@@ -104,11 +104,12 @@ const FormatterFeature = (() => {
       return true;
     }
 
-    // Check if it's a Daily Log Notes field
+    // Check if it's ANY Daily Log field (textarea inside label with bold heading)
     const label = textarea.closest('label');
     if (label) {
       const heading = label.querySelector('div.font-bold');
-      if (heading && heading.textContent.trim() === 'Notes') {
+      // If there's a bold heading in the label, this is a Daily Log field
+      if (heading && heading.textContent.trim().length > 0) {
         return true;
       }
     }
@@ -135,12 +136,12 @@ const FormatterFeature = (() => {
     const descriptionFields = document.querySelectorAll('textarea[placeholder="Description"]');
     fields.push(...descriptionFields);
 
-    // 2. Daily Log Notes fields (textarea inside label with "Notes" heading)
+    // 2. ALL Daily Log fields (any textarea inside label with bold heading)
     const labels = document.querySelectorAll('label');
     labels.forEach(label => {
-      // Check if this label has "Notes" heading
+      // Check if this label has any bold heading
       const heading = label.querySelector('div.font-bold');
-      if (heading && heading.textContent.trim() === 'Notes') {
+      if (heading && heading.textContent.trim().length > 0) {
         const textarea = label.querySelector('textarea');
         if (textarea && !fields.includes(textarea)) {
           fields.push(textarea);
@@ -148,7 +149,7 @@ const FormatterFeature = (() => {
       }
     });
 
-    console.log('Formatter: Found', fields.length, 'fields (Description + Notes)');
+    console.log('Formatter: Found', fields.length, 'fields (Description + Daily Log)');
 
     fields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
