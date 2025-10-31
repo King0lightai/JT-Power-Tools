@@ -95,6 +95,27 @@ const FormatterFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
+  // Helper function to check if a textarea should have the formatter
+  function isFormatterField(textarea) {
+    if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
+
+    // Check if it's a Budget Description field
+    if (textarea.getAttribute('placeholder') === 'Description') {
+      return true;
+    }
+
+    // Check if it's a Daily Log Notes field
+    const label = textarea.closest('label');
+    if (label) {
+      const heading = label.querySelector('div.font-bold');
+      if (heading && heading.textContent.trim() === 'Notes') {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // Initialize fields
   function initializeFields() {
     if (!isActive) return;
@@ -107,8 +128,27 @@ const FormatterFeature = (() => {
       activeToolbar = null;
     }
 
-    // Target only description textareas
-    const fields = document.querySelectorAll('textarea[placeholder="Description"]');
+    // Find all textareas that should have the formatter
+    const fields = [];
+
+    // 1. Budget Description fields
+    const descriptionFields = document.querySelectorAll('textarea[placeholder="Description"]');
+    fields.push(...descriptionFields);
+
+    // 2. Daily Log Notes fields (textarea inside label with "Notes" heading)
+    const labels = document.querySelectorAll('label');
+    labels.forEach(label => {
+      // Check if this label has "Notes" heading
+      const heading = label.querySelector('div.font-bold');
+      if (heading && heading.textContent.trim() === 'Notes') {
+        const textarea = label.querySelector('textarea');
+        if (textarea && !fields.includes(textarea)) {
+          fields.push(textarea);
+        }
+      }
+    });
+
+    console.log('Formatter: Found', fields.length, 'fields (Description + Notes)');
 
     fields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
@@ -239,7 +279,8 @@ const FormatterFeature = (() => {
   function handleGlobalClick(e) {
     const clickedElement = e.target;
 
-    if (clickedElement.matches('textarea[placeholder="Description"]') ||
+    // Don't hide if clicking on a formatter field or the toolbar
+    if (isFormatterField(clickedElement) ||
         clickedElement.closest('.jt-formatter-toolbar')) {
       return;
     }
@@ -252,7 +293,8 @@ const FormatterFeature = (() => {
   function handleKeydown(e) {
     const field = e.target;
 
-    if (!field.matches('textarea[placeholder="Description"]')) return;
+    // Only apply to formatter fields (Description or Notes)
+    if (!isFormatterField(field)) return;
 
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const modifier = isMac ? e.metaKey : e.ctrlKey;
