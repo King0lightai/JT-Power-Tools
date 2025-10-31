@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT-Tools Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛠️ JT-Tools Suite</h1>
+      <p class="subtitle">Toggle features on or off</p>
+    </header>
+
+    <div class="features-list">
+      <!-- Feature 1: Drag & Drop -->
+      <div class="feature-item">
+        <div class="feature-info">
+          <div class="feature-icon">📅</div>
+          <div class="feature-details">
+            <h3>Schedule Drag & Drop</h3>
+            <p>Move schedule items between dates</p>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="dragDrop" data-feature="dragDrop">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Feature 2: Contrast Fix -->
+      <div class="feature-item">
+        <div class="feature-info">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-details">
+            <h3>Contrast Fix</h3>
+            <p>Better text readability in schedule view</p>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Feature 3: Budget Formatter -->
+      <div class="feature-item">
+        <div class="feature-info">
+          <div class="feature-icon">📝</div>
+          <div class="feature-details">
+            <h3>Budget Formatter</h3>
+            <p>Rich text toolbar for budget descriptions</p>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="formatter" data-feature="formatter">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="refreshBtn" class="refresh-btn">
+        <span class="btn-icon">🔄</span>
+        Refresh Current Tab
+      </button>
+      <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <footer>
+      <p>Version 1.0.0</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
