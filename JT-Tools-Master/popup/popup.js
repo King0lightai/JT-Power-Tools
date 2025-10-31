@@ -5,14 +5,83 @@ const defaultSettings = {
   formatter: true
 };
 
+// Check and update license status on load
+async function checkLicenseStatus() {
+  const licenseData = await LicenseService.getLicenseData();
+  const licenseStatus = document.getElementById('licenseStatus');
+  const statusText = licenseStatus.querySelector('.status-text');
+  const dragDropFeature = document.getElementById('dragDropFeature');
+  const dragDropCheckbox = document.getElementById('dragDrop');
+
+  if (licenseData && licenseData.valid) {
+    // Valid license
+    licenseStatus.className = 'license-status active';
+    statusText.textContent = `✓ Premium Active (${licenseData.purchaseEmail})`;
+    dragDropFeature.classList.remove('locked');
+    dragDropCheckbox.disabled = false;
+  } else {
+    // No license or invalid
+    licenseStatus.className = 'license-status inactive';
+    statusText.textContent = '✗ Premium Not Active';
+    dragDropFeature.classList.add('locked');
+    dragDropCheckbox.disabled = true;
+    dragDropCheckbox.checked = false;
+
+    // Force save settings with drag-drop disabled
+    const settings = getCurrentSettings();
+    settings.dragDrop = false;
+    await chrome.storage.sync.set({ jtToolsSettings: settings });
+  }
+}
+
+// Verify license key
+async function verifyLicenseKey() {
+  const licenseInput = document.getElementById('licenseKey');
+  const verifyBtn = document.getElementById('verifyBtn');
+  const licenseKey = licenseInput.value.trim();
+
+  if (!licenseKey) {
+    showStatus('Please enter a license key', 'error');
+    return;
+  }
+
+  // Disable button during verification
+  verifyBtn.disabled = true;
+  verifyBtn.textContent = 'Verifying...';
+
+  try {
+    const result = await LicenseService.verifyLicense(licenseKey);
+
+    if (result.success) {
+      showStatus('License activated successfully!', 'success');
+      licenseInput.value = '';
+
+      // Update UI
+      await checkLicenseStatus();
+      await loadSettings();
+    } else {
+      showStatus(result.error || 'Invalid license key', 'error');
+    }
+  } catch (error) {
+    console.error('Error verifying license:', error);
+    showStatus('Error verifying license', 'error');
+  } finally {
+    verifyBtn.disabled = false;
+    verifyBtn.textContent = 'Verify';
+  }
+}
+
 // Load saved settings and update UI
 async function loadSettings() {
   try {
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     const settings = result.jtToolsSettings || defaultSettings;
 
+    // Check if user has premium license
+    const hasLicense = await LicenseService.hasValidLicense();
+
     // Update checkboxes
-    document.getElementById('dragDrop').checked = settings.dragDrop;
+    document.getElementById('dragDrop').checked = hasLicense && settings.dragDrop;
     document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('formatter').checked = settings.formatter;
 
@@ -26,6 +95,17 @@ async function loadSettings() {
 // Save settings
 async function saveSettings(settings) {
   try {
+    // Check if user is trying to enable drag-drop without license
+    if (settings.dragDrop) {
+      const hasLicense = await LicenseService.hasValidLicense();
+      if (!hasLicense) {
+        showStatus('Drag & Drop requires a premium license', 'error');
+        document.getElementById('dragDrop').checked = false;
+        settings.dragDrop = false;
+        return;
+      }
+    }
+
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
 
@@ -98,8 +178,21 @@ async function refreshCurrentTab() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT-Tools popup loaded');
 
+  // Check license status first
+  await checkLicenseStatus();
+
   // Load current settings
   await loadSettings();
+
+  // Listen for license verification
+  document.getElementById('verifyBtn').addEventListener('click', verifyLicenseKey);
+
+  // Allow Enter key in license input
+  document.getElementById('licenseKey').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      verifyLicenseKey();
+    }
+  });
 
   // Listen for checkbox changes
   const checkboxes = document.querySelectorAll('input[type="checkbox"]');
