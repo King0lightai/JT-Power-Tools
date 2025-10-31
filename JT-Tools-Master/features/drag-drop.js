@@ -271,12 +271,12 @@ const DragDropFeature = (() => {
   function attemptDateChange(element, newDateNumber, targetCell) {
     const dateInfo = extractFullDateInfo(targetCell);
 
-    // Inject CSS to make sidebar and date picker completely invisible while keeping them functional
+    // Inject CSS to make entire sidebar structure completely invisible
     const hideStyle = document.createElement('style');
     hideStyle.id = 'jt-hide-sidebar-temp';
     hideStyle.textContent = `
-        /* Make the sidebar invisible but keep it in DOM for functionality */
-        div.overflow-y-auto.overscroll-contain.sticky {
+        /* Hide the outer sidebar container (the one with z-30) */
+        div.z-30.absolute.top-0.bottom-0.right-0 {
             opacity: 0 !important;
             position: fixed !important;
             top: -9999px !important;
@@ -285,14 +285,21 @@ const DragDropFeature = (() => {
             height: 1px !important;
             overflow: hidden !important;
             clip: rect(0, 0, 0, 0) !important;
-            white-space: nowrap !important;
-            border: 0 !important;
             pointer-events: none !important;
         }
-        /* Hide all backgrounds and backdrops */
-        div.overflow-y-auto.overscroll-contain.sticky ~ div[class*="fixed"],
-        div.overflow-y-auto.overscroll-contain.sticky ~ div[class*="inset"],
-        body > div[class*="fixed"][class*="inset"]:not(.jt-formatter-toolbar) {
+        /* Hide the white background layer */
+        div.absolute.inset-0.bg-white.shadow-line-left {
+            opacity: 0 !important;
+            background: transparent !important;
+        }
+        /* Hide the inner sticky sidebar */
+        div.overflow-y-auto.overscroll-contain.sticky {
+            opacity: 0 !important;
+        }
+        /* Hide any fixed/absolute overlays and backdrops */
+        body > div.fixed.inset-0:not(.jt-formatter-toolbar),
+        div[style*="position: fixed"][style*="inset"],
+        div[class*="backdrop"] {
             opacity: 0 !important;
             position: fixed !important;
             top: -9999px !important;
