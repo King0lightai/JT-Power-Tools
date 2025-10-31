@@ -7,21 +7,18 @@ console.log('JT-Tools Master Suite: Content script loaded');
 const featureModules = {
   dragDrop: {
     name: 'Drag & Drop',
-    scriptPath: 'features/drag-drop.js',
-    instance: null,
-    loaded: false
+    feature: () => window.DragDropFeature,
+    instance: null
   },
   contrastFix: {
     name: 'Contrast Fix',
-    scriptPath: 'features/contrast-fix.js',
-    instance: null,
-    loaded: false
+    feature: () => window.ContrastFixFeature,
+    instance: null
   },
   formatter: {
     name: 'Formatter',
-    scriptPath: 'features/formatter.js',
-    instance: null,
-    loaded: false
+    feature: () => window.FormatterFeature,
+    instance: null
   }
 };
 
@@ -45,51 +42,16 @@ async function loadSettings() {
   }
 }
 
-// Load a feature module script
-function loadFeatureScript(featureKey) {
-  return new Promise((resolve, reject) => {
-    const module = featureModules[featureKey];
-
-    if (module.loaded) {
-      resolve();
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL(module.scriptPath);
-    script.onload = () => {
-      module.loaded = true;
-      console.log(`JT-Tools: ${module.name} script loaded`);
-      resolve();
-    };
-    script.onerror = (error) => {
-      console.error(`JT-Tools: Error loading ${module.name} script:`, error);
-      reject(error);
-    };
-
-    document.head.appendChild(script);
-  });
-}
-
 // Initialize a feature
-async function initializeFeature(featureKey) {
+function initializeFeature(featureKey) {
   const module = featureModules[featureKey];
 
   try {
-    // Load script if not already loaded
-    if (!module.loaded) {
-      await loadFeatureScript(featureKey);
-    }
-
-    // Wait for the feature to be available on window
-    await waitForFeature(featureKey);
-
-    // Get the feature instance
-    const featureName = getFeatureName(featureKey);
-    const FeatureClass = window[featureName];
+    // Get the feature from window
+    const FeatureClass = module.feature();
 
     if (!FeatureClass) {
-      console.error(`JT-Tools: ${module.name} class not found on window`);
+      console.error(`JT-Tools: ${module.name} not found on window`);
       return;
     }
 
@@ -111,8 +73,7 @@ function cleanupFeature(featureKey) {
   const module = featureModules[featureKey];
 
   try {
-    const featureName = getFeatureName(featureKey);
-    const FeatureClass = window[featureName];
+    const FeatureClass = module.feature();
 
     if (FeatureClass && FeatureClass.isActive()) {
       FeatureClass.cleanup();
@@ -123,41 +84,13 @@ function cleanupFeature(featureKey) {
   }
 }
 
-// Wait for feature to be available on window
-function waitForFeature(featureKey, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const featureName = getFeatureName(featureKey);
-    const startTime = Date.now();
-
-    const checkInterval = setInterval(() => {
-      if (window[featureName]) {
-        clearInterval(checkInterval);
-        resolve();
-      } else if (Date.now() - startTime > timeout) {
-        clearInterval(checkInterval);
-        reject(new Error(`Timeout waiting for ${featureName}`));
-      }
-    }, 100);
-  });
-}
-
-// Get feature class name from key
-function getFeatureName(featureKey) {
-  const nameMap = {
-    dragDrop: 'DragDropFeature',
-    contrastFix: 'ContrastFixFeature',
-    formatter: 'FormatterFeature'
-  };
-  return nameMap[featureKey];
-}
-
 // Initialize all enabled features
-async function initializeAllFeatures() {
+function initializeAllFeatures() {
   console.log('JT-Tools: Initializing features based on settings...');
 
   for (const [key, enabled] of Object.entries(currentSettings)) {
     if (enabled && featureModules[key]) {
-      await initializeFeature(key);
+      initializeFeature(key);
     }
   }
 
@@ -210,8 +143,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Load settings
   await loadSettings();
 
-  // Initialize all enabled features
-  await initializeAllFeatures();
-
-  console.log('JT-Tools Master Suite: Ready!');
+  // Wait a moment for all scripts to be ready
+  setTimeout(() => {
+    // Initialize all enabled features
+    initializeAllFeatures();
+    console.log('JT-Tools Master Suite: Ready!');
+  }, 100);
 })();
