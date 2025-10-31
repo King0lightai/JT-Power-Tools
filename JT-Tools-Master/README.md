@@ -74,6 +74,25 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 3. Formatting toolbar appears above the field
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
+## 🔑 Premium Features
+
+Some features require a premium license to unlock:
+
+### Premium License Activation
+1. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
+2. Open the extension popup
+3. Navigate to the License section
+4. Enter your license key
+5. Click "Activate"
+6. Premium features will be unlocked immediately
+
+### Product Configuration
+The extension is configured with:
+- **Product Permalink**: `jtpowertools`
+- **Product ID**: `x2GbSvLBfUSQcwVGDRSj1w==`
+
+For setup instructions, see [PREMIUM_SETUP.md](../PREMIUM_SETUP.md)
+
 ## 🏗️ Architecture
 
 ### File Structure

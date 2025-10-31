@@ -29,13 +29,18 @@ The premium licensing system allows you to:
 
 ### 2. Configure the Extension
 
-Open `/services/license.js` and update line 6:
+Open `/services/license.js` and update lines 6-7:
 
 ```javascript
 const PRODUCT_PERMALINK = 'your-product-permalink'; // Replace with your actual permalink
+const PRODUCT_ID = 'your-product-id'; // Replace with your actual product ID
 ```
 
-For example, if your product URL is `https://gumroad.com/l/jt-tools`, your permalink is `jt-tools`.
+For example:
+- If your product URL is `https://gumroad.com/l/jt-tools`, your permalink is `jt-tools`
+- Your product ID can be found in your Gumroad product settings (e.g., `x2GbSvLBfUSQcwVGDRSj1w==`)
+
+The extension uses `product_id` for license verification by default.
 
 ### 3. Build and Test
 
@@ -78,12 +83,15 @@ POST https://api.gumroad.com/v2/licenses/verify
 ```
 
 Parameters:
-- `product_permalink`: Your product's permalink
+- `product_id`: Your product's ID (recommended) OR
+- `product_permalink`: Your product's permalink (alternative)
 - `license_key`: User's license key
 
 Response includes:
 - `success`: true/false
 - `purchase`: Object with purchaser info (email, date, etc.)
+
+The extension is configured to use `product_id` by default for more reliable verification.
 
 ## Security Notes
 
