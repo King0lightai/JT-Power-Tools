@@ -1,4 +1,4 @@
-// JobTread Budget Formatter Feature Module
+// JobTread Budget Formatter Feature Module - COMPLETE VERSION
 // Add formatting toolbar to budget description fields
 
 const FormatterFeature = (() => {
@@ -87,7 +87,7 @@ const FormatterFeature = (() => {
 
   // Inject CSS dynamically
   function injectCSS() {
-    if (styleElement) return; // Already injected
+    if (styleElement) return;
 
     styleElement = document.createElement('link');
     styleElement.rel = 'stylesheet';
@@ -114,20 +114,18 @@ const FormatterFeature = (() => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
         field.dataset.formatterReady = 'true';
 
-        field.addEventListener('focus', handleFieldFocus);
-        field.addEventListener('mousedown', handleFieldMousedown);
-        field.addEventListener('blur', handleFieldBlur);
-        field.addEventListener('input', handleFieldInput);
-        field.addEventListener('click', handleFieldClick);
-        field.addEventListener('keyup', handleFieldKeyup);
+        field.addEventListener('focus', (e) => handleFieldFocus(e, field));
+        field.addEventListener('mousedown', (e) => handleFieldMousedown(e, field));
+        field.addEventListener('blur', (e) => handleFieldBlur(e, field));
+        field.addEventListener('input', () => handleFieldInput(field));
+        field.addEventListener('click', () => handleFieldClick(field));
+        field.addEventListener('keyup', () => handleFieldKeyup(field));
       }
     });
   }
 
   // Event handlers
-  function handleFieldFocus(e) {
-    const field = e.target;
-
+  function handleFieldFocus(e, field) {
     if (hideTimeout) {
       clearTimeout(hideTimeout);
       hideTimeout = null;
@@ -143,9 +141,7 @@ const FormatterFeature = (() => {
     }, 50);
   }
 
-  function handleFieldMousedown(e) {
-    const field = e.target;
-
+  function handleFieldMousedown(e, field) {
     if (activeField !== field) {
       if (hideTimeout) {
         clearTimeout(hideTimeout);
@@ -162,7 +158,7 @@ const FormatterFeature = (() => {
     }
   }
 
-  function handleFieldBlur(e) {
+  function handleFieldBlur(e, field) {
     if (hideTimeout) {
       clearTimeout(hideTimeout);
     }
@@ -176,23 +172,20 @@ const FormatterFeature = (() => {
     }, 200);
   }
 
-  function handleFieldInput(e) {
-    const field = e.target;
+  function handleFieldInput(field) {
     if (activeToolbar && activeField === field) {
       positionToolbar(activeToolbar, field);
       updateToolbarState(field, activeToolbar);
     }
   }
 
-  function handleFieldClick(e) {
-    const field = e.target;
+  function handleFieldClick(field) {
     if (activeToolbar && activeField === field) {
       updateToolbarState(field, activeToolbar);
     }
   }
 
-  function handleFieldKeyup(e) {
-    const field = e.target;
+  function handleFieldKeyup(field) {
     if (activeToolbar && activeField === field) {
       updateToolbarState(field, activeToolbar);
     }
@@ -289,12 +282,6 @@ const FormatterFeature = (() => {
     }
   }
 
-  // Core formatter functions (abbreviated for space - keeping same logic)
-  // [Include all the toolbar creation, format application, detection logic from original]
-
-  // Due to character limits, I'll include the essential functions inline
-  // The full implementation would include all functions from the original content.js
-
   // Show/hide toolbar
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
@@ -338,7 +325,6 @@ const FormatterFeature = (() => {
   }
 
   function createToolbar(field) {
-    // [Full toolbar HTML from original - truncated for space]
     const toolbar = document.createElement('div');
     toolbar.className = 'jt-formatter-toolbar';
     toolbar.innerHTML = `
@@ -519,12 +505,13 @@ const FormatterFeature = (() => {
     toolbar.style.width = `auto`;
   }
 
-  // Format detection and application
-  // [Include all format functions from original - abbreviated here due to size]
-
+  // Format detection
   function detectActiveFormats(field) {
-    // Simplified - full implementation would be same as original
-    return {
+    const start = field.selectionStart;
+    const end = field.selectionEnd;
+    const text = field.value;
+
+    const activeFormats = {
       bold: false,
       italic: false,
       underline: false,
@@ -533,11 +520,91 @@ const FormatterFeature = (() => {
       'justify-center': false,
       'justify-right': false
     };
+
+    // For selections, check if entire selection is wrapped
+    if (start !== end) {
+      const selection = text.substring(start, end);
+      const before = text.substring(0, start);
+      const after = text.substring(end);
+
+      // Check inline formats
+      if (before.endsWith('*') && after.startsWith('*')) {
+        activeFormats.bold = true;
+      }
+      if (before.endsWith('^') && after.startsWith('^')) {
+        activeFormats.italic = true;
+      }
+      if (before.endsWith('_') && after.startsWith('_')) {
+        activeFormats.underline = true;
+      }
+      if (before.endsWith('~') && after.startsWith('~')) {
+        activeFormats.strikethrough = true;
+      }
+
+      // Check for color
+      const colorMatch = before.match(/\[!color:(\w+)\]\s*$/);
+      if (colorMatch) {
+        activeFormats.color = colorMatch[1];
+      }
+    } else {
+      // For cursor position, check what we're inside of
+      let checkStart = start;
+      let checkEnd = start;
+
+      // Expand to find format boundaries
+      while (checkStart > 0 && !'*^_~\n'.includes(text[checkStart - 1])) {
+        checkStart--;
+      }
+      while (checkEnd < text.length && !'*^_~\n'.includes(text[checkEnd])) {
+        checkEnd++;
+      }
+
+      // Check if we're between format markers
+      if (checkStart > 0 && checkEnd < text.length) {
+        const charBefore = text[checkStart - 1];
+        const charAfter = text[checkEnd];
+
+        if (charBefore === '*' && charAfter === '*') {
+          activeFormats.bold = true;
+        }
+        if (charBefore === '^' && charAfter === '^') {
+          activeFormats.italic = true;
+        }
+        if (charBefore === '_' && charAfter === '_') {
+          activeFormats.underline = true;
+        }
+        if (charBefore === '~' && charAfter === '~') {
+          activeFormats.strikethrough = true;
+        }
+      }
+
+      // Check for color at line start
+      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const lineText = text.substring(lineStart, start);
+      const colorMatch = lineText.match(/\[!color:(\w+)\]/);
+      if (colorMatch) {
+        activeFormats.color = colorMatch[1];
+      }
+    }
+
+    // Check line-level formats (justify)
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start);
+    const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+    if (currentLine.trim().startsWith('--:')) {
+      activeFormats['justify-center'] = true;
+    } else if (currentLine.trim().startsWith('---:')) {
+      activeFormats['justify-right'] = true;
+    }
+
+    return activeFormats;
   }
 
   function updateToolbarState(field, toolbar) {
     const activeFormats = detectActiveFormats(field);
 
+    // Update basic format buttons
     const boldBtn = toolbar.querySelector('[data-format="bold"]');
     const italicBtn = toolbar.querySelector('[data-format="italic"]');
     const underlineBtn = toolbar.querySelector('[data-format="underline"]');
@@ -547,32 +614,370 @@ const FormatterFeature = (() => {
     italicBtn?.classList.toggle('active', activeFormats.italic);
     underlineBtn?.classList.toggle('active', activeFormats.underline);
     strikeBtn?.classList.toggle('active', activeFormats.strikethrough);
+
+    // Update justify buttons
+    const justifyLeft = toolbar.querySelector('[data-format="justify-left"]');
+    const justifyCenter = toolbar.querySelector('[data-format="justify-center"]');
+    const justifyRight = toolbar.querySelector('[data-format="justify-right"]');
+
+    justifyLeft?.classList.toggle('active', !activeFormats['justify-center'] && !activeFormats['justify-right']);
+    justifyCenter?.classList.toggle('active', activeFormats['justify-center']);
+    justifyRight?.classList.toggle('active', activeFormats['justify-right']);
+
+    // Update color button
+    const colorBtn = toolbar.querySelector('.jt-color-btn');
+    if (activeFormats.color) {
+      colorBtn?.classList.add('active');
+      colorBtn?.setAttribute('title', `Current: ${activeFormats.color}`);
+    } else {
+      colorBtn?.classList.remove('active');
+      colorBtn?.setAttribute('title', 'Text Color');
+    }
+
+    // Update color options
+    toolbar.querySelectorAll('[data-format="color"]').forEach(btn => {
+      const color = btn.dataset.color;
+      btn.classList.toggle('active', color === activeFormats.color);
+    });
   }
 
-  function applyFormat(field, format, options = {}) {
-    // Simplified - full implementation would include all format logic
+  // Format application
+  function removeFormat(field, format, options = {}) {
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
-    const selection = text.substring(start, end);
+    const hasSelection = start !== end;
 
-    let before = text.substring(0, start);
-    let after = text.substring(end);
-    let replacement;
+    let newText;
+    let newCursorPos;
+
+    function findMarkerPositions(text, pos, marker) {
+      let openPos = -1;
+      let closePos = -1;
+
+      for (let i = pos - 1; i >= 0; i--) {
+        if (text[i] === marker) {
+          openPos = i;
+          break;
+        }
+        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
+          break;
+        }
+      }
+
+      for (let i = pos; i < text.length; i++) {
+        if (text[i] === marker) {
+          closePos = i;
+          break;
+        }
+        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
+          break;
+        }
+      }
+
+      return { openPos, closePos };
+    }
 
     switch(format) {
       case 'bold':
-        replacement = selection ? `*${selection}*` : '*text*';
-        break;
       case 'italic':
-        replacement = selection ? `^${selection}^` : '^text^';
+      case 'underline':
+      case 'strikethrough':
+        const markerMap = {
+          'bold': '*',
+          'italic': '^',
+          'underline': '_',
+          'strikethrough': '~'
+        };
+        const marker = markerMap[format];
+
+        if (hasSelection) {
+          const before = text.substring(0, start);
+          const after = text.substring(end);
+          const selection = text.substring(start, end);
+
+          if (before.endsWith(marker) && after.startsWith(marker)) {
+            newText = before.slice(0, -1) + selection + after.slice(1);
+            newCursorPos = start - 1;
+          } else {
+            const cleaned = selection.replace(new RegExp(`\\${marker}`, 'g'), '');
+            newText = before + cleaned + after;
+            newCursorPos = start;
+          }
+        } else {
+          const { openPos, closePos } = findMarkerPositions(text, start, marker);
+
+          if (openPos !== -1 && closePos !== -1) {
+            const before = text.substring(0, openPos);
+            const middle = text.substring(openPos + 1, closePos);
+            const after = text.substring(closePos + 1);
+            newText = before + middle + after;
+            newCursorPos = start - 1;
+          } else {
+            return;
+          }
+        }
         break;
-      // Add all other formats...
+
+      case 'color':
+        const before = text.substring(0, start);
+        const lineStart = before.lastIndexOf('\n') + 1;
+        const lineText = text.substring(lineStart);
+        const lineEnd = lineText.indexOf('\n');
+        const fullLine = lineEnd === -1 ? lineText : lineText.substring(0, lineEnd);
+
+        const colorMatch = fullLine.match(/^\[!color:\w+\]\s*/);
+        if (colorMatch) {
+          const beforeLine = text.substring(0, lineStart);
+          const afterMatch = text.substring(lineStart + colorMatch[0].length);
+          newText = beforeLine + afterMatch;
+          newCursorPos = lineStart;
+        } else {
+          return;
+        }
+        break;
+
+      case 'justify-center':
+      case 'justify-right':
+        const before2 = text.substring(0, start);
+        const jLineStart = before2.lastIndexOf('\n') + 1;
+        const beforeLine2 = text.substring(0, jLineStart);
+        const afterLine = text.substring(jLineStart);
+
+        const cleaned = afterLine.replace(/^(--:|---:)\s*/, '');
+        newText = beforeLine2 + cleaned;
+        newCursorPos = jLineStart;
+        break;
+
       default:
         return;
     }
 
+    // Update field value
+    field.value = newText;
+    field.setSelectionRange(newCursorPos, newCursorPos);
+
+    // Trigger change events
+    field.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, field.value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function applyFormat(field, format, options = {}) {
+    const start = field.selectionStart;
+    const end = field.selectionEnd;
+    const text = field.value;
+    const selection = text.substring(start, end);
+    const hasSelection = selection.length > 0;
+
+    // Check if format is already active
+    const activeFormats = detectActiveFormats(field);
+
+    // Toggle logic for inline formats
+    if (['bold', 'italic', 'underline', 'strikethrough'].includes(format)) {
+      if (activeFormats[format]) {
+        removeFormat(field, format);
+        return;
+      }
+    }
+
+    // Toggle logic for colors
+    if (format === 'color' && activeFormats.color === options.color) {
+      removeFormat(field, 'color');
+      return;
+    }
+
+    // Toggle logic for justify
+    if (format === 'justify-center' && activeFormats['justify-center']) {
+      removeFormat(field, format);
+      return;
+    }
+    if (format === 'justify-right' && activeFormats['justify-right']) {
+      removeFormat(field, format);
+      return;
+    }
+
+    // Apply format logic
+    let before = text.substring(0, start);
+    let after = text.substring(end);
+    let replacement;
+    let cursorPos;
+
+    switch(format) {
+      case 'bold':
+        replacement = hasSelection ? `*${selection}*` : '*text*';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'italic':
+        replacement = hasSelection ? `^${selection}^` : '^text^';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'underline':
+        replacement = hasSelection ? `_${selection}_` : '_text_';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'strikethrough':
+        replacement = hasSelection ? `~${selection}~` : '~text~';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'h1':
+        const lineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart);
+        after = text.substring(lineStart);
+        replacement = `# ${after}`;
+        cursorPos = lineStart + 2;
+        after = '';
+        break;
+
+      case 'h2':
+        const lineStart2 = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart2);
+        after = text.substring(lineStart2);
+        replacement = `## ${after}`;
+        cursorPos = lineStart2 + 3;
+        after = '';
+        break;
+
+      case 'h3':
+        const lineStart3 = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart3);
+        after = text.substring(lineStart3);
+        replacement = `### ${after}`;
+        cursorPos = lineStart3 + 4;
+        after = '';
+        break;
+
+      case 'bullet':
+        if (hasSelection) {
+          replacement = selection.split('\n').map(line => `- ${line}`).join('\n');
+        } else {
+          replacement = '- Item';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 2;
+        break;
+
+      case 'numbered':
+        if (hasSelection) {
+          replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
+        } else {
+          replacement = '1. Item';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 3;
+        break;
+
+      case 'quote':
+        const quoteLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, quoteLineStart);
+        const afterQuote = text.substring(quoteLineStart);
+        replacement = `> ${afterQuote}`;
+        cursorPos = quoteLineStart + 2;
+        after = '';
+        break;
+
+      case 'justify-left':
+        const leftLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, leftLineStart);
+        let afterLeft = text.substring(leftLineStart);
+        afterLeft = afterLeft.replace(/^(--:|---:)\s*/, '');
+        replacement = afterLeft;
+        cursorPos = leftLineStart;
+        after = '';
+        break;
+
+      case 'justify-center':
+        const centerLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, centerLineStart);
+        let afterCenter = text.substring(centerLineStart);
+        afterCenter = afterCenter.replace(/^(--:|---:)\s*/, '');
+        replacement = `--: ${afterCenter}`;
+        cursorPos = centerLineStart + 4;
+        after = '';
+        break;
+
+      case 'justify-right':
+        const rightLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, rightLineStart);
+        let afterRight = text.substring(rightLineStart);
+        afterRight = afterRight.replace(/^(--:|---:)\s*/, '');
+        replacement = `---: ${afterRight}`;
+        cursorPos = rightLineStart + 5;
+        after = '';
+        break;
+
+      case 'link':
+        const url = prompt('Enter URL:', 'https://');
+        if (!url) return;
+        replacement = `[${hasSelection ? selection : 'link text'}](${url})`;
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'color':
+        const color = options.color;
+        const cLineStart = before.lastIndexOf('\n') + 1;
+        const cLineBefore = text.substring(cLineStart, start);
+        const existingColorMatch = cLineBefore.match(/\[!color:\w+\]\s*/);
+
+        if (existingColorMatch) {
+          before = text.substring(0, cLineStart + cLineBefore.indexOf(existingColorMatch[0]));
+          replacement = `[!color:${color}] ${hasSelection ? selection : 'Your text here'}`;
+          const afterColorStart = cLineStart + cLineBefore.indexOf(existingColorMatch[0]) + existingColorMatch[0].length;
+          after = text.substring(hasSelection ? end : afterColorStart);
+        } else {
+          replacement = hasSelection ? `[!color:${color}] ${selection}` : `[!color:${color}] Your text here`;
+        }
+        cursorPos = before.length + `[!color:${color}] `.length;
+        break;
+
+      case 'alert':
+        const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
+        if (!alertColor) return;
+
+        const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
+        if (!alertIcon) return;
+
+        const alertSubject = prompt('Alert subject:', 'Important');
+        if (!alertSubject) return;
+
+        const alertBody = prompt('Alert body text:', 'Your alert message here.');
+        if (!alertBody) return;
+
+        replacement = `> [!color:${alertColor}] #### [!icon:${alertIcon}] ${alertSubject}\n> ${alertBody}`;
+        cursorPos = start + replacement.length;
+        break;
+
+      case 'hr':
+        replacement = '\n---\n';
+        cursorPos = start + replacement.length;
+        break;
+
+      case 'table':
+        replacement = `| Column 1 | Column 2 | Column 3 |\n| Item 1 | Item 2 | Item 3 |\n| Item 4 | Item 5 | Item 6 |`;
+        cursorPos = start + 2;
+        break;
+
+      default:
+        return;
+    }
+
+    // Update field value
     field.value = before + replacement + after;
+
+    // Set cursor position
+    field.setSelectionRange(cursorPos, cursorPos);
+
+    // Trigger change events
+    field.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, field.value);
     field.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
