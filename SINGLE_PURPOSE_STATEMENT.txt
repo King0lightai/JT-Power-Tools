@@ -1,0 +1,3 @@
+SINGLE PURPOSE STATEMENT (for Chrome Web Store submission)
+
+JT Power Tools enhances the JobTread construction management platform with productivity features including drag-and-drop schedule management, dark mode for reduced eye strain, rich text formatting for budget descriptions, and improved text contrast for better readability. All features are designed to improve workflow efficiency for construction project managers using JobTread.
