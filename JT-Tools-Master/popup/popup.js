@@ -2,7 +2,8 @@
 const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
-  formatter: true
+  formatter: true,
+  darkMode: false
 };
 
 // Check and update license status on load
@@ -81,6 +82,7 @@ async function loadSettings() {
     document.getElementById('dragDrop').checked = hasLicense && settings.dragDrop;
     document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('formatter').checked = settings.formatter;
+    document.getElementById('darkMode').checked = settings.darkMode;
 
     console.log('Settings loaded:', settings);
   } catch (error) {
@@ -124,7 +126,8 @@ function getCurrentSettings() {
   return {
     dragDrop: document.getElementById('dragDrop').checked,
     contrastFix: document.getElementById('contrastFix').checked,
-    formatter: document.getElementById('formatter').checked
+    formatter: document.getElementById('formatter').checked,
+    darkMode: document.getElementById('darkMode').checked
   };
 }
 
