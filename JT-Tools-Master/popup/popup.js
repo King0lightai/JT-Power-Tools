@@ -173,7 +173,7 @@ async function refreshCurrentTab() {
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('JT-Tools popup loaded');
+  console.log('JT Power Tools popup loaded');
 
   // Check license status first (just UI, don't modify settings)
   const hasLicense = await checkLicenseStatus();
