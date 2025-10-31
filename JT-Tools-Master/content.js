@@ -136,6 +136,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+// Wait for all features to be available on window
+async function waitForFeatures(maxAttempts = 50, delayMs = 100) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const allAvailable = Object.values(featureModules).every(module => {
+      const feature = module.feature();
+      return feature !== null && feature !== undefined;
+    });
+
+    if (allAvailable) {
+      console.log(`JT-Tools: All features loaded (attempt ${attempt + 1})`);
+      return true;
+    }
+
+    console.log(`JT-Tools: Waiting for features... (attempt ${attempt + 1}/${maxAttempts})`);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  console.error('JT-Tools: Timeout waiting for all features to load');
+  return false;
+}
+
 // Initialize on page load
 (async function() {
   console.log('JT-Tools: Starting initialization...');
@@ -143,10 +164,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Load settings
   await loadSettings();
 
-  // Wait a moment for all scripts to be ready
-  setTimeout(() => {
+  // Wait for all feature scripts to be ready
+  const featuresReady = await waitForFeatures();
+
+  if (featuresReady) {
     // Initialize all enabled features
     initializeAllFeatures();
     console.log('JT-Tools Master Suite: Ready!');
-  }, 100);
+  } else {
+    console.error('JT-Tools Master Suite: Failed to initialize - features not loaded');
+  }
 })();
