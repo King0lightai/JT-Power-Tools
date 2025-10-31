@@ -271,30 +271,35 @@ const DragDropFeature = (() => {
   function attemptDateChange(element, newDateNumber, targetCell) {
     const dateInfo = extractFullDateInfo(targetCell);
 
-    // Inject CSS to hide sidebar AND backdrop completely behind the calendar
+    // Inject CSS to make sidebar and date picker completely invisible while keeping them functional
     const hideStyle = document.createElement('style');
     hideStyle.id = 'jt-hide-sidebar-temp';
     hideStyle.textContent = `
-        /* Hide the sidebar completely */
+        /* Make the sidebar invisible but keep it in DOM for functionality */
         div.overflow-y-auto.overscroll-contain.sticky {
             opacity: 0 !important;
-            visibility: hidden !important;
             position: fixed !important;
-            z-index: -9999 !important;
+            top: -9999px !important;
+            left: -9999px !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
             pointer-events: none !important;
-            transform: translateX(-9999px) !important;
-            display: none !important;
         }
-        /* Hide any backdrop/overlay */
-        div[class*="fixed"][class*="inset"] {
+        /* Hide all backgrounds and backdrops */
+        div.overflow-y-auto.overscroll-contain.sticky ~ div[class*="fixed"],
+        div.overflow-y-auto.overscroll-contain.sticky ~ div[class*="inset"],
+        body > div[class*="fixed"][class*="inset"]:not(.jt-formatter-toolbar) {
             opacity: 0 !important;
-            visibility: hidden !important;
-            z-index: -9999 !important;
-            pointer-events: none !important;
-        }
-        /* Hide any modal backgrounds */
-        div[style*="position: fixed"] {
-            z-index: -9999 !important;
+            position: fixed !important;
+            top: -9999px !important;
+            left: -9999px !important;
+            width: 1px !important;
+            height: 1px !important;
+            overflow: hidden !important;
         }
     `;
     document.head.appendChild(hideStyle);
