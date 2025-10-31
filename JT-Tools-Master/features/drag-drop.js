@@ -390,11 +390,36 @@ const DragDropFeature = (() => {
               inputField.focus();
               inputField.value = formattedDate;
 
+              // Dispatch input event
               inputField.dispatchEvent(new Event('input', { bubbles: true }));
+
+              // Simulate pressing Enter key to trigger the full update
+              const enterEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+              });
+              inputField.dispatchEvent(enterEvent);
+
+              // Also dispatch keyup for Enter
+              const enterUpEvent = new KeyboardEvent('keyup', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+              });
+              inputField.dispatchEvent(enterUpEvent);
+
+              // Dispatch change and blur events
               inputField.dispatchEvent(new Event('change', { bubbles: true }));
               inputField.dispatchEvent(new Event('blur', { bubbles: true }));
 
-              console.log('DragDrop: Date change events dispatched');
+              console.log('DragDrop: Date typed and Enter key simulated');
 
               setTimeout(() => {
                 closeSidebar(failsafeTimeout);
