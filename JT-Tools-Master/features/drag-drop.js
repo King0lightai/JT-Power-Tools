@@ -469,13 +469,6 @@ const DragDropFeature = (() => {
       console.log('DragDrop: Cleared failsafe timeout');
     }
 
-    // Always remove the hiding CSS immediately
-    const hideStyle = document.getElementById('jt-hide-sidebar-temp');
-    if (hideStyle) {
-      hideStyle.remove();
-      console.log('DragDrop: Removed hiding CSS');
-    }
-
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
     if (sidebar) {
@@ -486,13 +479,36 @@ const DragDropFeature = (() => {
         if (text.includes('Close')) {
           console.log('DragDrop: Found and clicking Close button');
           button.click();
+
+          // Wait for sidebar to close BEFORE removing hiding CSS
+          setTimeout(() => {
+            const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+            if (hideStyle) {
+              hideStyle.remove();
+              console.log('DragDrop: Removed hiding CSS after sidebar closed');
+            }
+          }, 300); // Wait 300ms for sidebar close animation
+
           return;
         }
       }
 
       console.log('DragDrop: Could not find Close button, sidebar will remain open');
+      // Still remove CSS even if close failed
+      setTimeout(() => {
+        const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+        if (hideStyle) {
+          hideStyle.remove();
+        }
+      }, 300);
     } else {
       console.log('DragDrop: Sidebar not found during close');
+      // Remove CSS anyway
+      const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+      if (hideStyle) {
+        hideStyle.remove();
+        console.log('DragDrop: Removed hiding CSS');
+      }
     }
   }
 
