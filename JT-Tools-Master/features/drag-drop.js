@@ -6,6 +6,7 @@ const DragDropFeature = (() => {
   let draggedItemData = null;
   let observer = null;
   let isActive = false;
+  let isShiftKeyPressed = false; // Track Shift key state
 
   // Initialize the feature
   function init() {
@@ -16,6 +17,13 @@ const DragDropFeature = (() => {
 
     console.log('DragDrop: Initializing...');
     isActive = true;
+
+    // Inject weekend styling
+    injectWeekendCSS();
+
+    // Track Shift key state
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
     // Initial setup
     setTimeout(() => {
@@ -55,6 +63,10 @@ const DragDropFeature = (() => {
     console.log('DragDrop: Cleaning up...');
     isActive = false;
 
+    // Remove key listeners
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keyup', handleKeyUp);
+
     // Disconnect observer
     if (observer) {
       observer.disconnect();
@@ -74,9 +86,50 @@ const DragDropFeature = (() => {
     const dateCells = document.querySelectorAll('td.jt-drop-enabled');
     dateCells.forEach(cell => {
       cell.classList.remove('jt-drop-enabled');
+      cell.classList.remove('jt-weekend-cell');
     });
 
+    // Remove weekend CSS
+    const weekendStyle = document.getElementById('jt-weekend-styling');
+    if (weekendStyle) {
+      weekendStyle.remove();
+    }
+
     console.log('DragDrop: Cleanup complete');
+  }
+
+  // Key event handlers
+  function handleKeyDown(e) {
+    if (e.key === 'Shift') {
+      isShiftKeyPressed = true;
+    }
+  }
+
+  function handleKeyUp(e) {
+    if (e.key === 'Shift') {
+      isShiftKeyPressed = false;
+    }
+  }
+
+  // Inject CSS to grey out weekends
+  function injectWeekendCSS() {
+    if (document.getElementById('jt-weekend-styling')) return;
+
+    const style = document.createElement('style');
+    style.id = 'jt-weekend-styling';
+    style.textContent = `
+      /* Grey out weekend columns */
+      td.jt-weekend-cell {
+        background-color: rgba(0, 0, 0, 0.03) !important;
+        opacity: 0.6;
+      }
+
+      /* Slightly darker on hover to show it's still interactive with Shift */
+      td.jt-weekend-cell:hover {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   // Function to make schedule items draggable
@@ -102,12 +155,71 @@ const DragDropFeature = (() => {
       if (!cell.classList.contains('jt-drop-enabled')) {
         cell.classList.add('jt-drop-enabled');
 
+        // Mark weekends
+        if (isWeekendCell(cell)) {
+          cell.classList.add('jt-weekend-cell');
+        }
+
         cell.addEventListener('dragover', handleDragOver);
         cell.addEventListener('drop', handleDrop);
         cell.addEventListener('dragleave', handleDragLeave);
         cell.addEventListener('dragenter', handleDragEnter);
       }
     });
+  }
+
+  // Check if a cell is a weekend
+  function isWeekendCell(cell) {
+    const dateInfo = extractFullDateInfo(cell);
+    if (!dateInfo || !dateInfo.day || !dateInfo.month) return false;
+
+    // Get current year
+    const currentYear = new Date().getFullYear();
+
+    // Parse the date
+    const monthMap = {
+      'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+      'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    };
+
+    const monthIndex = monthMap[dateInfo.month];
+    if (monthIndex === undefined) return false;
+
+    const date = new Date(currentYear, monthIndex, parseInt(dateInfo.day));
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+
+    return dayOfWeek === 0 || dayOfWeek === 6;
+  }
+
+  // Adjust date to skip weekends (move to next Monday)
+  function adjustDateToSkipWeekend(dateInfo) {
+    const currentYear = new Date().getFullYear();
+    const monthMap = {
+      'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+      'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    };
+
+    const monthIndex = monthMap[dateInfo.month];
+    const date = new Date(currentYear, monthIndex, parseInt(dateInfo.day));
+    const dayOfWeek = date.getDay();
+
+    // If Saturday (6), add 2 days to get to Monday
+    // If Sunday (0), add 1 day to get to Monday
+    if (dayOfWeek === 6) {
+      date.setDate(date.getDate() + 2);
+    } else if (dayOfWeek === 0) {
+      date.setDate(date.getDate() + 1);
+    }
+
+    // Convert back to month abbrev and day
+    const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    return {
+      day: date.getDate().toString(),
+      month: monthAbbrev[date.getMonth()],
+      fullDisplay: `${monthAbbrev[date.getMonth()]} ${date.getDate()}`
+    };
   }
 
   // Event handlers (same as original code)
@@ -179,10 +291,17 @@ const DragDropFeature = (() => {
         return false;
       }
 
-      const targetDate = extractDateFromCell(targetCell);
+      let dateInfo = extractFullDateInfo(targetCell);
 
-      if (targetDate) {
-        attemptDateChange(draggedElement, targetDate, targetCell);
+      if (dateInfo) {
+        // Check if dropping on weekend and Shift is NOT pressed
+        if (!isShiftKeyPressed && isWeekendCell(targetCell)) {
+          console.log('DragDrop: Weekend detected, auto-skipping to Monday');
+          dateInfo = adjustDateToSkipWeekend(dateInfo);
+          showNotification('Weekend detected - moved to Monday');
+        }
+
+        attemptDateChange(draggedElement, dateInfo.day, targetCell, dateInfo);
       } else {
         console.log('DragDrop: Could not determine target date');
         showNotification('Could not determine target date. Please try manually.');
@@ -268,8 +387,8 @@ const DragDropFeature = (() => {
     return `${month} ${dateInfo.day}`;
   }
 
-  function attemptDateChange(element, newDateNumber, targetCell) {
-    const dateInfo = extractFullDateInfo(targetCell);
+  function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo = null) {
+    const dateInfo = providedDateInfo || extractFullDateInfo(targetCell);
 
     // Inject CSS to make entire sidebar structure completely invisible
     const hideStyle = document.createElement('style');
