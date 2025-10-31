@@ -40,7 +40,8 @@ const FormatterFeature = (() => {
     window.addEventListener('scroll', handleScroll, true);
     window.addEventListener('resize', handleResize);
     document.addEventListener('click', handleGlobalClick, true);
-    document.addEventListener('keydown', handleKeydown);
+    // Use capture phase to catch Enter before React's handlers
+    document.addEventListener('keydown', handleKeydown, true);
 
     console.log('Formatter: Feature loaded');
   }
@@ -68,7 +69,7 @@ const FormatterFeature = (() => {
     window.removeEventListener('scroll', handleScroll, true);
     window.removeEventListener('resize', handleResize);
     document.removeEventListener('click', handleGlobalClick, true);
-    document.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener('keydown', handleKeydown, true);
 
     // Remove injected CSS
     if (styleElement) {
@@ -378,13 +379,13 @@ const FormatterFeature = (() => {
         field.setSelectionRange(newCursorPos, newCursorPos);
       }
 
-      // Trigger change events
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-      field.dispatchEvent(new Event('change', { bubbles: true }));
-
+      // Trigger change events using native setter
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
       nativeInputValueSetter.call(field, field.value);
-      field.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Dispatch only input event (not change to avoid breaking React state)
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(inputEvent);
 
       return true; // Handled
     }
@@ -421,13 +422,13 @@ const FormatterFeature = (() => {
         field.setSelectionRange(newCursorPos, newCursorPos);
       }
 
-      // Trigger change events
-      field.dispatchEvent(new Event('input', { bubbles: true }));
-      field.dispatchEvent(new Event('change', { bubbles: true }));
-
+      // Trigger change events using native setter
       const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
       nativeInputValueSetter.call(field, field.value);
-      field.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Dispatch only input event (not change to avoid breaking React state)
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(inputEvent);
 
       return true; // Handled
     }
