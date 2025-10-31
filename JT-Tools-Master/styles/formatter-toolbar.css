@@ -302,3 +302,50 @@
 .jt-alert-btn {
   font-size: 16px;
 }
+
+/* Compact Toolbar for Sidebars */
+.jt-formatter-toolbar.jt-formatter-compact {
+  padding: 4px 6px;
+  gap: 4px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.jt-formatter-compact button {
+  padding: 6px 8px;
+  min-width: 28px;
+  font-size: 12px;
+}
+
+.jt-formatter-compact button strong,
+.jt-formatter-compact button em,
+.jt-formatter-compact button u,
+.jt-formatter-compact button s {
+  font-size: 12px;
+}
+
+.jt-formatter-compact .jt-dropdown-menu {
+  min-width: 100px;
+  font-size: 12px;
+  padding: 3px;
+}
+
+.jt-formatter-compact .jt-dropdown-menu button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.jt-formatter-compact .jt-color-dropdown {
+  padding: 3px;
+  gap: 3px;
+}
+
+.jt-formatter-compact .jt-color-option {
+  min-width: 26px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.jt-formatter-compact .jt-toolbar-divider {
+  margin: 0 2px;
+}
