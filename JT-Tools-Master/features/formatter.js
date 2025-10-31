@@ -507,8 +507,9 @@ const FormatterFeature = (() => {
       <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
     </div>
   `;
+    }
 
-    // Setup dropdown handlers
+    // Setup dropdown handlers for BOTH compact and full toolbars
     setupDropdowns(toolbar);
     setupColorPicker(toolbar);
     setupFormatButtons(toolbar, field);
