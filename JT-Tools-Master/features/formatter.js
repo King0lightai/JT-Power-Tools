@@ -837,22 +837,22 @@ const FormatterFeature = (() => {
 
     switch(format) {
       case 'bold':
-        replacement = hasSelection ? `*${selection}*` : '*text*';
+        replacement = hasSelection ? `*${selection}*` : '**';
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
 
       case 'italic':
-        replacement = hasSelection ? `^${selection}^` : '^text^';
+        replacement = hasSelection ? `^${selection}^` : '^^';
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
 
       case 'underline':
-        replacement = hasSelection ? `_${selection}_` : '_text_';
+        replacement = hasSelection ? `_${selection}_` : '__';
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
 
       case 'strikethrough':
-        replacement = hasSelection ? `~${selection}~` : '~text~';
+        replacement = hasSelection ? `~${selection}~` : '~~';
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
 
@@ -887,7 +887,7 @@ const FormatterFeature = (() => {
         if (hasSelection) {
           replacement = selection.split('\n').map(line => `- ${line}`).join('\n');
         } else {
-          replacement = '- Item';
+          replacement = '- ';
         }
         cursorPos = hasSelection ? start + replacement.length : start + 2;
         break;
@@ -896,7 +896,7 @@ const FormatterFeature = (() => {
         if (hasSelection) {
           replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
         } else {
-          replacement = '1. Item';
+          replacement = '1. ';
         }
         cursorPos = hasSelection ? start + replacement.length : start + 3;
         break;
@@ -954,12 +954,51 @@ const FormatterFeature = (() => {
         const existingColorMatch = cLineBefore.match(/\[!color:\w+\]\s*/);
 
         if (existingColorMatch) {
-          before = text.substring(0, cLineStart + cLineBefore.indexOf(existingColorMatch[0]));
-          replacement = `[!color:${color}] ${hasSelection ? selection : 'Your text here'}`;
-          const afterColorStart = cLineStart + cLineBefore.indexOf(existingColorMatch[0]) + existingColorMatch[0].length;
-          after = text.substring(hasSelection ? end : afterColorStart);
+          // Found existing color formatting on this line
+          const colorTagStart = cLineStart + cLineBefore.indexOf(existingColorMatch[0]);
+          const colorTagEnd = colorTagStart + existingColorMatch[0].length;
+
+          // Extract the existing text after the color tag (up to end of line or selection end)
+          const lineEnd = text.indexOf('\n', colorTagEnd);
+          const existingTextEnd = lineEnd === -1 ? text.length : lineEnd;
+          const existingText = text.substring(colorTagEnd, hasSelection ? end : existingTextEnd).trim();
+
+          // Determine what text to use
+          let textToUse;
+          if (hasSelection) {
+            // User has selection, use that
+            textToUse = selection;
+          } else if (existingText && existingText !== 'Your text here') {
+            // Reuse existing meaningful content (not placeholder)
+            textToUse = existingText;
+          } else {
+            // No meaningful content, use minimal placeholder
+            textToUse = 'text';
+          }
+
+          // Replace the color tag and content
+          before = text.substring(0, colorTagStart);
+          replacement = `[!color:${color}] ${textToUse}`;
+          after = text.substring(hasSelection ? end : existingTextEnd);
         } else {
-          replacement = hasSelection ? `[!color:${color}] ${selection}` : `[!color:${color}] Your text here`;
+          // No existing color on this line
+          if (hasSelection) {
+            replacement = `[!color:${color}] ${selection}`;
+          } else {
+            // Check if cursor is on a line with content
+            const lineEnd = text.indexOf('\n', start);
+            const lineText = text.substring(cLineStart, lineEnd === -1 ? text.length : lineEnd).trim();
+
+            if (lineText.length > 0) {
+              // There's content on this line, just add color tag at start
+              replacement = `[!color:${color}] ${lineText}`;
+              before = text.substring(0, cLineStart);
+              after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+            } else {
+              // Empty line, use minimal placeholder
+              replacement = `[!color:${color}] text`;
+            }
+          }
         }
         cursorPos = before.length + `[!color:${color}] `.length;
         break;
