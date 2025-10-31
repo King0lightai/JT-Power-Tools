@@ -19,16 +19,18 @@
   "content_scripts": [
     {
       "matches": ["https://*.jobtread.com/*"],
-      "js": ["content.js"],
+      "js": [
+        "features/drag-drop.js",
+        "features/contrast-fix.js",
+        "features/formatter.js",
+        "content.js"
+      ],
       "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "features/drag-drop.js",
-        "features/contrast-fix.js",
-        "features/formatter.js",
         "styles/formatter-toolbar.css"
       ],
       "matches": ["https://*.jobtread.com/*"]
