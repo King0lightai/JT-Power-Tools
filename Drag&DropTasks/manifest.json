@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "JobTread Schedule Contrast Fix",
+  "version": "1.0",
+  "description": "Automatically adjusts text color in JobTread schedule view for better readability",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["https://*.jobtread.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
