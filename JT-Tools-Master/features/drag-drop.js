@@ -148,12 +148,12 @@ const DragDropFeature = (() => {
   }
 
   // Check if a cell is a weekend
-  function isWeekendCell(cell) {
-    const dateInfo = extractFullDateInfo(cell);
+  function isWeekendCell(cell, providedDateInfo = null) {
+    const dateInfo = providedDateInfo || extractFullDateInfo(cell);
     if (!dateInfo || !dateInfo.day || !dateInfo.month) return false;
 
-    // Get current year
-    const currentYear = new Date().getFullYear();
+    // Use the year from dateInfo (which now includes year from extraction)
+    const year = dateInfo.year || new Date().getFullYear();
 
     // Parse the date
     const monthMap = {
@@ -164,7 +164,7 @@ const DragDropFeature = (() => {
     const monthIndex = monthMap[dateInfo.month];
     if (monthIndex === undefined) return false;
 
-    const date = new Date(currentYear, monthIndex, parseInt(dateInfo.day));
+    const date = new Date(year, monthIndex, parseInt(dateInfo.day));
     const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
 
     return dayOfWeek === 0 || dayOfWeek === 6;
@@ -172,14 +172,14 @@ const DragDropFeature = (() => {
 
   // Adjust date to skip weekends (move to next Monday)
   function adjustDateToSkipWeekend(dateInfo) {
-    const currentYear = new Date().getFullYear();
+    const year = dateInfo.year || new Date().getFullYear();
     const monthMap = {
       'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
       'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
     };
 
     const monthIndex = monthMap[dateInfo.month];
-    const date = new Date(currentYear, monthIndex, parseInt(dateInfo.day));
+    const date = new Date(year, monthIndex, parseInt(dateInfo.day));
     const dayOfWeek = date.getDay();
 
     // If Saturday (6), add 2 days to get to Monday
@@ -190,14 +190,15 @@ const DragDropFeature = (() => {
       date.setDate(date.getDate() + 1);
     }
 
-    // Convert back to month abbrev and day
+    // Convert back to month abbrev and day (year may have changed)
     const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     return {
       day: date.getDate().toString(),
       month: monthAbbrev[date.getMonth()],
-      fullDisplay: `${monthAbbrev[date.getMonth()]} ${date.getDate()}`
+      year: date.getFullYear(),
+      fullDisplay: `${monthAbbrev[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
     };
   }
 
@@ -275,18 +276,40 @@ const DragDropFeature = (() => {
       }
 
       let dateInfo = extractFullDateInfo(targetCell);
+      const sourceDateInfo = extractFullDateInfo(originalCell);
 
       if (dateInfo) {
+        // Handle year transitions when dragging between months
+        if (sourceDateInfo && sourceDateInfo.month && dateInfo.month) {
+          const monthMap = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          };
+          const sourceMonth = monthMap[sourceDateInfo.month];
+          const targetMonth = monthMap[dateInfo.month];
+
+          // If dragging from December to January, increment year
+          if (sourceMonth === 11 && targetMonth === 0) {
+            dateInfo.year = sourceDateInfo.year + 1;
+            console.log('DragDrop: Year transition detected (Dec → Jan), year:', dateInfo.year);
+          }
+          // If dragging from January to December, decrement year
+          else if (sourceMonth === 0 && targetMonth === 11) {
+            dateInfo.year = sourceDateInfo.year - 1;
+            console.log('DragDrop: Year transition detected (Jan → Dec), year:', dateInfo.year);
+          }
+        }
+
         // Check Shift key at drop time (OR the state captured at drag start)
         const isShiftPressed = e.shiftKey || shiftKeyAtDragStart;
         console.log('DragDrop: Drop - Shift at drop:', e.shiftKey, 'Shift at start:', shiftKeyAtDragStart);
 
         // Check if dropping on weekend and Shift is NOT pressed
-        if (!isShiftPressed && isWeekendCell(targetCell)) {
+        if (!isShiftPressed && isWeekendCell(targetCell, dateInfo)) {
           console.log('DragDrop: Weekend detected, auto-skipping to Monday');
           dateInfo = adjustDateToSkipWeekend(dateInfo);
           showNotification('Weekend detected - moved to Monday');
-        } else if (isShiftPressed && isWeekendCell(targetCell)) {
+        } else if (isShiftPressed && isWeekendCell(targetCell, dateInfo)) {
           console.log('DragDrop: Shift held - allowing weekend drop');
         }
 
@@ -326,6 +349,7 @@ const DragDropFeature = (() => {
                         'July', 'August', 'September', 'October', 'November', 'December'];
 
     let month = null;
+    let year = null;
 
     // Search for month marker in table
     const table = cell.closest('table');
@@ -340,6 +364,14 @@ const DragDropFeature = (() => {
 
         for (const div of boldDivs) {
           const text = div.textContent.trim();
+
+          // Check for year (4 digits)
+          const yearMatch = text.match(/\b(20\d{2})\b/);
+          if (yearMatch) {
+            year = parseInt(yearMatch[1]);
+          }
+
+          // Check for month name
           for (let m = 0; m < monthNames.length; m++) {
             if (text === monthNames[m]) {
               month = monthAbbrev[m];
@@ -352,22 +384,25 @@ const DragDropFeature = (() => {
       }
     }
 
-    // Fallback to current month
-    if (!month) {
+    // Fallback to current month and year
+    if (!month || !year) {
       const now = new Date();
-      month = monthAbbrev[now.getMonth()];
+      if (!month) month = monthAbbrev[now.getMonth()];
+      if (!year) year = now.getFullYear();
     }
 
     return {
       day: dateNumber,
       month: month,
+      year: year,
       monthYear: month,
-      fullDisplay: `${month} ${dateNumber}`
+      fullDisplay: `${month} ${dateNumber}, ${year}`
     };
   }
 
   function formatDateForInput(dateInfo) {
     let month = dateInfo.month || '';
+    let year = dateInfo.year;
 
     if (!month) {
       const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -376,7 +411,12 @@ const DragDropFeature = (() => {
       month = monthAbbrev[now.getMonth()];
     }
 
-    return `${month} ${dateInfo.day}`;
+    if (!year) {
+      year = new Date().getFullYear();
+    }
+
+    // Include year in the format for cross-year drag operations
+    return `${month} ${dateInfo.day}, ${year}`;
   }
 
   function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo = null) {
