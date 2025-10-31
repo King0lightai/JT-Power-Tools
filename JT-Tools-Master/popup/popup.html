@@ -15,11 +15,11 @@
 
     <div class="features-list">
       <!-- Feature 1: Drag & Drop -->
-      <div class="feature-item">
+      <div class="feature-item" id="dragDropFeature">
         <div class="feature-info">
           <div class="feature-icon">📅</div>
           <div class="feature-details">
-            <h3>Schedule Drag & Drop</h3>
+            <h3>Schedule Drag & Drop <span class="premium-badge">⭐ PREMIUM</span></h3>
             <p>Move schedule items between dates</p>
           </div>
         </div>
@@ -60,6 +60,21 @@
       </div>
     </div>
 
+    <!-- Premium License Section -->
+    <div class="premium-section">
+      <h2>🔐 Premium License</h2>
+      <div id="licenseStatus" class="license-status">
+        <p class="status-text"></p>
+      </div>
+      <div class="license-input-group">
+        <input type="text" id="licenseKey" placeholder="Enter your license key" class="license-input">
+        <button id="verifyBtn" class="verify-btn">Verify</button>
+      </div>
+      <p class="license-info">
+        Don't have a license? <a href="https://gumroad.com" target="_blank">Get one here</a>
+      </p>
+    </div>
+
     <div class="actions">
       <button id="refreshBtn" class="refresh-btn">
         <span class="btn-icon">🔄</span>
@@ -73,6 +88,7 @@
     </footer>
   </div>
 
+  <script src="../services/license.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

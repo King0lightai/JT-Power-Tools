@@ -8,7 +8,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "https://*.jobtread.com/*"
+    "https://*.jobtread.com/*",
+    "https://api.gumroad.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html"
