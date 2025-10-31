@@ -19,18 +19,15 @@ async function checkLicenseStatus() {
     statusText.textContent = `✓ Premium Active (${licenseData.purchaseEmail})`;
     dragDropFeature.classList.remove('locked');
     dragDropCheckbox.disabled = false;
+    return true; // Has license
   } else {
     // No license or invalid
     licenseStatus.className = 'license-status inactive';
     statusText.textContent = '✗ Premium Not Active';
     dragDropFeature.classList.add('locked');
     dragDropCheckbox.disabled = true;
-    dragDropCheckbox.checked = false;
-
-    // Force save settings with drag-drop disabled
-    const settings = getCurrentSettings();
-    settings.dragDrop = false;
-    await chrome.storage.sync.set({ jtToolsSettings: settings });
+    // Don't change checked state here - let loadSettings handle it
+    return false; // No license
   }
 }
 
@@ -178,11 +175,21 @@ async function refreshCurrentTab() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT-Tools popup loaded');
 
-  // Check license status first
-  await checkLicenseStatus();
+  // Check license status first (just UI, don't modify settings)
+  const hasLicense = await checkLicenseStatus();
 
-  // Load current settings
+  // Load current settings and update UI
   await loadSettings();
+
+  // If no license, ensure drag-drop stays disabled
+  if (!hasLicense) {
+    const settings = await chrome.storage.sync.get(['jtToolsSettings']);
+    if (settings.jtToolsSettings && settings.jtToolsSettings.dragDrop) {
+      // User had it enabled but license expired/removed
+      const updatedSettings = { ...settings.jtToolsSettings, dragDrop: false };
+      await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
+    }
+  }
 
   // Listen for license verification
   document.getElementById('verifyBtn').addEventListener('click', verifyLicenseKey);
@@ -198,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const checkboxes = document.querySelectorAll('input[type="checkbox"]');
   checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', async () => {
+      console.log('Checkbox changed:', checkbox.id, checkbox.checked);
       const settings = getCurrentSettings();
       await saveSettings(settings);
     });
