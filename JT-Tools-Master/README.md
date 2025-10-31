@@ -1,4 +1,4 @@
-# 🛠️ JT-Tools Master Suite
+# ⚡ JT Power Tools
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
 
@@ -46,7 +46,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to any JobTread page (`*.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT-Tools control panel with three toggle switches
+3. You'll see the JT Power Tools control panel with three toggle switches
 
 ### Toggling Features
 
@@ -199,7 +199,7 @@ const featureModules = {
 
 1. Make changes to your code
 2. Go to `chrome://extensions`
-3. Click the **Reload** button on the JT-Tools extension
+3. Click the **Reload** button on the JT Power Tools extension
 4. Test on JobTread
 
 ### Debugging

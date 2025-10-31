@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "JT-Tools Master Suite",
+  "name": "JT Power Tools",
   "version": "1.0.0",
   "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, and Budget Formatter with toggle controls",
   "permissions": [

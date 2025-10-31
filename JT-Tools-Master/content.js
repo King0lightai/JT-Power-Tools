@@ -1,7 +1,7 @@
-// JT-Tools Master Suite - Content Script Orchestrator
+// JT Power Tools - Content Script Orchestrator
 // Manages loading and unloading of feature modules based on user settings
 
-console.log('JT-Tools Master Suite: Content script loaded');
+console.log('JT Power Tools: Content script loaded');
 
 // Feature module registry
 const featureModules = {
@@ -191,8 +191,8 @@ async function waitForFeatures(maxAttempts = 100, delayMs = 150) {
   if (featuresReady) {
     // Initialize all enabled features
     initializeAllFeatures();
-    console.log('JT-Tools Master Suite: Ready!');
+    console.log('JT Power Tools: Ready!');
   } else {
-    console.error('JT-Tools Master Suite: Failed to initialize - features not loaded');
+    console.error('JT Power Tools: Failed to initialize - features not loaded');
   }
 })();

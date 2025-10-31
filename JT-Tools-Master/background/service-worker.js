@@ -7,7 +7,7 @@ const defaultSettings = {
 
 // Initialize extension on install
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('JT-Tools Master Suite installed:', details.reason);
+  console.log('JT Power Tools installed:', details.reason);
 
   // Set default settings on fresh install
   if (details.reason === 'install') {
@@ -74,4 +74,4 @@ async function getSettings() {
   return result.jtToolsSettings || defaultSettings;
 }
 
-console.log('JT-Tools Master Suite background service worker loaded');
+console.log('JT Power Tools background service worker loaded');
