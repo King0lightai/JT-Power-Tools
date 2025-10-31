@@ -3,7 +3,7 @@
 
 const LicenseService = (() => {
   // Your Gumroad product permalink (you'll need to set this)
-  const PRODUCT_PERMALINK = 'YOUR_PRODUCT_PERMALINK'; // e.g., 'jt-tools'
+  const PRODUCT_PERMALINK = 'jtpowertools'; // e.g., 'jt-tools'
 
   // Verify license key with Gumroad API
   async function verifyLicense(licenseKey) {
