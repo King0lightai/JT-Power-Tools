@@ -904,11 +904,9 @@ const FormatterFeature = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Set cursor position
-    field.setSelectionRange(newCursorPos, newCursorPos);
-
     // Dispatch event with React-compatible timing and error handling
-    dispatchReactSafeEvent(field);
+    // Also handle cursor positioning in the delayed context to avoid triggering React early
+    dispatchReactSafeEvent(field, newCursorPos);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1154,41 +1152,60 @@ const FormatterFeature = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, before + replacement + after);
 
-    // Set cursor position
-    field.setSelectionRange(cursorPos, cursorPos);
-
     // Dispatch event with React-compatible timing and error handling
-    dispatchReactSafeEvent(field);
+    // Also handle cursor positioning in the delayed context to avoid triggering React early
+    dispatchReactSafeEvent(field, cursorPos);
   }
 
   // Helper function to dispatch events in a React-safe way
-  function dispatchReactSafeEvent(field) {
-    // Use requestAnimationFrame to defer the event until after React's render cycle
+  function dispatchReactSafeEvent(field, cursorPos = null) {
+    // Use multiple animation frames + setTimeout to ensure React has fully settled
+    // This gives React time to complete its internal state updates
     requestAnimationFrame(() => {
-      try {
-        // Create a more complete InputEvent for better React compatibility
-        const inputEvent = new InputEvent('input', {
-          bubbles: true,
-          cancelable: false,
-          composed: true,
-          data: null,
-          dataTransfer: null,
-          inputType: 'insertText',
-          isComposing: false
-        });
+      requestAnimationFrame(() => {
+        // Add a small additional delay to be extra safe with React's update cycle
+        setTimeout(() => {
+          try {
+            // Verify field still exists in DOM
+            if (!document.body.contains(field)) {
+              console.log('Formatter: Field removed from DOM, skipping event dispatch');
+              return;
+            }
 
-        field.dispatchEvent(inputEvent);
+            // Set cursor position now that React has settled
+            if (cursorPos !== null) {
+              field.setSelectionRange(cursorPos, cursorPos);
+            }
 
-        // Also dispatch a change event for good measure
-        const changeEvent = new Event('change', {
-          bubbles: true,
-          cancelable: false
-        });
-        field.dispatchEvent(changeEvent);
-      } catch (error) {
-        // If dispatching fails (rare), silently log and continue
-        console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
-      }
+            // Create a more complete InputEvent for better React compatibility
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: false,
+              composed: true,
+              data: null,
+              dataTransfer: null,
+              inputType: 'insertText',
+              isComposing: false
+            });
+
+            field.dispatchEvent(inputEvent);
+
+            // Also dispatch a change event after a tiny delay
+            setTimeout(() => {
+              if (document.body.contains(field)) {
+                const changeEvent = new Event('change', {
+                  bubbles: true,
+                  cancelable: false
+                });
+                field.dispatchEvent(changeEvent);
+              }
+            }, 10);
+          } catch (error) {
+            // If dispatching fails, silently log and continue
+            console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
+          }
+        }, 50); // 50ms delay to let React settle
+      });
     });
   }
 
