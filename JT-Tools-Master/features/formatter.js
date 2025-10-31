@@ -682,8 +682,10 @@ const FormatterFeature = (() => {
         activeFormats.strikethrough = true;
       }
 
-      // Check for color
-      const colorMatch = before.match(/\[!color:(\w+)\]\s*$/);
+      // Check for color (look for color tag at start of line)
+      const selLineStart = before.lastIndexOf('\n') + 1;
+      const beforeSelection = text.substring(selLineStart, start);
+      const colorMatch = beforeSelection.match(/^\[!color:(\w+)\]/);
       if (colorMatch) {
         activeFormats.color = colorMatch[1];
       }
@@ -719,10 +721,11 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Check for color at line start
-      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-      const lineText = text.substring(lineStart, start);
-      const colorMatch = lineText.match(/\[!color:(\w+)\]/);
+      // Check for color at line start (check full line, not just up to cursor)
+      const curLineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const curLineEnd = text.indexOf('\n', start);
+      const fullLineText = text.substring(curLineStart, curLineEnd === -1 ? text.length : curLineEnd);
+      const colorMatch = fullLineText.match(/^\[!color:(\w+)\]/);
       if (colorMatch) {
         activeFormats.color = colorMatch[1];
       }
@@ -867,6 +870,7 @@ const FormatterFeature = (() => {
         const lineEnd = lineText.indexOf('\n');
         const fullLine = lineEnd === -1 ? lineText : lineText.substring(0, lineEnd);
 
+        // Match color tag at the beginning of the line
         const colorMatch = fullLine.match(/^\[!color:\w+\]\s*/);
         if (colorMatch) {
           const beforeLine = text.substring(0, lineStart);
@@ -874,6 +878,8 @@ const FormatterFeature = (() => {
           newText = beforeLine + afterMatch;
           newCursorPos = lineStart;
         } else {
+          // No color tag found on this line, nothing to remove
+          console.log('Formatter: No color formatting found to remove on this line');
           return;
         }
         break;
@@ -901,9 +907,8 @@ const FormatterFeature = (() => {
     // Set cursor position
     field.setSelectionRange(newCursorPos, newCursorPos);
 
-    // Dispatch single input event (avoid breaking React state with multiple events)
-    const inputEvent = new Event('input', { bubbles: true });
-    field.dispatchEvent(inputEvent);
+    // Dispatch event with React-compatible timing and error handling
+    dispatchReactSafeEvent(field);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1152,9 +1157,39 @@ const FormatterFeature = (() => {
     // Set cursor position
     field.setSelectionRange(cursorPos, cursorPos);
 
-    // Dispatch single input event (avoid breaking React state with multiple events)
-    const inputEvent = new Event('input', { bubbles: true });
-    field.dispatchEvent(inputEvent);
+    // Dispatch event with React-compatible timing and error handling
+    dispatchReactSafeEvent(field);
+  }
+
+  // Helper function to dispatch events in a React-safe way
+  function dispatchReactSafeEvent(field) {
+    // Use requestAnimationFrame to defer the event until after React's render cycle
+    requestAnimationFrame(() => {
+      try {
+        // Create a more complete InputEvent for better React compatibility
+        const inputEvent = new InputEvent('input', {
+          bubbles: true,
+          cancelable: false,
+          composed: true,
+          data: null,
+          dataTransfer: null,
+          inputType: 'insertText',
+          isComposing: false
+        });
+
+        field.dispatchEvent(inputEvent);
+
+        // Also dispatch a change event for good measure
+        const changeEvent = new Event('change', {
+          bubbles: true,
+          cancelable: false
+        });
+        field.dispatchEvent(changeEvent);
+      } catch (error) {
+        // If dispatching fails (rare), silently log and continue
+        console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
+      }
+    });
   }
 
   // Public API
