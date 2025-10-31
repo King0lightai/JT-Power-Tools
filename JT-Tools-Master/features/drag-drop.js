@@ -184,7 +184,8 @@ const DragDropFeature = (() => {
       if (targetDate) {
         attemptDateChange(draggedElement, targetDate, targetCell);
       } else {
-        alert('Could not determine target date. Please try manually updating the item.');
+        console.log('DragDrop: Could not determine target date');
+        showNotification('Could not determine target date. Please try manually.');
       }
     }
 
@@ -270,7 +271,7 @@ const DragDropFeature = (() => {
   function attemptDateChange(element, newDateNumber, targetCell) {
     const dateInfo = extractFullDateInfo(targetCell);
 
-    // Inject CSS to hide sidebar - more specific to avoid hiding calendar
+    // Inject CSS to hide sidebar behind the calendar
     const hideStyle = document.createElement('style');
     hideStyle.id = 'jt-hide-sidebar-temp';
     hideStyle.textContent = `
@@ -278,7 +279,9 @@ const DragDropFeature = (() => {
             opacity: 0 !important;
             visibility: hidden !important;
             position: fixed !important;
-            left: -9999px !important;
+            z-index: -9999 !important;
+            pointer-events: none !important;
+            transform: translateX(-9999px) !important;
         }
     `;
     document.head.appendChild(hideStyle);
@@ -317,7 +320,7 @@ const DragDropFeature = (() => {
 
         if (startDateParent) {
           const formattedDate = formatDateForInput(dateInfo);
-          showNotification(`Automatically typing date: ${formattedDate}...`);
+          console.log('DragDrop: Formatting date:', formattedDate);
 
           startDateParent.click();
 
@@ -353,12 +356,11 @@ const DragDropFeature = (() => {
               inputField.dispatchEvent(new Event('change', { bubbles: true }));
               inputField.dispatchEvent(new Event('blur', { bubbles: true }));
 
+              console.log('DragDrop: Date change events dispatched');
+
               setTimeout(() => {
-                showNotification(`✓ Date changed to ${formattedDate}!`);
-                setTimeout(() => {
-                  closeSidebar(failsafeTimeout);
-                }, 500);
-              }, 300);
+                closeSidebar(failsafeTimeout);
+              }, 500);
             } else {
               console.log('DragDrop: Could not find input field');
               showNotification('Could not find date input field. Please try manually.');
@@ -370,13 +372,13 @@ const DragDropFeature = (() => {
           }, 400);
         } else {
           console.log('DragDrop: Could not find start date field');
-          alert('Could not find the start date field. Please update manually.');
+          showNotification('Could not find date field. Please update manually.');
           // Cleanup CSS
           closeSidebar(failsafeTimeout);
         }
       } else {
         console.log('DragDrop: Sidebar did not open');
-        alert('Task sidebar did not open. Try clicking the item manually.');
+        showNotification('Sidebar did not open. Please try manually.');
         // Cleanup CSS
         closeSidebar(failsafeTimeout);
       }
@@ -413,8 +415,7 @@ const DragDropFeature = (() => {
         }
       }
 
-      console.log('DragDrop: Could not find Close button');
-      showNotification('Date changed! Please close the sidebar manually.');
+      console.log('DragDrop: Could not find Close button, sidebar will remain open');
     } else {
       console.log('DragDrop: Sidebar not found during close');
     }
