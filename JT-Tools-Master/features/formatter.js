@@ -297,6 +297,13 @@ const FormatterFeature = (() => {
     // Only apply to formatter fields (Description or Notes)
     if (!isFormatterField(field)) return;
 
+    // Handle Enter key for auto-numbering
+    if (e.key === 'Enter') {
+      const handled = handleEnterKey(field, e);
+      if (handled) return;
+    }
+
+    // Handle keyboard shortcuts (Ctrl/Cmd + B/I/U)
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const modifier = isMac ? e.metaKey : e.ctrlKey;
 
@@ -323,6 +330,101 @@ const FormatterFeature = (() => {
         updateToolbarState(field, activeToolbar);
       }
     }
+  }
+
+  // Handle Enter key for smart auto-numbering
+  function handleEnterKey(field, e) {
+    const start = field.selectionStart;
+    const text = field.value;
+
+    // Find the current line
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start);
+    const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+    // Check if current line is a numbered list item (e.g., "1. ", "2. Some text")
+    const numberedListMatch = currentLine.match(/^(\d+)\.\s+(.*)$/);
+
+    if (numberedListMatch) {
+      e.preventDefault();
+
+      const currentNumber = parseInt(numberedListMatch[1]);
+      const lineContent = numberedListMatch[2];
+
+      // If the line is empty (just the number), exit list mode
+      if (lineContent.trim() === '') {
+        // Remove the empty list item and exit
+        const before = text.substring(0, lineStart);
+        const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+
+        field.value = before + after;
+        field.setSelectionRange(lineStart, lineStart);
+      } else {
+        // Insert next number on new line
+        const nextNumber = currentNumber + 1;
+        const before = text.substring(0, start);
+        const after = text.substring(start);
+
+        const newText = `\n${nextNumber}. `;
+        field.value = before + newText + after;
+
+        // Position cursor after the new number
+        const newCursorPos = start + newText.length;
+        field.setSelectionRange(newCursorPos, newCursorPos);
+      }
+
+      // Trigger change events
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      nativeInputValueSetter.call(field, field.value);
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+
+      return true; // Handled
+    }
+
+    // Check for bullet lists too
+    const bulletListMatch = currentLine.match(/^-\s+(.*)$/);
+
+    if (bulletListMatch) {
+      e.preventDefault();
+
+      const lineContent = bulletListMatch[1];
+
+      // If the line is empty (just the bullet), exit list mode
+      if (lineContent.trim() === '') {
+        // Remove the empty list item and exit
+        const before = text.substring(0, lineStart);
+        const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+
+        field.value = before + after;
+        field.setSelectionRange(lineStart, lineStart);
+      } else {
+        // Insert new bullet on new line
+        const before = text.substring(0, start);
+        const after = text.substring(start);
+
+        const newText = `\n- `;
+        field.value = before + newText + after;
+
+        // Position cursor after the new bullet
+        const newCursorPos = start + newText.length;
+        field.setSelectionRange(newCursorPos, newCursorPos);
+      }
+
+      // Trigger change events
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      nativeInputValueSetter.call(field, field.value);
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+
+      return true; // Handled
+    }
+
+    return false; // Not handled, allow default Enter behavior
   }
 
   // Show/hide toolbar
