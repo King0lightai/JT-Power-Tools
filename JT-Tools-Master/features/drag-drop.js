@@ -6,7 +6,7 @@ const DragDropFeature = (() => {
   let draggedItemData = null;
   let observer = null;
   let isActive = false;
-  let isShiftKeyPressed = false; // Track Shift key state
+  let shiftKeyAtDragStart = false; // Track Shift at drag start
 
   // Initialize the feature
   function init() {
@@ -20,10 +20,6 @@ const DragDropFeature = (() => {
 
     // Inject weekend styling
     injectWeekendCSS();
-
-    // Track Shift key state
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
 
     // Initial setup
     setTimeout(() => {
@@ -63,10 +59,6 @@ const DragDropFeature = (() => {
     console.log('DragDrop: Cleaning up...');
     isActive = false;
 
-    // Remove key listeners
-    document.removeEventListener('keydown', handleKeyDown);
-    document.removeEventListener('keyup', handleKeyUp);
-
     // Disconnect observer
     if (observer) {
       observer.disconnect();
@@ -96,19 +88,6 @@ const DragDropFeature = (() => {
     }
 
     console.log('DragDrop: Cleanup complete');
-  }
-
-  // Key event handlers
-  function handleKeyDown(e) {
-    if (e.key === 'Shift') {
-      isShiftKeyPressed = true;
-    }
-  }
-
-  function handleKeyUp(e) {
-    if (e.key === 'Shift') {
-      isShiftKeyPressed = false;
-    }
   }
 
   // Inject CSS to grey out weekends
@@ -228,6 +207,10 @@ const DragDropFeature = (() => {
     this.style.cursor = 'grabbing';
     this.style.opacity = '0.5';
 
+    // Capture Shift key state at drag start
+    shiftKeyAtDragStart = e.shiftKey;
+    console.log('DragDrop: Drag started, Shift key:', shiftKeyAtDragStart);
+
     draggedItemData = {
       element: this,
       html: this.innerHTML,
@@ -294,11 +277,17 @@ const DragDropFeature = (() => {
       let dateInfo = extractFullDateInfo(targetCell);
 
       if (dateInfo) {
+        // Check Shift key at drop time (OR the state captured at drag start)
+        const isShiftPressed = e.shiftKey || shiftKeyAtDragStart;
+        console.log('DragDrop: Drop - Shift at drop:', e.shiftKey, 'Shift at start:', shiftKeyAtDragStart);
+
         // Check if dropping on weekend and Shift is NOT pressed
-        if (!isShiftKeyPressed && isWeekendCell(targetCell)) {
+        if (!isShiftPressed && isWeekendCell(targetCell)) {
           console.log('DragDrop: Weekend detected, auto-skipping to Monday');
           dateInfo = adjustDateToSkipWeekend(dateInfo);
           showNotification('Weekend detected - moved to Monday');
+        } else if (isShiftPressed && isWeekendCell(targetCell)) {
+          console.log('DragDrop: Shift held - allowing weekend drop');
         }
 
         attemptDateChange(draggedElement, dateInfo.day, targetCell, dateInfo);
@@ -307,6 +296,9 @@ const DragDropFeature = (() => {
         showNotification('Could not determine target date. Please try manually.');
       }
     }
+
+    // Reset shift state
+    shiftKeyAtDragStart = false;
 
     return false;
   }
