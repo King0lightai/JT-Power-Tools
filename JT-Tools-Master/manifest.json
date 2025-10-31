@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "JT-Tools Master Suite",
+  "version": "1.0.0",
+  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, and Budget Formatter with toggle controls",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.jobtread.com/*",
+    "https://api.gumroad.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.jobtread.com/*"],
+      "js": [
+        "features/drag-drop.js",
+        "features/contrast-fix.js",
+        "features/formatter.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "styles/formatter-toolbar.css"
+      ],
+      "matches": ["https://*.jobtread.com/*"]
+    }
+  ]
+}
