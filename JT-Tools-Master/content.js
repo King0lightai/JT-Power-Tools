@@ -19,6 +19,11 @@ const featureModules = {
     name: 'Formatter',
     feature: () => window.FormatterFeature,
     instance: null
+  },
+  darkMode: {
+    name: 'Dark Mode',
+    feature: () => window.DarkModeFeature,
+    instance: null
   }
 };
 
@@ -26,7 +31,8 @@ const featureModules = {
 let currentSettings = {
   dragDrop: true,
   contrastFix: true,
-  formatter: true
+  formatter: true,
+  darkMode: false
 };
 
 // Load settings from storage

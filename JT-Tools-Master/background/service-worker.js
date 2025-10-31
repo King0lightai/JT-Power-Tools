@@ -2,7 +2,8 @@
 const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
-  formatter: true
+  formatter: true,
+  darkMode: false
 };
 
 // Initialize extension on install
