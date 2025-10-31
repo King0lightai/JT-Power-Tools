@@ -271,10 +271,11 @@ const DragDropFeature = (() => {
   function attemptDateChange(element, newDateNumber, targetCell) {
     const dateInfo = extractFullDateInfo(targetCell);
 
-    // Inject CSS to hide sidebar behind the calendar
+    // Inject CSS to hide sidebar AND backdrop completely behind the calendar
     const hideStyle = document.createElement('style');
     hideStyle.id = 'jt-hide-sidebar-temp';
     hideStyle.textContent = `
+        /* Hide the sidebar completely */
         div.overflow-y-auto.overscroll-contain.sticky {
             opacity: 0 !important;
             visibility: hidden !important;
@@ -282,6 +283,18 @@ const DragDropFeature = (() => {
             z-index: -9999 !important;
             pointer-events: none !important;
             transform: translateX(-9999px) !important;
+            display: none !important;
+        }
+        /* Hide any backdrop/overlay */
+        div[class*="fixed"][class*="inset"] {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            z-index: -9999 !important;
+            pointer-events: none !important;
+        }
+        /* Hide any modal backgrounds */
+        div[style*="position: fixed"] {
+            z-index: -9999 !important;
         }
     `;
     document.head.appendChild(hideStyle);
@@ -321,6 +334,31 @@ const DragDropFeature = (() => {
         if (startDateParent) {
           const formattedDate = formatDateForInput(dateInfo);
           console.log('DragDrop: Formatting date:', formattedDate);
+
+          // Look for and check any "notify" or "update linked" checkboxes
+          const checkboxes = sidebar.querySelectorAll('input[type="checkbox"]');
+          console.log('DragDrop: Found', checkboxes.length, 'checkboxes in sidebar');
+
+          checkboxes.forEach((checkbox, index) => {
+            // Look for labels or nearby text to identify the checkbox
+            const label = checkbox.closest('label') || checkbox.parentElement;
+            const labelText = label ? label.textContent.toLowerCase() : '';
+
+            console.log(`DragDrop: Checkbox ${index}: "${labelText.substring(0, 50)}", checked=${checkbox.checked}`);
+
+            // Check for keywords that suggest this checkbox should be checked
+            const shouldCheck = labelText.includes('notify') ||
+                               labelText.includes('linked') ||
+                               labelText.includes('dependent') ||
+                               labelText.includes('update') ||
+                               labelText.includes('push') ||
+                               labelText.includes('move');
+
+            if (shouldCheck && !checkbox.checked) {
+              console.log('DragDrop: Checking checkbox:', labelText.substring(0, 50));
+              checkbox.click();
+            }
+          });
 
           startDateParent.click();
 
