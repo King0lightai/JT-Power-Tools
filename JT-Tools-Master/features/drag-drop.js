@@ -270,18 +270,27 @@ const DragDropFeature = (() => {
   function attemptDateChange(element, newDateNumber, targetCell) {
     const dateInfo = extractFullDateInfo(targetCell);
 
-    // Inject CSS to hide sidebar
+    // Inject CSS to hide sidebar - more specific to avoid hiding calendar
     const hideStyle = document.createElement('style');
     hideStyle.id = 'jt-hide-sidebar-temp';
     hideStyle.textContent = `
-        div.overflow-y-auto.overscroll-contain.sticky,
-        div.overflow-y-auto.overscroll-contain.sticky * {
+        div.overflow-y-auto.overscroll-contain.sticky {
             opacity: 0 !important;
             visibility: hidden !important;
-            pointer-events: none !important;
+            position: fixed !important;
+            left: -9999px !important;
         }
     `;
     document.head.appendChild(hideStyle);
+
+    // Failsafe: Remove CSS after 5 seconds no matter what
+    const failsafeTimeout = setTimeout(() => {
+      const style = document.getElementById('jt-hide-sidebar-temp');
+      if (style) {
+        style.remove();
+        console.log('DragDrop: Failsafe removed hiding CSS');
+      }
+    }, 5000);
 
     // Click to open sidebar
     element.click();
@@ -291,19 +300,7 @@ const DragDropFeature = (() => {
       const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
       if (sidebar) {
-        // Hide sidebar completely
-        sidebar.style.setProperty('opacity', '0', 'important');
-        sidebar.style.setProperty('visibility', 'hidden', 'important');
-        sidebar.style.setProperty('pointer-events', 'none', 'important');
-
-        let parent = sidebar.parentElement;
-        let depth = 0;
-        while (parent && depth < 3) {
-          parent.style.setProperty('opacity', '0', 'important');
-          parent.style.setProperty('visibility', 'hidden', 'important');
-          parent = parent.parentElement;
-          depth++;
-        }
+        console.log('DragDrop: Sidebar found, processing date change...');
 
         // Find start date field
         const allDateFields = sidebar.querySelectorAll('div.text-gray-700.truncate.leading-tight');
@@ -359,23 +356,49 @@ const DragDropFeature = (() => {
               setTimeout(() => {
                 showNotification(`✓ Date changed to ${formattedDate}!`);
                 setTimeout(() => {
-                  closeSidebar();
+                  closeSidebar(failsafeTimeout);
                 }, 500);
               }, 300);
             } else {
+              console.log('DragDrop: Could not find input field');
               showNotification('Could not find date input field. Please try manually.');
+              // Cleanup CSS even on error
+              setTimeout(() => {
+                closeSidebar(failsafeTimeout);
+              }, 500);
             }
           }, 400);
         } else {
+          console.log('DragDrop: Could not find start date field');
           alert('Could not find the start date field. Please update manually.');
+          // Cleanup CSS
+          closeSidebar(failsafeTimeout);
         }
       } else {
+        console.log('DragDrop: Sidebar did not open');
         alert('Task sidebar did not open. Try clicking the item manually.');
+        // Cleanup CSS
+        closeSidebar(failsafeTimeout);
       }
     }, 500);
   }
 
-  function closeSidebar() {
+  function closeSidebar(failsafeTimeout) {
+    console.log('DragDrop: Attempting to close sidebar...');
+
+    // Clear the failsafe timeout since we're handling cleanup now
+    if (failsafeTimeout) {
+      clearTimeout(failsafeTimeout);
+      console.log('DragDrop: Cleared failsafe timeout');
+    }
+
+    // Always remove the hiding CSS immediately
+    const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+    if (hideStyle) {
+      hideStyle.remove();
+      console.log('DragDrop: Removed hiding CSS');
+    }
+
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
     if (sidebar) {
@@ -384,26 +407,16 @@ const DragDropFeature = (() => {
       for (const button of closeButtons) {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
+          console.log('DragDrop: Found and clicking Close button');
           button.click();
-
-          setTimeout(() => {
-            const hideStyle = document.getElementById('jt-hide-sidebar-temp');
-            if (hideStyle) {
-              hideStyle.remove();
-            }
-          }, 100);
           return;
         }
       }
 
-      setTimeout(() => {
-        const hideStyle = document.getElementById('jt-hide-sidebar-temp');
-        if (hideStyle) {
-          hideStyle.remove();
-        }
-      }, 100);
-
+      console.log('DragDrop: Could not find Close button');
       showNotification('Date changed! Please close the sidebar manually.');
+    } else {
+      console.log('DragDrop: Sidebar not found during close');
     }
   }
 
