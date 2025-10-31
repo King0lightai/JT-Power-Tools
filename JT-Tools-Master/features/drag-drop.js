@@ -487,7 +487,7 @@ const DragDropFeature = (() => {
               hideStyle.remove();
               console.log('DragDrop: Removed hiding CSS after sidebar closed');
             }
-          }, 300); // Wait 300ms for sidebar close animation
+          }, 600); // Wait 600ms for sidebar close animation to fully complete
 
           return;
         }
@@ -500,7 +500,7 @@ const DragDropFeature = (() => {
         if (hideStyle) {
           hideStyle.remove();
         }
-      }, 300);
+      }, 600);
     } else {
       console.log('DragDrop: Sidebar not found during close');
       // Remove CSS anyway
