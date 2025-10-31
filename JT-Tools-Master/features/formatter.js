@@ -95,6 +95,13 @@ const FormatterFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
+  // Helper function to check if field is in a sidebar
+  function isInSidebar(field) {
+    // Check if field is inside the right sidebar container
+    const sidebar = field.closest('div.z-30.absolute.top-0.bottom-0.right-0');
+    return sidebar !== null;
+  }
+
   // Helper function to check if a textarea should have the formatter
   function isFormatterField(textarea) {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
@@ -338,6 +345,9 @@ const FormatterFeature = (() => {
       activeToolbar = null;
     }
 
+    // Check if we need compact version
+    const useCompact = isInSidebar(field);
+
     if (activeToolbar) {
       activeField = field;
       activeToolbar.style.display = 'flex';
@@ -346,7 +356,7 @@ const FormatterFeature = (() => {
       positionToolbar(activeToolbar, field);
       updateToolbarState(field, activeToolbar);
     } else {
-      const toolbar = createToolbar(field);
+      const toolbar = createToolbar(field, useCompact);
       positionToolbar(toolbar, field);
       updateToolbarState(field, toolbar);
       activeToolbar = toolbar;
@@ -367,10 +377,57 @@ const FormatterFeature = (() => {
     }
   }
 
-  function createToolbar(field) {
+  function createToolbar(field, useCompact = false) {
     const toolbar = document.createElement('div');
-    toolbar.className = 'jt-formatter-toolbar';
-    toolbar.innerHTML = `
+    toolbar.className = useCompact ? 'jt-formatter-toolbar jt-formatter-compact' : 'jt-formatter-toolbar';
+
+    // Compact version for sidebars - just essential buttons
+    if (useCompact) {
+      toolbar.innerHTML = `
+    <div class="jt-toolbar-group">
+      <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
+        <strong>B</strong>
+      </button>
+      <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
+        <em>I</em>
+      </button>
+      <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
+        <u>U</u>
+      </button>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-dropdown-group">
+      <button class="jt-dropdown-btn" title="More">
+        <span>+</span>
+      </button>
+      <div class="jt-dropdown-menu">
+        <button data-format="strikethrough" title="Strikethrough">~S~ Strike</button>
+        <button data-format="h1" title="Heading 1">H1</button>
+        <button data-format="h2" title="Heading 2">H2</button>
+        <button data-format="bullet" title="Bullet List">• List</button>
+        <button data-format="link" title="Insert Link">🔗 Link</button>
+      </div>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-color-group">
+      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
+        <span class="jt-color-icon">A</span>
+      </button>
+      <div class="jt-color-dropdown">
+        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+      </div>
+    </div>
+  `;
+    } else {
+      // Full version for Budget pages
+      toolbar.innerHTML = `
     <div class="jt-toolbar-group">
       <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
         <strong>B</strong>
