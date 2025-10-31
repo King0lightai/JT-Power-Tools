@@ -137,7 +137,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Wait for all features to be available on window
-async function waitForFeatures(maxAttempts = 50, delayMs = 100) {
+async function waitForFeatures(maxAttempts = 100, delayMs = 150) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const allAvailable = Object.values(featureModules).every(module => {
       const feature = module.feature();
@@ -149,11 +149,32 @@ async function waitForFeatures(maxAttempts = 50, delayMs = 100) {
       return true;
     }
 
-    console.log(`JT-Tools: Waiting for features... (attempt ${attempt + 1}/${maxAttempts})`);
+    // Only log every 10 attempts to reduce console spam
+    if (attempt % 10 === 0 || attempt < 5) {
+      console.log(`JT-Tools: Waiting for features... (attempt ${attempt + 1}/${maxAttempts})`);
+
+      // Log which features are missing
+      Object.entries(featureModules).forEach(([key, module]) => {
+        const feature = module.feature();
+        if (!feature) {
+          console.log(`  - ${module.name} not yet available`);
+        }
+      });
+    }
+
     await new Promise(resolve => setTimeout(resolve, delayMs));
   }
 
   console.error('JT-Tools: Timeout waiting for all features to load');
+
+  // Log which features failed to load
+  Object.entries(featureModules).forEach(([key, module]) => {
+    const feature = module.feature();
+    if (!feature) {
+      console.error(`  - ${module.name} FAILED to load`);
+    }
+  });
+
   return false;
 }
 
