@@ -326,6 +326,8 @@ const FormatterFeature = (() => {
 
     if (format) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       applyFormat(field, format);
       if (activeToolbar) {
         updateToolbarState(field, activeToolbar);
@@ -612,6 +614,7 @@ const FormatterFeature = (() => {
 
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const format = btn.dataset.format;
         const color = btn.dataset.color;
 
