@@ -894,17 +894,16 @@ const FormatterFeature = (() => {
         return;
     }
 
-    // Update field value
-    field.value = newText;
+    // Update field value using native setter to avoid React state issues
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, newText);
+
+    // Set cursor position
     field.setSelectionRange(newCursorPos, newCursorPos);
 
-    // Trigger change events
-    field.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-    field.dispatchEvent(new Event('change', { bubbles: true }));
-
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-    nativeInputValueSetter.call(field, field.value);
-    field.dispatchEvent(new Event('input', { bubbles: true }));
+    // Dispatch single input event (avoid breaking React state with multiple events)
+    const inputEvent = new Event('input', { bubbles: true });
+    field.dispatchEvent(inputEvent);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1146,19 +1145,16 @@ const FormatterFeature = (() => {
         return;
     }
 
-    // Update field value
-    field.value = before + replacement + after;
+    // Update field value using native setter to avoid React state issues
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, before + replacement + after);
 
     // Set cursor position
     field.setSelectionRange(cursorPos, cursorPos);
 
-    // Trigger change events
-    field.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true }));
-    field.dispatchEvent(new Event('change', { bubbles: true }));
-
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-    nativeInputValueSetter.call(field, field.value);
-    field.dispatchEvent(new Event('input', { bubbles: true }));
+    // Dispatch single input event (avoid breaking React state with multiple events)
+    const inputEvent = new Event('input', { bubbles: true });
+    field.dispatchEvent(inputEvent);
   }
 
   // Public API
