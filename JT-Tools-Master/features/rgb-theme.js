@@ -102,73 +102,253 @@ const CustomThemeFeature = (() => {
     return { h: h * 360, s: s * 100, l: l * 100 };
   }
 
-  // Calculate hue rotation needed from default blue to target color
-  function calculateHueRotation(targetColor) {
-    const defaultBlue = '#3B82F6'; // Default blue
+  // Generate color palette from base color (like dark mode does with grays)
+  function generatePalette(baseColor) {
+    const rgb = hexToRgb(baseColor);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-    const defaultRgb = hexToRgb(defaultBlue);
-    const targetRgb = hexToRgb(targetColor);
-
-    const defaultHsl = rgbToHsl(defaultRgb.r, defaultRgb.g, defaultRgb.b);
-    const targetHsl = rgbToHsl(targetRgb.r, targetRgb.g, targetRgb.b);
-
-    // Calculate the hue rotation needed
-    let rotation = targetHsl.h - defaultHsl.h;
-
-    // Normalize to -180 to 180 range for shortest rotation
-    if (rotation > 180) rotation -= 360;
-    if (rotation < -180) rotation += 360;
+    // Helper to create HSL color string
+    const makeColor = (hue, sat, light) => `hsl(${hue}, ${sat}%, ${light}%)`;
 
     return {
-      hueRotate: rotation,
-      saturate: targetHsl.s / defaultHsl.s,
-      brightness: targetHsl.l / defaultHsl.l
+      // Background colors (very light tints) - like dark mode's grays
+      bg_white: makeColor(hsl.h, Math.min(hsl.s * 0.1, 10), 99),        // Almost white with slight tint
+      bg_gray_50: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 97),     // Very light
+      bg_gray_100: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 95),     // Light
+      bg_gray_200: makeColor(hsl.h, Math.min(hsl.s * 0.25, 25), 92),    // Medium light
+      bg_slate_50: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 96),
+      bg_blue_50: makeColor(hsl.h, Math.min(hsl.s * 0.3, 30), 94),
+      bg_blue_100: makeColor(hsl.h, Math.min(hsl.s * 0.35, 35), 91),
+      bg_yellow_100: makeColor((hsl.h + 30) % 360, Math.min(hsl.s * 0.2, 20), 93),
+
+      // Text colors (dark shades with tint)
+      text_gray_500: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 45),
+      text_gray_600: makeColor(hsl.h, Math.min(hsl.s * 0.3, 30), 35),
+      text_gray_700: makeColor(hsl.h, Math.min(hsl.s * 0.4, 40), 25),
+      text_gray_800: makeColor(hsl.h, Math.min(hsl.s * 0.5, 50), 20),
+      text_gray_900: makeColor(hsl.h, Math.min(hsl.s * 0.6, 60), 15),
+      text_black: makeColor(hsl.h, Math.min(hsl.s * 0.7, 70), 10),
+
+      // Border colors
+      border: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 85),
+      border_dark: makeColor(hsl.h, Math.min(hsl.s * 0.25, 25), 75),
+
+      // Primary/accent (the actual chosen color)
+      primary: baseColor,
+      primary_light: makeColor(hsl.h, hsl.s, Math.min(hsl.l + 10, 90)),
+      primary_dark: makeColor(hsl.h, hsl.s, Math.max(hsl.l - 10, 10)),
+
+      // Schedule card backgrounds (with inline styles)
+      schedule_card_bg: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 96),
     };
   }
 
-  // Inject theme CSS with filter-based approach (like Dark Reader)
+  // Inject theme CSS following dark mode's selector pattern
   function injectThemeCSS() {
     if (styleElement) {
       styleElement.remove();
     }
 
-    const filters = calculateHueRotation(currentColor);
+    const palette = generatePalette(currentColor);
 
-    // Calculate adjustments
-    const hueRotate = filters.hueRotate;
-    const saturate = Math.max(0.5, Math.min(1.5, filters.saturate)); // Clamp between 0.5 and 1.5
-    const brightness = Math.max(0.85, Math.min(1.15, filters.brightness)); // Clamp between 0.85 and 1.15
-
-    // Create CSS with filter-based theming
+    // Create CSS using the same selectors as dark mode, but with custom colors
     const css = `
-      /* JT Tools - Custom Color Theme (Filter-based) */
+      /* === JT Power Tools - Custom Color Theme === */
+      /* Following dark mode's selector pattern with custom colors */
 
-      /* Apply hue rotation to the entire page */
-      html {
-        filter: hue-rotate(${hueRotate}deg) saturate(${saturate}) brightness(${brightness});
+      /* === Schedule Card Overrides (Inline Styles) === */
+      td div.cursor-pointer[style*="background-color"] {
+        background-color: ${palette.schedule_card_bg} !important;
       }
 
-      /* Restore images, videos, and media to their original colors */
-      img,
-      video,
-      canvas,
-      iframe,
-      [style*="background-image"],
-      picture {
-        filter: hue-rotate(${-hueRotate}deg) saturate(${1/saturate}) brightness(${1/brightness}) !important;
+      /* Keep colored left border visible */
+      td div.cursor-pointer[style*="border-left"] {
+        /* Border color preserved from inline style */
       }
 
-      /* Restore avatars and profile pictures */
-      [class*="avatar"],
-      [class*="profile"],
-      [alt*="avatar" i],
-      [alt*="profile" i],
-      [alt*="logo" i] {
-        filter: hue-rotate(${-hueRotate}deg) saturate(${1/saturate}) brightness(${1/brightness}) !important;
+      /* === General Styles === */
+      *, ::backdrop, ::file-selector-button, :after, :before {
+        border-color: ${palette.border};
       }
 
-      /* Optional: Fine-tune specific elements if needed */
-      /* This allows us to override specific cases where the global filter doesn't work well */
+      .border-transparent {
+        border-color: transparent;
+      }
+
+      .border-white {
+        border-color: ${palette.border};
+      }
+
+      /* === Background Colors === */
+      .bg-white {
+        background-color: ${palette.bg_white};
+      }
+
+      .bg-gray-50 {
+        background-color: ${palette.bg_gray_50};
+      }
+
+      .bg-gray-100 {
+        background-color: ${palette.bg_gray_100};
+      }
+
+      .bg-gray-200 {
+        background-color: ${palette.bg_gray_200};
+      }
+
+      .bg-gray-700 {
+        background-color: ${palette.bg_gray_200};
+      }
+
+      .bg-yellow-100 {
+        background-color: ${palette.bg_yellow_100};
+      }
+
+      .bg-slate-50 {
+        background-color: ${palette.bg_slate_50};
+      }
+
+      .bg-blue-100 {
+        background-color: ${palette.bg_blue_100};
+      }
+
+      .bg-blue-50 {
+        background-color: ${palette.bg_blue_50};
+      }
+
+      .focus\\:bg-white:focus {
+        background-color: ${palette.bg_gray_50};
+      }
+
+      /* === Text Colors === */
+      .text-gray-500 {
+        color: ${palette.text_gray_500};
+      }
+
+      .text-gray-600 {
+        color: ${palette.text_gray_600};
+      }
+
+      .text-gray-700 {
+        color: ${palette.text_gray_700};
+      }
+
+      .text-gray-800 {
+        color: ${palette.text_gray_800};
+      }
+
+      .text-gray-900 {
+        color: ${palette.text_gray_900};
+      }
+
+      .text-black {
+        color: ${palette.text_black};
+      }
+
+      /* === Shadow Styles === */
+      .shadow-line-right {
+        box-shadow: 1px 0 0 ${palette.border};
+      }
+
+      .shadow-line-left {
+        box-shadow: -1px 0 0 ${palette.border};
+      }
+
+      .shadow-line-bottom {
+        box-shadow: 0 1px 0 ${palette.border};
+      }
+
+      .shadow-sm {
+        border: solid 1px ${palette.border};
+      }
+
+      /* === Focus Styles === */
+      .focus-within\\:bg-white {
+        background-color: ${palette.bg_white};
+      }
+
+      .focus-within\\:bg-blue-50:focus-within {
+        background-color: ${palette.bg_blue_50};
+      }
+
+      .focus\\:bg-gray-100:focus {
+        background-color: ${palette.bg_gray_100};
+      }
+
+      /* === Hover Styles === */
+      .hover\\:bg-gray-50:hover {
+        background-color: ${palette.bg_gray_100};
+      }
+
+      .hover\\:bg-gray-100:hover {
+        background-color: ${palette.bg_gray_100};
+      }
+
+      .hover\\:bg-gray-200:hover {
+        background-color: ${palette.bg_gray_200};
+      }
+
+      .hover\\:text-gray-800:hover {
+        color: ${palette.text_gray_800};
+      }
+
+      .hover\\:text-gray-900:hover {
+        color: ${palette.text_gray_900};
+      }
+
+      .hover\\:bg-blue-50:hover {
+        background-color: ${palette.bg_blue_50};
+      }
+
+      .hover\\:bg-blue-100:hover {
+        background-color: ${palette.bg_blue_100};
+      }
+
+      /* === Active Styles === */
+      .active\\:bg-gray-200:active {
+        background-color: ${palette.bg_gray_200};
+      }
+
+      /* === Group Hover Styles === */
+      .group-hover\\/row\\:bg-gray-50 {
+        background-color: ${palette.bg_gray_100};
+      }
+
+      .group-hover\\/row\\:bg-blue-100 {
+        background-color: ${palette.bg_blue_100};
+      }
+
+      .group:hover .group-hover\\:text-gray-800 {
+        color: ${palette.text_gray_800};
+      }
+
+      .group:hover .group-hover\\:bg-slate-50 {
+        background-color: ${palette.bg_slate_50};
+      }
+
+      /* === Primary Color Overrides === */
+      /* Blue buttons and accents should use the user's chosen color */
+      .bg-blue-500,
+      .bg-blue-600,
+      button[class*="bg-blue"] {
+        background-color: ${palette.primary} !important;
+      }
+
+      .hover\\:bg-blue-600:hover,
+      .hover\\:bg-blue-700:hover {
+        background-color: ${palette.primary_dark} !important;
+      }
+
+      .text-blue-500,
+      .text-blue-600,
+      [class*="text-blue"] {
+        color: ${palette.primary} !important;
+      }
+
+      .border-blue-500,
+      [class*="border-blue"] {
+        border-color: ${palette.primary} !important;
+      }
     `;
 
     styleElement = document.createElement('style');
