@@ -1,44 +1,41 @@
-// JobTread RGB Custom Theme Feature Module
-// Applies custom RGB color theme to JobTread interface (PREMIUM FEATURE)
+// JobTread Custom Theme Feature Module
+// Applies custom color theme to JobTread interface (PREMIUM FEATURE)
+// Generates a complete color palette from a single base color
 
-const RGBThemeFeature = (() => {
+const CustomThemeFeature = (() => {
   let isActive = false;
   let styleElement = null;
-  let currentColors = {
-    primary: { r: 59, g: 130, b: 246 },    // Default blue
-    background: { r: 249, g: 250, b: 251 }, // Default light gray
-    text: { r: 17, g: 24, b: 39 }          // Default dark text
-  };
+  let currentColor = '#3B82F6'; // Default blue
 
   // Initialize the feature
-  function init(colors = null) {
+  function init(color = null) {
     if (isActive) {
-      console.log('RGBTheme: Already initialized');
+      console.log('CustomTheme: Already initialized');
       return;
     }
 
-    console.log('RGBTheme: Initializing...');
+    console.log('CustomTheme: Initializing...');
     isActive = true;
 
-    // Update colors if provided
-    if (colors) {
-      currentColors = { ...currentColors, ...colors };
+    // Update color if provided
+    if (color) {
+      currentColor = color;
     }
 
-    // Inject custom RGB theme CSS
-    injectRGBThemeCSS();
+    // Inject custom theme CSS
+    injectThemeCSS();
 
-    console.log('RGBTheme: Custom theme applied', currentColors);
+    console.log('CustomTheme: Custom theme applied with color', currentColor);
   }
 
   // Cleanup the feature
   function cleanup() {
     if (!isActive) {
-      console.log('RGBTheme: Not active, nothing to cleanup');
+      console.log('CustomTheme: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('RGBTheme: Cleaning up...');
+    console.log('CustomTheme: Cleaning up...');
     isActive = false;
 
     // Remove injected CSS
@@ -47,126 +44,245 @@ const RGBThemeFeature = (() => {
       styleElement = null;
     }
 
-    console.log('RGBTheme: Custom theme removed');
+    console.log('CustomTheme: Custom theme removed');
   }
 
-  // Update colors dynamically
-  function updateColors(colors) {
-    currentColors = { ...currentColors, ...colors };
+  // Update color dynamically
+  function updateColor(color) {
+    currentColor = color;
 
     if (isActive) {
-      // Re-inject CSS with new colors
+      // Re-inject CSS with new color
       if (styleElement) {
         styleElement.remove();
       }
-      injectRGBThemeCSS();
-      console.log('RGBTheme: Colors updated', currentColors);
+      injectThemeCSS();
+      console.log('CustomTheme: Color updated to', currentColor);
     }
   }
 
-  // Get current colors
-  function getColors() {
-    return { ...currentColors };
+  // Get current color
+  function getColor() {
+    return currentColor;
   }
 
-  // Inject RGB theme CSS with custom colors
-  function injectRGBThemeCSS() {
+  // Convert hex to RGB
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 59, g: 130, b: 246 };
+  }
+
+  // Convert RGB to HSL
+  function rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  // Generate color palette from base color
+  function generatePalette(baseColor) {
+    const rgb = hexToRgb(baseColor);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    return {
+      // Primary colors
+      primary: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+      primaryDark: `hsl(${hsl.h}, ${hsl.s}%, ${Math.max(hsl.l - 10, 10)}%)`,
+      primaryDarker: `hsl(${hsl.h}, ${hsl.s}%, ${Math.max(hsl.l - 15, 5)}%)`,
+      primaryLight: `hsl(${hsl.h}, ${hsl.s}%, ${Math.min(hsl.l + 10, 90)}%)`,
+
+      // Background colors (very light tints)
+      bg50: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.3, 30)}%, 98%)`,
+      bg100: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.4, 40)}%, 96%)`,
+      bg200: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.5, 50)}%, 94%)`,
+      bg300: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.6, 60)}%, 90%)`,
+
+      // Text colors (dark shades)
+      text: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.8, 80)}%, 15%)`,
+      textLight: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.6, 60)}%, 30%)`,
+
+      // Border colors
+      border: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.4, 40)}%, 85%)`,
+      borderDark: `hsl(${hsl.h}, ${Math.min(hsl.s * 0.5, 50)}%, 75%)`,
+
+      // Accent (slightly shifted hue for variety)
+      accent: `hsl(${(hsl.h + 10) % 360}, ${hsl.s}%, ${hsl.l}%)`,
+    };
+  }
+
+  // Inject theme CSS with generated color palette
+  function injectThemeCSS() {
     if (styleElement) {
       styleElement.remove();
     }
 
-    const { primary, background, text } = currentColors;
+    const palette = generatePalette(currentColor);
 
-    // Create CSS with custom RGB values
+    // Create CSS with generated color palette
     const css = `
-      /* JT Tools - Custom RGB Theme */
+      /* JT Tools - Custom Color Theme */
 
-      /* CSS Variables for custom colors */
-      :root {
-        --jt-rgb-primary: ${primary.r}, ${primary.g}, ${primary.b};
-        --jt-rgb-background: ${background.r}, ${background.g}, ${background.b};
-        --jt-rgb-text: ${text.r}, ${text.g}, ${text.b};
+      /* Override primary background colors */
+      body {
+        background-color: ${palette.bg50} !important;
       }
 
-      /* Primary color applications */
+      .bg-gray-50 {
+        background-color: ${palette.bg50} !important;
+      }
+
+      .bg-gray-100 {
+        background-color: ${palette.bg100} !important;
+      }
+
+      .bg-gray-200 {
+        background-color: ${palette.bg200} !important;
+      }
+
+      /* Primary colors for buttons and accents */
       .bg-blue-500,
       .bg-blue-600,
       button.bg-blue-500,
-      button.bg-blue-600 {
-        background-color: rgb(var(--jt-rgb-primary)) !important;
+      button.bg-blue-600,
+      [class*="bg-blue"] {
+        background-color: ${palette.primary} !important;
       }
 
       .hover\\:bg-blue-600:hover,
       .hover\\:bg-blue-700:hover {
-        background-color: rgb(calc(var(--jt-rgb-primary) * 0.9)) !important;
+        background-color: ${palette.primaryDark} !important;
       }
 
+      button:active[class*="bg-blue"] {
+        background-color: ${palette.primaryDarker} !important;
+      }
+
+      /* Text colors */
       .text-blue-500,
-      .text-blue-600 {
-        color: rgb(var(--jt-rgb-primary)) !important;
+      .text-blue-600,
+      [class*="text-blue"] {
+        color: ${palette.primary} !important;
       }
 
-      .border-blue-500 {
-        border-color: rgb(var(--jt-rgb-primary)) !important;
+      .text-gray-900 {
+        color: ${palette.text} !important;
       }
 
-      /* Background color applications */
-      body,
-      .bg-gray-50,
-      .bg-gray-100 {
-        background-color: rgb(var(--jt-rgb-background)) !important;
-      }
-
-      /* Text color applications */
-      .text-gray-900,
       .text-gray-800 {
-        color: rgb(var(--jt-rgb-text)) !important;
+        color: ${palette.text} !important;
       }
 
-      /* Schedule card customization */
-      .schedule-item {
-        border-left-color: rgb(var(--jt-rgb-primary)) !important;
-        background-color: rgba(var(--jt-rgb-background), 0.95) !important;
-        color: rgb(var(--jt-rgb-text)) !important;
+      .text-gray-700 {
+        color: ${palette.textLight} !important;
       }
 
-      /* Button states */
-      button:hover {
-        filter: brightness(0.95);
+      .text-gray-600 {
+        color: ${palette.textLight} !important;
       }
 
-      button:active {
-        filter: brightness(0.9);
+      /* Border colors */
+      .border-blue-500,
+      [class*="border-blue"] {
+        border-color: ${palette.primary} !important;
       }
 
-      /* Link colors */
+      .border-gray-200 {
+        border-color: ${palette.border} !important;
+      }
+
+      .border-gray-300 {
+        border-color: ${palette.borderDark} !important;
+      }
+
+      /* Schedule cards */
+      .schedule-item,
+      [class*="schedule"] {
+        border-left-color: ${palette.primary} !important;
+        background-color: ${palette.bg100} !important;
+      }
+
+      /* Links */
       a {
-        color: rgb(var(--jt-rgb-primary)) !important;
+        color: ${palette.primary} !important;
       }
 
       a:hover {
-        color: rgba(var(--jt-rgb-primary), 0.8) !important;
+        color: ${palette.primaryDark} !important;
       }
 
       /* Focus states */
       input:focus,
       textarea:focus,
       select:focus {
-        border-color: rgb(var(--jt-rgb-primary)) !important;
-        outline-color: rgba(var(--jt-rgb-primary), 0.5) !important;
+        border-color: ${palette.primary} !important;
+        outline-color: ${palette.primaryLight} !important;
+        box-shadow: 0 0 0 3px ${palette.primaryLight}33 !important;
       }
 
-      /* Checkbox and radio customization */
+      /* Checkbox and radio */
       input[type="checkbox"]:checked,
       input[type="radio"]:checked {
-        background-color: rgb(var(--jt-rgb-primary)) !important;
-        border-color: rgb(var(--jt-rgb-primary)) !important;
+        background-color: ${palette.primary} !important;
+        border-color: ${palette.primary} !important;
+      }
+
+      /* Badges and pills */
+      .badge,
+      .pill,
+      [class*="badge"],
+      [class*="pill"] {
+        background-color: ${palette.bg200} !important;
+        color: ${palette.text} !important;
+      }
+
+      /* Cards and panels */
+      .card,
+      .panel,
+      [class*="card"],
+      [class*="panel"] {
+        background-color: white !important;
+        border-color: ${palette.border} !important;
+      }
+
+      /* Hover states for list items */
+      [class*="hover:bg-gray"]:hover {
+        background-color: ${palette.bg200} !important;
+      }
+
+      /* Selected states */
+      [class*="bg-blue"].selected,
+      .selected[class*="bg-blue"] {
+        background-color: ${palette.primaryLight} !important;
+        border-color: ${palette.primary} !important;
       }
     `;
 
     styleElement = document.createElement('style');
     styleElement.textContent = css;
-    styleElement.id = 'jt-rgb-theme-styles';
+    styleElement.id = 'jt-custom-theme-styles';
     document.head.appendChild(styleElement);
   }
 
@@ -174,13 +290,14 @@ const RGBThemeFeature = (() => {
   return {
     init,
     cleanup,
-    updateColors,
-    getColors,
+    updateColor,
+    getColor,
     isActive: () => isActive
   };
 })();
 
 // Export for use in main content script
 if (typeof window !== 'undefined') {
-  window.RGBThemeFeature = RGBThemeFeature;
+  window.RGBThemeFeature = CustomThemeFeature;
+  window.CustomThemeFeature = CustomThemeFeature;
 }
