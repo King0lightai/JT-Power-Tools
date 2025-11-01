@@ -843,11 +843,32 @@ const DragDropFeature = (() => {
                 // Small delay to let month change process and update calendar
                 setTimeout(() => {
                   // Find and click the day in the calendar
-                  // The table is a sibling of the select container, so go up to parent and search
-                  const pickerContainer = monthSelect.closest('div.p-1');
-                  const calendarTable = pickerContainer ? pickerContainer.querySelector('table') : null;
+                  // Try multiple strategies to find the calendar table
+                  let calendarTable = null;
 
-                  console.log('DragDrop: attemptDateChange - Picker container:', pickerContainer);
+                  // Strategy 1: Look for table in the date picker popup that just opened
+                  const popupTables = document.querySelectorAll('div.p-1 table');
+                  console.log(`DragDrop: attemptDateChange - Found ${popupTables.length} tables in date picker popups`);
+
+                  // Use the last table found (most recently opened)
+                  if (popupTables.length > 0) {
+                    calendarTable = popupTables[popupTables.length - 1];
+                    console.log('DragDrop: attemptDateChange - Using last found table');
+                  }
+
+                  // Strategy 2: Find by the thead with S M T W T F S header
+                  if (!calendarTable) {
+                    const allTables = document.querySelectorAll('table');
+                    for (const table of allTables) {
+                      const headers = table.querySelectorAll('thead th');
+                      if (headers.length === 7 && headers[0].textContent.trim() === 'S') {
+                        calendarTable = table;
+                        console.log('DragDrop: attemptDateChange - Found table by day headers');
+                        break;
+                      }
+                    }
+                  }
+
                   console.log('DragDrop: attemptDateChange - Calendar table:', calendarTable);
 
                   if (calendarTable) {
