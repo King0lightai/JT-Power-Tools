@@ -5,7 +5,16 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
-  themeColor: '#3B82F6' // Default blue
+  themeColors: {
+    primary: '#3B82F6',     // Default blue
+    background: '#F3E8FF',  // Light purple
+    text: '#1F1B29'         // Dark purple
+  },
+  savedThemes: [
+    null, // Slot 1
+    null, // Slot 2
+    null  // Slot 3
+  ]
 };
 
 // Check and update license status on load
@@ -93,9 +102,13 @@ async function loadSettings() {
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
 
-    // Load theme color
-    const themeColor = settings.themeColor || defaultSettings.themeColor;
-    loadThemeColor(themeColor);
+    // Load theme colors
+    const themeColors = settings.themeColors || defaultSettings.themeColors;
+    loadThemeColors(themeColors);
+
+    // Load saved themes
+    const savedThemes = settings.savedThemes || defaultSettings.savedThemes;
+    loadSavedThemes(savedThemes);
 
     // Show/hide theme customization panel based on rgbTheme state
     const themeCustomization = document.getElementById('themeCustomization');
@@ -152,7 +165,8 @@ async function saveSettings(settings) {
 // Get current settings from checkboxes
 async function getCurrentSettings() {
   const result = await chrome.storage.sync.get(['jtToolsSettings']);
-  const currentColor = (result.jtToolsSettings && result.jtToolsSettings.themeColor) || defaultSettings.themeColor;
+  const currentColors = (result.jtToolsSettings && result.jtToolsSettings.themeColors) || defaultSettings.themeColors;
+  const savedThemes = (result.jtToolsSettings && result.jtToolsSettings.savedThemes) || defaultSettings.savedThemes;
 
   return {
     dragDrop: document.getElementById('dragDrop').checked,
@@ -160,7 +174,8 @@ async function getCurrentSettings() {
     formatter: document.getElementById('formatter').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
-    themeColor: currentColor
+    themeColors: currentColors,
+    savedThemes: savedThemes
   };
 }
 
@@ -243,65 +258,59 @@ function rgbToHsl(r, g, b) {
   return { h: h * 360, s: s * 100, l: l * 100 };
 }
 
-// Load theme color
-function loadThemeColor(color) {
-  document.getElementById('themeColorPicker').value = color;
-  document.getElementById('colorValueText').textContent = color.toUpperCase();
-  updateThemePreview(color);
+// Load theme colors into pickers
+function loadThemeColors(colors) {
+  document.getElementById('primaryColorPicker').value = colors.primary;
+  document.getElementById('backgroundColorPicker').value = colors.background;
+  document.getElementById('textColorPicker').value = colors.text;
+
+  document.getElementById('primaryColorValue').textContent = colors.primary.toUpperCase();
+  document.getElementById('backgroundColorValue').textContent = colors.background.toUpperCase();
+  document.getElementById('textColorValue').textContent = colors.text.toUpperCase();
+
+  updateThemePreview();
 }
 
-// Generate palette (same logic as rgb-theme.js)
-function generatePalette(baseColor) {
-  const rgb = hexToRgb(baseColor);
-  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-  const makeColor = (hue, sat, light) => `hsl(${hue}, ${sat}%, ${light}%)`;
-  const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
-
+// Get current theme colors from pickers
+function getCurrentThemeColors() {
   return {
-    bg_gray_50: makeColor(hsl.h, baseSat * 0.75, 85),
-    text_gray_900: makeColor(hsl.h, baseSat * 0.8, 15),
-    primary: baseColor,
+    primary: document.getElementById('primaryColorPicker').value,
+    background: document.getElementById('backgroundColorPicker').value,
+    text: document.getElementById('textColorPicker').value
   };
 }
 
-// Update theme preview samples with actual palette colors
-function updateThemePreview(color) {
-  const palette = generatePalette(color);
+// Update theme preview samples
+function updateThemePreview() {
+  const colors = getCurrentThemeColors();
 
-  // Primary - show the actual chosen color
-  document.getElementById('previewPrimary').style.backgroundColor = palette.primary;
-  document.getElementById('previewPrimary').style.borderColor = palette.primary;
+  // Primary
+  document.getElementById('previewPrimary').style.backgroundColor = colors.primary;
+  document.getElementById('previewPrimary').style.borderColor = colors.primary;
   document.getElementById('previewPrimary').style.color = 'white';
 
-  // Background - show the actual background color that will be used
-  document.getElementById('previewBackground').style.backgroundColor = palette.bg_gray_50;
-  document.getElementById('previewBackground').style.color = palette.text_gray_900;
-  document.getElementById('previewBackground').style.borderColor = palette.bg_gray_50;
+  // Background
+  document.getElementById('previewBackground').style.backgroundColor = colors.background;
+  document.getElementById('previewBackground').style.color = colors.text;
+  document.getElementById('previewBackground').style.borderColor = colors.background;
 
-  // Text - show the actual text color that will be used
+  // Text
   document.getElementById('previewText').style.backgroundColor = 'white';
-  document.getElementById('previewText').style.color = palette.text_gray_900;
+  document.getElementById('previewText').style.color = colors.text;
   document.getElementById('previewText').style.borderColor = '#e5e7eb';
 }
 
-// Reset color to default
-async function resetColor() {
-  loadThemeColor(defaultSettings.themeColor);
-  showStatus('Color reset to default', 'success');
-}
-
-// Apply theme color
-async function applyColor() {
+// Apply current theme
+async function applyTheme() {
   try {
-    const color = document.getElementById('themeColorPicker').value;
+    const colors = getCurrentThemeColors();
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     const settings = result.jtToolsSettings || defaultSettings;
 
-    settings.themeColor = color;
+    settings.themeColors = colors;
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
-    console.log('Theme color saved:', color);
+    console.log('Theme colors saved:', colors);
 
     // Notify background script of settings change
     chrome.runtime.sendMessage({
@@ -313,6 +322,78 @@ async function applyColor() {
   } catch (error) {
     console.error('Error applying theme:', error);
     showStatus('Error applying theme', 'error');
+  }
+}
+
+// Load saved themes into slots
+function loadSavedThemes(savedThemes) {
+  savedThemes.forEach((theme, index) => {
+    if (theme) {
+      // Theme exists - show load button
+      document.getElementById(`themeName${index}`).value = theme.name || `Theme ${index + 1}`;
+      document.getElementById(`slot${index}Primary`).style.backgroundColor = theme.colors.primary;
+      document.getElementById(`slot${index}Background`).style.backgroundColor = theme.colors.background;
+      document.getElementById(`slot${index}Text`).style.backgroundColor = theme.colors.text;
+
+      document.querySelector(`[data-slot="${index}"].load-theme-btn`).style.display = 'inline-block';
+    } else {
+      // No theme saved
+      document.getElementById(`themeName${index}`).value = '';
+      document.getElementById(`themeName${index}`).placeholder = `Theme ${index + 1}`;
+      document.getElementById(`slot${index}Primary`).style.backgroundColor = '#f3f4f6';
+      document.getElementById(`slot${index}Background`).style.backgroundColor = '#f3f4f6';
+      document.getElementById(`slot${index}Text`).style.backgroundColor = '#f3f4f6';
+
+      document.querySelector(`[data-slot="${index}"].load-theme-btn`).style.display = 'none';
+    }
+  });
+}
+
+// Save theme to slot
+async function saveThemeToSlot(slotIndex) {
+  try {
+    const result = await chrome.storage.sync.get(['jtToolsSettings']);
+    const settings = result.jtToolsSettings || defaultSettings;
+
+    const themeName = document.getElementById(`themeName${slotIndex}`).value || `Theme ${slotIndex + 1}`;
+    const colors = getCurrentThemeColors();
+
+    if (!settings.savedThemes) {
+      settings.savedThemes = [null, null, null];
+    }
+
+    settings.savedThemes[slotIndex] = {
+      name: themeName,
+      colors: colors
+    };
+
+    await chrome.storage.sync.set({ jtToolsSettings: settings });
+    console.log(`Theme saved to slot ${slotIndex}:`, settings.savedThemes[slotIndex]);
+
+    // Update the slot display
+    loadSavedThemes(settings.savedThemes);
+
+    showStatus(`Theme saved to slot ${slotIndex + 1}!`, 'success');
+  } catch (error) {
+    console.error('Error saving theme:', error);
+    showStatus('Error saving theme', 'error');
+  }
+}
+
+// Load theme from slot
+async function loadThemeFromSlot(slotIndex) {
+  try {
+    const result = await chrome.storage.sync.get(['jtToolsSettings']);
+    const settings = result.jtToolsSettings || defaultSettings;
+
+    if (settings.savedThemes && settings.savedThemes[slotIndex]) {
+      const theme = settings.savedThemes[slotIndex];
+      loadThemeColors(theme.colors);
+      showStatus(`Loaded "${theme.name}"`, 'success');
+    }
+  } catch (error) {
+    console.error('Error loading theme:', error);
+    showStatus('Error loading theme', 'error');
   }
 }
 
@@ -361,18 +442,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Listen for color picker changes
-  const colorPicker = document.getElementById('themeColorPicker');
-  colorPicker.addEventListener('input', (e) => {
-    const color = e.target.value;
-    document.getElementById('colorValueText').textContent = color.toUpperCase();
-    updateThemePreview(color);
+  const colorPickers = [
+    { picker: 'primaryColorPicker', value: 'primaryColorValue' },
+    { picker: 'backgroundColorPicker', value: 'backgroundColorValue' },
+    { picker: 'textColorPicker', value: 'textColorValue' }
+  ];
+
+  colorPickers.forEach(({ picker, value }) => {
+    document.getElementById(picker).addEventListener('input', (e) => {
+      document.getElementById(value).textContent = e.target.value.toUpperCase();
+      updateThemePreview();
+    });
   });
 
-  // Listen for reset color button
-  document.getElementById('resetColorBtn').addEventListener('click', resetColor);
+  // Listen for apply theme button
+  document.getElementById('applyThemeBtn').addEventListener('click', applyTheme);
 
-  // Listen for apply color button
-  document.getElementById('applyColorBtn').addEventListener('click', applyColor);
+  // Listen for save theme buttons
+  document.querySelectorAll('.save-theme-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const slotIndex = parseInt(e.target.dataset.slot);
+      saveThemeToSlot(slotIndex);
+    });
+  });
+
+  // Listen for load theme buttons
+  document.querySelectorAll('.load-theme-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const slotIndex = parseInt(e.target.dataset.slot);
+      loadThemeFromSlot(slotIndex);
+    });
+  });
 
   // Listen for refresh button
   document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);
