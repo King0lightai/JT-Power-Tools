@@ -5,10 +5,14 @@
 const CustomThemeFeature = (() => {
   let isActive = false;
   let styleElement = null;
-  let currentColor = '#3B82F6'; // Default blue
+  let currentColors = {
+    primary: '#3B82F6',
+    background: '#F3E8FF',
+    text: '#1F1B29'
+  };
 
   // Initialize the feature
-  function init(color = null) {
+  function init(colors = null) {
     if (isActive) {
       console.log('CustomTheme: Already initialized');
       return;
@@ -17,15 +21,15 @@ const CustomThemeFeature = (() => {
     console.log('CustomTheme: Initializing...');
     isActive = true;
 
-    // Update color if provided
-    if (color) {
-      currentColor = color;
+    // Update colors if provided
+    if (colors) {
+      currentColors = { ...currentColors, ...colors };
     }
 
     // Inject custom theme CSS
     injectThemeCSS();
 
-    console.log('CustomTheme: Custom theme applied with color', currentColor);
+    console.log('CustomTheme: Custom theme applied with colors', currentColors);
   }
 
   // Cleanup the feature
@@ -47,131 +51,46 @@ const CustomThemeFeature = (() => {
     console.log('CustomTheme: Custom theme removed');
   }
 
-  // Update color dynamically
-  function updateColor(color) {
-    currentColor = color;
+  // Update colors dynamically
+  function updateColors(colors) {
+    currentColors = { ...currentColors, ...colors };
 
     if (isActive) {
-      // Re-inject CSS with new color
+      // Re-inject CSS with new colors
       if (styleElement) {
         styleElement.remove();
       }
       injectThemeCSS();
-      console.log('CustomTheme: Color updated to', currentColor);
+      console.log('CustomTheme: Colors updated to', currentColors);
     }
   }
 
-  // Get current color
-  function getColor() {
-    return currentColor;
+  // Get current colors
+  function getColors() {
+    return { ...currentColors };
   }
 
-  // Convert hex to RGB
-  function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : { r: 59, g: 130, b: 246 };
-  }
-
-  // Convert RGB to HSL
-  function rgbToHsl(r, g, b) {
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-
-    if (max === min) {
-      h = s = 0;
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-
-  // Generate color palette from base color (like dark mode does with grays)
-  function generatePalette(baseColor) {
-    const rgb = hexToRgb(baseColor);
-    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-    // Helper to create HSL color string
-    const makeColor = (hue, sat, light) => `hsl(${hue}, ${sat}%, ${light}%)`;
-
-    // Use much higher saturation for dramatic effect like dark mode
-    const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
-
-    return {
-      // Background colors (much closer to primary) - bold, vibrant presence
-      bg_white: makeColor(hsl.h, baseSat * 0.7, 88),        // Strong tint
-      bg_gray_50: makeColor(hsl.h, baseSat * 0.75, 85),     // Very saturated
-      bg_gray_100: makeColor(hsl.h, baseSat * 0.8, 82),     // Close to primary
-      bg_gray_200: makeColor(hsl.h, baseSat * 0.85, 78),    // Very close to primary
-      bg_slate_50: makeColor(hsl.h, baseSat * 0.75, 84),
-      bg_blue_50: makeColor(hsl.h, baseSat * 0.85, 80),
-      bg_blue_100: makeColor(hsl.h, baseSat * 0.9, 75),
-      bg_yellow_100: makeColor((hsl.h + 30) % 360, baseSat * 0.7, 82),
-
-      // Text colors (saturated dark shades)
-      text_gray_500: makeColor(hsl.h, baseSat * 0.6, 40),
-      text_gray_600: makeColor(hsl.h, baseSat * 0.65, 32),
-      text_gray_700: makeColor(hsl.h, baseSat * 0.7, 25),
-      text_gray_800: makeColor(hsl.h, baseSat * 0.75, 20),
-      text_gray_900: makeColor(hsl.h, baseSat * 0.8, 15),
-      text_black: makeColor(hsl.h, baseSat * 0.85, 10),
-
-      // Border colors (visible)
-      border: makeColor(hsl.h, baseSat * 0.6, 75),
-      border_dark: makeColor(hsl.h, baseSat * 0.65, 65),
-
-      // Primary/accent (the actual chosen color)
-      primary: baseColor,
-      primary_light: makeColor(hsl.h, hsl.s, Math.min(hsl.l + 10, 90)),
-      primary_dark: makeColor(hsl.h, hsl.s, Math.max(hsl.l - 10, 10)),
-
-      // Schedule card backgrounds (with inline styles)
-      schedule_card_bg: makeColor(hsl.h, baseSat * 0.75, 84),
-    };
-  }
-
-  // Inject theme CSS following dark mode's selector pattern
+  // Inject theme CSS using user's chosen colors directly
   function injectThemeCSS() {
     if (styleElement) {
       styleElement.remove();
     }
 
-    const palette = generatePalette(currentColor);
+    const { primary, background, text } = currentColors;
 
-    // Create CSS using the same selectors as dark mode, but with custom colors
+    // Create CSS using user's chosen colors
     const css = `
       /* === JT Power Tools - Custom Color Theme === */
-      /* Following dark mode's selector pattern with custom colors */
+      /* Using user's chosen Primary, Background, and Text colors */
 
       /* === Schedule Card Overrides (Inline Styles) === */
       td div.cursor-pointer[style*="background-color"] {
-        background-color: ${palette.schedule_card_bg} !important;
-      }
-
-      /* Keep colored left border visible */
-      td div.cursor-pointer[style*="border-left"] {
-        /* Border color preserved from inline style */
+        background-color: ${background} !important;
       }
 
       /* === General Styles === */
       *, ::backdrop, ::file-selector-button, :after, :before {
-        border-color: ${palette.border};
+        border-color: ${background};
       }
 
       .border-transparent {
@@ -179,178 +98,118 @@ const CustomThemeFeature = (() => {
       }
 
       .border-white {
-        border-color: ${palette.border};
+        border-color: ${background};
       }
 
       /* === Background Colors === */
-      .bg-white {
-        background-color: ${palette.bg_white};
-      }
-
-      .bg-gray-50 {
-        background-color: ${palette.bg_gray_50};
-      }
-
-      .bg-gray-100 {
-        background-color: ${palette.bg_gray_100};
-      }
-
-      .bg-gray-200 {
-        background-color: ${palette.bg_gray_200};
-      }
-
-      .bg-gray-700 {
-        background-color: ${palette.bg_gray_200};
-      }
-
+      .bg-white,
+      .bg-gray-50,
+      .bg-gray-100,
+      .bg-gray-200,
+      .bg-gray-700,
+      .bg-slate-50,
+      .bg-blue-50,
+      .bg-blue-100,
       .bg-yellow-100 {
-        background-color: ${palette.bg_yellow_100};
+        background-color: ${background};
       }
 
-      .bg-slate-50 {
-        background-color: ${palette.bg_slate_50};
-      }
-
-      .bg-blue-100 {
-        background-color: ${palette.bg_blue_100};
-      }
-
-      .bg-blue-50 {
-        background-color: ${palette.bg_blue_50};
-      }
-
-      .focus\\:bg-white:focus {
-        background-color: ${palette.bg_gray_50};
+      .focus\\:bg-white:focus,
+      .focus\\:bg-gray-100:focus {
+        background-color: ${background};
+        filter: brightness(0.95);
       }
 
       /* === Text Colors === */
-      .text-gray-500 {
-        color: ${palette.text_gray_500};
-      }
-
-      .text-gray-600 {
-        color: ${palette.text_gray_600};
-      }
-
-      .text-gray-700 {
-        color: ${palette.text_gray_700};
-      }
-
-      .text-gray-800 {
-        color: ${palette.text_gray_800};
-      }
-
-      .text-gray-900 {
-        color: ${palette.text_gray_900};
-      }
-
+      .text-gray-500,
+      .text-gray-600,
+      .text-gray-700,
+      .text-gray-800,
+      .text-gray-900,
       .text-black {
-        color: ${palette.text_black};
+        color: ${text};
       }
 
       /* === Shadow Styles === */
       .shadow-line-right {
-        box-shadow: 1px 0 0 ${palette.border};
+        box-shadow: 1px 0 0 ${background};
       }
 
       .shadow-line-left {
-        box-shadow: -1px 0 0 ${palette.border};
+        box-shadow: -1px 0 0 ${background};
       }
 
       .shadow-line-bottom {
-        box-shadow: 0 1px 0 ${palette.border};
+        box-shadow: 0 1px 0 ${background};
       }
 
       .shadow-sm {
-        border: solid 1px ${palette.border};
+        border: solid 1px ${background};
       }
 
       /* === Focus Styles === */
-      .focus-within\\:bg-white {
-        background-color: ${palette.bg_white};
-      }
-
+      .focus-within\\:bg-white,
       .focus-within\\:bg-blue-50:focus-within {
-        background-color: ${palette.bg_blue_50};
-      }
-
-      .focus\\:bg-gray-100:focus {
-        background-color: ${palette.bg_gray_100};
+        background-color: ${background};
       }
 
       /* === Hover Styles === */
-      .hover\\:bg-gray-50:hover {
-        background-color: ${palette.bg_gray_100};
-      }
-
-      .hover\\:bg-gray-100:hover {
-        background-color: ${palette.bg_gray_100};
-      }
-
-      .hover\\:bg-gray-200:hover {
-        background-color: ${palette.bg_gray_200};
-      }
-
-      .hover\\:text-gray-800:hover {
-        color: ${palette.text_gray_800};
-      }
-
-      .hover\\:text-gray-900:hover {
-        color: ${palette.text_gray_900};
-      }
-
-      .hover\\:bg-blue-50:hover {
-        background-color: ${palette.bg_blue_50};
-      }
-
+      .hover\\:bg-gray-50:hover,
+      .hover\\:bg-gray-100:hover,
+      .hover\\:bg-gray-200:hover,
+      .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
-        background-color: ${palette.bg_blue_100};
+        background-color: ${background};
+        filter: brightness(0.9);
+      }
+
+      .hover\\:text-gray-800:hover,
+      .hover\\:text-gray-900:hover {
+        color: ${text};
       }
 
       /* === Active Styles === */
       .active\\:bg-gray-200:active {
-        background-color: ${palette.bg_gray_200};
+        background-color: ${background};
+        filter: brightness(0.85);
       }
 
       /* === Group Hover Styles === */
-      .group-hover\\/row\\:bg-gray-50 {
-        background-color: ${palette.bg_gray_100};
-      }
-
+      .group-hover\\/row\\:bg-gray-50,
       .group-hover\\/row\\:bg-blue-100 {
-        background-color: ${palette.bg_blue_100};
+        background-color: ${background};
       }
 
       .group:hover .group-hover\\:text-gray-800 {
-        color: ${palette.text_gray_800};
+        color: ${text};
       }
 
       .group:hover .group-hover\\:bg-slate-50 {
-        background-color: ${palette.bg_slate_50};
+        background-color: ${background};
       }
 
       /* === Primary Color Overrides === */
-      /* Blue buttons and accents should use the user's chosen color */
       .bg-blue-500,
       .bg-blue-600,
       button[class*="bg-blue"] {
-        background-color: ${palette.primary} !important;
+        background-color: ${primary} !important;
       }
 
       .hover\\:bg-blue-600:hover,
       .hover\\:bg-blue-700:hover {
-        background-color: ${palette.primary_dark} !important;
+        background-color: ${primary} !important;
+        filter: brightness(0.9);
       }
 
       .text-blue-500,
       .text-blue-600,
       [class*="text-blue"] {
-        color: ${palette.primary} !important;
+        color: ${primary} !important;
       }
 
       .border-blue-500,
       [class*="border-blue"] {
-        border-color: ${palette.primary} !important;
+        border-color: ${primary} !important;
       }
     `;
 
@@ -364,11 +223,9 @@ const CustomThemeFeature = (() => {
   return {
     init,
     cleanup,
-    updateColor,
-    getColor,
-    isActive: () => isActive,
-    // Export palette generator for preview
-    generatePalette: (color) => generatePalette(color)
+    updateColors,
+    getColors,
+    isActive: () => isActive
   };
 })();
 
