@@ -172,7 +172,13 @@ const DragDropFeature = (() => {
 
   // Adjust date to skip weekends (move to next Monday)
   function adjustDateToSkipWeekend(dateInfo) {
+    console.log('DragDrop: adjustDateToSkipWeekend - input:', JSON.stringify(dateInfo));
+
     const year = dateInfo.year || new Date().getFullYear();
+    if (!dateInfo.year) {
+      console.warn(`DragDrop: adjustDateToSkipWeekend - year missing, using current year: ${year}`);
+    }
+
     const monthMap = {
       'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
       'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
@@ -182,11 +188,15 @@ const DragDropFeature = (() => {
     const date = new Date(year, monthIndex, parseInt(dateInfo.day));
     const dayOfWeek = date.getDay();
 
+    console.log(`DragDrop: adjustDateToSkipWeekend - original date: ${dateInfo.month} ${dateInfo.day}, ${year} (day of week: ${dayOfWeek})`);
+
     // If Saturday (6), add 2 days to get to Monday
     // If Sunday (0), add 1 day to get to Monday
     if (dayOfWeek === 6) {
+      console.log('DragDrop: adjustDateToSkipWeekend - Saturday detected, adding 2 days');
       date.setDate(date.getDate() + 2);
     } else if (dayOfWeek === 0) {
+      console.log('DragDrop: adjustDateToSkipWeekend - Sunday detected, adding 1 day');
       date.setDate(date.getDate() + 1);
     }
 
@@ -194,12 +204,20 @@ const DragDropFeature = (() => {
     const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-    return {
+    const result = {
       day: date.getDate().toString(),
       month: monthAbbrev[date.getMonth()],
       year: date.getFullYear(),
       fullDisplay: `${monthAbbrev[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
     };
+
+    console.log('DragDrop: adjustDateToSkipWeekend - output:', JSON.stringify(result));
+
+    if (result.year !== year) {
+      console.log(`DragDrop: adjustDateToSkipWeekend - *** YEAR CHANGED during weekend skip: ${year} -> ${result.year} ***`);
+    }
+
+    return result;
   }
 
   // Event handlers (same as original code)
@@ -263,6 +281,8 @@ const DragDropFeature = (() => {
     }
     e.preventDefault();
 
+    console.log('DragDrop: ========== DROP EVENT START ==========');
+
     this.classList.remove('jt-drop-zone');
     this.style.border = '';
     this.style.backgroundColor = '';
@@ -272,10 +292,14 @@ const DragDropFeature = (() => {
       const originalCell = draggedItemData.originalParent;
 
       if (targetCell === originalCell) {
+        console.log('DragDrop: Drop on same cell, ignoring');
         return false;
       }
 
+      console.log('DragDrop: Extracting target date info...');
       let dateInfo = extractFullDateInfo(targetCell);
+
+      console.log('DragDrop: Extracting source date info...');
       const sourceDateInfo = extractFullDateInfo(originalCell);
 
       if (dateInfo) {
@@ -288,40 +312,65 @@ const DragDropFeature = (() => {
           const sourceMonth = monthMap[sourceDateInfo.month];
           const targetMonth = monthMap[dateInfo.month];
 
+          console.log(`DragDrop: Year boundary check - Source: ${sourceDateInfo.month} ${sourceDateInfo.day}, ${sourceDateInfo.year} (month index: ${sourceMonth})`);
+          console.log(`DragDrop: Year boundary check - Target: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year} (month index: ${targetMonth})`);
+
           // If dragging from December to January, increment year
           if (sourceMonth === 11 && targetMonth === 0) {
+            const originalYear = dateInfo.year;
             dateInfo.year = sourceDateInfo.year + 1;
-            console.log('DragDrop: Year transition detected (Dec → Jan), year:', dateInfo.year);
+            console.log(`DragDrop: *** YEAR TRANSITION (Dec → Jan) *** Changed year from ${originalYear} to ${dateInfo.year}`);
+            console.log(`DragDrop: *** Target date will be: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
+            showNotification(`Year transition: Moving to Jan ${dateInfo.year}`);
           }
           // If dragging from January to December, decrement year
           else if (sourceMonth === 0 && targetMonth === 11) {
+            const originalYear = dateInfo.year;
             dateInfo.year = sourceDateInfo.year - 1;
-            console.log('DragDrop: Year transition detected (Jan → Dec), year:', dateInfo.year);
+            console.log(`DragDrop: *** YEAR TRANSITION (Jan → Dec) *** Changed year from ${originalYear} to ${dateInfo.year}`);
+            console.log(`DragDrop: *** Target date will be: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
+            showNotification(`Year transition: Moving to Dec ${dateInfo.year}`);
+          } else {
+            console.log(`DragDrop: No year transition needed (same year: ${dateInfo.year})`);
+          }
+        } else {
+          if (!sourceDateInfo) {
+            console.error('DragDrop: Failed to extract source date info - year transition detection skipped');
+          } else if (!sourceDateInfo.month) {
+            console.error('DragDrop: Source date info missing month - year transition detection skipped');
+          } else if (!dateInfo.month) {
+            console.error('DragDrop: Target date info missing month - year transition detection skipped');
           }
         }
 
         // Check Shift key at drop time (OR the state captured at drag start)
         const isShiftPressed = e.shiftKey || shiftKeyAtDragStart;
-        console.log('DragDrop: Drop - Shift at drop:', e.shiftKey, 'Shift at start:', shiftKeyAtDragStart);
+        console.log('DragDrop: Drop - Shift at drop:', e.shiftKey, 'Shift at start:', shiftKeyAtDragStart, 'Final:', isShiftPressed);
 
         // Check if dropping on weekend and Shift is NOT pressed
         if (!isShiftPressed && isWeekendCell(targetCell, dateInfo)) {
           console.log('DragDrop: Weekend detected, auto-skipping to Monday');
+          const originalDate = `${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`;
           dateInfo = adjustDateToSkipWeekend(dateInfo);
+          console.log(`DragDrop: Weekend skip - changed from ${originalDate} to ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
           showNotification('Weekend detected - moved to Monday');
         } else if (isShiftPressed && isWeekendCell(targetCell, dateInfo)) {
           console.log('DragDrop: Shift held - allowing weekend drop');
         }
 
+        console.log(`DragDrop: Final date before formatting: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
         attemptDateChange(draggedElement, dateInfo.day, targetCell, dateInfo);
       } else {
-        console.log('DragDrop: Could not determine target date');
+        console.error('DragDrop: *** CRITICAL ERROR *** Could not determine target date');
         showNotification('Could not determine target date. Please try manually.');
       }
+    } else {
+      console.error('DragDrop: Drop handler called but draggedElement or draggedItemData is missing');
     }
 
     // Reset shift state
     shiftKeyAtDragStart = false;
+    console.log('DragDrop: ========== DROP EVENT END ==========');
 
     return false;
   }
@@ -337,12 +386,20 @@ const DragDropFeature = (() => {
   }
 
   function extractFullDateInfo(cell) {
-    if (!cell) return null;
+    if (!cell) {
+      console.error('DragDrop: extractFullDateInfo - cell is null');
+      return null;
+    }
 
     const dateDiv = cell.querySelector('div.font-bold');
-    if (!dateDiv) return null;
+    if (!dateDiv) {
+      console.error('DragDrop: extractFullDateInfo - no font-bold div found in cell');
+      return null;
+    }
 
     const dateNumber = dateDiv.textContent.trim();
+    console.log(`DragDrop: extractFullDateInfo - extracted day number: "${dateNumber}"`);
+
     const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -357,6 +414,7 @@ const DragDropFeature = (() => {
       const allCells = table.querySelectorAll('td');
       const cellArray = Array.from(allCells);
       const currentCellIndex = cellArray.indexOf(cell);
+      console.log(`DragDrop: extractFullDateInfo - searching ${currentCellIndex + 1} cells backwards for month/year`);
 
       for (let i = currentCellIndex; i >= 0; i--) {
         const cellToCheck = cellArray[i];
@@ -369,12 +427,14 @@ const DragDropFeature = (() => {
           const yearMatch = text.match(/\b(20\d{2})\b/);
           if (yearMatch) {
             year = parseInt(yearMatch[1]);
+            console.log(`DragDrop: extractFullDateInfo - found year: ${year} in cell ${i}`);
           }
 
           // Check for month name
           for (let m = 0; m < monthNames.length; m++) {
             if (text === monthNames[m]) {
               month = monthAbbrev[m];
+              console.log(`DragDrop: extractFullDateInfo - found month: ${month} in cell ${i}`);
               break;
             }
           }
@@ -382,25 +442,51 @@ const DragDropFeature = (() => {
         }
         if (month) break;
       }
+    } else {
+      console.error('DragDrop: extractFullDateInfo - no table found for cell');
     }
 
     // Fallback to current month and year
     if (!month || !year) {
       const now = new Date();
-      if (!month) month = monthAbbrev[now.getMonth()];
-      if (!year) year = now.getFullYear();
+      const fallbackMonth = !month ? monthAbbrev[now.getMonth()] : null;
+      const fallbackYear = !year ? now.getFullYear() : null;
+
+      if (fallbackMonth) {
+        console.warn(`DragDrop: extractFullDateInfo - month not found, using current month: ${fallbackMonth}`);
+        month = fallbackMonth;
+      }
+      if (fallbackYear) {
+        console.warn(`DragDrop: extractFullDateInfo - year not found, using current year: ${fallbackYear}`);
+        year = fallbackYear;
+      }
     }
 
-    return {
+    const result = {
       day: dateNumber,
       month: month,
       year: year,
       monthYear: month,
       fullDisplay: `${month} ${dateNumber}, ${year}`
     };
+
+    console.log('DragDrop: extractFullDateInfo - result:', JSON.stringify(result));
+    return result;
   }
 
   function formatDateForInput(dateInfo) {
+    console.log('DragDrop: formatDateForInput - input:', JSON.stringify(dateInfo));
+
+    if (!dateInfo) {
+      console.error('DragDrop: formatDateForInput - dateInfo is null/undefined');
+      return '';
+    }
+
+    if (!dateInfo.day) {
+      console.error('DragDrop: formatDateForInput - day is missing from dateInfo');
+      return '';
+    }
+
     let month = dateInfo.month || '';
 
     if (!month) {
@@ -408,15 +494,33 @@ const DragDropFeature = (() => {
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const now = new Date();
       month = monthAbbrev[now.getMonth()];
+      console.warn(`DragDrop: formatDateForInput - month missing, using current: ${month}`);
     }
 
     // Return format without year - JobTread infers year from calendar context
     // This allows cross-year drags to work (e.g., Dec to Jan assumes next year)
-    return `${month} ${dateInfo.day}`;
+    // NOTE: Year information IS available in dateInfo.year but NOT sent to JobTread input
+    const formattedDate = `${month} ${dateInfo.day}`;
+    console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} not included)`);
+
+    return formattedDate;
   }
 
   function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo = null) {
+    console.log('DragDrop: attemptDateChange - START');
+    console.log('DragDrop: attemptDateChange - element:', element);
+    console.log('DragDrop: attemptDateChange - newDateNumber:', newDateNumber);
+    console.log('DragDrop: attemptDateChange - providedDateInfo:', JSON.stringify(providedDateInfo));
+
     const dateInfo = providedDateInfo || extractFullDateInfo(targetCell);
+
+    if (!dateInfo) {
+      console.error('DragDrop: attemptDateChange - Failed to get dateInfo');
+      showNotification('Error: Could not extract date information');
+      return;
+    }
+
+    console.log('DragDrop: attemptDateChange - Using dateInfo:', JSON.stringify(dateInfo));
 
     // Inject CSS to make entire sidebar structure completely invisible
     const hideStyle = document.createElement('style');
@@ -457,6 +561,7 @@ const DragDropFeature = (() => {
         }
     `;
     document.head.appendChild(hideStyle);
+    console.log('DragDrop: attemptDateChange - Sidebar hiding CSS injected');
 
     // Failsafe: Remove CSS after 5 seconds no matter what
     const failsafeTimeout = setTimeout(() => {
@@ -468,6 +573,7 @@ const DragDropFeature = (() => {
     }, 5000);
 
     // Click to open sidebar
+    console.log('DragDrop: attemptDateChange - Clicking element to open sidebar');
     element.click();
 
     // Wait for sidebar and process
@@ -475,24 +581,30 @@ const DragDropFeature = (() => {
       const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
       if (sidebar) {
-        console.log('DragDrop: Sidebar found, processing date change...');
+        console.log('DragDrop: attemptDateChange - Sidebar found, processing date change...');
 
         // Find start date field
         const allDateFields = sidebar.querySelectorAll('div.text-gray-700.truncate.leading-tight');
+        console.log(`DragDrop: attemptDateChange - Found ${allDateFields.length} potential date fields`);
+
         let startDateParent = null;
 
         for (const field of allDateFields) {
           const text = field.textContent.trim();
+          console.log(`DragDrop: attemptDateChange - Checking field text: "${text}"`);
+
           if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
               /^(Today|Tomorrow|Yesterday)$/.test(text)) {
             startDateParent = field.closest('div.group.items-center');
+            console.log('DragDrop: attemptDateChange - Found start date field:', text);
             break;
           }
         }
 
         if (startDateParent) {
           const formattedDate = formatDateForInput(dateInfo);
-          console.log('DragDrop: Formatting date:', formattedDate);
+          console.log('DragDrop: attemptDateChange - Formatted date for input:', formattedDate);
+          console.log(`DragDrop: attemptDateChange - *** NOTE: Year ${dateInfo.year} is NOT included in formatted date ***`);
 
           // Look for and check any "notify" or "update linked" checkboxes
           const checkboxes = sidebar.querySelectorAll('input[type="checkbox"]');
@@ -519,38 +631,52 @@ const DragDropFeature = (() => {
             }
           });
 
+          console.log('DragDrop: attemptDateChange - Clicking start date parent to open date picker');
           startDateParent.click();
 
           setTimeout(() => {
+            console.log('DragDrop: attemptDateChange - Looking for input field...');
             let inputField = null;
             const inputs = sidebar.querySelectorAll('input');
+            console.log(`DragDrop: attemptDateChange - Found ${inputs.length} input fields in sidebar`);
 
             for (const input of inputs) {
               const placeholder = input.getAttribute('placeholder');
               const style = window.getComputedStyle(input);
+              console.log(`DragDrop: attemptDateChange - Checking input with placeholder: "${placeholder}", display: ${style.display}, opacity: ${style.opacity}`);
 
               if (placeholder && /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(placeholder)) {
                 if (style.display !== 'none' && style.opacity !== '0') {
                   inputField = input;
+                  console.log('DragDrop: attemptDateChange - Found suitable date input field');
                   break;
                 }
               }
             }
 
             if (!inputField) {
+              console.log('DragDrop: attemptDateChange - No input in sidebar, checking for popup date picker');
               const datePickerPopup = document.querySelector('div.block.relative input[placeholder]');
               if (datePickerPopup) {
                 inputField = datePickerPopup;
+                console.log('DragDrop: attemptDateChange - Found date picker popup input');
               }
             }
 
             if (inputField) {
+              console.log('DragDrop: attemptDateChange - Input field found, setting value');
+              console.log(`DragDrop: attemptDateChange - Current input value: "${inputField.value}"`);
+              console.log(`DragDrop: attemptDateChange - Will set to: "${formattedDate}"`);
+              console.log(`DragDrop: attemptDateChange - *** CRITICAL: This is where year info is lost! Year ${dateInfo.year} is NOT in "${formattedDate}" ***`);
+
               inputField.value = '';
               inputField.focus();
               inputField.value = formattedDate;
+              console.log(`DragDrop: attemptDateChange - Input value set to: "${inputField.value}"`);
 
               // Dispatch input event
               inputField.dispatchEvent(new Event('input', { bubbles: true }));
+              console.log('DragDrop: attemptDateChange - Dispatched input event');
 
               // Simulate pressing Enter key to trigger the full update
               const enterEvent = new KeyboardEvent('keydown', {
@@ -562,6 +688,7 @@ const DragDropFeature = (() => {
                 cancelable: true
               });
               inputField.dispatchEvent(enterEvent);
+              console.log('DragDrop: attemptDateChange - Dispatched Enter keydown event');
 
               // Also dispatch keyup for Enter
               const enterUpEvent = new KeyboardEvent('keyup', {
@@ -573,18 +700,21 @@ const DragDropFeature = (() => {
                 cancelable: true
               });
               inputField.dispatchEvent(enterUpEvent);
+              console.log('DragDrop: attemptDateChange - Dispatched Enter keyup event');
 
               // Dispatch change and blur events
               inputField.dispatchEvent(new Event('change', { bubbles: true }));
               inputField.dispatchEvent(new Event('blur', { bubbles: true }));
+              console.log('DragDrop: attemptDateChange - Dispatched change and blur events');
 
-              console.log('DragDrop: Date typed and Enter key simulated');
+              console.log('DragDrop: attemptDateChange - Date typed and Enter key simulated - COMPLETE');
 
               setTimeout(() => {
                 closeSidebar(failsafeTimeout);
               }, 500);
             } else {
-              console.log('DragDrop: Could not find input field');
+              console.error('DragDrop: attemptDateChange - *** ERROR *** Could not find input field');
+              console.error('DragDrop: attemptDateChange - Checked sidebar inputs and popup date picker');
               showNotification('Could not find date input field. Please try manually.');
               // Cleanup CSS even on error
               setTimeout(() => {
@@ -593,18 +723,21 @@ const DragDropFeature = (() => {
             }
           }, 400);
         } else {
-          console.log('DragDrop: Could not find start date field');
+          console.error('DragDrop: attemptDateChange - *** ERROR *** Could not find start date field');
+          console.error(`DragDrop: attemptDateChange - Checked ${allDateFields.length} fields in sidebar`);
           showNotification('Could not find date field. Please update manually.');
           // Cleanup CSS
           closeSidebar(failsafeTimeout);
         }
       } else {
-        console.log('DragDrop: Sidebar did not open');
+        console.error('DragDrop: attemptDateChange - *** ERROR *** Sidebar did not open after clicking element');
         showNotification('Sidebar did not open. Please try manually.');
         // Cleanup CSS
         closeSidebar(failsafeTimeout);
       }
     }, 500);
+
+    console.log('DragDrop: attemptDateChange - END (async operations still running)');
   }
 
   function closeSidebar(failsafeTimeout) {
