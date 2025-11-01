@@ -73,6 +73,94 @@
           <span class="slider"></span>
         </label>
       </div>
+
+      <!-- Feature 5: RGB Custom Theme -->
+      <div class="feature-item" id="rgbThemeFeature">
+        <div class="feature-info">
+          <div class="feature-icon">🎨</div>
+          <div class="feature-details">
+            <h3>RGB Custom Theme <span class="premium-badge">⭐ PREMIUM</span></h3>
+            <p>Create your own custom color theme</p>
+          </div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- RGB Theme Customization Panel -->
+    <div class="rgb-customization" id="rgbCustomization" style="display: none;">
+      <h3>🎨 Customize Your Theme Colors</h3>
+
+      <div class="color-group">
+        <label class="color-label">
+          <span class="color-name">Primary Color</span>
+          <span class="color-preview" id="primaryPreview"></span>
+        </label>
+        <div class="rgb-sliders">
+          <div class="slider-group">
+            <label>R: <span id="primaryR-value">59</span></label>
+            <input type="range" id="primaryR" min="0" max="255" value="59" class="rgb-slider red">
+          </div>
+          <div class="slider-group">
+            <label>G: <span id="primaryG-value">130</span></label>
+            <input type="range" id="primaryG" min="0" max="255" value="130" class="rgb-slider green">
+          </div>
+          <div class="slider-group">
+            <label>B: <span id="primaryB-value">246</span></label>
+            <input type="range" id="primaryB" min="0" max="255" value="246" class="rgb-slider blue">
+          </div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <label class="color-label">
+          <span class="color-name">Background Color</span>
+          <span class="color-preview" id="backgroundPreview"></span>
+        </label>
+        <div class="rgb-sliders">
+          <div class="slider-group">
+            <label>R: <span id="backgroundR-value">249</span></label>
+            <input type="range" id="backgroundR" min="0" max="255" value="249" class="rgb-slider red">
+          </div>
+          <div class="slider-group">
+            <label>G: <span id="backgroundG-value">250</span></label>
+            <input type="range" id="backgroundG" min="0" max="255" value="250" class="rgb-slider green">
+          </div>
+          <div class="slider-group">
+            <label>B: <span id="backgroundB-value">251</span></label>
+            <input type="range" id="backgroundB" min="0" max="255" value="251" class="rgb-slider blue">
+          </div>
+        </div>
+      </div>
+
+      <div class="color-group">
+        <label class="color-label">
+          <span class="color-name">Text Color</span>
+          <span class="color-preview" id="textPreview"></span>
+        </label>
+        <div class="rgb-sliders">
+          <div class="slider-group">
+            <label>R: <span id="textR-value">17</span></label>
+            <input type="range" id="textR" min="0" max="255" value="17" class="rgb-slider red">
+          </div>
+          <div class="slider-group">
+            <label>G: <span id="textG-value">24</span></label>
+            <input type="range" id="textG" min="0" max="255" value="24" class="rgb-slider green">
+          </div>
+          <div class="slider-group">
+            <label>B: <span id="textB-value">39</span></label>
+            <input type="range" id="textB" min="0" max="255" value="39" class="rgb-slider blue">
+          </div>
+        </div>
+      </div>
+
+      <div class="rgb-actions">
+        <button id="resetColorsBtn" class="reset-btn">Reset to Defaults</button>
+        <button id="applyColorsBtn" class="apply-btn">Apply Colors</button>
+      </div>
     </div>
 
     <div class="actions">
