@@ -315,8 +315,13 @@ const DragDropFeature = (() => {
           console.log(`DragDrop: Year boundary check - Source: ${sourceDateInfo.month} ${sourceDateInfo.day}, ${sourceDateInfo.year} (month index: ${sourceMonth})`);
           console.log(`DragDrop: Year boundary check - Target: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year} (month index: ${targetMonth})`);
 
+          // If source and target are the same month, use source year as baseline
+          if (sourceMonth === targetMonth) {
+            console.log(`DragDrop: Same month drag - using source year ${sourceDateInfo.year}`);
+            dateInfo.year = sourceDateInfo.year;
+          }
           // If dragging from December to January, increment year
-          if (sourceMonth === 11 && targetMonth === 0) {
+          else if (sourceMonth === 11 && targetMonth === 0) {
             const originalYear = dateInfo.year;
             dateInfo.year = sourceDateInfo.year + 1;
             console.log(`DragDrop: *** YEAR TRANSITION (Dec → Jan) *** Changed year from ${originalYear} to ${dateInfo.year}`);
@@ -330,8 +335,11 @@ const DragDropFeature = (() => {
             console.log(`DragDrop: *** YEAR TRANSITION (Jan → Dec) *** Changed year from ${originalYear} to ${dateInfo.year}`);
             console.log(`DragDrop: *** Target date will be: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
             showNotification(`Year transition: Moving to Dec ${dateInfo.year}`);
-          } else {
-            console.log(`DragDrop: No year transition needed (same year: ${dateInfo.year})`);
+          }
+          // For other month changes, use source year as baseline
+          else {
+            console.log(`DragDrop: Different month, same year - using source year ${sourceDateInfo.year}`);
+            dateInfo.year = sourceDateInfo.year;
           }
         } else {
           if (!sourceDateInfo) {
@@ -450,12 +458,64 @@ const DragDropFeature = (() => {
     if (!month || !year) {
       console.log('DragDrop: extractFullDateInfo - Searching entire page for month/year...');
 
-      // Look for calendar navigation buttons or headers that might contain month/year
+      // Strategy 1: Look for calendar navigation/header elements with specific selectors
+      const calendarHeaders = document.querySelectorAll('h1, h2, h3, h4, button, div[class*="header"], div[class*="nav"]');
+      for (const header of calendarHeaders) {
+        const text = header.textContent.trim();
+        const match = text.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/);
+        if (match) {
+          const foundMonth = match[1];
+          const foundYear = parseInt(match[2]);
+          const monthIndex = monthNames.indexOf(foundMonth);
+
+          if (monthIndex >= 0) {
+            if (!month) {
+              month = monthAbbrev[monthIndex];
+              console.log(`DragDrop: extractFullDateInfo - Found month in calendar header: ${month}`);
+            }
+            if (!year) {
+              year = foundYear;
+              console.log(`DragDrop: extractFullDateInfo - Found year in calendar header: ${year}`);
+            }
+            if (month && year) break;
+          }
+        }
+      }
+    }
+
+    // Strategy 2: Search all bold text on page for month/year patterns
+    if (!month || !year) {
+      const allBoldElements = document.querySelectorAll('div.font-bold, strong, b, [class*="bold"]');
+      for (const elem of allBoldElements) {
+        const text = elem.textContent.trim();
+        const match = text.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/);
+        if (match) {
+          const foundMonth = match[1];
+          const foundYear = parseInt(match[2]);
+          const monthIndex = monthNames.indexOf(foundMonth);
+
+          if (monthIndex >= 0) {
+            if (!month) {
+              month = monthAbbrev[monthIndex];
+              console.log(`DragDrop: extractFullDateInfo - Found month in bold element: ${month}`);
+            }
+            if (!year) {
+              year = foundYear;
+              console.log(`DragDrop: extractFullDateInfo - Found year in bold element: ${year}`);
+            }
+            if (month && year) break;
+          }
+        }
+      }
+    }
+
+    // Strategy 3: General page text search (last resort)
+    if (!month || !year) {
       const pageText = document.body.innerText;
       const monthYearMatches = pageText.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/g);
 
       if (monthYearMatches && monthYearMatches.length > 0) {
-        console.log('DragDrop: extractFullDateInfo - Found potential month/year patterns:', monthYearMatches);
+        console.log('DragDrop: extractFullDateInfo - Found potential month/year patterns:', monthYearMatches.slice(0, 5));
 
         // Try each match to see if it's a valid month
         for (const match of monthYearMatches) {
@@ -469,11 +529,11 @@ const DragDropFeature = (() => {
             if (monthIndex >= 0) {
               if (!month) {
                 month = monthAbbrev[monthIndex];
-                console.log(`DragDrop: extractFullDateInfo - Found month in page: ${month}`);
+                console.log(`DragDrop: extractFullDateInfo - Found month in page text: ${month}`);
               }
               if (!year) {
                 year = foundYear;
-                console.log(`DragDrop: extractFullDateInfo - Found year in page: ${year}`);
+                console.log(`DragDrop: extractFullDateInfo - Found year in page text: ${year}`);
               }
               if (month && year) break;
             }
@@ -482,19 +542,36 @@ const DragDropFeature = (() => {
       }
     }
 
-    // Fallback to current month and year
+    // Fallback to current month and year with smart year inference
     if (!month || !year) {
       const now = new Date();
-      const fallbackMonth = !month ? monthAbbrev[now.getMonth()] : null;
-      const fallbackYear = !year ? now.getFullYear() : null;
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
 
-      if (fallbackMonth) {
-        console.warn(`DragDrop: extractFullDateInfo - month not found, using current month: ${fallbackMonth}`);
-        month = fallbackMonth;
+      if (!month) {
+        month = monthAbbrev[currentMonth];
+        console.warn(`DragDrop: extractFullDateInfo - month not found, using current month: ${month}`);
       }
-      if (fallbackYear) {
-        console.warn(`DragDrop: extractFullDateInfo - year not found, using current year: ${fallbackYear}`);
-        year = fallbackYear;
+
+      if (!year && month) {
+        // Smart year inference based on current date
+        const targetMonthIndex = monthAbbrev.indexOf(month);
+
+        // If we're in Nov/Dec and the target is Jan/Feb, likely next year
+        if (currentMonth >= 10 && targetMonthIndex <= 1) {
+          year = currentYear + 1;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred next year ${year} (current: ${monthAbbrev[currentMonth]}, target: ${month})`);
+        }
+        // If we're in Jan/Feb and the target is Nov/Dec, likely last year
+        else if (currentMonth <= 1 && targetMonthIndex >= 10) {
+          year = currentYear - 1;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred previous year ${year} (current: ${monthAbbrev[currentMonth]}, target: ${month})`);
+        }
+        // Otherwise, assume current year
+        else {
+          year = currentYear;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, using current year: ${year}`);
+        }
       }
     }
 
