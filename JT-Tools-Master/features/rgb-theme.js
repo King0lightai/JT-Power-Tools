@@ -145,95 +145,118 @@ const CustomThemeFeature = (() => {
     const css = `
       /* JT Tools - Custom Color Theme */
 
-      /* Override primary background colors */
+      /* ===== BACKGROUND COLORS ===== */
+
+      /* Main body background */
       body {
         background-color: ${palette.bg50} !important;
       }
 
-      .bg-gray-50 {
-        background-color: ${palette.bg50} !important;
-      }
-
-      .bg-gray-100 {
+      /* All gray background variations */
+      [class*="bg-gray-50"],
+      [class*="bg-gray-100"],
+      [class*="bg-gray-200"] {
         background-color: ${palette.bg100} !important;
       }
 
-      .bg-gray-200 {
+      [class*="bg-gray-300"] {
         background-color: ${palette.bg200} !important;
       }
 
-      /* Primary colors for buttons and accents */
-      .bg-blue-500,
-      .bg-blue-600,
-      button.bg-blue-500,
-      button.bg-blue-600,
-      [class*="bg-blue"] {
+      /* Specific background shades */
+      [style*="background-color: rgb(249, 250, 251)"],
+      [style*="background-color: rgb(243, 244, 246)"],
+      [style*="background: rgb(249, 250, 251)"],
+      [style*="background: rgb(243, 244, 246)"] {
+        background-color: ${palette.bg100} !important;
+      }
+
+      /* ===== PRIMARY/ACCENT COLORS ===== */
+
+      /* All blue backgrounds (buttons, badges, etc) */
+      [class*="bg-blue"],
+      button[class*="bg-blue"],
+      a[class*="bg-blue"] {
         background-color: ${palette.primary} !important;
       }
 
-      .hover\\:bg-blue-600:hover,
-      .hover\\:bg-blue-700:hover {
+      /* Blue hover states */
+      [class*="hover:bg-blue"]:hover,
+      button:hover[class*="bg-blue"] {
         background-color: ${palette.primaryDark} !important;
       }
 
-      button:active[class*="bg-blue"] {
+      /* Blue active states */
+      button:active[class*="bg-blue"],
+      [class*="active"][class*="bg-blue"] {
         background-color: ${palette.primaryDarker} !important;
       }
 
-      /* Text colors */
-      .text-blue-500,
-      .text-blue-600,
-      [class*="text-blue"] {
+      /* Primary color backgrounds (alternative) */
+      [class*="bg-primary"] {
+        background-color: ${palette.primary} !important;
+      }
+
+      /* ===== TEXT COLORS ===== */
+
+      /* Blue text */
+      [class*="text-blue"],
+      a[class*="text-blue"] {
         color: ${palette.primary} !important;
       }
 
-      .text-gray-900 {
+      /* Dark gray text */
+      [class*="text-gray-900"],
+      [class*="text-gray-800"] {
         color: ${palette.text} !important;
       }
 
-      .text-gray-800 {
-        color: ${palette.text} !important;
-      }
-
-      .text-gray-700 {
+      /* Medium gray text */
+      [class*="text-gray-700"],
+      [class*="text-gray-600"],
+      [class*="text-gray-500"] {
         color: ${palette.textLight} !important;
       }
 
-      .text-gray-600 {
-        color: ${palette.textLight} !important;
-      }
+      /* ===== BORDER COLORS ===== */
 
-      /* Border colors */
-      .border-blue-500,
+      /* Blue borders */
       [class*="border-blue"] {
         border-color: ${palette.primary} !important;
       }
 
-      .border-gray-200 {
+      /* Gray borders */
+      [class*="border-gray-200"],
+      [class*="border-gray-300"] {
         border-color: ${palette.border} !important;
       }
 
-      .border-gray-300 {
+      [class*="border-gray-400"] {
         border-color: ${palette.borderDark} !important;
       }
 
-      /* Schedule cards */
-      .schedule-item,
-      [class*="schedule"] {
-        border-left-color: ${palette.primary} !important;
-        background-color: ${palette.bg100} !important;
+      /* Divide colors (dividers between elements) */
+      [class*="divide-gray"] > * + * {
+        border-color: ${palette.border} !important;
+      }
+
+      /* ===== SPECIFIC ELEMENTS ===== */
+
+      /* Buttons */
+      button {
+        transition: all 0.2s ease;
       }
 
       /* Links */
-      a {
+      a:not([class*="bg-"]) {
         color: ${palette.primary} !important;
       }
 
-      a:hover {
+      a:hover:not([class*="bg-"]) {
         color: ${palette.primaryDark} !important;
       }
 
-      /* Focus states */
+      /* Form inputs */
       input:focus,
       textarea:focus,
       select:focus {
@@ -242,41 +265,74 @@ const CustomThemeFeature = (() => {
         box-shadow: 0 0 0 3px ${palette.primaryLight}33 !important;
       }
 
-      /* Checkbox and radio */
+      /* Checkboxes and radios */
       input[type="checkbox"]:checked,
       input[type="radio"]:checked {
         background-color: ${palette.primary} !important;
         border-color: ${palette.primary} !important;
       }
 
-      /* Badges and pills */
-      .badge,
-      .pill,
+      /* Ring colors (Tailwind focus rings) */
+      [class*="ring-blue"],
+      [class*="focus:ring-blue"]:focus {
+        --tw-ring-color: ${palette.primary} !important;
+      }
+
+      /* ===== COMPONENT-SPECIFIC ===== */
+
+      /* Schedule items/cards */
+      [class*="schedule"],
+      .schedule-item,
+      div[class*="border-l-4"],
+      div[class*="border-l-8"] {
+        border-left-color: ${palette.primary} !important;
+      }
+
+      /* Cards and panels - keep white but add themed border */
+      [class*="rounded"][class*="border"],
+      [class*="shadow"][class*="bg-white"] {
+        border-color: ${palette.border} !important;
+      }
+
+      /* Badges, pills, tags */
       [class*="badge"],
-      [class*="pill"] {
+      [class*="pill"],
+      [class*="tag"],
+      span[class*="bg-"][class*="rounded"] {
         background-color: ${palette.bg200} !important;
         color: ${palette.text} !important;
       }
 
-      /* Cards and panels */
-      .card,
-      .panel,
-      [class*="card"],
-      [class*="panel"] {
-        background-color: white !important;
-        border-color: ${palette.border} !important;
-      }
-
-      /* Hover states for list items */
-      [class*="hover:bg-gray"]:hover {
+      /* Progress bars */
+      [class*="progress"],
+      [role="progressbar"] {
         background-color: ${palette.bg200} !important;
       }
 
-      /* Selected states */
-      [class*="bg-blue"].selected,
-      .selected[class*="bg-blue"] {
+      [class*="progress"] > div,
+      [role="progressbar"] > div {
+        background-color: ${palette.primary} !important;
+      }
+
+      /* Selected/active states */
+      [class*="selected"],
+      [aria-selected="true"],
+      [class*="active"]:not(button) {
         background-color: ${palette.primaryLight} !important;
         border-color: ${palette.primary} !important;
+      }
+
+      /* Hover backgrounds for rows/list items */
+      [class*="hover:bg-gray"]:hover,
+      tr:hover,
+      li:hover[class*="cursor-pointer"] {
+        background-color: ${palette.bg200} !important;
+      }
+
+      /* SVG icons with blue color */
+      svg[class*="text-blue"],
+      [class*="text-blue"] svg {
+        color: ${palette.primary} !important;
       }
     `;
 
