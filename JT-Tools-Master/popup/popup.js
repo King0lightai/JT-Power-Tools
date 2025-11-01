@@ -345,7 +345,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', async () => {
       console.log('Checkbox changed:', checkbox.id, checkbox.checked);
-      const settings = getCurrentSettings();
+      const settings = await getCurrentSettings();
       await saveSettings(settings);
     });
   });
