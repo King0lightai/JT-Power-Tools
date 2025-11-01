@@ -70,6 +70,65 @@ const CustomThemeFeature = (() => {
     return { ...currentColors };
   }
 
+  // Helper function to convert hex to RGB
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
+  // Helper function to convert RGB to hex
+  function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  // Calculate luminance to determine if color is light or dark
+  function getLuminance(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return 0.5;
+
+    // Normalize RGB values
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+
+    // Calculate relative luminance
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  // Adjust color brightness (amount: positive to lighten, negative to darken)
+  function adjustBrightness(hex, amount) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+
+    const adjust = (value) => {
+      const newValue = value + amount;
+      return Math.max(0, Math.min(255, newValue));
+    };
+
+    return rgbToHex(
+      adjust(rgb.r),
+      adjust(rgb.g),
+      adjust(rgb.b)
+    );
+  }
+
+  // Generate border color based on background luminance
+  function getBorderColor(backgroundColor) {
+    const luminance = getLuminance(backgroundColor);
+
+    // If background is dark (luminance < 0.5), lighten the border
+    // If background is light (luminance >= 0.5), darken the border
+    if (luminance < 0.5) {
+      return adjustBrightness(backgroundColor, 30); // Lighten by 30
+    } else {
+      return adjustBrightness(backgroundColor, -30); // Darken by 30
+    }
+  }
+
   // Inject theme CSS using user's chosen colors directly
   function injectThemeCSS() {
     if (styleElement) {
@@ -77,6 +136,9 @@ const CustomThemeFeature = (() => {
     }
 
     const { primary, background, text } = currentColors;
+
+    // Generate border color that's slightly lighter/darker than background
+    const borderColor = getBorderColor(background);
 
     // Create CSS using user's chosen colors
     const css = `
@@ -90,7 +152,7 @@ const CustomThemeFeature = (() => {
 
       /* === General Styles === */
       *, ::backdrop, ::file-selector-button, :after, :before {
-        border-color: ${background};
+        border-color: ${borderColor};
       }
 
       .border-transparent {
@@ -98,7 +160,7 @@ const CustomThemeFeature = (() => {
       }
 
       .border-white {
-        border-color: ${background};
+        border-color: ${borderColor};
       }
 
       /* === Background Colors === */
@@ -132,19 +194,19 @@ const CustomThemeFeature = (() => {
 
       /* === Shadow Styles === */
       .shadow-line-right {
-        box-shadow: 1px 0 0 ${background};
+        box-shadow: 1px 0 0 ${borderColor};
       }
 
       .shadow-line-left {
-        box-shadow: -1px 0 0 ${background};
+        box-shadow: -1px 0 0 ${borderColor};
       }
 
       .shadow-line-bottom {
-        box-shadow: 0 1px 0 ${background};
+        box-shadow: 0 1px 0 ${borderColor};
       }
 
       .shadow-sm {
-        border: solid 1px ${background};
+        border: solid 1px ${borderColor};
       }
 
       /* === Focus Styles === */
