@@ -5,11 +5,7 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
-  rgbColors: {
-    primary: { r: 59, g: 130, b: 246 },
-    background: { r: 249, g: 250, b: 251 },
-    text: { r: 17, g: 24, b: 39 }
-  }
+  themeColor: '#3B82F6' // Default blue
 };
 
 // Initialize extension on install

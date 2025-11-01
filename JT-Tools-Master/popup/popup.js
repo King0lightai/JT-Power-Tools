@@ -5,11 +5,7 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
-  rgbColors: {
-    primary: { r: 59, g: 130, b: 246 },
-    background: { r: 249, g: 250, b: 251 },
-    text: { r: 17, g: 24, b: 39 }
-  }
+  themeColor: '#3B82F6' // Default blue
 };
 
 // Check and update license status on load
@@ -97,13 +93,13 @@ async function loadSettings() {
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
 
-    // Load RGB colors
-    const colors = settings.rgbColors || defaultSettings.rgbColors;
-    loadRGBColors(colors);
+    // Load theme color
+    const themeColor = settings.themeColor || defaultSettings.themeColor;
+    loadThemeColor(themeColor);
 
-    // Show/hide RGB customization panel based on rgbTheme state
-    const rgbCustomization = document.getElementById('rgbCustomization');
-    rgbCustomization.style.display = (hasLicense && settings.rgbTheme) ? 'block' : 'none';
+    // Show/hide theme customization panel based on rgbTheme state
+    const themeCustomization = document.getElementById('themeCustomization');
+    themeCustomization.style.display = (hasLicense && settings.rgbTheme) ? 'block' : 'none';
 
     console.log('Settings loaded:', settings);
   } catch (error) {
@@ -133,9 +129,9 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Show/hide RGB customization panel
-    const rgbCustomization = document.getElementById('rgbCustomization');
-    rgbCustomization.style.display = settings.rgbTheme ? 'block' : 'none';
+    // Show/hide theme customization panel
+    const themeCustomization = document.getElementById('themeCustomization');
+    themeCustomization.style.display = settings.rgbTheme ? 'block' : 'none';
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -156,7 +152,7 @@ async function saveSettings(settings) {
 // Get current settings from checkboxes
 async function getCurrentSettings() {
   const result = await chrome.storage.sync.get(['jtToolsSettings']);
-  const currentColors = (result.jtToolsSettings && result.jtToolsSettings.rgbColors) || defaultSettings.rgbColors;
+  const currentColor = (result.jtToolsSettings && result.jtToolsSettings.themeColor) || defaultSettings.themeColor;
 
   return {
     dragDrop: document.getElementById('dragDrop').checked,
@@ -164,7 +160,7 @@ async function getCurrentSettings() {
     formatter: document.getElementById('formatter').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
-    rgbColors: currentColors
+    themeColor: currentColor
   };
 }
 
@@ -211,87 +207,85 @@ async function refreshCurrentTab() {
   }
 }
 
-// Load RGB colors into sliders
-function loadRGBColors(colors) {
-  // Primary color
-  document.getElementById('primaryR').value = colors.primary.r;
-  document.getElementById('primaryG').value = colors.primary.g;
-  document.getElementById('primaryB').value = colors.primary.b;
-  document.getElementById('primaryR-value').textContent = colors.primary.r;
-  document.getElementById('primaryG-value').textContent = colors.primary.g;
-  document.getElementById('primaryB-value').textContent = colors.primary.b;
-
-  // Background color
-  document.getElementById('backgroundR').value = colors.background.r;
-  document.getElementById('backgroundG').value = colors.background.g;
-  document.getElementById('backgroundB').value = colors.background.b;
-  document.getElementById('backgroundR-value').textContent = colors.background.r;
-  document.getElementById('backgroundG-value').textContent = colors.background.g;
-  document.getElementById('backgroundB-value').textContent = colors.background.b;
-
-  // Text color
-  document.getElementById('textR').value = colors.text.r;
-  document.getElementById('textG').value = colors.text.g;
-  document.getElementById('textB').value = colors.text.b;
-  document.getElementById('textR-value').textContent = colors.text.r;
-  document.getElementById('textG-value').textContent = colors.text.g;
-  document.getElementById('textB-value').textContent = colors.text.b;
-
-  // Update previews
-  updateColorPreviews();
+// Convert hex to RGB for preview generation
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 59, g: 130, b: 246 };
 }
 
-// Get current RGB colors from sliders
-function getCurrentRGBColors() {
-  return {
-    primary: {
-      r: parseInt(document.getElementById('primaryR').value),
-      g: parseInt(document.getElementById('primaryG').value),
-      b: parseInt(document.getElementById('primaryB').value)
-    },
-    background: {
-      r: parseInt(document.getElementById('backgroundR').value),
-      g: parseInt(document.getElementById('backgroundG').value),
-      b: parseInt(document.getElementById('backgroundB').value)
-    },
-    text: {
-      r: parseInt(document.getElementById('textR').value),
-      g: parseInt(document.getElementById('textG').value),
-      b: parseInt(document.getElementById('textB').value)
+// Convert RGB to HSL
+function rgbToHsl(r, g, b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+
+  if (max === min) {
+    h = s = 0;
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
     }
-  };
+  }
+
+  return { h: h * 360, s: s * 100, l: l * 100 };
 }
 
-// Update color preview boxes
-function updateColorPreviews() {
-  const colors = getCurrentRGBColors();
-
-  const primaryPreview = document.getElementById('primaryPreview');
-  const backgroundPreview = document.getElementById('backgroundPreview');
-  const textPreview = document.getElementById('textPreview');
-
-  primaryPreview.style.backgroundColor = `rgb(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b})`;
-  backgroundPreview.style.backgroundColor = `rgb(${colors.background.r}, ${colors.background.g}, ${colors.background.b})`;
-  textPreview.style.backgroundColor = `rgb(${colors.text.r}, ${colors.text.g}, ${colors.text.b})`;
+// Load theme color
+function loadThemeColor(color) {
+  document.getElementById('themeColorPicker').value = color;
+  document.getElementById('colorValueText').textContent = color.toUpperCase();
+  document.getElementById('colorPreviewLarge').style.backgroundColor = color;
+  updateThemePreview(color);
 }
 
-// Reset colors to defaults
-async function resetColors() {
-  loadRGBColors(defaultSettings.rgbColors);
-  showStatus('Colors reset to defaults', 'success');
+// Update theme preview samples
+function updateThemePreview(color) {
+  const rgb = hexToRgb(color);
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+  const primaryColor = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+  const bgColor = `hsl(${hsl.h}, ${Math.min(hsl.s * 0.3, 30)}%, 98%)`;
+  const textColor = `hsl(${hsl.h}, ${Math.min(hsl.s * 0.8, 80)}%, 15%)`;
+
+  document.getElementById('previewPrimary').style.backgroundColor = primaryColor;
+  document.getElementById('previewPrimary').style.borderColor = primaryColor;
+
+  document.getElementById('previewBackground').style.backgroundColor = bgColor;
+  document.getElementById('previewBackground').style.color = textColor;
+
+  document.getElementById('previewText').style.color = textColor;
 }
 
-// Apply colors
-async function applyColors() {
+// Reset color to default
+async function resetColor() {
+  loadThemeColor(defaultSettings.themeColor);
+  showStatus('Color reset to default', 'success');
+}
+
+// Apply theme color
+async function applyColor() {
   try {
-    const colors = getCurrentRGBColors();
+    const color = document.getElementById('themeColorPicker').value;
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     const settings = result.jtToolsSettings || defaultSettings;
 
-    settings.rgbColors = colors;
+    settings.themeColor = color;
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
-    console.log('RGB colors saved:', colors);
+    console.log('Theme color saved:', color);
 
     // Notify background script of settings change
     chrome.runtime.sendMessage({
@@ -299,10 +293,10 @@ async function applyColors() {
       settings: settings
     });
 
-    showStatus('Colors applied!', 'success');
+    showStatus('Theme applied!', 'success');
   } catch (error) {
-    console.error('Error applying colors:', error);
-    showStatus('Error applying colors', 'error');
+    console.error('Error applying theme:', error);
+    showStatus('Error applying theme', 'error');
   }
 }
 
@@ -350,24 +344,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Listen for RGB slider changes
-  const rgbSliders = document.querySelectorAll('.rgb-slider');
-  rgbSliders.forEach(slider => {
-    slider.addEventListener('input', (e) => {
-      // Update the value display
-      const valueSpan = document.getElementById(`${e.target.id}-value`);
-      valueSpan.textContent = e.target.value;
-
-      // Update color previews
-      updateColorPreviews();
-    });
+  // Listen for color picker changes
+  const colorPicker = document.getElementById('themeColorPicker');
+  colorPicker.addEventListener('input', (e) => {
+    const color = e.target.value;
+    document.getElementById('colorValueText').textContent = color.toUpperCase();
+    document.getElementById('colorPreviewLarge').style.backgroundColor = color;
+    updateThemePreview(color);
   });
 
-  // Listen for reset colors button
-  document.getElementById('resetColorsBtn').addEventListener('click', resetColors);
+  // Listen for reset color button
+  document.getElementById('resetColorBtn').addEventListener('click', resetColor);
 
-  // Listen for apply colors button
-  document.getElementById('applyColorsBtn').addEventListener('click', applyColors);
+  // Listen for apply color button
+  document.getElementById('applyColorBtn').addEventListener('click', applyColor);
 
   // Listen for refresh button
   document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);

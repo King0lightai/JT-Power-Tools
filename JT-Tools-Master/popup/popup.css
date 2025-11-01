@@ -336,125 +336,161 @@ footer p {
   opacity: 0.5;
 }
 
-/* RGB Customization Panel */
-.rgb-customization {
+/* Theme Customization Panel */
+.theme-customization {
   padding: 16px 20px;
   background: #f9fafb;
   border-top: 1px solid #e5e7eb;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.rgb-customization h3 {
+.theme-customization h3 {
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
-.color-group {
+.theme-description {
+  font-size: 11px;
+  color: #6b7280;
   margin-bottom: 16px;
-  padding: 12px;
+  line-height: 1.4;
+}
+
+/* Color Picker Container */
+.color-picker-container {
   background: #ffffff;
+  padding: 16px;
   border-radius: 6px;
   border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
 }
 
-.color-label {
+.color-picker-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.color-picker-label {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  cursor: pointer;
 }
 
-.color-name {
+.color-picker-text {
   font-size: 12px;
   font-weight: 500;
   color: #1f2937;
 }
 
-.color-preview {
-  width: 32px;
-  height: 20px;
-  border-radius: 3px;
-  border: 1px solid #d1d5db;
-  display: inline-block;
+.color-preview-large {
+  width: 48px;
+  height: 32px;
+  border-radius: 6px;
+  border: 2px solid #d1d5db;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background-color: #3B82F6;
+  transition: transform 0.15s ease;
 }
 
-.rgb-sliders {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.color-picker-label:hover .color-preview-large {
+  transform: scale(1.05);
 }
 
-.slider-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.color-picker-input {
+  width: 100%;
+  height: 48px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
 
-.slider-group label {
+.color-picker-input:hover {
+  border-color: #d1d5db;
+}
+
+.color-picker-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.color-value-display {
+  text-align: center;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #f9fafb;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.color-value-display span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  text-transform: uppercase;
+}
+
+/* Theme Preview */
+.theme-preview {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.theme-preview h4 {
   font-size: 11px;
   font-weight: 600;
   color: #6b7280;
-  width: 30px;
-  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
 }
 
-.rgb-slider {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.rgb-slider.red {
-  background: linear-gradient(to right, #000000, #ff0000);
-}
-
-.rgb-slider.green {
-  background: linear-gradient(to right, #000000, #00ff00);
-}
-
-.rgb-slider.blue {
-  background: linear-gradient(to right, #000000, #0000ff);
-}
-
-.rgb-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #4b5563;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.rgb-slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid #4b5563;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.rgb-slider::-webkit-slider-thumb:hover {
-  background: #f3f4f6;
-}
-
-.rgb-slider::-moz-range-thumb:hover {
-  background: #f3f4f6;
-}
-
-.rgb-actions {
+.preview-samples {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+}
+
+.preview-sample {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preview-sample.primary {
+  background: #3B82F6;
+  color: white;
+  border: 1px solid #3B82F6;
+}
+
+.preview-sample.background {
+  background: #f0f7ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.preview-sample.text {
+  background: #ffffff;
+  color: #1e3a8a;
+  border: 1px solid #e5e7eb;
+}
+
+/* Theme Actions */
+.theme-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .reset-btn,

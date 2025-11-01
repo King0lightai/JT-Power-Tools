@@ -39,11 +39,7 @@ let currentSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
-  rgbColors: {
-    primary: { r: 59, g: 130, b: 246 },
-    background: { r: 249, g: 250, b: 251 },
-    text: { r: 17, g: 24, b: 39 }
-  }
+  themeColor: '#3B82F6' // Default blue
 };
 
 // Load settings from storage
@@ -74,9 +70,9 @@ function initializeFeature(featureKey) {
 
     // Initialize if not already active
     if (!FeatureClass.isActive()) {
-      // Special handling for RGB theme - pass colors
-      if (featureKey === 'rgbTheme' && currentSettings.rgbColors) {
-        FeatureClass.init(currentSettings.rgbColors);
+      // Special handling for RGB theme - pass theme color
+      if (featureKey === 'rgbTheme' && currentSettings.themeColor) {
+        FeatureClass.init(currentSettings.themeColor);
       } else {
         FeatureClass.init();
       }
@@ -141,15 +137,15 @@ function handleSettingsChange(newSettings) {
     }
   }
 
-  // Special handling for RGB color changes
-  if (newSettings.rgbTheme && newSettings.rgbColors) {
+  // Special handling for theme color changes
+  if (newSettings.rgbTheme && newSettings.themeColor) {
     const RGBThemeFeature = window.RGBThemeFeature;
     if (RGBThemeFeature && RGBThemeFeature.isActive()) {
-      // Check if colors actually changed
-      const colorsChanged = JSON.stringify(currentSettings.rgbColors) !== JSON.stringify(newSettings.rgbColors);
-      if (colorsChanged) {
-        console.log('JT-Tools: RGB colors updated, applying new colors');
-        RGBThemeFeature.updateColors(newSettings.rgbColors);
+      // Check if color actually changed
+      const colorChanged = currentSettings.themeColor !== newSettings.themeColor;
+      if (colorChanged) {
+        console.log('JT-Tools: Theme color updated, applying new color');
+        RGBThemeFeature.updateColor(newSettings.themeColor);
       }
     }
   }
