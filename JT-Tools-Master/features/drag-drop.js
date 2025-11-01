@@ -433,22 +433,28 @@ const DragDropFeature = (() => {
 
           // Check for year (4 digits)
           const yearMatch = text.match(/\b(20\d{2})\b/);
-          if (yearMatch) {
+          if (yearMatch && !year) {
             year = parseInt(yearMatch[1]);
             console.log(`DragDrop: extractFullDateInfo - found year: ${year} in cell ${i}`);
           }
 
           // Check for month name
-          for (let m = 0; m < monthNames.length; m++) {
-            if (text === monthNames[m]) {
-              month = monthAbbrev[m];
-              console.log(`DragDrop: extractFullDateInfo - found month: ${month} in cell ${i}`);
-              break;
+          if (!month) {
+            for (let m = 0; m < monthNames.length; m++) {
+              if (text === monthNames[m]) {
+                month = monthAbbrev[m];
+                console.log(`DragDrop: extractFullDateInfo - found month: ${month} in cell ${i}`);
+                break;
+              }
             }
           }
-          if (month) break;
         }
-        if (month) break;
+        // Continue searching until we have both month AND year, or reach the beginning
+        if (month && year) break;
+      }
+
+      if (month && !year) {
+        console.log('DragDrop: extractFullDateInfo - Found month in table but NO year - will search page');
       }
     } else {
       console.error('DragDrop: extractFullDateInfo - no table found for cell');
