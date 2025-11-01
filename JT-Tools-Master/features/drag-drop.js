@@ -706,6 +706,8 @@ const DragDropFeature = (() => {
         console.log(`DragDrop: attemptDateChange - Found ${allDateFields.length} potential date fields`);
 
         let startDateParent = null;
+        let sidebarSourceYear = null; // Extract year from sidebar's current date
+        let sidebarSourceMonth = null; // Extract month from sidebar's current date
         const fieldTexts = []; // Collect all field texts for debugging
 
         for (const field of allDateFields) {
@@ -717,12 +719,56 @@ const DragDropFeature = (() => {
           // 1. "Jan 1, 2026" (Month Day, Year)
           // 2. "Mon, January 15" (DayOfWeek, FullMonth Day) - legacy format
           // 3. "Today", "Tomorrow", "Yesterday"
-          if (/^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(text) ||
-              /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
+          if (/^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(text)) {
+            // Extract year and month from "Jan 1, 2026" format
+            const match = text.match(/^([A-Z][a-z]{2})\s+\d{1,2},\s+(20\d{2})$/);
+            if (match) {
+              sidebarSourceMonth = match[1];
+              sidebarSourceYear = parseInt(match[2]);
+              console.log(`DragDrop: attemptDateChange - Extracted from sidebar: ${sidebarSourceMonth} ${sidebarSourceYear}`);
+            }
+            startDateParent = field.closest('div.group.items-center');
+            console.log('DragDrop: attemptDateChange - Found start date field:', text);
+            break;
+          } else if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
               /^(Today|Tomorrow|Yesterday)$/.test(text)) {
             startDateParent = field.closest('div.group.items-center');
             console.log('DragDrop: attemptDateChange - Found start date field:', text);
             break;
+          }
+        }
+
+        // If we found year and month in sidebar, recalculate target year (this is the CORRECT year logic)
+        if (sidebarSourceYear && sidebarSourceMonth && providedDateInfo) {
+          console.log(`DragDrop: attemptDateChange - *** USING SIDEBAR DATA FOR YEAR CALCULATION ***`);
+          console.log(`DragDrop: attemptDateChange - Sidebar source: ${sidebarSourceMonth} ${sidebarSourceYear}`);
+          console.log(`DragDrop: attemptDateChange - Original target: ${dateInfo.month} ${dateInfo.year}`);
+
+          const monthMap = {
+            'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+            'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+          };
+
+          const sourceMonthIndex = monthMap[sidebarSourceMonth];
+          const targetMonthIndex = monthMap[dateInfo.month];
+
+          // Apply year boundary logic using ACTUAL source year from sidebar
+          if (sourceMonthIndex === targetMonthIndex) {
+            // Same month - use source year
+            dateInfo.year = sidebarSourceYear;
+            console.log(`DragDrop: attemptDateChange - ✓ Same month, corrected target year to: ${dateInfo.year}`);
+          } else if (sourceMonthIndex === 11 && targetMonthIndex === 0) {
+            // Dec → Jan: next year
+            dateInfo.year = sidebarSourceYear + 1;
+            console.log(`DragDrop: attemptDateChange - ✓ Dec→Jan transition, corrected target year to: ${dateInfo.year}`);
+          } else if (sourceMonthIndex === 0 && targetMonthIndex === 11) {
+            // Jan → Dec: previous year
+            dateInfo.year = sidebarSourceYear - 1;
+            console.log(`DragDrop: attemptDateChange - ✓ Jan→Dec transition, corrected target year to: ${dateInfo.year}`);
+          } else {
+            // Other month change - use source year
+            dateInfo.year = sidebarSourceYear;
+            console.log(`DragDrop: attemptDateChange - ✓ Different month, corrected target year to: ${dateInfo.year}`);
           }
         }
 
