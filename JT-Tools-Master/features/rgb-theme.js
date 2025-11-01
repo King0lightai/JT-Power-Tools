@@ -110,28 +110,31 @@ const CustomThemeFeature = (() => {
     // Helper to create HSL color string
     const makeColor = (hue, sat, light) => `hsl(${hue}, ${sat}%, ${light}%)`;
 
+    // Use much higher saturation for dramatic effect like dark mode
+    const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
+
     return {
-      // Background colors (very light tints) - like dark mode's grays
-      bg_white: makeColor(hsl.h, Math.min(hsl.s * 0.1, 10), 99),        // Almost white with slight tint
-      bg_gray_50: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 97),     // Very light
-      bg_gray_100: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 95),     // Light
-      bg_gray_200: makeColor(hsl.h, Math.min(hsl.s * 0.25, 25), 92),    // Medium light
-      bg_slate_50: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 96),
-      bg_blue_50: makeColor(hsl.h, Math.min(hsl.s * 0.3, 30), 94),
-      bg_blue_100: makeColor(hsl.h, Math.min(hsl.s * 0.35, 35), 91),
-      bg_yellow_100: makeColor((hsl.h + 30) % 360, Math.min(hsl.s * 0.2, 20), 93),
+      // Background colors (dramatic tints) - bold color presence
+      bg_white: makeColor(hsl.h, baseSat * 0.5, 96),        // Noticeable tint
+      bg_gray_50: makeColor(hsl.h, baseSat * 0.6, 93),      // Clear color
+      bg_gray_100: makeColor(hsl.h, baseSat * 0.65, 90),    // Strong tint
+      bg_gray_200: makeColor(hsl.h, baseSat * 0.7, 85),     // Very visible
+      bg_slate_50: makeColor(hsl.h, baseSat * 0.55, 92),
+      bg_blue_50: makeColor(hsl.h, baseSat * 0.7, 88),
+      bg_blue_100: makeColor(hsl.h, baseSat * 0.75, 83),
+      bg_yellow_100: makeColor((hsl.h + 30) % 360, baseSat * 0.5, 88),
 
-      // Text colors (dark shades with tint)
-      text_gray_500: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 45),
-      text_gray_600: makeColor(hsl.h, Math.min(hsl.s * 0.3, 30), 35),
-      text_gray_700: makeColor(hsl.h, Math.min(hsl.s * 0.4, 40), 25),
-      text_gray_800: makeColor(hsl.h, Math.min(hsl.s * 0.5, 50), 20),
-      text_gray_900: makeColor(hsl.h, Math.min(hsl.s * 0.6, 60), 15),
-      text_black: makeColor(hsl.h, Math.min(hsl.s * 0.7, 70), 10),
+      // Text colors (saturated dark shades)
+      text_gray_500: makeColor(hsl.h, baseSat * 0.6, 40),
+      text_gray_600: makeColor(hsl.h, baseSat * 0.65, 32),
+      text_gray_700: makeColor(hsl.h, baseSat * 0.7, 25),
+      text_gray_800: makeColor(hsl.h, baseSat * 0.75, 20),
+      text_gray_900: makeColor(hsl.h, baseSat * 0.8, 15),
+      text_black: makeColor(hsl.h, baseSat * 0.85, 10),
 
-      // Border colors
-      border: makeColor(hsl.h, Math.min(hsl.s * 0.2, 20), 85),
-      border_dark: makeColor(hsl.h, Math.min(hsl.s * 0.25, 25), 75),
+      // Border colors (visible)
+      border: makeColor(hsl.h, baseSat * 0.6, 75),
+      border_dark: makeColor(hsl.h, baseSat * 0.65, 65),
 
       // Primary/accent (the actual chosen color)
       primary: baseColor,
@@ -139,7 +142,7 @@ const CustomThemeFeature = (() => {
       primary_dark: makeColor(hsl.h, hsl.s, Math.max(hsl.l - 10, 10)),
 
       // Schedule card backgrounds (with inline styles)
-      schedule_card_bg: makeColor(hsl.h, Math.min(hsl.s * 0.15, 15), 96),
+      schedule_card_bg: makeColor(hsl.h, baseSat * 0.6, 92),
     };
   }
 
@@ -363,7 +366,9 @@ const CustomThemeFeature = (() => {
     cleanup,
     updateColor,
     getColor,
-    isActive: () => isActive
+    isActive: () => isActive,
+    // Export palette generator for preview
+    generatePalette: (color) => generatePalette(color)
   };
 })();
 
