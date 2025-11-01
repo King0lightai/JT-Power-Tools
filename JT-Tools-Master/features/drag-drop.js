@@ -402,7 +402,6 @@ const DragDropFeature = (() => {
 
   function formatDateForInput(dateInfo) {
     let month = dateInfo.month || '';
-    let year = dateInfo.year;
 
     if (!month) {
       const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -411,12 +410,9 @@ const DragDropFeature = (() => {
       month = monthAbbrev[now.getMonth()];
     }
 
-    if (!year) {
-      year = new Date().getFullYear();
-    }
-
-    // Include year in the format for cross-year drag operations
-    return `${month} ${dateInfo.day}, ${year}`;
+    // Return format without year - JobTread infers year from calendar context
+    // This allows cross-year drags to work (e.g., Dec to Jan assumes next year)
+    return `${month} ${dateInfo.day}`;
   }
 
   function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo = null) {
