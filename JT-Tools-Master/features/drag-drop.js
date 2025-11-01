@@ -843,7 +843,13 @@ const DragDropFeature = (() => {
                 // Small delay to let month change process and update calendar
                 setTimeout(() => {
                   // Find and click the day in the calendar
-                  const calendarTable = monthSelect.closest('div').querySelector('table');
+                  // The table is a sibling of the select container, so go up to parent and search
+                  const pickerContainer = monthSelect.closest('div.p-1');
+                  const calendarTable = pickerContainer ? pickerContainer.querySelector('table') : null;
+
+                  console.log('DragDrop: attemptDateChange - Picker container:', pickerContainer);
+                  console.log('DragDrop: attemptDateChange - Calendar table:', calendarTable);
+
                   if (calendarTable) {
                     const dayCells = calendarTable.querySelectorAll('td');
                     let targetDayCell = null;
