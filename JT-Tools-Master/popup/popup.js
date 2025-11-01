@@ -247,26 +247,42 @@ function rgbToHsl(r, g, b) {
 function loadThemeColor(color) {
   document.getElementById('themeColorPicker').value = color;
   document.getElementById('colorValueText').textContent = color.toUpperCase();
-  document.getElementById('colorPreviewLarge').style.backgroundColor = color;
   updateThemePreview(color);
 }
 
-// Update theme preview samples
-function updateThemePreview(color) {
-  const rgb = hexToRgb(color);
+// Generate palette (same logic as rgb-theme.js)
+function generatePalette(baseColor) {
+  const rgb = hexToRgb(baseColor);
   const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-  const primaryColor = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
-  const bgColor = `hsl(${hsl.h}, ${Math.min(hsl.s * 0.3, 30)}%, 98%)`;
-  const textColor = `hsl(${hsl.h}, ${Math.min(hsl.s * 0.8, 80)}%, 15%)`;
+  const makeColor = (hue, sat, light) => `hsl(${hue}, ${sat}%, ${light}%)`;
+  const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
 
-  document.getElementById('previewPrimary').style.backgroundColor = primaryColor;
-  document.getElementById('previewPrimary').style.borderColor = primaryColor;
+  return {
+    bg_gray_50: makeColor(hsl.h, baseSat * 0.6, 93),
+    text_gray_900: makeColor(hsl.h, baseSat * 0.8, 15),
+    primary: baseColor,
+  };
+}
 
-  document.getElementById('previewBackground').style.backgroundColor = bgColor;
-  document.getElementById('previewBackground').style.color = textColor;
+// Update theme preview samples with actual palette colors
+function updateThemePreview(color) {
+  const palette = generatePalette(color);
 
-  document.getElementById('previewText').style.color = textColor;
+  // Primary - show the actual chosen color
+  document.getElementById('previewPrimary').style.backgroundColor = palette.primary;
+  document.getElementById('previewPrimary').style.borderColor = palette.primary;
+  document.getElementById('previewPrimary').style.color = 'white';
+
+  // Background - show the actual background color that will be used
+  document.getElementById('previewBackground').style.backgroundColor = palette.bg_gray_50;
+  document.getElementById('previewBackground').style.color = palette.text_gray_900;
+  document.getElementById('previewBackground').style.borderColor = palette.bg_gray_50;
+
+  // Text - show the actual text color that will be used
+  document.getElementById('previewText').style.backgroundColor = 'white';
+  document.getElementById('previewText').style.color = palette.text_gray_900;
+  document.getElementById('previewText').style.borderColor = '#e5e7eb';
 }
 
 // Reset color to default
@@ -349,7 +365,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   colorPicker.addEventListener('input', (e) => {
     const color = e.target.value;
     document.getElementById('colorValueText').textContent = color.toUpperCase();
-    document.getElementById('colorPreviewLarge').style.backgroundColor = color;
     updateThemePreview(color);
   });
 
