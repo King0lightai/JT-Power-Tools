@@ -806,8 +806,82 @@ const DragDropFeature = (() => {
           startDateParent.click();
 
           setTimeout(() => {
-            console.log('DragDrop: attemptDateChange - Looking for input field...');
-            let inputField = null;
+            console.log('DragDrop: attemptDateChange - Looking for date picker...');
+
+            // Look for the date picker popup with month/year selects
+            const monthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+            const yearSelect = document.querySelector('select option[value="2026"]')?.closest('select');
+
+            if (monthSelect && yearSelect) {
+              console.log('DragDrop: attemptDateChange - Found date picker with month and year selects');
+
+              // Map month names to select values (1-12)
+              const monthMap = {
+                'Jan': '1', 'Feb': '2', 'Mar': '3', 'Apr': '4', 'May': '5', 'Jun': '6',
+                'Jul': '7', 'Aug': '8', 'Sep': '9', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+              };
+
+              const targetMonthValue = monthMap[dateInfo.month];
+              const targetYearValue = dateInfo.year.toString();
+
+              console.log(`DragDrop: attemptDateChange - Setting date picker to: ${dateInfo.month} (${targetMonthValue}) ${dateInfo.year}`);
+
+              // Set the year first
+              yearSelect.value = targetYearValue;
+              yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+              yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
+              console.log(`DragDrop: attemptDateChange - Year select set to: ${targetYearValue}`);
+
+              // Small delay to let year change process
+              setTimeout(() => {
+                // Set the month
+                monthSelect.value = targetMonthValue;
+                monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                console.log(`DragDrop: attemptDateChange - Month select set to: ${targetMonthValue}`);
+
+                // Small delay to let month change process and update calendar
+                setTimeout(() => {
+                  // Find and click the day in the calendar
+                  const calendarTable = monthSelect.closest('div').querySelector('table');
+                  if (calendarTable) {
+                    const dayCells = calendarTable.querySelectorAll('td');
+                    let targetDayCell = null;
+
+                    for (const cell of dayCells) {
+                      const cellText = cell.textContent.trim();
+                      // Match the day and make sure it's not grayed out (text-gray-300)
+                      if (cellText === dateInfo.day && !cell.classList.contains('text-gray-300')) {
+                        targetDayCell = cell;
+                        break;
+                      }
+                    }
+
+                    if (targetDayCell) {
+                      console.log(`DragDrop: attemptDateChange - Clicking day ${dateInfo.day} in calendar`);
+                      targetDayCell.click();
+                      console.log('DragDrop: attemptDateChange - Date picker selection COMPLETE');
+
+                      setTimeout(() => {
+                        closeSidebar(failsafeTimeout);
+                      }, 500);
+                    } else {
+                      console.error(`DragDrop: attemptDateChange - Could not find day ${dateInfo.day} in calendar`);
+                      showNotification('Could not find target day in calendar');
+                      closeSidebar(failsafeTimeout);
+                    }
+                  } else {
+                    console.error('DragDrop: attemptDateChange - Could not find calendar table');
+                    showNotification('Could not find calendar');
+                    closeSidebar(failsafeTimeout);
+                  }
+                }, 200);
+              }, 200);
+            } else {
+              console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
+
+              // Fall back to old input field method
+              let inputField = null;
             const inputs = sidebar.querySelectorAll('input');
             console.log(`DragDrop: attemptDateChange - Found ${inputs.length} input fields in sidebar`);
 
@@ -898,6 +972,7 @@ const DragDropFeature = (() => {
                 closeSidebar(failsafeTimeout);
               }, 500);
             }
+            } // End of date picker fallback else block
           }, 400);
         } else {
           console.error('DragDrop: attemptDateChange - *** ERROR *** Could not find start date field');
