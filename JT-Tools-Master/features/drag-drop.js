@@ -588,9 +588,11 @@ const DragDropFeature = (() => {
         console.log(`DragDrop: attemptDateChange - Found ${allDateFields.length} potential date fields`);
 
         let startDateParent = null;
+        const fieldTexts = []; // Collect all field texts for debugging
 
         for (const field of allDateFields) {
           const text = field.textContent.trim();
+          fieldTexts.push(text);
           console.log(`DragDrop: attemptDateChange - Checking field text: "${text}"`);
 
           if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
@@ -725,7 +727,11 @@ const DragDropFeature = (() => {
         } else {
           console.error('DragDrop: attemptDateChange - *** ERROR *** Could not find start date field');
           console.error(`DragDrop: attemptDateChange - Checked ${allDateFields.length} fields in sidebar`);
-          showNotification('Could not find date field. Please update manually.');
+          console.error('DragDrop: attemptDateChange - Field texts found:', JSON.stringify(fieldTexts));
+          console.error('DragDrop: attemptDateChange - Expected patterns:');
+          console.error('  - Pattern 1: "[Day], [Month] [Date]" (e.g., "Mon, January 15")');
+          console.error('  - Pattern 2: "Today" or "Tomorrow" or "Yesterday"');
+          showNotification('Could not find date field. Check console for details.');
           // Cleanup CSS
           closeSidebar(failsafeTimeout);
         }
