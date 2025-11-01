@@ -3,7 +3,13 @@ const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
-  darkMode: false
+  darkMode: false,
+  rgbTheme: false,
+  rgbColors: {
+    primary: { r: 59, g: 130, b: 246 },
+    background: { r: 249, g: 250, b: 251 },
+    text: { r: 17, g: 24, b: 39 }
+  }
 };
 
 // Check and update license status on load
@@ -13,6 +19,8 @@ async function checkLicenseStatus() {
   const statusText = licenseStatus.querySelector('.status-text');
   const dragDropFeature = document.getElementById('dragDropFeature');
   const dragDropCheckbox = document.getElementById('dragDrop');
+  const rgbThemeFeature = document.getElementById('rgbThemeFeature');
+  const rgbThemeCheckbox = document.getElementById('rgbTheme');
 
   if (licenseData && licenseData.valid) {
     // Valid license
@@ -20,6 +28,8 @@ async function checkLicenseStatus() {
     statusText.textContent = `✓ Premium Active (${licenseData.purchaseEmail})`;
     dragDropFeature.classList.remove('locked');
     dragDropCheckbox.disabled = false;
+    rgbThemeFeature.classList.remove('locked');
+    rgbThemeCheckbox.disabled = false;
     return true; // Has license
   } else {
     // No license or invalid
@@ -27,6 +37,8 @@ async function checkLicenseStatus() {
     statusText.textContent = '✗ Premium Not Active';
     dragDropFeature.classList.add('locked');
     dragDropCheckbox.disabled = true;
+    rgbThemeFeature.classList.add('locked');
+    rgbThemeCheckbox.disabled = true;
     // Don't change checked state here - let loadSettings handle it
     return false; // No license
   }
@@ -83,6 +95,15 @@ async function loadSettings() {
     document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('formatter').checked = settings.formatter;
     document.getElementById('darkMode').checked = settings.darkMode;
+    document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
+
+    // Load RGB colors
+    const colors = settings.rgbColors || defaultSettings.rgbColors;
+    loadRGBColors(colors);
+
+    // Show/hide RGB customization panel based on rgbTheme state
+    const rgbCustomization = document.getElementById('rgbCustomization');
+    rgbCustomization.style.display = (hasLicense && settings.rgbTheme) ? 'block' : 'none';
 
     console.log('Settings loaded:', settings);
   } catch (error) {
@@ -94,16 +115,27 @@ async function loadSettings() {
 // Save settings
 async function saveSettings(settings) {
   try {
+    const hasLicense = await LicenseService.hasValidLicense();
+
     // Check if user is trying to enable drag-drop without license
-    if (settings.dragDrop) {
-      const hasLicense = await LicenseService.hasValidLicense();
-      if (!hasLicense) {
-        showStatus('Drag & Drop requires a premium license', 'error');
-        document.getElementById('dragDrop').checked = false;
-        settings.dragDrop = false;
-        return;
-      }
+    if (settings.dragDrop && !hasLicense) {
+      showStatus('Drag & Drop requires a premium license', 'error');
+      document.getElementById('dragDrop').checked = false;
+      settings.dragDrop = false;
+      return;
     }
+
+    // Check if user is trying to enable RGB theme without license
+    if (settings.rgbTheme && !hasLicense) {
+      showStatus('RGB Custom Theme requires a premium license', 'error');
+      document.getElementById('rgbTheme').checked = false;
+      settings.rgbTheme = false;
+      return;
+    }
+
+    // Show/hide RGB customization panel
+    const rgbCustomization = document.getElementById('rgbCustomization');
+    rgbCustomization.style.display = settings.rgbTheme ? 'block' : 'none';
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -122,12 +154,17 @@ async function saveSettings(settings) {
 }
 
 // Get current settings from checkboxes
-function getCurrentSettings() {
+async function getCurrentSettings() {
+  const result = await chrome.storage.sync.get(['jtToolsSettings']);
+  const currentColors = (result.jtToolsSettings && result.jtToolsSettings.rgbColors) || defaultSettings.rgbColors;
+
   return {
     dragDrop: document.getElementById('dragDrop').checked,
     contrastFix: document.getElementById('contrastFix').checked,
     formatter: document.getElementById('formatter').checked,
-    darkMode: document.getElementById('darkMode').checked
+    darkMode: document.getElementById('darkMode').checked,
+    rgbTheme: document.getElementById('rgbTheme').checked,
+    rgbColors: currentColors
   };
 }
 
@@ -174,6 +211,101 @@ async function refreshCurrentTab() {
   }
 }
 
+// Load RGB colors into sliders
+function loadRGBColors(colors) {
+  // Primary color
+  document.getElementById('primaryR').value = colors.primary.r;
+  document.getElementById('primaryG').value = colors.primary.g;
+  document.getElementById('primaryB').value = colors.primary.b;
+  document.getElementById('primaryR-value').textContent = colors.primary.r;
+  document.getElementById('primaryG-value').textContent = colors.primary.g;
+  document.getElementById('primaryB-value').textContent = colors.primary.b;
+
+  // Background color
+  document.getElementById('backgroundR').value = colors.background.r;
+  document.getElementById('backgroundG').value = colors.background.g;
+  document.getElementById('backgroundB').value = colors.background.b;
+  document.getElementById('backgroundR-value').textContent = colors.background.r;
+  document.getElementById('backgroundG-value').textContent = colors.background.g;
+  document.getElementById('backgroundB-value').textContent = colors.background.b;
+
+  // Text color
+  document.getElementById('textR').value = colors.text.r;
+  document.getElementById('textG').value = colors.text.g;
+  document.getElementById('textB').value = colors.text.b;
+  document.getElementById('textR-value').textContent = colors.text.r;
+  document.getElementById('textG-value').textContent = colors.text.g;
+  document.getElementById('textB-value').textContent = colors.text.b;
+
+  // Update previews
+  updateColorPreviews();
+}
+
+// Get current RGB colors from sliders
+function getCurrentRGBColors() {
+  return {
+    primary: {
+      r: parseInt(document.getElementById('primaryR').value),
+      g: parseInt(document.getElementById('primaryG').value),
+      b: parseInt(document.getElementById('primaryB').value)
+    },
+    background: {
+      r: parseInt(document.getElementById('backgroundR').value),
+      g: parseInt(document.getElementById('backgroundG').value),
+      b: parseInt(document.getElementById('backgroundB').value)
+    },
+    text: {
+      r: parseInt(document.getElementById('textR').value),
+      g: parseInt(document.getElementById('textG').value),
+      b: parseInt(document.getElementById('textB').value)
+    }
+  };
+}
+
+// Update color preview boxes
+function updateColorPreviews() {
+  const colors = getCurrentRGBColors();
+
+  const primaryPreview = document.getElementById('primaryPreview');
+  const backgroundPreview = document.getElementById('backgroundPreview');
+  const textPreview = document.getElementById('textPreview');
+
+  primaryPreview.style.backgroundColor = `rgb(${colors.primary.r}, ${colors.primary.g}, ${colors.primary.b})`;
+  backgroundPreview.style.backgroundColor = `rgb(${colors.background.r}, ${colors.background.g}, ${colors.background.b})`;
+  textPreview.style.backgroundColor = `rgb(${colors.text.r}, ${colors.text.g}, ${colors.text.b})`;
+}
+
+// Reset colors to defaults
+async function resetColors() {
+  loadRGBColors(defaultSettings.rgbColors);
+  showStatus('Colors reset to defaults', 'success');
+}
+
+// Apply colors
+async function applyColors() {
+  try {
+    const colors = getCurrentRGBColors();
+    const result = await chrome.storage.sync.get(['jtToolsSettings']);
+    const settings = result.jtToolsSettings || defaultSettings;
+
+    settings.rgbColors = colors;
+
+    await chrome.storage.sync.set({ jtToolsSettings: settings });
+    console.log('RGB colors saved:', colors);
+
+    // Notify background script of settings change
+    chrome.runtime.sendMessage({
+      type: 'SETTINGS_UPDATED',
+      settings: settings
+    });
+
+    showStatus('Colors applied!', 'success');
+  } catch (error) {
+    console.error('Error applying colors:', error);
+    showStatus('Error applying colors', 'error');
+  }
+}
+
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
@@ -184,12 +316,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load current settings and update UI
   await loadSettings();
 
-  // If no license, ensure drag-drop stays disabled
+  // If no license, ensure premium features stay disabled
   if (!hasLicense) {
     const settings = await chrome.storage.sync.get(['jtToolsSettings']);
-    if (settings.jtToolsSettings && settings.jtToolsSettings.dragDrop) {
-      // User had it enabled but license expired/removed
-      const updatedSettings = { ...settings.jtToolsSettings, dragDrop: false };
+    if (settings.jtToolsSettings && (settings.jtToolsSettings.dragDrop || settings.jtToolsSettings.rgbTheme)) {
+      // User had premium features enabled but license expired/removed
+      const updatedSettings = {
+        ...settings.jtToolsSettings,
+        dragDrop: false,
+        rgbTheme: false
+      };
       await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
     }
   }
@@ -213,6 +349,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       await saveSettings(settings);
     });
   });
+
+  // Listen for RGB slider changes
+  const rgbSliders = document.querySelectorAll('.rgb-slider');
+  rgbSliders.forEach(slider => {
+    slider.addEventListener('input', (e) => {
+      // Update the value display
+      const valueSpan = document.getElementById(`${e.target.id}-value`);
+      valueSpan.textContent = e.target.value;
+
+      // Update color previews
+      updateColorPreviews();
+    });
+  });
+
+  // Listen for reset colors button
+  document.getElementById('resetColorsBtn').addEventListener('click', resetColors);
+
+  // Listen for apply colors button
+  document.getElementById('applyColorsBtn').addEventListener('click', applyColors);
 
   // Listen for refresh button
   document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);
