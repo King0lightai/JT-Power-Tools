@@ -446,6 +446,42 @@ const DragDropFeature = (() => {
       console.error('DragDrop: extractFullDateInfo - no table found for cell');
     }
 
+    // If month or year not found in table, search the entire page
+    if (!month || !year) {
+      console.log('DragDrop: extractFullDateInfo - Searching entire page for month/year...');
+
+      // Look for calendar navigation buttons or headers that might contain month/year
+      const pageText = document.body.innerText;
+      const monthYearMatches = pageText.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/g);
+
+      if (monthYearMatches && monthYearMatches.length > 0) {
+        console.log('DragDrop: extractFullDateInfo - Found potential month/year patterns:', monthYearMatches);
+
+        // Try each match to see if it's a valid month
+        for (const match of monthYearMatches) {
+          const parts = match.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/);
+          if (parts && parts.length >= 3) {
+            const foundMonth = parts[1];
+            const foundYear = parseInt(parts[2]);
+
+            // Check if it's a valid month name
+            const monthIndex = monthNames.indexOf(foundMonth);
+            if (monthIndex >= 0) {
+              if (!month) {
+                month = monthAbbrev[monthIndex];
+                console.log(`DragDrop: extractFullDateInfo - Found month in page: ${month}`);
+              }
+              if (!year) {
+                year = foundYear;
+                console.log(`DragDrop: extractFullDateInfo - Found year in page: ${year}`);
+              }
+              if (month && year) break;
+            }
+          }
+        }
+      }
+    }
+
     // Fallback to current month and year
     if (!month || !year) {
       const now = new Date();
@@ -595,7 +631,12 @@ const DragDropFeature = (() => {
           fieldTexts.push(text);
           console.log(`DragDrop: attemptDateChange - Checking field text: "${text}"`);
 
-          if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
+          // Match formats:
+          // 1. "Jan 1, 2026" (Month Day, Year)
+          // 2. "Mon, January 15" (DayOfWeek, FullMonth Day) - legacy format
+          // 3. "Today", "Tomorrow", "Yesterday"
+          if (/^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(text) ||
+              /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
               /^(Today|Tomorrow|Yesterday)$/.test(text)) {
             startDateParent = field.closest('div.group.items-center');
             console.log('DragDrop: attemptDateChange - Found start date field:', text);
