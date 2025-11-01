@@ -601,6 +601,7 @@ const DragDropFeature = (() => {
     }
 
     let month = dateInfo.month || '';
+    let year = dateInfo.year;
 
     if (!month) {
       const monthAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -610,11 +611,15 @@ const DragDropFeature = (() => {
       console.warn(`DragDrop: formatDateForInput - month missing, using current: ${month}`);
     }
 
-    // Return format without year - JobTread infers year from calendar context
-    // This allows cross-year drags to work (e.g., Dec to Jan assumes next year)
-    // NOTE: Year information IS available in dateInfo.year but NOT sent to JobTread input
-    const formattedDate = `${month} ${dateInfo.day}`;
-    console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} not included)`);
+    if (!year) {
+      year = new Date().getFullYear();
+      console.warn(`DragDrop: formatDateForInput - year missing, using current: ${year}`);
+    }
+
+    // Return format WITH year to match JobTread's sidebar format "Jan 1, 2026"
+    // This ensures year boundary transitions work correctly (Dec 2025 → Jan 2026)
+    const formattedDate = `${month} ${dateInfo.day}, ${year}`;
+    console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (includes year ${year})`);
 
     return formattedDate;
   }
@@ -765,7 +770,9 @@ const DragDropFeature = (() => {
               const style = window.getComputedStyle(input);
               console.log(`DragDrop: attemptDateChange - Checking input with placeholder: "${placeholder}", display: ${style.display}, opacity: ${style.opacity}`);
 
-              if (placeholder && /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(placeholder)) {
+              // Match both formats: "Mon, January 15" (legacy) or "Jan 1, 2026" (current)
+              if (placeholder && (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(placeholder) ||
+                                  /^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(placeholder))) {
                 if (style.display !== 'none' && style.opacity !== '0') {
                   inputField = input;
                   console.log('DragDrop: attemptDateChange - Found suitable date input field');
@@ -786,8 +793,7 @@ const DragDropFeature = (() => {
             if (inputField) {
               console.log('DragDrop: attemptDateChange - Input field found, setting value');
               console.log(`DragDrop: attemptDateChange - Current input value: "${inputField.value}"`);
-              console.log(`DragDrop: attemptDateChange - Will set to: "${formattedDate}"`);
-              console.log(`DragDrop: attemptDateChange - *** CRITICAL: This is where year info is lost! Year ${dateInfo.year} is NOT in "${formattedDate}" ***`);
+              console.log(`DragDrop: attemptDateChange - Will set to: "${formattedDate}" (includes year ${dateInfo.year})`);
 
               inputField.value = '';
               inputField.focus();
@@ -847,8 +853,9 @@ const DragDropFeature = (() => {
           console.error(`DragDrop: attemptDateChange - Checked ${allDateFields.length} fields in sidebar`);
           console.error('DragDrop: attemptDateChange - Field texts found:', JSON.stringify(fieldTexts));
           console.error('DragDrop: attemptDateChange - Expected patterns:');
-          console.error('  - Pattern 1: "[Day], [Month] [Date]" (e.g., "Mon, January 15")');
-          console.error('  - Pattern 2: "Today" or "Tomorrow" or "Yesterday"');
+          console.error('  - Pattern 1: "[Month] [Day], [Year]" (e.g., "Jan 1, 2026")');
+          console.error('  - Pattern 2: "[Day], [Month] [Date]" (e.g., "Mon, January 15")');
+          console.error('  - Pattern 3: "Today" or "Tomorrow" or "Yesterday"');
           showNotification('Could not find date field. Check console for details.');
           // Cleanup CSS
           closeSidebar(failsafeTimeout);
