@@ -259,7 +259,7 @@ function generatePalette(baseColor) {
   const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
 
   return {
-    bg_gray_50: makeColor(hsl.h, baseSat * 0.6, 93),
+    bg_gray_50: makeColor(hsl.h, baseSat * 0.75, 85),
     text_gray_900: makeColor(hsl.h, baseSat * 0.8, 15),
     primary: baseColor,
   };

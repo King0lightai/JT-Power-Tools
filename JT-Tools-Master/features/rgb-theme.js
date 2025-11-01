@@ -114,15 +114,15 @@ const CustomThemeFeature = (() => {
     const baseSat = Math.max(hsl.s, 40); // Ensure minimum 40% saturation
 
     return {
-      // Background colors (dramatic tints) - bold color presence
-      bg_white: makeColor(hsl.h, baseSat * 0.5, 96),        // Noticeable tint
-      bg_gray_50: makeColor(hsl.h, baseSat * 0.6, 93),      // Clear color
-      bg_gray_100: makeColor(hsl.h, baseSat * 0.65, 90),    // Strong tint
-      bg_gray_200: makeColor(hsl.h, baseSat * 0.7, 85),     // Very visible
-      bg_slate_50: makeColor(hsl.h, baseSat * 0.55, 92),
-      bg_blue_50: makeColor(hsl.h, baseSat * 0.7, 88),
-      bg_blue_100: makeColor(hsl.h, baseSat * 0.75, 83),
-      bg_yellow_100: makeColor((hsl.h + 30) % 360, baseSat * 0.5, 88),
+      // Background colors (much closer to primary) - bold, vibrant presence
+      bg_white: makeColor(hsl.h, baseSat * 0.7, 88),        // Strong tint
+      bg_gray_50: makeColor(hsl.h, baseSat * 0.75, 85),     // Very saturated
+      bg_gray_100: makeColor(hsl.h, baseSat * 0.8, 82),     // Close to primary
+      bg_gray_200: makeColor(hsl.h, baseSat * 0.85, 78),    // Very close to primary
+      bg_slate_50: makeColor(hsl.h, baseSat * 0.75, 84),
+      bg_blue_50: makeColor(hsl.h, baseSat * 0.85, 80),
+      bg_blue_100: makeColor(hsl.h, baseSat * 0.9, 75),
+      bg_yellow_100: makeColor((hsl.h + 30) % 360, baseSat * 0.7, 82),
 
       // Text colors (saturated dark shades)
       text_gray_500: makeColor(hsl.h, baseSat * 0.6, 40),
@@ -142,7 +142,7 @@ const CustomThemeFeature = (() => {
       primary_dark: makeColor(hsl.h, hsl.s, Math.max(hsl.l - 10, 10)),
 
       // Schedule card backgrounds (with inline styles)
-      schedule_card_bg: makeColor(hsl.h, baseSat * 0.6, 92),
+      schedule_card_bg: makeColor(hsl.h, baseSat * 0.75, 84),
     };
   }
 
