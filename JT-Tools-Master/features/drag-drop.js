@@ -891,8 +891,14 @@ const DragDropFeature = (() => {
               setTimeout(() => {
                 console.log(`DragDrop: attemptDateChange - React re-render complete, setting month...`);
 
-                // Re-find the month select in case DOM was rebuilt
+                // Re-find both selects in case DOM was rebuilt
+                console.log('DragDrop: attemptDateChange - Re-querying for month and year selects...');
                 const newMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                const newYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+
+                console.log('DragDrop: attemptDateChange - newMonthSelect:', newMonthSelect);
+                console.log('DragDrop: attemptDateChange - newYearSelect:', newYearSelect);
+
                 if (!newMonthSelect) {
                   console.error('DragDrop: attemptDateChange - Month select disappeared after year change!');
                   showNotification('Date picker error: month selector not found after year change');
@@ -901,7 +907,9 @@ const DragDropFeature = (() => {
                 }
 
                 // Set the month
+                console.log(`DragDrop: attemptDateChange - About to set month to: ${targetMonthValue}`);
                 newMonthSelect.value = targetMonthValue;
+                console.log(`DragDrop: attemptDateChange - Month value set, dispatching change event...`);
                 newMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 newMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
                 console.log(`DragDrop: attemptDateChange - Month select set to: ${targetMonthValue}`);
@@ -968,8 +976,8 @@ const DragDropFeature = (() => {
                     showNotification('Could not find calendar');
                     closeSidebar(failsafeTimeout);
                   }
-                }, 200);
-              }, 200);
+                }, 300);
+              }, 500);
             } else {
               console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
 
