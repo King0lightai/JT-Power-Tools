@@ -7,6 +7,7 @@ const DragDropFeature = (() => {
   let observer = null;
   let isActive = false;
   let shiftKeyAtDragStart = false; // Track Shift at drag start
+  let sourceDateInfo = null; // Store source date from drag start
 
   // Initialize the feature
   function init() {
@@ -240,7 +241,7 @@ const DragDropFeature = (() => {
     shiftKeyAtDragStart = e.shiftKey;
 
     const sourceCell = this.closest('td');
-    const sourceDateInfo = extractFullDateInfo(sourceCell);
+    sourceDateInfo = extractFullDateInfo(sourceCell); // Store globally for year calculation
     console.log('DragDrop: ==========================================');
     console.log('DragDrop: *** DRAG START ***');
     console.log('DragDrop: Source date:', JSON.stringify(sourceDateInfo));
@@ -770,8 +771,9 @@ const DragDropFeature = (() => {
 
           // Match formats:
           // 1. "Jan 1, 2026" (Month Day, Year)
-          // 2. "Mon, January 15" (DayOfWeek, FullMonth Day) - legacy format
-          // 3. "Today", "Tomorrow", "Yesterday"
+          // 2. "Wed, Dec 31" (DayOfWeek, Month Day) - NEW format without year
+          // 3. "Mon, January 15" (DayOfWeek, FullMonth Day) - legacy format
+          // 4. "Today", "Tomorrow", "Yesterday"
           if (/^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(text)) {
             // Extract year and month from "Jan 1, 2026" format
             const match = text.match(/^([A-Z][a-z]{2})\s+\d{1,2},\s+(20\d{2})$/);
@@ -783,8 +785,35 @@ const DragDropFeature = (() => {
             startDateParent = field.closest('div.group.items-center');
             console.log('DragDrop: attemptDateChange - Found start date field:', text);
             break;
-          } else if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text) ||
-              /^(Today|Tomorrow|Yesterday)$/.test(text)) {
+          } else if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text)) {
+            // "Wed, Dec 31" or "Mon, January 15" format - extract month, get year from drag source
+            const match = text.match(/^[A-Z][a-z]{2},\s+([A-Z][a-z]{2,})\s+\d{1,2}$/);
+            if (match) {
+              const fullOrShortMonth = match[1];
+              // Convert full month names to 3-letter abbreviations
+              const monthNameMap = {
+                'January': 'Jan', 'February': 'Feb', 'March': 'Mar', 'April': 'Apr',
+                'May': 'May', 'June': 'Jun', 'July': 'Jul', 'August': 'Aug',
+                'September': 'Sep', 'October': 'Oct', 'November': 'Nov', 'December': 'Dec'
+              };
+              sidebarSourceMonth = monthNameMap[fullOrShortMonth] || fullOrShortMonth;
+
+              // Use year from the drag source (stored during handleDragStart)
+              if (sourceDateInfo && sourceDateInfo.year) {
+                sidebarSourceYear = sourceDateInfo.year;
+                console.log(`DragDrop: attemptDateChange - Using year from drag source: ${sidebarSourceYear}`);
+              } else {
+                // Fallback: use current year
+                sidebarSourceYear = new Date().getFullYear();
+                console.log(`DragDrop: attemptDateChange - No drag source year, using current year: ${sidebarSourceYear}`);
+              }
+
+              console.log(`DragDrop: attemptDateChange - Extracted month from sidebar: ${sidebarSourceMonth}, year from source: ${sidebarSourceYear}`);
+            }
+            startDateParent = field.closest('div.group.items-center');
+            console.log('DragDrop: attemptDateChange - Found start date field:', text);
+            break;
+          } else if (/^(Today|Tomorrow|Yesterday)$/.test(text)) {
             startDateParent = field.closest('div.group.items-center');
             console.log('DragDrop: attemptDateChange - Found start date field:', text);
             break;
