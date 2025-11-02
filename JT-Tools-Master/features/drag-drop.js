@@ -945,6 +945,23 @@ const DragDropFeature = (() => {
 
                 // Small delay to let month change process and update calendar
                 setTimeout(() => {
+                  // VERIFY: Check that the dropdowns are still set correctly before clicking
+                  const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                  const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+
+                  if (verifyMonthSelect && verifyYearSelect) {
+                    console.log(`DragDrop: attemptDateChange - VERIFY before clicking: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
+                    console.log(`DragDrop: attemptDateChange - Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
+
+                    if (verifyMonthSelect.value !== targetMonthValue || verifyYearSelect.value !== targetYearValue) {
+                      console.error('DragDrop: attemptDateChange - WARNING: Dropdowns changed! Re-setting...');
+                      verifyYearSelect.value = targetYearValue;
+                      verifyYearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                      verifyMonthSelect.value = targetMonthValue;
+                      verifyMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                  }
+
                   // Find and click the day in the calendar
                   // Try multiple strategies to find the calendar table
                   let calendarTable = null;
@@ -1005,7 +1022,7 @@ const DragDropFeature = (() => {
                     showNotification('Could not find calendar');
                     closeSidebar(failsafeTimeout);
                   }
-                }, 300);
+                }, 500); // Increased to 500ms to let month change fully render
               }, 500);
             } else {
               console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
@@ -1153,36 +1170,14 @@ const DragDropFeature = (() => {
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
     if (sidebar) {
-      // FIRST: Look for and click Save/Update button
-      const allButtons = sidebar.querySelectorAll('div[role="button"], button');
-      console.log(`DragDrop: Found ${allButtons.length} buttons in sidebar`);
+      // Find and click Close button (clicking day in calendar already saved the change)
+      const closeButtons = sidebar.querySelectorAll('div[role="button"]');
 
-      let saveButton = null;
-      let closeButton = null;
-
-      for (const button of allButtons) {
+      for (const button of closeButtons) {
         const text = button.textContent.trim();
-        console.log(`DragDrop: Button text: "${text}"`);
-
-        if (text.includes('Save') || text.includes('Update') || text.includes('Apply')) {
-          saveButton = button;
-          console.log('DragDrop: Found Save/Update button');
-        }
         if (text.includes('Close')) {
-          closeButton = button;
-        }
-      }
-
-      if (saveButton) {
-        console.log('DragDrop: Clicking Save button');
-        saveButton.click();
-
-        // Wait for save to process, then close
-        setTimeout(() => {
-          if (closeButton) {
-            console.log('DragDrop: Clicking Close button after save');
-            closeButton.click();
-          }
+          console.log('DragDrop: Found and clicking Close button');
+          button.click();
 
           // Wait for sidebar to close BEFORE removing hiding CSS
           setTimeout(() => {
@@ -1192,24 +1187,9 @@ const DragDropFeature = (() => {
               console.log('DragDrop: Removed hiding CSS after sidebar closed');
             }
           }, 800);
-        }, 300); // Wait 300ms for save to process
 
-        return;
-      } else if (closeButton) {
-        // No save button found, just close
-        console.log('DragDrop: No Save button found, clicking Close button');
-        closeButton.click();
-
-        // Wait for sidebar to close BEFORE removing hiding CSS
-        setTimeout(() => {
-          const hideStyle = document.getElementById('jt-hide-sidebar-temp');
-          if (hideStyle) {
-            hideStyle.remove();
-            console.log('DragDrop: Removed hiding CSS after sidebar closed');
-          }
-        }, 800);
-
-        return;
+          return;
+        }
       }
 
       console.log('DragDrop: Could not find Close button, sidebar will remain open');
