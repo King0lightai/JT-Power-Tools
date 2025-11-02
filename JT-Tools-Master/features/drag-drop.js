@@ -129,10 +129,13 @@ const DragDropFeature = (() => {
   // Function to make date cells droppable
   function makeDateCellsDroppable() {
     const dateCells = document.querySelectorAll('td.group.text-xs');
+    console.log(`DragDrop: makeDateCellsDroppable - Found ${dateCells.length} cells to make droppable`);
 
-    dateCells.forEach(cell => {
+    let newCells = 0;
+    dateCells.forEach((cell, index) => {
       if (!cell.classList.contains('jt-drop-enabled')) {
         cell.classList.add('jt-drop-enabled');
+        newCells++;
 
         // Mark weekends
         if (isWeekendCell(cell)) {
@@ -143,8 +146,15 @@ const DragDropFeature = (() => {
         cell.addEventListener('drop', handleDrop);
         cell.addEventListener('dragleave', handleDragLeave);
         cell.addEventListener('dragenter', handleDragEnter);
+
+        // Log a sample of cells to verify they're in different months
+        if (index < 3 || index > dateCells.length - 3) {
+          const dateInfo = extractDateFromCell(cell);
+          console.log(`DragDrop: makeDateCellsDroppable - Cell ${index}: day=${dateInfo}, classes=${cell.className}`);
+        }
       }
     });
+    console.log(`DragDrop: makeDateCellsDroppable - Attached listeners to ${newCells} new cells`);
   }
 
   // Check if a cell is a weekend
@@ -228,12 +238,19 @@ const DragDropFeature = (() => {
 
     // Capture Shift key state at drag start
     shiftKeyAtDragStart = e.shiftKey;
-    console.log('DragDrop: Drag started, Shift key:', shiftKeyAtDragStart);
+
+    const sourceCell = this.closest('td');
+    const sourceDateInfo = extractFullDateInfo(sourceCell);
+    console.log('DragDrop: ==========================================');
+    console.log('DragDrop: *** DRAG START ***');
+    console.log('DragDrop: Source date:', JSON.stringify(sourceDateInfo));
+    console.log('DragDrop: Shift key:', shiftKeyAtDragStart);
+    console.log('DragDrop: ==========================================');
 
     draggedItemData = {
       element: this,
       html: this.innerHTML,
-      originalParent: this.closest('td')
+      originalParent: sourceCell
     };
 
     e.dataTransfer.effectAllowed = 'move';
@@ -241,6 +258,7 @@ const DragDropFeature = (() => {
   }
 
   function handleDragEnd(e) {
+    console.log('DragDrop: *** DRAG END ***');
     this.style.opacity = '1';
     this.style.cursor = 'grab';
 
@@ -260,6 +278,9 @@ const DragDropFeature = (() => {
   }
 
   function handleDragEnter(e) {
+    const dateInfo = extractDateFromCell(this);
+    console.log(`DragDrop: handleDragEnter - Entering cell with date: ${dateInfo}`);
+
     if (!this.classList.contains('jt-drop-zone')) {
       this.classList.add('jt-drop-zone');
       this.style.border = '2px dashed rgb(59, 130, 246)';
