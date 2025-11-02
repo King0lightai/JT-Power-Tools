@@ -1153,13 +1153,36 @@ const DragDropFeature = (() => {
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
     if (sidebar) {
-      const closeButtons = sidebar.querySelectorAll('div[role="button"]');
+      // FIRST: Look for and click Save/Update button
+      const allButtons = sidebar.querySelectorAll('div[role="button"], button');
+      console.log(`DragDrop: Found ${allButtons.length} buttons in sidebar`);
 
-      for (const button of closeButtons) {
+      let saveButton = null;
+      let closeButton = null;
+
+      for (const button of allButtons) {
         const text = button.textContent.trim();
+        console.log(`DragDrop: Button text: "${text}"`);
+
+        if (text.includes('Save') || text.includes('Update') || text.includes('Apply')) {
+          saveButton = button;
+          console.log('DragDrop: Found Save/Update button');
+        }
         if (text.includes('Close')) {
-          console.log('DragDrop: Found and clicking Close button');
-          button.click();
+          closeButton = button;
+        }
+      }
+
+      if (saveButton) {
+        console.log('DragDrop: Clicking Save button');
+        saveButton.click();
+
+        // Wait for save to process, then close
+        setTimeout(() => {
+          if (closeButton) {
+            console.log('DragDrop: Clicking Close button after save');
+            closeButton.click();
+          }
 
           // Wait for sidebar to close BEFORE removing hiding CSS
           setTimeout(() => {
@@ -1168,10 +1191,25 @@ const DragDropFeature = (() => {
               hideStyle.remove();
               console.log('DragDrop: Removed hiding CSS after sidebar closed');
             }
-          }, 800); // Wait 800ms for sidebar close animation to fully complete
+          }, 800);
+        }, 300); // Wait 300ms for save to process
 
-          return;
-        }
+        return;
+      } else if (closeButton) {
+        // No save button found, just close
+        console.log('DragDrop: No Save button found, clicking Close button');
+        closeButton.click();
+
+        // Wait for sidebar to close BEFORE removing hiding CSS
+        setTimeout(() => {
+          const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+          if (hideStyle) {
+            hideStyle.remove();
+            console.log('DragDrop: Removed hiding CSS after sidebar closed');
+          }
+        }, 800);
+
+        return;
       }
 
       console.log('DragDrop: Could not find Close button, sidebar will remain open');
