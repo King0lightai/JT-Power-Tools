@@ -884,13 +884,26 @@ const DragDropFeature = (() => {
               yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
               yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
               console.log(`DragDrop: attemptDateChange - Year select set to: ${targetYearValue}`);
+              console.log(`DragDrop: attemptDateChange - Waiting for React to re-render calendar after year change...`);
 
-              // Small delay to let year change process
+              // IMPORTANT: Longer delay to let React re-render the calendar when year changes
+              // When year changes, React destroys and recreates the calendar DOM
               setTimeout(() => {
+                console.log(`DragDrop: attemptDateChange - React re-render complete, setting month...`);
+
+                // Re-find the month select in case DOM was rebuilt
+                const newMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                if (!newMonthSelect) {
+                  console.error('DragDrop: attemptDateChange - Month select disappeared after year change!');
+                  showNotification('Date picker error: month selector not found after year change');
+                  closeSidebar(failsafeTimeout);
+                  return;
+                }
+
                 // Set the month
-                monthSelect.value = targetMonthValue;
-                monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                newMonthSelect.value = targetMonthValue;
+                newMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                newMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
                 console.log(`DragDrop: attemptDateChange - Month select set to: ${targetMonthValue}`);
 
                 // Small delay to let month change process and update calendar
