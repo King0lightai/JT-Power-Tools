@@ -276,35 +276,50 @@ const DragDropFeature = (() => {
   }
 
   function handleDrop(e) {
-    if (e.stopPropagation) {
-      e.stopPropagation();
-    }
-    e.preventDefault();
-
+    // CRITICAL: Log at the very top to confirm function is called
+    console.log('DragDrop: ========================================');
     console.log('DragDrop: ========== DROP EVENT START ==========');
+    console.log('DragDrop: ========================================');
 
-    this.classList.remove('jt-drop-zone');
-    this.style.border = '';
-    this.style.backgroundColor = '';
-
-    if (draggedElement && draggedItemData) {
-      const targetCell = this;
-      const originalCell = draggedItemData.originalParent;
-
-      if (targetCell === originalCell) {
-        console.log('DragDrop: Drop on same cell, ignoring');
-        return false;
+    try {
+      if (e.stopPropagation) {
+        e.stopPropagation();
       }
+      e.preventDefault();
+      console.log('DragDrop: Event handlers called successfully');
 
-      console.log('DragDrop: Extracting target date info...');
-      let dateInfo = extractFullDateInfo(targetCell);
+      this.classList.remove('jt-drop-zone');
+      this.style.border = '';
+      this.style.backgroundColor = '';
+      console.log('DragDrop: Visual cleanup complete');
 
-      console.log('DragDrop: Extracting source date info...');
-      const sourceDateInfo = extractFullDateInfo(originalCell);
+      console.log('DragDrop: Checking draggedElement:', !!draggedElement);
+      console.log('DragDrop: Checking draggedItemData:', !!draggedItemData);
 
-      if (dateInfo) {
-        // Handle year transitions when dragging between months
-        if (sourceDateInfo && sourceDateInfo.month && dateInfo.month) {
+      if (draggedElement && draggedItemData) {
+        const targetCell = this;
+        const originalCell = draggedItemData.originalParent;
+        console.log('DragDrop: Target cell:', targetCell);
+        console.log('DragDrop: Original cell:', originalCell);
+
+        if (targetCell === originalCell) {
+          console.log('DragDrop: Drop on same cell, ignoring');
+          return false;
+        }
+
+        console.log('DragDrop: Different cells confirmed, proceeding with date extraction');
+        console.log('DragDrop: Extracting target date info...');
+        let dateInfo = extractFullDateInfo(targetCell);
+        console.log('DragDrop: Target date info extracted:', JSON.stringify(dateInfo));
+
+        console.log('DragDrop: Extracting source date info...');
+        const sourceDateInfo = extractFullDateInfo(originalCell);
+        console.log('DragDrop: Source date info extracted:', JSON.stringify(sourceDateInfo));
+
+        if (dateInfo) {
+          console.log('DragDrop: Date info is valid, proceeding with year boundary checks');
+          // Handle year transitions when dragging between months
+          if (sourceDateInfo && sourceDateInfo.month && dateInfo.month) {
           const monthMap = {
             'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
             'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
@@ -367,13 +382,17 @@ const DragDropFeature = (() => {
         }
 
         console.log(`DragDrop: Final date before formatting: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
+        console.log('DragDrop: About to call attemptDateChange...');
         attemptDateChange(draggedElement, dateInfo.day, targetCell, dateInfo);
+        console.log('DragDrop: attemptDateChange called (async operations continuing)');
       } else {
         console.error('DragDrop: *** CRITICAL ERROR *** Could not determine target date');
         showNotification('Could not determine target date. Please try manually.');
       }
     } else {
       console.error('DragDrop: Drop handler called but draggedElement or draggedItemData is missing');
+      if (!draggedElement) console.error('DragDrop: draggedElement is null/undefined');
+      if (!draggedItemData) console.error('DragDrop: draggedItemData is null/undefined');
     }
 
     // Reset shift state
@@ -381,6 +400,15 @@ const DragDropFeature = (() => {
     console.log('DragDrop: ========== DROP EVENT END ==========');
 
     return false;
+
+    } catch (error) {
+      console.error('DragDrop: *** EXCEPTION IN handleDrop ***');
+      console.error('DragDrop: Error name:', error.name);
+      console.error('DragDrop: Error message:', error.message);
+      console.error('DragDrop: Error stack:', error.stack);
+      showNotification('Error during drag & drop. Check console for details.');
+      return false;
+    }
   }
 
   // Helper functions (kept from original)
@@ -625,20 +653,24 @@ const DragDropFeature = (() => {
   }
 
   function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo = null) {
-    console.log('DragDrop: attemptDateChange - START');
-    console.log('DragDrop: attemptDateChange - element:', element);
-    console.log('DragDrop: attemptDateChange - newDateNumber:', newDateNumber);
-    console.log('DragDrop: attemptDateChange - providedDateInfo:', JSON.stringify(providedDateInfo));
+    console.log('DragDrop: ==========================================');
+    console.log('DragDrop: attemptDateChange - *** START ***');
+    console.log('DragDrop: ==========================================');
 
-    const dateInfo = providedDateInfo || extractFullDateInfo(targetCell);
+    try {
+      console.log('DragDrop: attemptDateChange - element:', element);
+      console.log('DragDrop: attemptDateChange - newDateNumber:', newDateNumber);
+      console.log('DragDrop: attemptDateChange - providedDateInfo:', JSON.stringify(providedDateInfo));
 
-    if (!dateInfo) {
-      console.error('DragDrop: attemptDateChange - Failed to get dateInfo');
-      showNotification('Error: Could not extract date information');
-      return;
-    }
+      const dateInfo = providedDateInfo || extractFullDateInfo(targetCell);
 
-    console.log('DragDrop: attemptDateChange - Using dateInfo:', JSON.stringify(dateInfo));
+      if (!dateInfo) {
+        console.error('DragDrop: attemptDateChange - Failed to get dateInfo');
+        showNotification('Error: Could not extract date information');
+        return;
+      }
+
+      console.log('DragDrop: attemptDateChange - Using dateInfo:', JSON.stringify(dateInfo));
 
     // Inject CSS to make entire sidebar structure completely invisible
     const hideStyle = document.createElement('style');
@@ -1022,6 +1054,20 @@ const DragDropFeature = (() => {
     }, 500);
 
     console.log('DragDrop: attemptDateChange - END (async operations still running)');
+
+    } catch (error) {
+      console.error('DragDrop: *** EXCEPTION IN attemptDateChange ***');
+      console.error('DragDrop: Error name:', error.name);
+      console.error('DragDrop: Error message:', error.message);
+      console.error('DragDrop: Error stack:', error.stack);
+      showNotification('Error during date change. Check console for details.');
+      // Try to clean up CSS even on error
+      const hideStyle = document.getElementById('jt-hide-sidebar-temp');
+      if (hideStyle) {
+        hideStyle.remove();
+        console.log('DragDrop: Removed hiding CSS after exception');
+      }
+    }
   }
 
   function closeSidebar(failsafeTimeout) {
