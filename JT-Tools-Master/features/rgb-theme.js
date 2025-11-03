@@ -179,29 +179,45 @@ const CustomThemeFeature = (() => {
 
       /* === General Styles === */
       *, ::backdrop, ::file-selector-button, :after, :before {
-        border-color: ${borderColor};
+        border-color: ${borderColor} !important;
       }
 
       .border-transparent {
-        border-color: transparent;
+        border-color: transparent !important;
       }
 
       .border-white {
-        border-color: ${borderColor};
+        border-color: ${borderColor} !important;
+      }
+
+      /* === Gray Border Color Overrides === */
+      .border-gray-100,
+      .border-gray-200,
+      .border-gray-300,
+      .border-gray-400,
+      .border-gray-500,
+      .border-gray-600,
+      .border-gray-700,
+      .border-gray-800,
+      [class*="border-gray"] {
+        border-color: ${borderColor} !important;
       }
 
       /* === Table Border Overrides === */
+      .border,
       .border-b,
       .border-t,
       .border-l,
       .border-r {
-        border-color: ${borderColor};
+        border-color: ${borderColor} !important;
       }
 
       /* === Input Field Border Overrides === */
       input.border,
-      textarea.border {
-        border-color: ${borderColor};
+      input[class*="border-"],
+      textarea.border,
+      textarea[class*="border-"] {
+        border-color: ${borderColor} !important;
       }
 
       input.hover\\:border-blue-500:hover,
@@ -213,12 +229,13 @@ const CustomThemeFeature = (() => {
 
       input.border-transparent,
       textarea.border-transparent {
-        border-color: transparent;
+        border-color: transparent !important;
       }
 
       /* === Divider Colors === */
-      .divide-gray-500 > * + * {
-        border-color: ${borderColor};
+      .divide-gray-500 > * + *,
+      [class*="divide-gray"] > * + * {
+        border-color: ${borderColor} !important;
       }
 
       /* === Background Colors === */
