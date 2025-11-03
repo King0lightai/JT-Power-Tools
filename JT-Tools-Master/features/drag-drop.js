@@ -922,10 +922,97 @@ const DragDropFeature = (() => {
           startDateParent.click();
 
           setTimeout(() => {
-            console.log('DragDrop: attemptDateChange - Looking for date picker...');
+            console.log('DragDrop: attemptDateChange - Looking for date input method...');
 
-            // Look for the date picker popup INSIDE a popup/modal (not the main calendar view)
-            // The date picker appears in a div.block or similar popup container
+            // PRIORITY 1: Try to find a date input field to type into (most reliable method)
+            let inputField = null;
+            const sidebarInputs = sidebar.querySelectorAll('input[type="text"], input:not([type])');
+            console.log(`DragDrop: attemptDateChange - Found ${sidebarInputs.length} potential input fields in sidebar`);
+
+            for (const input of sidebarInputs) {
+              const placeholder = input.placeholder || '';
+              const style = window.getComputedStyle(input);
+
+              console.log(`DragDrop: attemptDateChange - Checking input with placeholder: "${placeholder}", display: ${style.display}, opacity: ${style.opacity}`);
+
+              // We're looking for any input that looks like a date field
+              if (placeholder && (
+                  /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(placeholder) ||  // "Mon, January 15"
+                  /^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(placeholder) ||           // "Jan 1, 2026"
+                  /^[A-Z][a-z]{2}\s+\d{1,2}$/.test(placeholder)                       // "Jan 1"
+              )) {
+                if (style.display !== 'none' && style.opacity !== '0') {
+                  inputField = input;
+                  console.log('DragDrop: attemptDateChange - Found suitable date input field');
+                  break;
+                }
+              }
+            }
+
+            if (!inputField) {
+              console.log('DragDrop: attemptDateChange - No input in sidebar, checking for popup date picker input');
+              const datePickerPopup = document.querySelector('div.block.relative input[placeholder]');
+              if (datePickerPopup) {
+                inputField = datePickerPopup;
+                console.log('DragDrop: attemptDateChange - Found date picker popup input');
+              }
+            }
+
+            // If we found an input field, use the typing method (most reliable)
+            if (inputField) {
+              console.log('DragDrop: attemptDateChange - Using typing method');
+              console.log(`DragDrop: attemptDateChange - Current input value: "${inputField.value}"`);
+              console.log(`DragDrop: attemptDateChange - Will set to: "${formattedDate}"`);
+              console.log(`DragDrop: attemptDateChange - Note: Year ${dateInfo.year} tracked internally but JobTread infers from calendar`);
+
+              inputField.value = '';
+              inputField.focus();
+              inputField.value = formattedDate;
+              console.log(`DragDrop: attemptDateChange - Input value set to: "${inputField.value}"`);
+
+              // Dispatch input event
+              inputField.dispatchEvent(new Event('input', { bubbles: true }));
+              console.log('DragDrop: attemptDateChange - Dispatched input event');
+
+              // Simulate pressing Enter key to trigger the full update
+              const enterEvent = new KeyboardEvent('keydown', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+              });
+              inputField.dispatchEvent(enterEvent);
+              console.log('DragDrop: attemptDateChange - Dispatched Enter keydown event');
+
+              // Also dispatch keyup for Enter
+              const enterUpEvent = new KeyboardEvent('keyup', {
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13,
+                bubbles: true,
+                cancelable: true
+              });
+              inputField.dispatchEvent(enterUpEvent);
+              console.log('DragDrop: attemptDateChange - Dispatched Enter keyup event');
+
+              // Dispatch change and blur events
+              inputField.dispatchEvent(new Event('change', { bubbles: true }));
+              inputField.dispatchEvent(new Event('blur', { bubbles: true }));
+              console.log('DragDrop: attemptDateChange - Dispatched change and blur events');
+
+              console.log('DragDrop: attemptDateChange - Date typed and Enter key simulated - COMPLETE');
+
+              setTimeout(() => {
+                closeSidebar(failsafeTimeout);
+              }, 500);
+              return; // Exit early, don't try calendar dropdown method
+            }
+
+            // PRIORITY 2: Fallback to calendar dropdown manipulation if no input field found
+            console.log('DragDrop: attemptDateChange - No input field found, trying calendar dropdown method...');
             let monthSelect = null;
             let yearSelect = null;
 
@@ -1177,100 +1264,11 @@ const DragDropFeature = (() => {
                 } // End of proceedWithDayClick function
 
             } else {
-              console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
-
-              // Fall back to old input field method
-              let inputField = null;
-            const inputs = sidebar.querySelectorAll('input');
-            console.log(`DragDrop: attemptDateChange - Found ${inputs.length} input fields in sidebar`);
-
-            for (const input of inputs) {
-              const placeholder = input.getAttribute('placeholder');
-              const style = window.getComputedStyle(input);
-              console.log(`DragDrop: attemptDateChange - Checking input with placeholder: "${placeholder}", display: ${style.display}, opacity: ${style.opacity}`);
-
-              // The input field placeholder might be in various formats, so check broadly
-              // We're looking for any input that looks like a date field
-              if (placeholder && (
-                  /^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(placeholder) ||  // "Mon, January 15"
-                  /^[A-Z][a-z]{2}\s+\d{1,2},\s+\d{4}$/.test(placeholder) ||           // "Jan 1, 2026"
-                  /^[A-Z][a-z]{2}\s+\d{1,2}$/.test(placeholder)                       // "Jan 1"
-              )) {
-                if (style.display !== 'none' && style.opacity !== '0') {
-                  inputField = input;
-                  console.log('DragDrop: attemptDateChange - Found suitable date input field');
-                  break;
-                }
-              }
-            }
-
-            if (!inputField) {
-              console.log('DragDrop: attemptDateChange - No input in sidebar, checking for popup date picker');
-              const datePickerPopup = document.querySelector('div.block.relative input[placeholder]');
-              if (datePickerPopup) {
-                inputField = datePickerPopup;
-                console.log('DragDrop: attemptDateChange - Found date picker popup input');
-              }
-            }
-
-            if (inputField) {
-              console.log('DragDrop: attemptDateChange - Input field found, setting value');
-              console.log(`DragDrop: attemptDateChange - Current input value: "${inputField.value}"`);
-              console.log(`DragDrop: attemptDateChange - Will set to: "${formattedDate}"`);
-              console.log(`DragDrop: attemptDateChange - Note: Year ${dateInfo.year} tracked internally but JobTread infers from calendar`);
-
-              inputField.value = '';
-              inputField.focus();
-              inputField.value = formattedDate;
-              console.log(`DragDrop: attemptDateChange - Input value set to: "${inputField.value}"`);
-
-              // Dispatch input event
-              inputField.dispatchEvent(new Event('input', { bubbles: true }));
-              console.log('DragDrop: attemptDateChange - Dispatched input event');
-
-              // Simulate pressing Enter key to trigger the full update
-              const enterEvent = new KeyboardEvent('keydown', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true,
-                cancelable: true
-              });
-              inputField.dispatchEvent(enterEvent);
-              console.log('DragDrop: attemptDateChange - Dispatched Enter keydown event');
-
-              // Also dispatch keyup for Enter
-              const enterUpEvent = new KeyboardEvent('keyup', {
-                key: 'Enter',
-                code: 'Enter',
-                keyCode: 13,
-                which: 13,
-                bubbles: true,
-                cancelable: true
-              });
-              inputField.dispatchEvent(enterUpEvent);
-              console.log('DragDrop: attemptDateChange - Dispatched Enter keyup event');
-
-              // Dispatch change and blur events
-              inputField.dispatchEvent(new Event('change', { bubbles: true }));
-              inputField.dispatchEvent(new Event('blur', { bubbles: true }));
-              console.log('DragDrop: attemptDateChange - Dispatched change and blur events');
-
-              console.log('DragDrop: attemptDateChange - Date typed and Enter key simulated - COMPLETE');
-
+              console.error('DragDrop: attemptDateChange - *** ERROR *** No input field or calendar picker found');
+              showNotification('Could not find date input method. Please try manually.');
               setTimeout(() => {
                 closeSidebar(failsafeTimeout);
               }, 500);
-            } else {
-              console.error('DragDrop: attemptDateChange - *** ERROR *** Could not find input field');
-              console.error('DragDrop: attemptDateChange - Checked sidebar inputs and popup date picker');
-              showNotification('Could not find date input field. Please try manually.');
-              // Cleanup CSS even on error
-              setTimeout(() => {
-                closeSidebar(failsafeTimeout);
-              }, 500);
-            }
             } // End of date picker fallback else block
           }, 400);
         } else {
