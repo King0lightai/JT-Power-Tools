@@ -8,6 +8,7 @@ const DragDropFeature = (() => {
   let isActive = false;
   let shiftKeyAtDragStart = false; // Track Shift at drag start
   let sourceDateInfo = null; // Store source date from drag start
+  let isDateChangeInProgress = false; // Prevent observer re-entry during date changes
 
   // Initialize the feature
   function init() {
@@ -30,6 +31,12 @@ const DragDropFeature = (() => {
 
     // Watch for DOM changes and re-initialize
     observer = new MutationObserver((mutations) => {
+      // CRITICAL: Don't re-initialize while date change is in progress
+      if (isDateChangeInProgress) {
+        console.log('DragDrop: MutationObserver - Skipping re-init, date change in progress');
+        return;
+      }
+
       let shouldReinit = false;
 
       mutations.forEach(mutation => {
@@ -679,6 +686,10 @@ const DragDropFeature = (() => {
     console.log('DragDrop: attemptDateChange - *** START ***');
     console.log('DragDrop: ==========================================');
 
+    // CRITICAL: Set flag to prevent observer from re-initializing during date changes
+    isDateChangeInProgress = true;
+    console.log('DragDrop: attemptDateChange - Set isDateChangeInProgress = true');
+
     try {
       console.log('DragDrop: attemptDateChange - element:', element);
       console.log('DragDrop: attemptDateChange - newDateNumber:', newDateNumber);
@@ -1149,6 +1160,11 @@ const DragDropFeature = (() => {
       console.error('DragDrop: Error message:', error.message);
       console.error('DragDrop: Error stack:', error.stack);
       showNotification('Error during date change. Check console for details.');
+
+      // CRITICAL: Clear the date change flag on error to re-enable observer
+      isDateChangeInProgress = false;
+      console.log('DragDrop: Exception handler - Set isDateChangeInProgress = false');
+
       // Try to clean up CSS even on error
       const hideStyle = document.getElementById('jt-hide-sidebar-temp');
       if (hideStyle) {
@@ -1160,6 +1176,10 @@ const DragDropFeature = (() => {
 
   function closeSidebar(failsafeTimeout) {
     console.log('DragDrop: Attempting to close sidebar...');
+
+    // CRITICAL: Clear the date change flag to re-enable observer
+    isDateChangeInProgress = false;
+    console.log('DragDrop: closeSidebar - Set isDateChangeInProgress = false');
 
     // Clear the failsafe timeout since we're handling cleanup now
     if (failsafeTimeout) {
