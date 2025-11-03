@@ -1,7 +1,7 @@
-// JT-Tools Master Suite - Content Script Orchestrator
+// JT Power Tools - Content Script Orchestrator
 // Manages loading and unloading of feature modules based on user settings
 
-console.log('JT-Tools Master Suite: Content script loaded');
+console.log('JT Power Tools: Content script loaded');
 
 // Feature module registry
 const featureModules = {
@@ -19,6 +19,16 @@ const featureModules = {
     name: 'Formatter',
     feature: () => window.FormatterFeature,
     instance: null
+  },
+  darkMode: {
+    name: 'Dark Mode',
+    feature: () => window.DarkModeFeature,
+    instance: null
+  },
+  rgbTheme: {
+    name: 'RGB Custom Theme',
+    feature: () => window.RGBThemeFeature,
+    instance: null
   }
 };
 
@@ -26,7 +36,15 @@ const featureModules = {
 let currentSettings = {
   dragDrop: true,
   contrastFix: true,
-  formatter: true
+  formatter: true,
+  darkMode: false,
+  rgbTheme: false,
+  themeColors: {
+    primary: '#3B82F6',
+    background: '#F3E8FF',
+    text: '#1F1B29'
+  },
+  savedThemes: [null, null, null]
 };
 
 // Load settings from storage
@@ -57,7 +75,12 @@ function initializeFeature(featureKey) {
 
     // Initialize if not already active
     if (!FeatureClass.isActive()) {
-      FeatureClass.init();
+      // Special handling for RGB theme - pass theme colors
+      if (featureKey === 'rgbTheme' && currentSettings.themeColors) {
+        FeatureClass.init(currentSettings.themeColors);
+      } else {
+        FeatureClass.init();
+      }
       module.instance = FeatureClass;
       console.log(`JT-Tools: ${module.name} initialized`);
     } else {
@@ -103,6 +126,9 @@ function handleSettingsChange(newSettings) {
 
   // Compare old and new settings
   for (const [key, enabled] of Object.entries(newSettings)) {
+    // Skip non-feature settings like rgbColors
+    if (!featureModules[key]) continue;
+
     const wasEnabled = currentSettings[key];
 
     if (enabled && !wasEnabled) {
@@ -113,6 +139,19 @@ function handleSettingsChange(newSettings) {
       // Feature was disabled
       console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
       cleanupFeature(key);
+    }
+  }
+
+  // Special handling for theme colors changes
+  if (newSettings.rgbTheme && newSettings.themeColors) {
+    const RGBThemeFeature = window.RGBThemeFeature;
+    if (RGBThemeFeature && RGBThemeFeature.isActive()) {
+      // Check if colors actually changed
+      const colorsChanged = JSON.stringify(currentSettings.themeColors) !== JSON.stringify(newSettings.themeColors);
+      if (colorsChanged) {
+        console.log('JT-Tools: Theme colors updated, applying new colors');
+        RGBThemeFeature.updateColors(newSettings.themeColors);
+      }
     }
   }
 
@@ -191,8 +230,8 @@ async function waitForFeatures(maxAttempts = 100, delayMs = 150) {
   if (featuresReady) {
     // Initialize all enabled features
     initializeAllFeatures();
-    console.log('JT-Tools Master Suite: Ready!');
+    console.log('JT Power Tools: Ready!');
   } else {
-    console.error('JT-Tools Master Suite: Failed to initialize - features not loaded');
+    console.error('JT Power Tools: Failed to initialize - features not loaded');
   }
 })();

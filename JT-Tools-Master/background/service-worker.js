@@ -2,12 +2,20 @@
 const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
-  formatter: true
+  formatter: true,
+  darkMode: false,
+  rgbTheme: false,
+  themeColors: {
+    primary: '#3B82F6',
+    background: '#F3E8FF',
+    text: '#1F1B29'
+  },
+  savedThemes: [null, null, null]
 };
 
 // Initialize extension on install
 chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('JT-Tools Master Suite installed:', details.reason);
+  console.log('JT Power Tools installed:', details.reason);
 
   // Set default settings on fresh install
   if (details.reason === 'install') {
@@ -74,4 +82,4 @@ async function getSettings() {
   return result.jtToolsSettings || defaultSettings;
 }
 
-console.log('JT-Tools Master Suite background service worker loaded');
+console.log('JT Power Tools background service worker loaded');
