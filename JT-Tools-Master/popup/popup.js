@@ -436,6 +436,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', async () => {
       console.log('Checkbox changed:', checkbox.id, checkbox.checked);
+
+      // Handle mutual exclusivity for appearance modes
+      if (checkbox.checked) {
+        if (checkbox.id === 'contrastFix') {
+          // Contrast Fix enabled - disable Dark Mode and RGB Theme
+          document.getElementById('darkMode').checked = false;
+          document.getElementById('rgbTheme').checked = false;
+        } else if (checkbox.id === 'darkMode') {
+          // Dark Mode enabled - disable Contrast Fix and RGB Theme
+          document.getElementById('contrastFix').checked = false;
+          document.getElementById('rgbTheme').checked = false;
+        } else if (checkbox.id === 'rgbTheme') {
+          // RGB Theme enabled - disable Contrast Fix and Dark Mode
+          document.getElementById('contrastFix').checked = false;
+          document.getElementById('darkMode').checked = false;
+        }
+      }
+
       const settings = await getCurrentSettings();
       await saveSettings(settings);
     });
