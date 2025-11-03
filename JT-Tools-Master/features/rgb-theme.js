@@ -186,10 +186,45 @@ const CustomThemeFeature = (() => {
         border-color: transparent !important;
       }
 
-      /* === Exclude Formatter Toolbar from Theme === */
-      .jt-formatter-toolbar,
-      .jt-formatter-toolbar * {
-        border-color: revert !important;
+      /* === Formatter Toolbar Theme === */
+      .jt-formatter-toolbar {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-formatter-toolbar button {
+        background: ${background} !important;
+        border: none !important;
+        color: ${text} !important;
+      }
+
+      .jt-formatter-toolbar button:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+        border: none !important;
+      }
+
+      .jt-formatter-toolbar button:active {
+        background: ${background} !important;
+        filter: brightness(0.9);
+      }
+
+      .jt-toolbar-divider {
+        background: ${borderColor} !important;
+      }
+
+      .jt-dropdown-menu {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-dropdown-menu button {
+        color: ${text} !important;
+      }
+
+      .jt-dropdown-menu button:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
       }
 
       .border-white {
