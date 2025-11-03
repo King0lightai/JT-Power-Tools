@@ -924,9 +924,43 @@ const DragDropFeature = (() => {
           setTimeout(() => {
             console.log('DragDrop: attemptDateChange - Looking for date picker...');
 
-            // Look for the date picker popup with month/year selects
-            const monthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-            const yearSelect = document.querySelector('select option[value="2026"]')?.closest('select');
+            // Look for the date picker popup INSIDE a popup/modal (not the main calendar view)
+            // The date picker appears in a div.block or similar popup container
+            let monthSelect = null;
+            let yearSelect = null;
+
+            // Strategy 1: Look for selects inside a popup container (has positioning like fixed/absolute)
+            const popups = document.querySelectorAll('div.block, div[style*="position"], div.absolute, div.fixed');
+            for (const popup of popups) {
+              const popupMonthSelect = popup.querySelector('select option[value="1"]')?.closest('select');
+              const popupYearSelect = popup.querySelector('select option[value="2026"]')?.closest('select');
+
+              if (popupMonthSelect && popupYearSelect) {
+                // Verify this is a date picker (has 12 month options)
+                const monthOptions = popupMonthSelect.querySelectorAll('option');
+                if (monthOptions.length === 12) {
+                  monthSelect = popupMonthSelect;
+                  yearSelect = popupYearSelect;
+                  console.log('DragDrop: attemptDateChange - Found date picker in popup container');
+                  break;
+                }
+              }
+            }
+
+            // Strategy 2: Look inside the sidebar itself
+            if (!monthSelect || !yearSelect) {
+              const sidebarMonthSelect = sidebar.querySelector('select option[value="1"]')?.closest('select');
+              const sidebarYearSelect = sidebar.querySelector('select option[value="2026"]')?.closest('select');
+
+              if (sidebarMonthSelect && sidebarYearSelect) {
+                const monthOptions = sidebarMonthSelect.querySelectorAll('option');
+                if (monthOptions.length === 12) {
+                  monthSelect = sidebarMonthSelect;
+                  yearSelect = sidebarYearSelect;
+                  console.log('DragDrop: attemptDateChange - Found date picker in sidebar');
+                }
+              }
+            }
 
             if (monthSelect && yearSelect) {
               console.log('DragDrop: attemptDateChange - Found date picker with month and year selects');
@@ -970,23 +1004,21 @@ const DragDropFeature = (() => {
 
                   try {
                     // VERIFY: Check that the dropdowns are still set correctly
-                    const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                    const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
-
-                    if (verifyMonthSelect && verifyYearSelect) {
-                      console.log(`DragDrop: attemptDateChange - VERIFY: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
+                    // Use the same selects we found earlier (from closure)
+                    if (monthSelect && yearSelect) {
+                      console.log(`DragDrop: attemptDateChange - VERIFY: Month=${monthSelect.value}, Year=${yearSelect.value}`);
                       console.log(`DragDrop: attemptDateChange - Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
 
-                      if (verifyMonthSelect.value !== targetMonthValue || verifyYearSelect.value !== targetYearValue) {
+                      if (monthSelect.value !== targetMonthValue || yearSelect.value !== targetYearValue) {
                         if (retryCount < maxRetries) {
                           console.warn(`DragDrop: attemptDateChange - Dropdowns reverted! Retry ${retryCount}/${maxRetries}`);
                           // Re-set both rapidly
-                          verifyYearSelect.value = targetYearValue;
-                          verifyYearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                          verifyYearSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                          verifyMonthSelect.value = targetMonthValue;
-                          verifyMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                          verifyMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                          yearSelect.value = targetYearValue;
+                          yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                          yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                          monthSelect.value = targetMonthValue;
+                          monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                          monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
                           // Try again
                           verifyAndRetry();
                           return;
@@ -1053,11 +1085,9 @@ const DragDropFeature = (() => {
                     const sampleCells = Array.from(calendarCells).slice(0, 10).map(c => c.textContent.trim());
                     console.log(`DragDrop: attemptDateChange - Calendar showing days: ${sampleCells.join(', ')}`);
 
-                    // Check the current month/year in the date picker
-                    const pickerMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                    const pickerYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
-                    if (pickerMonthSelect && pickerYearSelect) {
-                      console.log(`DragDrop: attemptDateChange - Date picker currently showing: Month=${pickerMonthSelect.value}, Year=${pickerYearSelect.value}`);
+                    // Check the current month/year in the date picker (use same selects from closure)
+                    if (monthSelect && yearSelect) {
+                      console.log(`DragDrop: attemptDateChange - Date picker currently showing: Month=${monthSelect.value}, Year=${yearSelect.value}`);
                     }
 
                     const dayCells = calendarTable.querySelectorAll('td');
