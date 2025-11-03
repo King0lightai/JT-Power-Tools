@@ -5,23 +5,28 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 ## 🎯 Features
 
 ### 📅 Schedule Drag & Drop
-- Drag schedule items between dates seamlessly
+- Drag schedule items between dates seamlessly with full year boundary support
+- Works across December→January transitions (2025→2026)
 - Automatically updates dates invisibly in the background
-- Multi-month support with intelligent date detection
+- Multi-month and multi-year support with intelligent date detection
 - Visual feedback with drop zone highlighting
+- Preserves task details and assignments during moves
 
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability
 - Uses WCAG contrast formula for optimal visibility
 - Highlights current date in schedule view
 - Real-time updates as content changes
+- Mutual exclusivity with Dark Mode and Custom Theme
 
 ### 📝 Budget Formatter
 - Rich text formatting toolbar for budget descriptions
 - Supports bold, italic, underline, strikethrough
 - Headings (H1, H2, H3)
 - Lists (bullets, numbered)
-- Text alignment and colors
+- Text alignment and colors with smart color switching
+- Detects active formatting and highlights buttons
+- Click same color to toggle off formatting
 - Tables, links, quotes, and alerts
 - Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 - MS Word-style active button states
@@ -32,6 +37,17 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Customized for construction management workflows
 - Smooth toggle on/off
 - Syncs across devices
+- Mutual exclusivity with Contrast Fix and Custom Theme
+
+### 🎨 Custom Theme (Premium)
+- Personalize JobTread with your own color palette
+- Choose primary, background, and text colors via RGB sliders
+- Intelligent color coordination across entire interface
+- Preserves task type colors with enhanced visibility
+- 5px thick colored borders for clear task identification
+- Themed formatter toolbar, buttons, links, and inputs
+- Task cards blend seamlessly with custom background
+- Mutual exclusivity with Contrast Fix and Dark Mode
 
 ## 📦 Installation
 
@@ -116,9 +132,12 @@ JT-Tools-Master/
 ├── features/
 │   ├── drag-drop.js          # Drag & Drop module
 │   ├── contrast-fix.js       # Contrast Fix module
-│   └── formatter.js          # Budget Formatter module
+│   ├── formatter.js          # Budget Formatter module
+│   ├── dark-mode.js          # Dark Mode module
+│   └── rgb-theme.js          # Custom Theme module (Premium)
 ├── styles/
-│   └── formatter-toolbar.css # Formatter toolbar styles
+│   ├── formatter-toolbar.css # Formatter toolbar styles
+│   └── dark-mode.css         # Dark mode styles
 └── icons/
     ├── icon16.png
     ├── icon48.png
@@ -218,7 +237,31 @@ const featureModules = {
 
 ## 📝 Version History
 
-### v1.0.0 (Current)
+### v3.1.0 (Current)
+- **Major Drag & Drop Fixes**: Complete rewrite of year boundary handling
+  - Fixed December→January year transitions (2025→2026)
+  - Fixed date moves in future years (Jan 2026, Feb 2026)
+  - Always includes year in date format for accuracy
+  - Intelligent year inference using source date as baseline
+  - Year validation when page shows different months
+- **Custom Theme Enhancements** (Premium):
+  - Enhanced task type color visibility with 5px thick borders
+  - Task cards now use theme background with colored border
+  - Subtle shadow effect for better visual depth
+  - Preserves task type identification while unifying appearance
+- **Formatter Improvements**:
+  - Color switching: Change colors by clicking different color buttons
+  - Active color detection and button highlighting
+  - Click same color to toggle off formatting
+
+### v3.0.0
+- Added Custom Theme feature (Premium)
+- RGB color sliders for personalized themes
+- Mutual exclusivity between appearance modes
+- Integrated contrast fix into custom theme
+- Enhanced popup UI with collapsible sections
+
+### v1.0.0
 - Initial public release
 - Four core features: Schedule Drag & Drop, Contrast Fix, Budget Formatter, Dark Mode
 - Premium licensing system via Gumroad
@@ -258,7 +301,6 @@ All documentation for publishing to the Chrome Web Store is in the [`chrome-web-
 
 - **Formatter**: Some complex formatting scenarios may require page refresh
 - **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
-- **General**: Extension must be reloaded after Chrome browser restart for optimal performance
 
 ## 🔮 Future Enhancements
 
@@ -268,7 +310,8 @@ All documentation for publishing to the Chrome Web Store is in the [`chrome-web-
 - [ ] More formatting options (code blocks, inline code, etc.)
 - [ ] Custom keyboard shortcuts
 - [ ] Export/import settings
-- [ ] Premium theme options
+- [ ] Additional custom theme presets
+- [ ] Theme sharing and import/export
 
 ## 📧 Support
 
