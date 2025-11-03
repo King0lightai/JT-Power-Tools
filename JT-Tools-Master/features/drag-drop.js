@@ -965,10 +965,11 @@ const DragDropFeature = (() => {
             if (monthSelect && yearSelect) {
               console.log('DragDrop: attemptDateChange - Found date picker with month and year selects');
 
-              // Map month names to select values (0-11, JavaScript standard)
+              // Map month names to select values (1-12, JobTread's select format)
+              // NOTE: Different from JavaScript Date (0-11)! JobTread uses 1-12 in their selects
               const monthMap = {
-                'Jan': '0', 'Feb': '1', 'Mar': '2', 'Apr': '3', 'May': '4', 'Jun': '5',
-                'Jul': '6', 'Aug': '7', 'Sep': '8', 'Oct': '9', 'Nov': '10', 'Dec': '11'
+                'Jan': '1', 'Feb': '2', 'Mar': '3', 'Apr': '4', 'May': '5', 'Jun': '6',
+                'Jul': '7', 'Aug': '8', 'Sep': '9', 'Oct': '10', 'Nov': '11', 'Dec': '12'
               };
 
               const targetMonthValue = monthMap[dateInfo.month];
