@@ -209,6 +209,74 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.9);
       }
 
+      /* Active buttons use primary color instead of blue */
+      .jt-formatter-toolbar button.active {
+        background: ${primary} !important;
+        color: #ffffff !important;
+        border-color: ${primary} !important;
+      }
+
+      .jt-formatter-toolbar button.active:hover {
+        background: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      /* Color picker buttons - show "A" in the actual color */
+      .jt-formatter-toolbar button.jt-color-green {
+        color: #10b981 !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-yellow {
+        color: #f59e0b !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-blue {
+        color: #3b82f6 !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-red {
+        color: #ef4444 !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-orange {
+        color: #f97316 !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-purple {
+        color: #a855f7 !important;
+      }
+
+      /* Active color buttons keep their color but with filled background */
+      .jt-formatter-toolbar button.jt-color-green.active {
+        background: #10b981 !important;
+        color: #ffffff !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-yellow.active {
+        background: #f59e0b !important;
+        color: #ffffff !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-blue.active {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-red.active {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-orange.active {
+        background: #f97316 !important;
+        color: #ffffff !important;
+      }
+
+      .jt-formatter-toolbar button.jt-color-purple.active {
+        background: #a855f7 !important;
+        color: #ffffff !important;
+      }
+
       .jt-toolbar-divider {
         background: ${borderColor} !important;
       }
@@ -225,6 +293,11 @@ const CustomThemeFeature = (() => {
       .jt-dropdown-menu button:hover {
         background: ${background} !important;
         filter: brightness(0.95);
+      }
+
+      .jt-dropdown-menu button.active {
+        background: ${primary} !important;
+        color: #ffffff !important;
       }
 
       .border-white {
