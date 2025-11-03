@@ -3,7 +3,14 @@ const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
-  darkMode: false
+  darkMode: false,
+  rgbTheme: false,
+  themeColors: {
+    primary: '#3B82F6',
+    background: '#F3E8FF',
+    text: '#1F1B29'
+  },
+  savedThemes: [null, null, null]
 };
 
 // Initialize extension on install
