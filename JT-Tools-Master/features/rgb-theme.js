@@ -5,6 +5,8 @@
 const CustomThemeFeature = (() => {
   let isActive = false;
   let styleElement = null;
+  let observer = null;
+  let debounceTimer = null;
   let currentColors = {
     primary: '#3B82F6',
     background: '#F3E8FF',
@@ -29,6 +31,12 @@ const CustomThemeFeature = (() => {
     // Inject custom theme CSS
     injectThemeCSS();
 
+    // Apply contrast fixes to existing elements
+    applyContrastFixes();
+
+    // Start observing for new elements
+    startObserver();
+
     console.log('CustomTheme: Custom theme applied with colors', currentColors);
   }
 
@@ -41,6 +49,18 @@ const CustomThemeFeature = (() => {
 
     console.log('CustomTheme: Cleaning up...');
     isActive = false;
+
+    // Disconnect observer
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    // Clear debounce timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
 
     // Remove injected CSS
     if (styleElement) {
@@ -61,6 +81,10 @@ const CustomThemeFeature = (() => {
         styleElement.remove();
       }
       injectThemeCSS();
+
+      // Reapply contrast fixes with new colors
+      applyContrastFixes();
+
       console.log('CustomTheme: Colors updated to', currentColors);
     }
   }
@@ -282,6 +306,110 @@ const CustomThemeFeature = (() => {
     styleElement.textContent = css;
     styleElement.id = 'jt-custom-theme-styles';
     document.head.appendChild(styleElement);
+  }
+
+  // Start observing DOM changes for contrast fixes
+  function startObserver() {
+    observer = new MutationObserver((mutations) => {
+      let shouldUpdate = false;
+
+      mutations.forEach(mutation => {
+        if (mutation.addedNodes.length > 0) {
+          shouldUpdate = true;
+        }
+      });
+
+      if (shouldUpdate) {
+        // Debounce to prevent excessive calls
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+
+        debounceTimer = setTimeout(() => {
+          // Temporarily disconnect observer to prevent infinite loop
+          observer.disconnect();
+
+          applyContrastFixes();
+
+          // Reconnect observer after a short delay
+          setTimeout(() => {
+            if (isActive) {
+              observer.observe(document.body, {
+                childList: true,
+                subtree: true
+              });
+            }
+          }, 100);
+        }, 250);
+      }
+    });
+
+    // Start observing
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  // Apply custom text color and current date highlighting
+  function applyContrastFixes() {
+    // Apply custom text color to schedule items
+    const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
+
+    scheduleItems.forEach(item => {
+      // Target calendar/schedule items (they have cursor-pointer class)
+      if (item.classList.contains('cursor-pointer')) {
+        fixTextContrast(item);
+      }
+    });
+
+    // Highlight current date with primary color
+    highlightCurrentDate();
+  }
+
+  // Fix text contrast for a single element using custom text color
+  function fixTextContrast(element) {
+    const style = element.getAttribute('style');
+    if (!style) return;
+
+    // Check if element has both background-color and color in inline styles
+    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
+    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
+
+    if (bgColorMatch && textColorMatch) {
+      // Get current computed color
+      const currentColor = window.getComputedStyle(element).color;
+      const customTextColor = hexToRgb(currentColors.text);
+      const targetColor = `rgb(${customTextColor.r}, ${customTextColor.g}, ${customTextColor.b})`;
+
+      // Only update if different (prevents infinite loop)
+      if (currentColor !== targetColor) {
+        // Override the color property with user's custom text color
+        const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${targetColor}`);
+        element.setAttribute('style', newStyle);
+        element.style.color = targetColor;
+      }
+    }
+  }
+
+  // Highlight current date with primary color
+  function highlightCurrentDate() {
+    // Find all date cells with blue background (current date indicator)
+    const currentDateDivs = document.querySelectorAll('div.bg-blue-500.text-white');
+
+    currentDateDivs.forEach(dateDiv => {
+      // Find the parent td cell
+      let tdCell = dateDiv.closest('td');
+
+      if (tdCell && !tdCell.classList.contains('jt-current-date-enhanced')) {
+        // Add custom class to prevent re-processing
+        tdCell.classList.add('jt-current-date-enhanced');
+
+        // Fill entire cell background with primary color
+        const primaryRgb = hexToRgb(currentColors.primary);
+        tdCell.style.backgroundColor = `rgb(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b})`;
+      }
+    });
   }
 
   // Public API
