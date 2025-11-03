@@ -179,11 +179,17 @@ const CustomThemeFeature = (() => {
 
       /* === General Styles === */
       *, ::backdrop, ::file-selector-button, :after, :before {
-        border-color: ${borderColor} !important;
+        border-color: ${borderColor};
       }
 
       .border-transparent {
         border-color: transparent !important;
+      }
+
+      /* === Exclude Formatter Toolbar from Theme === */
+      .jt-formatter-toolbar,
+      .jt-formatter-toolbar * {
+        border-color: revert !important;
       }
 
       .border-white {
@@ -353,7 +359,7 @@ const CustomThemeFeature = (() => {
 
       .border-blue-500,
       [class*="border-blue"] {
-        border-color: ${primary} !important;
+        border-color: ${borderColor} !important;
       }
 
       /* === Cyan Link Overrides === */
