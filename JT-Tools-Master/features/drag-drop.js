@@ -992,13 +992,36 @@ const DragDropFeature = (() => {
                     console.log(`DragDrop: attemptDateChange - Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
 
                     if (verifyMonthSelect.value !== targetMonthValue || verifyYearSelect.value !== targetYearValue) {
-                      console.error('DragDrop: attemptDateChange - WARNING: Dropdowns changed! Re-setting...');
+                      console.error('DragDrop: attemptDateChange - WARNING: Dropdowns changed! Re-setting and waiting...');
                       verifyYearSelect.value = targetYearValue;
                       verifyYearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                      verifyYearSelect.dispatchEvent(new Event('input', { bubbles: true }));
                       verifyMonthSelect.value = targetMonthValue;
                       verifyMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                      verifyMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+
+                      // Wait for React to process the changes before proceeding
+                      console.log('DragDrop: attemptDateChange - Waiting 700ms for React to update calendar...');
+                      setTimeout(() => {
+                        proceedWithDayClick();
+                      }, 700);
+                      return; // Don't proceed immediately
                     }
                   }
+
+                  // Dropdowns are correct, proceed immediately
+                  proceedWithDayClick();
+
+                  } catch (error) {
+                    console.error('DragDrop: attemptDateChange - Error during day click:', error);
+                    showNotification('Error clicking date: ' + error.message);
+                    closeSidebar(failsafeTimeout);
+                  }
+                }, 500);
+
+                // Extracted function to handle day clicking logic
+                function proceedWithDayClick() {
+                  try {
 
                   // Find and click the day in the calendar
                   // Try multiple strategies to find the calendar table
@@ -1119,14 +1142,16 @@ const DragDropFeature = (() => {
                   }
 
                   } catch (error) {
-                    console.error('DragDrop: *** EXCEPTION in verification/clicking setTimeout ***');
+                    console.error('DragDrop: *** EXCEPTION in proceedWithDayClick ***');
                     console.error('DragDrop: Error:', error.name, error.message);
                     console.error('DragDrop: Stack:', error.stack);
                     showNotification('Error during day selection. Check console.');
                     closeSidebar(failsafeTimeout);
                   }
-                }, 500); // Increased to 500ms to let month change fully render
-              }, 500);
+                } // End of proceedWithDayClick function
+
+              }, 500); // End of month setting timeout
+            }, 300); // End of year setting timeout
             } else {
               console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
 
