@@ -208,6 +208,11 @@ const CustomThemeFeature = (() => {
         border-color: transparent;
       }
 
+      /* === Divider Colors === */
+      .divide-gray-500 > * + * {
+        border-color: ${borderColor};
+      }
+
       /* === Background Colors === */
       .bg-white,
       .bg-gray-50,
@@ -233,8 +238,14 @@ const CustomThemeFeature = (() => {
       .text-gray-700,
       .text-gray-800,
       .text-gray-900,
-      .text-black {
+      .text-black,
+      .text-white {
         color: ${text};
+      }
+
+      .text-gray-300 {
+        color: ${text};
+        opacity: 0.8;
       }
 
       /* === Shadow Styles === */
@@ -264,6 +275,7 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-50:hover,
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
+      .hover\\:bg-gray-800:hover,
       .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
         background-color: ${background};
