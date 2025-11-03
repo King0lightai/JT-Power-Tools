@@ -140,6 +140,9 @@ const CustomThemeFeature = (() => {
     // Generate border color that's slightly lighter/darker than background
     const borderColor = getBorderColor(background);
 
+    // Generate lighter shade for task cards (40 brightness units lighter)
+    const taskCardBackground = adjustBrightness(background, 40);
+
     // Create CSS using user's chosen colors
     const css = `
       /* === JT Power Tools - Custom Color Theme === */
@@ -147,7 +150,7 @@ const CustomThemeFeature = (() => {
 
       /* === Schedule Card Overrides (Inline Styles) === */
       td div.cursor-pointer[style*="background-color"] {
-        background-color: ${background} !important;
+        background-color: ${taskCardBackground} !important;
       }
 
       /* === General Styles === */
