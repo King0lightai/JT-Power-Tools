@@ -190,6 +190,14 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor};
       }
 
+      /* === Table Border Overrides === */
+      .border-b,
+      .border-t,
+      .border-l,
+      .border-r {
+        border-color: ${borderColor};
+      }
+
       /* === Input Field Border Overrides === */
       input.border,
       textarea.border {
