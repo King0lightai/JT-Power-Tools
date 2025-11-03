@@ -650,7 +650,7 @@ const DragDropFeature = (() => {
     return result;
   }
 
-  function formatDateForInput(dateInfo) {
+  function formatDateForInput(dateInfo, sourceMonth = null) {
     console.log('DragDrop: formatDateForInput - input:', JSON.stringify(dateInfo));
 
     if (!dateInfo) {
@@ -673,15 +673,26 @@ const DragDropFeature = (() => {
       console.warn(`DragDrop: formatDateForInput - month missing, using current: ${month}`);
     }
 
-    // For year boundary transitions (Dec→Jan or Jan→Dec), include the year to be explicit
-    // Otherwise JobTread may infer the wrong year
+    // Detect year boundary transitions (Dec→Jan or Jan→Dec)
+    const monthMap = {
+      'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+      'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    };
+
+    const isYearBoundaryTransition = sourceMonth && (
+      (monthMap[sourceMonth] === 11 && monthMap[month] === 0) ||  // Dec → Jan
+      (monthMap[sourceMonth] === 0 && monthMap[month] === 11)     // Jan → Dec
+    );
+
     let formattedDate;
-    if (dateInfo.year) {
+    if (isYearBoundaryTransition && dateInfo.year) {
+      // For year boundary transitions, include the year to be explicit
       formattedDate = `${month} ${dateInfo.day}, ${dateInfo.year}`;
-      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} included for accuracy)`);
+      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} included for year boundary)`);
     } else {
+      // For regular moves, omit the year (JobTread infers from calendar context)
       formattedDate = `${month} ${dateInfo.day}`;
-      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (no year available)`);
+      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year omitted, JobTread will infer)`);
     }
 
     return formattedDate;
@@ -895,9 +906,8 @@ const DragDropFeature = (() => {
         }
 
         if (startDateParent) {
-          const formattedDate = formatDateForInput(dateInfo);
+          const formattedDate = formatDateForInput(dateInfo, sidebarSourceMonth);
           console.log('DragDrop: attemptDateChange - Formatted date for input:', formattedDate);
-          console.log(`DragDrop: attemptDateChange - *** NOTE: Year ${dateInfo.year} is NOT included in formatted date ***`);
 
           // Look for and check any "notify" or "update linked" checkboxes
           const checkboxes = sidebar.querySelectorAll('input[type="checkbox"]');
