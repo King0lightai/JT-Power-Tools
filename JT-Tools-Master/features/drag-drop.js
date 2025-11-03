@@ -1007,6 +1007,18 @@ const DragDropFeature = (() => {
                   console.log('DragDrop: attemptDateChange - Calendar table:', calendarTable);
 
                   if (calendarTable) {
+                    // VERIFY: Log what month/year the calendar is actually showing
+                    const calendarCells = calendarTable.querySelectorAll('td');
+                    const sampleCells = Array.from(calendarCells).slice(0, 10).map(c => c.textContent.trim());
+                    console.log(`DragDrop: attemptDateChange - Calendar showing days: ${sampleCells.join(', ')}`);
+
+                    // Check the current month/year in the date picker
+                    const pickerMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                    const pickerYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+                    if (pickerMonthSelect && pickerYearSelect) {
+                      console.log(`DragDrop: attemptDateChange - Date picker currently showing: Month=${pickerMonthSelect.value}, Year=${pickerYearSelect.value}`);
+                    }
+
                     const dayCells = calendarTable.querySelectorAll('td');
                     let targetDayCell = null;
 
@@ -1015,6 +1027,7 @@ const DragDropFeature = (() => {
                       // Match the day and make sure it's not grayed out (text-gray-300)
                       if (cellText === dateInfo.day && !cell.classList.contains('text-gray-300')) {
                         targetDayCell = cell;
+                        console.log(`DragDrop: attemptDateChange - Found target cell for day ${dateInfo.day}, classes: ${cell.className}`);
                         break;
                       }
                     }
@@ -1022,6 +1035,19 @@ const DragDropFeature = (() => {
                     if (targetDayCell) {
                       console.log(`DragDrop: attemptDateChange - Clicking day ${dateInfo.day} in calendar`);
                       targetDayCell.click();
+                      console.log('DragDrop: attemptDateChange - Day clicked, waiting for JobTread to process...');
+
+                      // Wait a bit to see if date field updates
+                      setTimeout(() => {
+                        // Check if the date field in the sidebar actually updated
+                        const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+                        if (sidebar) {
+                          const dateFields = sidebar.querySelectorAll('span.text-gray-600');
+                          const currentDateText = Array.from(dateFields).map(f => f.textContent.trim()).join(' | ');
+                          console.log(`DragDrop: attemptDateChange - After click, sidebar date fields show: ${currentDateText}`);
+                        }
+                      }, 200);
+
                       console.log('DragDrop: attemptDateChange - Date picker selection COMPLETE');
 
                       setTimeout(() => {
