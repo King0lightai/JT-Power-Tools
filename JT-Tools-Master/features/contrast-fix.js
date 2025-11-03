@@ -156,8 +156,32 @@ const ContrastFixFeature = (() => {
     });
   }
 
+  // Check if dark mode is currently active
+  function isDarkModeActive() {
+    // Check if dark mode CSS is injected
+    return document.getElementById('jt-dark-mode-styles') !== null;
+  }
+
+  // Check if custom theme is currently active
+  function isCustomThemeActive() {
+    // Check if custom theme CSS is injected
+    return document.getElementById('jt-custom-theme-styles') !== null;
+  }
+
   // Process all schedule items
   function fixAllScheduleItems() {
+    // Skip contrast fix if dark mode is active (dark mode handles colors)
+    if (isDarkModeActive()) {
+      console.log('ContrastFix: Dark mode active, skipping contrast adjustments');
+      return;
+    }
+
+    // Skip contrast fix if custom theme is active (custom theme handles colors)
+    if (isCustomThemeActive()) {
+      console.log('ContrastFix: Custom theme active, skipping contrast adjustments');
+      return;
+    }
+
     // Target the specific divs in schedule/calendar view that have inline background-color and color
     const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
 

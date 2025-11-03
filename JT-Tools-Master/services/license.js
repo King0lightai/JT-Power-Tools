@@ -2,8 +2,9 @@
 // Handles Gumroad license key verification
 
 const LicenseService = (() => {
-  // Your Gumroad product permalink (you'll need to set this)
+  // Your Gumroad product configuration
   const PRODUCT_PERMALINK = 'jtpowertools'; // e.g., 'jt-tools'
+  const PRODUCT_ID = 'x2GbSvLBfUSQcwVGDRSj1w=='; // Gumroad product ID
 
   // Verify license key with Gumroad API
   async function verifyLicense(licenseKey) {
@@ -17,7 +18,7 @@ const LicenseService = (() => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          'product_permalink': PRODUCT_PERMALINK,
+          'product_id': PRODUCT_ID,
           'license_key': licenseKey,
         })
       });
@@ -94,7 +95,8 @@ const LicenseService = (() => {
     getLicenseData,
     hasValidLicense,
     removeLicense,
-    PRODUCT_PERMALINK
+    PRODUCT_PERMALINK,
+    PRODUCT_ID
   };
 })();
 

@@ -326,6 +326,8 @@ const FormatterFeature = (() => {
 
     if (format) {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       applyFormat(field, format);
       if (activeToolbar) {
         updateToolbarState(field, activeToolbar);
@@ -612,6 +614,7 @@ const FormatterFeature = (() => {
 
       btn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const format = btn.dataset.format;
         const color = btn.dataset.color;
 
@@ -682,8 +685,10 @@ const FormatterFeature = (() => {
         activeFormats.strikethrough = true;
       }
 
-      // Check for color
-      const colorMatch = before.match(/\[!color:(\w+)\]\s*$/);
+      // Check for color (look for color tag at start of line)
+      const selLineStart = before.lastIndexOf('\n') + 1;
+      const beforeSelection = text.substring(selLineStart, start);
+      const colorMatch = beforeSelection.match(/^\[!color:(\w+)\]/);
       if (colorMatch) {
         activeFormats.color = colorMatch[1];
       }
@@ -719,10 +724,11 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Check for color at line start
-      const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-      const lineText = text.substring(lineStart, start);
-      const colorMatch = lineText.match(/\[!color:(\w+)\]/);
+      // Check for color at line start (check full line, not just up to cursor)
+      const curLineStart = text.lastIndexOf('\n', start - 1) + 1;
+      const curLineEnd = text.indexOf('\n', start);
+      const fullLineText = text.substring(curLineStart, curLineEnd === -1 ? text.length : curLineEnd);
+      const colorMatch = fullLineText.match(/^\[!color:(\w+)\]/);
       if (colorMatch) {
         activeFormats.color = colorMatch[1];
       }
@@ -867,6 +873,7 @@ const FormatterFeature = (() => {
         const lineEnd = lineText.indexOf('\n');
         const fullLine = lineEnd === -1 ? lineText : lineText.substring(0, lineEnd);
 
+        // Match color tag at the beginning of the line
         const colorMatch = fullLine.match(/^\[!color:\w+\]\s*/);
         if (colorMatch) {
           const beforeLine = text.substring(0, lineStart);
@@ -874,6 +881,8 @@ const FormatterFeature = (() => {
           newText = beforeLine + afterMatch;
           newCursorPos = lineStart;
         } else {
+          // No color tag found on this line, nothing to remove
+          console.log('Formatter: No color formatting found to remove on this line');
           return;
         }
         break;
@@ -898,12 +907,9 @@ const FormatterFeature = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Set cursor position
-    field.setSelectionRange(newCursorPos, newCursorPos);
-
-    // Dispatch single input event (avoid breaking React state with multiple events)
-    const inputEvent = new Event('input', { bubbles: true });
-    field.dispatchEvent(inputEvent);
+    // Dispatch event with React-compatible timing and error handling
+    // Also handle cursor positioning in the delayed context to avoid triggering React early
+    dispatchReactSafeEvent(field, newCursorPos);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1149,12 +1155,61 @@ const FormatterFeature = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, before + replacement + after);
 
-    // Set cursor position
-    field.setSelectionRange(cursorPos, cursorPos);
+    // Dispatch event with React-compatible timing and error handling
+    // Also handle cursor positioning in the delayed context to avoid triggering React early
+    dispatchReactSafeEvent(field, cursorPos);
+  }
 
-    // Dispatch single input event (avoid breaking React state with multiple events)
-    const inputEvent = new Event('input', { bubbles: true });
-    field.dispatchEvent(inputEvent);
+  // Helper function to dispatch events in a React-safe way
+  function dispatchReactSafeEvent(field, cursorPos = null) {
+    // Use multiple animation frames + setTimeout to ensure React has fully settled
+    // This gives React time to complete its internal state updates
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Add a small additional delay to be extra safe with React's update cycle
+        setTimeout(() => {
+          try {
+            // Verify field still exists in DOM
+            if (!document.body.contains(field)) {
+              console.log('Formatter: Field removed from DOM, skipping event dispatch');
+              return;
+            }
+
+            // Set cursor position now that React has settled
+            if (cursorPos !== null) {
+              field.setSelectionRange(cursorPos, cursorPos);
+            }
+
+            // Create a more complete InputEvent for better React compatibility
+            const inputEvent = new InputEvent('input', {
+              bubbles: true,
+              cancelable: false,
+              composed: true,
+              data: null,
+              dataTransfer: null,
+              inputType: 'insertText',
+              isComposing: false
+            });
+
+            field.dispatchEvent(inputEvent);
+
+            // Also dispatch a change event after a tiny delay
+            setTimeout(() => {
+              if (document.body.contains(field)) {
+                const changeEvent = new Event('change', {
+                  bubbles: true,
+                  cancelable: false
+                });
+                field.dispatchEvent(changeEvent);
+              }
+            }, 10);
+          } catch (error) {
+            // If dispatching fails, silently log and continue
+            console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
+          }
+        }, 50); // 50ms delay to let React settle
+      });
+    });
   }
 
   // Public API
