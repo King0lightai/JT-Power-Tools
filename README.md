@@ -302,16 +302,17 @@ All documentation for publishing to the Chrome Web Store is in the [`chrome-web-
 - **Formatter**: Some complex formatting scenarios may require page refresh
 - **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
 
-## 🔮 Future Enhancements
+## 🔮 Future Enhancements (susceptible to change)
 
 - [ ] End date adjustment for drag & drop
 - [ ] Multi-select drag for multiple tasks
-- [ ] Undo functionality for drag operations
-- [ ] More formatting options (code blocks, inline code, etc.)
+- [ ] click and drag task cards edges to expand and shrink days.
 - [ ] Custom keyboard shortcuts
 - [ ] Export/import settings
 - [ ] Additional custom theme presets
 - [ ] Theme sharing and import/export
+- [ ] Budget changelog captured in a line item
+- [ ] Record "why" schedule items shifted
 
 ## 📧 Support
 
