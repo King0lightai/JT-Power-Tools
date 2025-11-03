@@ -300,6 +300,37 @@ const CustomThemeFeature = (() => {
       [class*="border-blue"] {
         border-color: ${primary} !important;
       }
+
+      /* === Cyan Link Overrides === */
+      .text-cyan-500,
+      .text-cyan-600,
+      a[class*="text-cyan"] {
+        color: ${primary} !important;
+      }
+
+      .hover\\:text-cyan-600:hover,
+      .focus\\:text-cyan-600:focus {
+        color: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      /* === Search Bar and Gray Text Overrides === */
+      .text-gray-400 {
+        color: ${text} !important;
+        opacity: 0.7;
+      }
+
+      .group-hover\\:text-gray-500,
+      .group:hover .group-hover\\:text-gray-500 {
+        color: ${text} !important;
+        opacity: 0.85;
+      }
+
+      .placeholder-gray-400::placeholder,
+      .group-hover\\:placeholder-gray-500:hover::placeholder {
+        color: ${text} !important;
+        opacity: 0.5;
+      }
     `;
 
     styleElement = document.createElement('style');
