@@ -1131,7 +1131,6 @@ const DragDropFeature = (() => {
                   }
                 } // End of proceedWithDayClick function
 
-              }, 600); // End of date picker verification timeout
             } else {
               console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
 
