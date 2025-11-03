@@ -335,3 +335,276 @@ footer p {
   pointer-events: none;
   opacity: 0.5;
 }
+
+/* Theme Customization Panel */
+.theme-customization {
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.theme-customization h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.theme-description {
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+/* Color Pickers Grid */
+.color-pickers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.color-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.color-picker-label {
+  display: block;
+}
+
+.color-picker-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.color-picker-input {
+  width: 100%;
+  height: 56px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.color-picker-input:hover {
+  border-color: #d1d5db;
+}
+
+.color-picker-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.color-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: #9ca3af;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Theme Preview */
+.theme-preview {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+}
+
+.theme-preview h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.preview-samples {
+  display: flex;
+  gap: 8px;
+}
+
+.preview-sample {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.preview-sample.primary {
+  background: #3B82F6;
+  color: white;
+  border: 1px solid #3B82F6;
+}
+
+.preview-sample.background {
+  background: #f0f7ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.preview-sample.text {
+  background: #ffffff;
+  color: #1e3a8a;
+  border: 1px solid #e5e7eb;
+}
+
+/* Theme Actions */
+.theme-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.reset-btn,
+.apply-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reset-btn {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.reset-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.apply-btn {
+  background: #FF6B35;
+  color: white;
+}
+
+.apply-btn:hover {
+  background: #e65a2b;
+}
+
+.apply-btn:active {
+  background: #cc4f23;
+}
+
+/* Saved Themes Section */
+.saved-themes {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.saved-themes h4 {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.saved-theme-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.theme-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  transition: border-color 0.15s ease;
+}
+
+.theme-slot:hover {
+  border-color: #d1d5db;
+}
+
+.theme-name-input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #1f2937;
+  min-width: 80px;
+}
+
+.theme-name-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+}
+
+.theme-colors-preview {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+}
+
+.save-theme-btn,
+.load-theme-btn {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.save-theme-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.save-theme-btn:hover {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.load-theme-btn {
+  background: #FF6B35;
+  color: white;
+}
+
+.load-theme-btn:hover {
+  background: #e65a2b;
+}
+
+.load-theme-btn:active {
+  background: #cc4f23;
+}

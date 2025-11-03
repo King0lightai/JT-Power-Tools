@@ -24,6 +24,11 @@ const featureModules = {
     name: 'Dark Mode',
     feature: () => window.DarkModeFeature,
     instance: null
+  },
+  rgbTheme: {
+    name: 'RGB Custom Theme',
+    feature: () => window.RGBThemeFeature,
+    instance: null
   }
 };
 
@@ -32,7 +37,14 @@ let currentSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
-  darkMode: false
+  darkMode: false,
+  rgbTheme: false,
+  themeColors: {
+    primary: '#3B82F6',
+    background: '#F3E8FF',
+    text: '#1F1B29'
+  },
+  savedThemes: [null, null, null]
 };
 
 // Load settings from storage
@@ -63,7 +75,12 @@ function initializeFeature(featureKey) {
 
     // Initialize if not already active
     if (!FeatureClass.isActive()) {
-      FeatureClass.init();
+      // Special handling for RGB theme - pass theme colors
+      if (featureKey === 'rgbTheme' && currentSettings.themeColors) {
+        FeatureClass.init(currentSettings.themeColors);
+      } else {
+        FeatureClass.init();
+      }
       module.instance = FeatureClass;
       console.log(`JT-Tools: ${module.name} initialized`);
     } else {
@@ -109,6 +126,9 @@ function handleSettingsChange(newSettings) {
 
   // Compare old and new settings
   for (const [key, enabled] of Object.entries(newSettings)) {
+    // Skip non-feature settings like rgbColors
+    if (!featureModules[key]) continue;
+
     const wasEnabled = currentSettings[key];
 
     if (enabled && !wasEnabled) {
@@ -119,6 +139,19 @@ function handleSettingsChange(newSettings) {
       // Feature was disabled
       console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
       cleanupFeature(key);
+    }
+  }
+
+  // Special handling for theme colors changes
+  if (newSettings.rgbTheme && newSettings.themeColors) {
+    const RGBThemeFeature = window.RGBThemeFeature;
+    if (RGBThemeFeature && RGBThemeFeature.isActive()) {
+      // Check if colors actually changed
+      const colorsChanged = JSON.stringify(currentSettings.themeColors) !== JSON.stringify(newSettings.themeColors);
+      if (colorsChanged) {
+        console.log('JT-Tools: Theme colors updated, applying new colors');
+        RGBThemeFeature.updateColors(newSettings.themeColors);
+      }
     }
   }
 
