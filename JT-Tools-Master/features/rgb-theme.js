@@ -171,7 +171,11 @@ const CustomThemeFeature = (() => {
 
       /* === Task Cards === */
       /* Task cards keep their original colors (task type indicators) */
-      /* Only the border-left color indicates task type - preserve it! */
+      /* Enhance the left border to make task type colors more visible */
+      td div.cursor-pointer[style*="border-left"] {
+        border-left-width: 5px !important;
+        box-shadow: inset 4px 0 8px rgba(0, 0, 0, 0.1);
+      }
 
       /* === General Styles === */
       *, ::backdrop, ::file-selector-button, :after, :before {
