@@ -955,10 +955,14 @@ const DragDropFeature = (() => {
                 console.log(`DragDrop: attemptDateChange - Month select set to: ${targetMonthValue}`);
 
                 // Small delay to let month change process and update calendar
+                console.log('DragDrop: attemptDateChange - Setting 500ms timeout for verification and clicking...');
                 setTimeout(() => {
-                  // VERIFY: Check that the dropdowns are still set correctly before clicking
-                  const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                  const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+                  console.log('DragDrop: attemptDateChange - *** TIMEOUT FIRED - Starting verification ***');
+
+                  try {
+                    // VERIFY: Check that the dropdowns are still set correctly before clicking
+                    const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                    const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
 
                   if (verifyMonthSelect && verifyYearSelect) {
                     console.log(`DragDrop: attemptDateChange - VERIFY before clicking: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
@@ -1031,6 +1035,14 @@ const DragDropFeature = (() => {
                   } else {
                     console.error('DragDrop: attemptDateChange - Could not find calendar table');
                     showNotification('Could not find calendar');
+                    closeSidebar(failsafeTimeout);
+                  }
+
+                  } catch (error) {
+                    console.error('DragDrop: *** EXCEPTION in verification/clicking setTimeout ***');
+                    console.error('DragDrop: Error:', error.name, error.message);
+                    console.error('DragDrop: Stack:', error.stack);
+                    showNotification('Error during day selection. Check console.');
                     closeSidebar(failsafeTimeout);
                   }
                 }, 500); // Increased to 500ms to let month change fully render
