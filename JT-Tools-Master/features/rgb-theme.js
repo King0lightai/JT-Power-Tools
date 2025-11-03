@@ -371,6 +371,46 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.95);
       }
 
+      /* === Hover Background States === */
+      .hover\\:bg-gray-50:hover,
+      .hover\\:bg-gray-100:hover,
+      .hover\\:bg-gray-200:hover,
+      .hover\\:bg-white:hover {
+        background-color: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      /* === Active Background States === */
+      .active\\:bg-gray-100:active,
+      .active\\:bg-gray-200:active,
+      .active\\:bg-gray-300:active {
+        background-color: ${background} !important;
+        filter: brightness(0.9);
+      }
+
+      /* === Popups, Tooltips, and Modals === */
+      [role="dialog"],
+      [role="tooltip"],
+      [role="menu"],
+      [role="listbox"],
+      .tooltip,
+      .popup,
+      .modal,
+      .dropdown,
+      div[class*="absolute"][class*="bg-"],
+      div[class*="fixed"][class*="bg-"],
+      div[class*="z-"][class*="bg-"] {
+        background-color: ${background} !important;
+        color: ${text} !important;
+      }
+
+      /* === Black/Dark Background Overrides === */
+      .bg-black,
+      .bg-gray-800,
+      .bg-gray-900 {
+        background-color: ${background} !important;
+      }
+
       /* === Text Colors === */
       .text-gray-500,
       .text-gray-600,
