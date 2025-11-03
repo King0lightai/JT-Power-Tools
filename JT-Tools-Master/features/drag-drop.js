@@ -712,7 +712,8 @@ const DragDropFeature = (() => {
       console.warn(`DragDrop: formatDateForInput - month missing, using current: ${month}`);
     }
 
-    // Detect year boundary transitions (Dec→Jan or Jan→Dec)
+    // Determine if we should include the year
+    const currentRealYear = new Date().getFullYear();
     const monthMap = {
       'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
       'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
@@ -723,13 +724,19 @@ const DragDropFeature = (() => {
       (monthMap[sourceMonth] === 0 && monthMap[month] === 11)     // Jan → Dec
     );
 
+    // Include year if:
+    // 1. Year boundary transition (Dec→Jan or Jan→Dec), OR
+    // 2. Target year is different from current real-world year
+    const shouldIncludeYear = dateInfo.year && (
+      isYearBoundaryTransition ||
+      dateInfo.year !== currentRealYear
+    );
+
     let formattedDate;
-    if (isYearBoundaryTransition && dateInfo.year) {
-      // For year boundary transitions, include the year to be explicit
+    if (shouldIncludeYear) {
       formattedDate = `${month} ${dateInfo.day}, ${dateInfo.year}`;
-      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} included for year boundary)`);
+      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} included)`);
     } else {
-      // For regular moves, omit the year (JobTread infers from calendar context)
       formattedDate = `${month} ${dateInfo.day}`;
       console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year omitted, JobTread will infer)`);
     }
