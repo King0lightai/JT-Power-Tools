@@ -605,35 +605,50 @@ const DragDropFeature = (() => {
       }
     }
 
-    // Fallback to current month and year with smart year inference
+    // Fallback to smart year inference using source date or current date
     if (!month || !year) {
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
+      // Try to use the source date info (from drag start) as baseline
+      let baselineMonth, baselineYear;
+
+      if (sourceDateInfo && sourceDateInfo.month && sourceDateInfo.year) {
+        const monthMap = {
+          'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+          'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+        };
+        baselineMonth = monthMap[sourceDateInfo.month];
+        baselineYear = sourceDateInfo.year;
+        console.log(`DragDrop: extractFullDateInfo - Using source date as baseline: ${sourceDateInfo.month} ${baselineYear}`);
+      } else {
+        // Fall back to real-world current date
+        const now = new Date();
+        baselineMonth = now.getMonth();
+        baselineYear = now.getFullYear();
+        console.log(`DragDrop: extractFullDateInfo - Using real-world date as baseline: ${monthAbbrev[baselineMonth]} ${baselineYear}`);
+      }
 
       if (!month) {
-        month = monthAbbrev[currentMonth];
-        console.warn(`DragDrop: extractFullDateInfo - month not found, using current month: ${month}`);
+        month = monthAbbrev[baselineMonth];
+        console.warn(`DragDrop: extractFullDateInfo - month not found, using baseline month: ${month}`);
       }
 
       if (!year && month) {
-        // Smart year inference based on current date
+        // Smart year inference based on baseline date
         const targetMonthIndex = monthAbbrev.indexOf(month);
 
-        // If we're in Nov/Dec and the target is Jan/Feb, likely next year
-        if (currentMonth >= 10 && targetMonthIndex <= 1) {
-          year = currentYear + 1;
-          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred next year ${year} (current: ${monthAbbrev[currentMonth]}, target: ${month})`);
+        // If baseline is Nov/Dec and target is Jan/Feb, likely next year
+        if (baselineMonth >= 10 && targetMonthIndex <= 1) {
+          year = baselineYear + 1;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred next year ${year} (baseline: ${monthAbbrev[baselineMonth]} ${baselineYear}, target: ${month})`);
         }
-        // If we're in Jan/Feb and the target is Nov/Dec, likely last year
-        else if (currentMonth <= 1 && targetMonthIndex >= 10) {
-          year = currentYear - 1;
-          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred previous year ${year} (current: ${monthAbbrev[currentMonth]}, target: ${month})`);
+        // If baseline is Jan/Feb and target is Nov/Dec, likely previous year
+        else if (baselineMonth <= 1 && targetMonthIndex >= 10) {
+          year = baselineYear - 1;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, inferred previous year ${year} (baseline: ${monthAbbrev[baselineMonth]} ${baselineYear}, target: ${month})`);
         }
-        // Otherwise, assume current year
+        // Otherwise, assume baseline year
         else {
-          year = currentYear;
-          console.warn(`DragDrop: extractFullDateInfo - year not found, using current year: ${year}`);
+          year = baselineYear;
+          console.warn(`DragDrop: extractFullDateInfo - year not found, using baseline year: ${year}`);
         }
       }
     }
