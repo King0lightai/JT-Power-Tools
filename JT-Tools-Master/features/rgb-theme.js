@@ -352,6 +352,24 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.9);
       }
 
+      /* === Purple Button Overrides (Send buttons, etc.) === */
+      .bg-purple-700,
+      .bg-purple-800,
+      button[class*="bg-purple"] {
+        background-color: ${primary} !important;
+      }
+
+      .hover\\:bg-purple-800:hover {
+        background-color: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      .border-purple-700,
+      .border-purple-800,
+      [class*="border-purple"] {
+        border-color: ${primary} !important;
+      }
+
       /* === Search Bar and Gray Text Overrides === */
       .text-gray-400 {
         color: ${text} !important;
