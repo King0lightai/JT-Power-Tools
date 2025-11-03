@@ -959,46 +959,60 @@ const DragDropFeature = (() => {
               console.log(`DragDrop: attemptDateChange - Both year (${targetYearValue}) and month (${targetMonthValue}) set`);
               console.log(`DragDrop: attemptDateChange - Waiting for React to render calendar with both changes...`);
 
-              // Wait longer for React to process both year and month changes together
-              setTimeout(() => {
-                console.log('DragDrop: attemptDateChange - *** TIMEOUT FIRED - Starting verification ***');
+              // Retry mechanism to ensure dropdowns stay set correctly
+              let retryCount = 0;
+              const maxRetries = 5;
 
-                try {
-                  // VERIFY: Check that the dropdowns are still set correctly before clicking
-                  const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                  const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+              function verifyAndRetry() {
+                setTimeout(() => {
+                  retryCount++;
+                  console.log(`DragDrop: attemptDateChange - Verification attempt ${retryCount}/${maxRetries}`);
 
-                  if (verifyMonthSelect && verifyYearSelect) {
-                    console.log(`DragDrop: attemptDateChange - VERIFY before clicking: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
-                    console.log(`DragDrop: attemptDateChange - Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
+                  try {
+                    // VERIFY: Check that the dropdowns are still set correctly
+                    const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                    const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
 
-                    if (verifyMonthSelect.value !== targetMonthValue || verifyYearSelect.value !== targetYearValue) {
-                      console.error('DragDrop: attemptDateChange - WARNING: Dropdowns changed! Re-setting and waiting...');
-                      verifyYearSelect.value = targetYearValue;
-                      verifyYearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                      verifyYearSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                      verifyMonthSelect.value = targetMonthValue;
-                      verifyMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                      verifyMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                    if (verifyMonthSelect && verifyYearSelect) {
+                      console.log(`DragDrop: attemptDateChange - VERIFY: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
+                      console.log(`DragDrop: attemptDateChange - Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
 
-                      // Wait for React to process the changes before proceeding
-                      console.log('DragDrop: attemptDateChange - Waiting 700ms for React to update calendar...');
-                      setTimeout(() => {
-                        proceedWithDayClick();
-                      }, 700);
-                      return; // Don't proceed immediately
+                      if (verifyMonthSelect.value !== targetMonthValue || verifyYearSelect.value !== targetYearValue) {
+                        if (retryCount < maxRetries) {
+                          console.warn(`DragDrop: attemptDateChange - Dropdowns reverted! Retry ${retryCount}/${maxRetries}`);
+                          // Re-set both rapidly
+                          verifyYearSelect.value = targetYearValue;
+                          verifyYearSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                          verifyYearSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                          verifyMonthSelect.value = targetMonthValue;
+                          verifyMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                          verifyMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                          // Try again
+                          verifyAndRetry();
+                          return;
+                        } else {
+                          console.error(`DragDrop: attemptDateChange - Max retries (${maxRetries}) reached, dropdowns still incorrect!`);
+                          showNotification('Date picker not responding correctly. Please try manually.');
+                          closeSidebar(failsafeTimeout);
+                          return;
+                        }
+                      }
                     }
+
+                    // Dropdowns are correct, proceed with clicking
+                    console.log('DragDrop: attemptDateChange - Dropdowns verified correct, proceeding...');
+                    proceedWithDayClick();
+
+                  } catch (error) {
+                    console.error('DragDrop: attemptDateChange - Error during verification:', error);
+                    showNotification('Error during date picker verification: ' + error.message);
+                    closeSidebar(failsafeTimeout);
                   }
+                }, retryCount === 0 ? 400 : 300); // First check after 400ms, subsequent retries after 300ms
+              }
 
-                  // Dropdowns are correct, proceed immediately
-                  proceedWithDayClick();
-
-                } catch (error) {
-                  console.error('DragDrop: attemptDateChange - Error during day click:', error);
-                  showNotification('Error clicking date: ' + error.message);
-                  closeSidebar(failsafeTimeout);
-                }
-              }, 600); // Longer delay since we're processing both changes
+              // Start verification process
+              verifyAndRetry();
 
               // Extracted function to handle day clicking logic
               function proceedWithDayClick() {
