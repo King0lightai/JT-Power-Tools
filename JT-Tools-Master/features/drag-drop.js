@@ -673,10 +673,16 @@ const DragDropFeature = (() => {
       console.warn(`DragDrop: formatDateForInput - month missing, using current: ${month}`);
     }
 
-    // Return format WITHOUT year - JobTread infers year from calendar context
-    // Year information is in dateInfo.year but JobTread's input doesn't accept it
-    const formattedDate = `${month} ${dateInfo.day}`;
-    console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} tracked but not sent)`);
+    // For year boundary transitions (Dec→Jan or Jan→Dec), include the year to be explicit
+    // Otherwise JobTread may infer the wrong year
+    let formattedDate;
+    if (dateInfo.year) {
+      formattedDate = `${month} ${dateInfo.day}, ${dateInfo.year}`;
+      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (year ${dateInfo.year} included for accuracy)`);
+    } else {
+      formattedDate = `${month} ${dateInfo.day}`;
+      console.log(`DragDrop: formatDateForInput - output: "${formattedDate}" (no year available)`);
+    }
 
     return formattedDate;
   }
