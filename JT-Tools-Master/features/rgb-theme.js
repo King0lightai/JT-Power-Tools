@@ -224,7 +224,7 @@ const CustomThemeFeature = (() => {
       input.focus\\:border-blue-500:focus,
       textarea.hover\\:border-blue-500:hover,
       textarea.focus\\:border-blue-500:focus {
-        border-color: ${primary} !important;
+        border-color: ${borderColor} !important;
       }
 
       input.border-transparent,
