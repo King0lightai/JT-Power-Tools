@@ -170,9 +170,9 @@ const CustomThemeFeature = (() => {
       /* Using user's chosen Primary, Background, and Text colors */
 
       /* === Task Cards === */
-      /* Task cards keep their original colors (task type indicators) */
-      /* Enhance the left border to make task type colors more visible */
+      /* Use theme background for cards, keep task type color in thick border */
       td div.cursor-pointer[style*="border-left"] {
+        background-color: ${background} !important;
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px rgba(0, 0, 0, 0.1);
       }
