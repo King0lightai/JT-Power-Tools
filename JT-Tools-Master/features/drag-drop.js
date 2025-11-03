@@ -1128,11 +1128,20 @@ const DragDropFeature = (() => {
                       }
                     }
 
-                    // If no non-grayed cell found, log error and use first cell as fallback
+                    // If no non-grayed cell found, calendar hasn't re-rendered yet - retry instead of using fallback
                     if (!targetDayCell && candidateCells.length > 0) {
                       console.error(`DragDrop: attemptDateChange - All ${candidateCells.length} cells for day ${dateInfo.day} appear grayed out!`);
-                      targetDayCell = candidateCells[0].cell;
-                      console.log('DragDrop: attemptDateChange - Using first cell as fallback');
+
+                      // Calendar hasn't updated yet - retry if we have attempts left
+                      if (retryCount < maxRetries) {
+                        console.warn('DragDrop: attemptDateChange - Calendar not updated yet, retrying...');
+                        verifyAndRetry();
+                        return;
+                      } else {
+                        console.error('DragDrop: attemptDateChange - Max retries reached but calendar still not updated, using fallback');
+                        targetDayCell = candidateCells[0].cell;
+                        console.log('DragDrop: attemptDateChange - Using first cell as fallback');
+                      }
                     }
 
                     if (targetDayCell) {
