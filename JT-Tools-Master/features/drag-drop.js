@@ -573,6 +573,7 @@ const DragDropFeature = (() => {
     }
 
     // Strategy 3: General page text search (last resort)
+    let pageFoundMonth = null; // Track which month the year came from
     if (!month || !year) {
       const pageText = document.body.innerText;
       const monthYearMatches = pageText.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/g);
@@ -596,12 +597,35 @@ const DragDropFeature = (() => {
               }
               if (!year) {
                 year = foundYear;
-                console.log(`DragDrop: extractFullDateInfo - Found year in page text: ${year}`);
+                pageFoundMonth = monthAbbrev[monthIndex]; // Remember which month this year came from
+                console.log(`DragDrop: extractFullDateInfo - Found year ${year} associated with month ${pageFoundMonth}`);
               }
               if (month && year) break;
             }
           }
         }
+      }
+    }
+
+    // CRITICAL: Validate year if it came from a different month
+    // If we found "Dec 2025" on page but extracting a Jan cell, that Jan is likely 2026
+    if (year && month && pageFoundMonth && pageFoundMonth !== month) {
+      const monthMap = {
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+      };
+      const pageMonthIndex = monthMap[pageFoundMonth];
+      const targetMonthIndex = monthMap[month];
+
+      // If page shows Nov/Dec with year X, but cell is Jan/Feb, cell is likely year X+1
+      if (pageMonthIndex >= 10 && targetMonthIndex <= 1) {
+        year = year + 1;
+        console.warn(`DragDrop: extractFullDateInfo - ✓ Adjusted year to ${year} (page showed ${pageFoundMonth} ${year - 1}, but cell is ${month})`);
+      }
+      // If page shows Jan/Feb with year X, but cell is Nov/Dec, cell is likely year X-1
+      else if (pageMonthIndex <= 1 && targetMonthIndex >= 10) {
+        year = year - 1;
+        console.warn(`DragDrop: extractFullDateInfo - ✓ Adjusted year to ${year} (page showed ${pageFoundMonth} ${year + 1}, but cell is ${month})`);
       }
     }
 
