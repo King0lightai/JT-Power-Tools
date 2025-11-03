@@ -1021,19 +1021,50 @@ const DragDropFeature = (() => {
 
                     const dayCells = calendarTable.querySelectorAll('td');
                     let targetDayCell = null;
+                    const candidateCells = [];
 
+                    // CRITICAL: Find ALL cells matching the day number (may include prev/next month days)
                     for (const cell of dayCells) {
                       const cellText = cell.textContent.trim();
-                      // Match the day and make sure it's not grayed out (text-gray-300)
-                      if (cellText === dateInfo.day && !cell.classList.contains('text-gray-300')) {
-                        targetDayCell = cell;
-                        console.log(`DragDrop: attemptDateChange - Found target cell for day ${dateInfo.day}, classes: ${cell.className}`);
+                      if (cellText === dateInfo.day) {
+                        const classes = cell.className;
+                        const computedStyle = window.getComputedStyle(cell);
+                        const color = computedStyle.color;
+                        const opacity = computedStyle.opacity;
+
+                        candidateCells.push({
+                          cell,
+                          classes,
+                          color,
+                          opacity,
+                          // Detect grayed-out cells (previous/next month days)
+                          isGrayed: classes.includes('text-gray') || parseFloat(opacity) < 1
+                        });
+
+                        console.log(`DragDrop: attemptDateChange - Candidate day ${dateInfo.day}: classes="${classes}", color="${color}", opacity="${opacity}", grayed=${classes.includes('text-gray') || parseFloat(opacity) < 1}`);
+                      }
+                    }
+
+                    console.log(`DragDrop: attemptDateChange - Found ${candidateCells.length} cells with day ${dateInfo.day}`);
+
+                    // Select the FIRST non-grayed cell (the current month's day)
+                    for (const candidate of candidateCells) {
+                      if (!candidate.isGrayed) {
+                        targetDayCell = candidate.cell;
+                        console.log(`DragDrop: attemptDateChange - Selected non-grayed cell for day ${dateInfo.day}`);
                         break;
                       }
                     }
 
+                    // If no non-grayed cell found, log error and use first cell as fallback
+                    if (!targetDayCell && candidateCells.length > 0) {
+                      console.error(`DragDrop: attemptDateChange - All ${candidateCells.length} cells for day ${dateInfo.day} appear grayed out!`);
+                      targetDayCell = candidateCells[0].cell;
+                      console.log('DragDrop: attemptDateChange - Using first cell as fallback');
+                    }
+
                     if (targetDayCell) {
-                      console.log(`DragDrop: attemptDateChange - Clicking day ${dateInfo.day} in calendar`);
+                      console.log(`DragDrop: attemptDateChange - Final selected cell classes: ${targetDayCell.className}`);
                       targetDayCell.click();
                       console.log('DragDrop: attemptDateChange - Day clicked, waiting for JobTread to process...');
 
