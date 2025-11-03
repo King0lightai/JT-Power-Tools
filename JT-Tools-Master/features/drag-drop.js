@@ -981,15 +981,29 @@ const DragDropFeature = (() => {
               // Don't wait between them - let React process both changes together
               // This prevents React from re-syncing to the sidebar date in between
 
-              console.log(`DragDrop: attemptDateChange - Setting year to: ${targetYearValue}`);
-              yearSelect.value = targetYearValue;
-              yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-              yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
+              // Helper function to simulate realistic user interaction with select element
+              function setSelectWithEvents(selectElement, value, label) {
+                console.log(`DragDrop: attemptDateChange - Setting ${label} to: ${value}`);
 
-              console.log(`DragDrop: attemptDateChange - Immediately setting month to: ${targetMonthValue}`);
-              monthSelect.value = targetMonthValue;
-              monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-              monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                // Simulate focus
+                selectElement.focus();
+                selectElement.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+
+                // Set the value
+                selectElement.value = value;
+
+                // Dispatch comprehensive events that React might be listening to
+                selectElement.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+                selectElement.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+                selectElement.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+
+                // Simulate blur
+                selectElement.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+              }
+
+              // Set year AND month with full event simulation
+              setSelectWithEvents(yearSelect, targetYearValue, 'year');
+              setSelectWithEvents(monthSelect, targetMonthValue, 'month');
 
               console.log(`DragDrop: attemptDateChange - Both year (${targetYearValue}) and month (${targetMonthValue}) set`);
               console.log(`DragDrop: attemptDateChange - Waiting for React to render calendar with both changes...`);
@@ -1013,13 +1027,9 @@ const DragDropFeature = (() => {
                       if (monthSelect.value !== targetMonthValue || yearSelect.value !== targetYearValue) {
                         if (retryCount < maxRetries) {
                           console.warn(`DragDrop: attemptDateChange - Dropdowns reverted! Retry ${retryCount}/${maxRetries}`);
-                          // Re-set both rapidly
-                          yearSelect.value = targetYearValue;
-                          yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                          yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                          monthSelect.value = targetMonthValue;
-                          monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                          monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                          // Re-set both with full event simulation
+                          setSelectWithEvents(yearSelect, targetYearValue, 'year');
+                          setSelectWithEvents(monthSelect, targetMonthValue, 'month');
                           // Try again
                           verifyAndRetry();
                           return;
@@ -1041,7 +1051,7 @@ const DragDropFeature = (() => {
                     showNotification('Error during date picker verification: ' + error.message);
                     closeSidebar(failsafeTimeout);
                   }
-                }, retryCount === 0 ? 400 : 300); // First check after 400ms, subsequent retries after 300ms
+                }, retryCount === 0 ? 600 : 500); // First check after 600ms, subsequent retries after 500ms - give React time to re-render
               }
 
               // Start verification process
