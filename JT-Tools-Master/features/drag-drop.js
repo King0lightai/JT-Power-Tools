@@ -809,17 +809,40 @@ const DragDropFeature = (() => {
               };
               sidebarSourceMonth = monthNameMap[fullOrShortMonth] || fullOrShortMonth;
 
-              // Use year from the drag source (stored during handleDragStart)
-              if (sourceDateInfo && sourceDateInfo.year) {
-                sidebarSourceYear = sourceDateInfo.year;
-                console.log(`DragDrop: attemptDateChange - Using year from drag source: ${sidebarSourceYear}`);
+              // CRITICAL: Infer year intelligently based on sidebar month vs source calendar month
+              if (sourceDateInfo && sourceDateInfo.year && sourceDateInfo.month) {
+                const monthIndexMap = {
+                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                };
+
+                const sidebarMonthIndex = monthIndexMap[sidebarSourceMonth];
+                const sourceCalendarMonthIndex = monthIndexMap[sourceDateInfo.month];
+
+                console.log(`DragDrop: attemptDateChange - Sidebar month: ${sidebarSourceMonth} (${sidebarMonthIndex}), Source calendar month: ${sourceDateInfo.month} (${sourceCalendarMonthIndex}), Source year: ${sourceDateInfo.year}`);
+
+                // If sidebar shows Dec (11) and source calendar shows Jan (0), sidebar is from previous year
+                if (sidebarMonthIndex === 11 && sourceCalendarMonthIndex === 0) {
+                  sidebarSourceYear = sourceDateInfo.year - 1;
+                  console.log(`DragDrop: attemptDateChange - Dec→Jan year boundary detected, using previous year: ${sidebarSourceYear}`);
+                }
+                // If sidebar shows Jan (0) and source calendar shows Dec (11), sidebar is from next year
+                else if (sidebarMonthIndex === 0 && sourceCalendarMonthIndex === 11) {
+                  sidebarSourceYear = sourceDateInfo.year + 1;
+                  console.log(`DragDrop: attemptDateChange - Jan→Dec year boundary detected, using next year: ${sidebarSourceYear}`);
+                }
+                // Otherwise, use source year
+                else {
+                  sidebarSourceYear = sourceDateInfo.year;
+                  console.log(`DragDrop: attemptDateChange - Using year from drag source: ${sidebarSourceYear}`);
+                }
               } else {
                 // Fallback: use current year
                 sidebarSourceYear = new Date().getFullYear();
                 console.log(`DragDrop: attemptDateChange - No drag source year, using current year: ${sidebarSourceYear}`);
               }
 
-              console.log(`DragDrop: attemptDateChange - Extracted month from sidebar: ${sidebarSourceMonth}, year from source: ${sidebarSourceYear}`);
+              console.log(`DragDrop: attemptDateChange - Final extracted: ${sidebarSourceMonth} ${sidebarSourceYear}`);
             }
             startDateParent = field.closest('div.group.items-center');
             console.log('DragDrop: attemptDateChange - Found start date field:', text);
