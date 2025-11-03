@@ -190,6 +190,24 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor};
       }
 
+      /* === Input Field Border Overrides === */
+      input.border,
+      textarea.border {
+        border-color: ${borderColor};
+      }
+
+      input.hover\\:border-blue-500:hover,
+      input.focus\\:border-blue-500:focus,
+      textarea.hover\\:border-blue-500:hover,
+      textarea.focus\\:border-blue-500:focus {
+        border-color: ${primary} !important;
+      }
+
+      input.border-transparent,
+      textarea.border-transparent {
+        border-color: transparent;
+      }
+
       /* === Background Colors === */
       .bg-white,
       .bg-gray-50,
