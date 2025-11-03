@@ -942,50 +942,31 @@ const DragDropFeature = (() => {
 
               console.log(`DragDrop: attemptDateChange - Setting date picker to: ${dateInfo.month} (${targetMonthValue}) ${dateInfo.year}`);
 
-              // Set the year first
+              // STRATEGY: Set year AND month rapidly in succession (like Jan→Dec which works)
+              // Don't wait between them - let React process both changes together
+              // This prevents React from re-syncing to the sidebar date in between
+
+              console.log(`DragDrop: attemptDateChange - Setting year to: ${targetYearValue}`);
               yearSelect.value = targetYearValue;
               yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
               yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
-              console.log(`DragDrop: attemptDateChange - Year select set to: ${targetYearValue}`);
-              console.log(`DragDrop: attemptDateChange - Waiting for React to re-render calendar after year change...`);
 
-              // IMPORTANT: Longer delay to let React re-render the calendar when year changes
-              // When year changes, React destroys and recreates the calendar DOM
+              console.log(`DragDrop: attemptDateChange - Immediately setting month to: ${targetMonthValue}`);
+              monthSelect.value = targetMonthValue;
+              monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
+              monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
+
+              console.log(`DragDrop: attemptDateChange - Both year (${targetYearValue}) and month (${targetMonthValue}) set`);
+              console.log(`DragDrop: attemptDateChange - Waiting for React to render calendar with both changes...`);
+
+              // Wait longer for React to process both year and month changes together
               setTimeout(() => {
-                console.log(`DragDrop: attemptDateChange - React re-render complete, setting month...`);
+                console.log('DragDrop: attemptDateChange - *** TIMEOUT FIRED - Starting verification ***');
 
-                // Re-find both selects in case DOM was rebuilt
-                console.log('DragDrop: attemptDateChange - Re-querying for month and year selects...');
-                const newMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                const newYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
-
-                console.log('DragDrop: attemptDateChange - newMonthSelect:', newMonthSelect);
-                console.log('DragDrop: attemptDateChange - newYearSelect:', newYearSelect);
-
-                if (!newMonthSelect) {
-                  console.error('DragDrop: attemptDateChange - Month select disappeared after year change!');
-                  showNotification('Date picker error: month selector not found after year change');
-                  closeSidebar(failsafeTimeout);
-                  return;
-                }
-
-                // Set the month
-                console.log(`DragDrop: attemptDateChange - About to set month to: ${targetMonthValue}`);
-                newMonthSelect.value = targetMonthValue;
-                console.log(`DragDrop: attemptDateChange - Month value set, dispatching change event...`);
-                newMonthSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                newMonthSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                console.log(`DragDrop: attemptDateChange - Month select set to: ${targetMonthValue}`);
-
-                // Small delay to let month change process and update calendar
-                console.log('DragDrop: attemptDateChange - Setting 500ms timeout for verification and clicking...');
-                setTimeout(() => {
-                  console.log('DragDrop: attemptDateChange - *** TIMEOUT FIRED - Starting verification ***');
-
-                  try {
-                    // VERIFY: Check that the dropdowns are still set correctly before clicking
-                    const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
-                    const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
+                try {
+                  // VERIFY: Check that the dropdowns are still set correctly before clicking
+                  const verifyMonthSelect = document.querySelector('select option[value="1"]')?.closest('select');
+                  const verifyYearSelect = document.querySelector('select option[value="2025"], select option[value="2026"]')?.closest('select');
 
                   if (verifyMonthSelect && verifyYearSelect) {
                     console.log(`DragDrop: attemptDateChange - VERIFY before clicking: Month=${verifyMonthSelect.value}, Year=${verifyYearSelect.value}`);
@@ -1012,16 +993,16 @@ const DragDropFeature = (() => {
                   // Dropdowns are correct, proceed immediately
                   proceedWithDayClick();
 
-                  } catch (error) {
-                    console.error('DragDrop: attemptDateChange - Error during day click:', error);
-                    showNotification('Error clicking date: ' + error.message);
-                    closeSidebar(failsafeTimeout);
-                  }
-                }, 500);
+                } catch (error) {
+                  console.error('DragDrop: attemptDateChange - Error during day click:', error);
+                  showNotification('Error clicking date: ' + error.message);
+                  closeSidebar(failsafeTimeout);
+                }
+              }, 600); // Longer delay since we're processing both changes
 
-                // Extracted function to handle day clicking logic
-                function proceedWithDayClick() {
-                  try {
+              // Extracted function to handle day clicking logic
+              function proceedWithDayClick() {
+                try {
 
                   // Find and click the day in the calendar
                   // Try multiple strategies to find the calendar table
@@ -1150,8 +1131,7 @@ const DragDropFeature = (() => {
                   }
                 } // End of proceedWithDayClick function
 
-              }, 500); // End of month setting timeout
-            }, 300); // End of year setting timeout
+              }, 600); // End of date picker verification timeout
             } else {
               console.log('DragDrop: attemptDateChange - Date picker not found, falling back to input field method');
 
