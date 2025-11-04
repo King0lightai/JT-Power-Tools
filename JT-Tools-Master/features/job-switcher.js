@@ -27,7 +27,7 @@ const QuickJobSwitcherFeature = (() => {
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
 
-    console.log('QuickJobSwitcher: Listening for Ctrl/Cmd+J');
+    console.log('QuickJobSwitcher: ✅ Listening for Ctrl/Cmd+J keyboard shortcut');
   }
 
   /**
@@ -55,7 +55,8 @@ const QuickJobSwitcherFeature = (() => {
    */
   function handleKeyDown(e) {
     // Start quick search: Ctrl+J or Cmd+J
-    if ((e.ctrlKey || e.metaKey) && e.key === 'j' && !isSearching) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'j' || e.key === 'J') && !isSearching) {
+      console.log('QuickJobSwitcher: 🎯 Ctrl+J detected!');
       e.preventDefault();
       e.stopPropagation();
       modifierKey = e.ctrlKey ? 'ctrl' : 'meta';
@@ -67,6 +68,7 @@ const QuickJobSwitcherFeature = (() => {
     if (isSearching) {
       // Cancel on Escape
       if (e.key === 'Escape') {
+        console.log('QuickJobSwitcher: ESC pressed, canceling search');
         e.preventDefault();
         e.stopPropagation();
         closeQuickSearch();
@@ -87,9 +89,15 @@ const QuickJobSwitcherFeature = (() => {
    */
   function handleKeyUp(e) {
     // If we're searching and they released the modifier key
-    if (isSearching && ((modifierKey === 'ctrl' && !e.ctrlKey) || (modifierKey === 'meta' && !e.metaKey))) {
-      console.log('QuickJobSwitcher: Modifier key released, selecting top result');
-      selectTopResult();
+    if (isSearching) {
+      // Check if ctrl or meta key was released
+      const ctrlReleased = modifierKey === 'ctrl' && !e.ctrlKey && e.key === 'Control';
+      const metaReleased = modifierKey === 'meta' && !e.metaKey && (e.key === 'Meta' || e.key === 'Command');
+
+      if (ctrlReleased || metaReleased) {
+        console.log('QuickJobSwitcher: Modifier key released, selecting top result');
+        selectTopResult();
+      }
     }
   }
 
@@ -113,31 +121,70 @@ const QuickJobSwitcherFeature = (() => {
     isSearching = true;
     searchQuery = '';
 
-    // Find and click the job number to open sidebar
-    const jobNumberButton = document.querySelector('div[role="button"][tabindex="0"] .font-bold.text-2xl');
+    // Find the job number button - try multiple selectors
+    let jobNumberButton = null;
+
+    // Strategy 1: Look for the specific structure from user's HTML
+    jobNumberButton = document.querySelector('.font-bold.text-2xl div[role="button"]');
+
+    // Strategy 2: Look for any button with "Job" text
     if (!jobNumberButton) {
-      console.error('QuickJobSwitcher: Could not find job number button');
+      const buttons = document.querySelectorAll('div[role="button"]');
+      for (const btn of buttons) {
+        if (btn.textContent.includes('Job ')) {
+          jobNumberButton = btn;
+          break;
+        }
+      }
+    }
+
+    // Strategy 3: Look for text-2xl class with Job text
+    if (!jobNumberButton) {
+      const elements = document.querySelectorAll('.text-2xl');
+      for (const el of elements) {
+        if (el.textContent.includes('Job ')) {
+          const button = el.querySelector('div[role="button"]');
+          if (button) {
+            jobNumberButton = button;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!jobNumberButton) {
+      console.error('QuickJobSwitcher: ❌ Could not find job number button');
+      console.log('QuickJobSwitcher: Tried looking for:');
+      console.log('  1. .font-bold.text-2xl div[role="button"]');
+      console.log('  2. div[role="button"] containing "Job "');
+      console.log('  3. .text-2xl containing "Job "');
       isSearching = false;
+      showErrorNotification('Could not find job switcher button. Make sure you\'re on a job page.');
       return;
     }
+
+    console.log('QuickJobSwitcher: ✅ Found job button:', jobNumberButton.textContent);
 
     // Inject CSS to hide the sidebar
     hideStyleElement = document.createElement('style');
     hideStyleElement.id = 'jt-quick-search-hide';
     hideStyleElement.textContent = `
       /* Hide the job switcher sidebar */
-      div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"] {
+      div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"],
+      div.z-30.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary] {
         opacity: 0 !important;
         pointer-events: none !important;
         position: fixed !important;
         top: -9999px !important;
         left: -9999px !important;
+        visibility: hidden !important;
       }
     `;
     document.head.appendChild(hideStyleElement);
+    console.log('QuickJobSwitcher: ✅ Injected sidebar hiding CSS');
 
     // Click to open sidebar (invisibly)
-    console.log('QuickJobSwitcher: Opening sidebar invisibly');
+    console.log('QuickJobSwitcher: Clicking job button to open sidebar...');
     jobNumberButton.click();
 
     // Wait for sidebar to open, then create floating popup
@@ -162,8 +209,8 @@ const QuickJobSwitcherFeature = (() => {
               <path d="m21 21-4.35-4.35"></path>
             </svg>
           </div>
-          <div class="search-query" id="quickSearchQuery">Search jobs...</div>
-          <div class="search-hint">Release Ctrl to select</div>
+          <div class="search-query empty" id="quickSearchQuery">Search jobs...</div>
+          <div class="search-hint">Release ${modifierKey === 'ctrl' ? 'Ctrl' : 'Cmd'} to select</div>
         </div>
       </div>
     `;
@@ -256,20 +303,29 @@ const QuickJobSwitcherFeature = (() => {
     document.head.appendChild(style);
 
     document.body.appendChild(floatingPopup);
-    console.log('QuickJobSwitcher: Floating popup created');
+    console.log('QuickJobSwitcher: ✅ Floating popup created and displayed');
   }
 
   /**
    * Focus the hidden search input
    */
   function focusSearchInput() {
-    // Find the search input in the (invisible) sidebar
-    const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]');
+    // Find the search input in the (invisible) sidebar - try multiple selectors
+    let searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]');
+
+    if (!searchInput) {
+      searchInput = document.querySelector('input[placeholder*="Search Jobs"]');
+    }
+
+    if (!searchInput) {
+      searchInput = document.querySelector('input[placeholder*="Search"]');
+    }
+
     if (searchInput) {
       searchInput.focus();
-      console.log('QuickJobSwitcher: Search input focused');
+      console.log('QuickJobSwitcher: ✅ Search input focused');
     } else {
-      console.error('QuickJobSwitcher: Could not find search input');
+      console.error('QuickJobSwitcher: ❌ Could not find search input');
     }
   }
 
@@ -277,7 +333,10 @@ const QuickJobSwitcherFeature = (() => {
    * Handle search input from keyboard
    */
   function handleSearchInput(e) {
-    const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]');
+    const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
+                        document.querySelector('input[placeholder*="Search Jobs"]') ||
+                        document.querySelector('input[placeholder*="Search"]');
+
     if (!searchInput) return;
 
     // Update search query based on key
@@ -292,6 +351,7 @@ const QuickJobSwitcherFeature = (() => {
     // Update the hidden input
     searchInput.value = searchQuery;
     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    searchInput.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Update the floating popup display
     updatePopupDisplay();
@@ -321,30 +381,48 @@ const QuickJobSwitcherFeature = (() => {
   function selectTopResult() {
     console.log('QuickJobSwitcher: Selecting top result...');
 
-    // Find the first job result (not the current one with checkmark)
-    const sidebar = document.querySelector('div.z-30.absolute[style*="width: 400px"]');
+    // Find the sidebar
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"]') ||
+                    document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary]');
+
     if (!sidebar) {
-      console.error('QuickJobSwitcher: Could not find sidebar');
+      console.error('QuickJobSwitcher: ❌ Could not find sidebar');
       closeQuickSearch();
       return;
     }
 
+    console.log('QuickJobSwitcher: ✅ Found sidebar');
+
     // Find all job buttons
     const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
+    console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
 
     // Filter out the close button and header, find first visible job
     let topResult = null;
     for (const button of jobButtons) {
-      // Skip if it's the close button (has X icon)
-      if (button.querySelector('svg path[d*="M18 6"]')) continue;
+      const text = button.textContent.trim();
+      console.log(`QuickJobSwitcher: Checking button: ${text.substring(0, 50)}`);
+
+      // Skip if it's the close button (has X or Close text)
+      if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
+        console.log('  → Skipping (close button)');
+        continue;
+      }
+
+      // Skip the header
+      if (text.includes('Job Switcher')) {
+        console.log('  → Skipping (header)');
+        continue;
+      }
 
       // This should be a job result
       topResult = button;
+      console.log(`QuickJobSwitcher: ✅ Top result: ${text.substring(0, 50)}`);
       break;
     }
 
     if (topResult) {
-      console.log('QuickJobSwitcher: Found top result, clicking...');
+      console.log('QuickJobSwitcher: Clicking top result...');
       topResult.click();
 
       // Small delay to let the click register before closing
@@ -380,12 +458,38 @@ const QuickJobSwitcherFeature = (() => {
 
     // Close the sidebar if it's open
     setTimeout(() => {
-      const closeButton = document.querySelector('div.z-30.absolute div[role="button"] svg path[d*="M18 6"]');
-      if (closeButton) {
-        closeButton.closest('div[role="button"]').click();
-        console.log('QuickJobSwitcher: Closed sidebar');
+      const closeButton = document.querySelector('div.z-30.absolute div[role="button"]');
+      if (closeButton && closeButton.textContent.includes('Close')) {
+        closeButton.click();
+        console.log('QuickJobSwitcher: ✅ Closed sidebar');
       }
     }, 150);
+  }
+
+  /**
+   * Show error notification
+   */
+  function showErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 999999;
+      font-size: 13px;
+      max-width: 300px;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
   }
 
   // Public API
