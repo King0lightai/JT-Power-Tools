@@ -455,6 +455,7 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
       .hover\\:bg-gray-800:hover,
+      .hover\\:bg-gray-900:hover,
       .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
         background-color: ${background};
@@ -629,6 +630,18 @@ const CustomThemeFeature = (() => {
   function fixTextContrast(element) {
     const style = element.getAttribute('style');
     if (!style) return;
+
+    // Skip tags - they should keep their original colors
+    // Tags have the rounded-sm class and px-2/py-1 padding
+    if (element.classList.contains('rounded-sm') &&
+        (element.classList.contains('px-2') || element.classList.contains('py-1'))) {
+      return;
+    }
+
+    // Also skip draggable elements (alternative tag format)
+    if (element.getAttribute('draggable') === 'true') {
+      return;
+    }
 
     // Check if element has both background-color and color in inline styles
     const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
