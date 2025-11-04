@@ -970,11 +970,13 @@ const FormatterFeature = (() => {
   }
 
   function applyFormat(field, format, options = {}) {
+    console.log('Formatter: applyFormat called with format:', format);
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
     const selection = text.substring(start, end);
     const hasSelection = selection.length > 0;
+    console.log('Formatter: Field state - start:', start, 'end:', end, 'textLength:', text.length);
 
     // Check if format is already active
     const activeFormats = detectActiveFormats(field);
@@ -1191,8 +1193,19 @@ const FormatterFeature = (() => {
           return;
         }
 
+        console.log('Formatter: Alert data received, restoring focus to field');
+        // Restore focus immediately after prompts complete
+        if (field && document.body.contains(field)) {
+          field.focus();
+          console.log('Formatter: Field focused, active element is:', document.activeElement?.tagName);
+        } else {
+          console.error('Formatter: Field is not in DOM!');
+          return;
+        }
+
         replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
         cursorPos = start + replacement.length;
+        console.log('Formatter: Alert replacement ready, length:', replacement.length);
         break;
 
       case 'hr':
@@ -1210,8 +1223,12 @@ const FormatterFeature = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
+    console.log('Formatter: Setting field value, replacement length:', replacement?.length);
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-    nativeInputValueSetter.call(field, before + replacement + after);
+    const newValue = before + replacement + after;
+    console.log('Formatter: New value length:', newValue.length, 'old length:', text.length);
+    nativeInputValueSetter.call(field, newValue);
+    console.log('Formatter: Field value set, dispatching events...');
 
     // Dispatch event with React-compatible timing and error handling
     // Also handle cursor positioning in the delayed context to avoid triggering React early
