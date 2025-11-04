@@ -55,14 +55,14 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    // If sidebar is open and Enter is pressed in the search input, close sidebar
+    // If sidebar is open and Enter is pressed in the search input, select top job and close
     if (isSearchOpen && e.key === 'Enter') {
       const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]');
       if (searchInput && document.activeElement === searchInput) {
-        console.log('QuickJobSwitcher: Enter pressed in search, closing sidebar');
+        console.log('QuickJobSwitcher: Enter pressed in search, selecting top job');
         e.preventDefault();
         e.stopPropagation();
-        closeSidebar();
+        selectTopJobAndClose();
         return;
       }
     }
@@ -151,6 +151,61 @@ const QuickJobSwitcherFeature = (() => {
     }
 
     isSearchOpen = false;
+  }
+
+  /**
+   * Select the top job from the filtered list and close sidebar
+   */
+  function selectTopJobAndClose() {
+    console.log('QuickJobSwitcher: Selecting top job...');
+
+    // Find the sidebar
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (!sidebar) {
+      console.error('QuickJobSwitcher: ❌ Could not find sidebar');
+      closeSidebar();
+      return;
+    }
+
+    // Find all job buttons
+    const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
+    console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
+
+    // Find the first job (skip close button and header)
+    let topJobButton = null;
+    for (const button of jobButtons) {
+      const text = button.textContent.trim();
+
+      // Skip close button
+      if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
+        console.log('  → Skipping close button');
+        continue;
+      }
+
+      // Skip header
+      if (text.includes('Job Switcher')) {
+        console.log('  → Skipping header');
+        continue;
+      }
+
+      // This is the first job in the list
+      topJobButton = button;
+      console.log(`QuickJobSwitcher: ✅ Top job: ${text.substring(0, 50)}`);
+      break;
+    }
+
+    if (topJobButton) {
+      console.log('QuickJobSwitcher: Clicking top job...');
+      topJobButton.click();
+
+      // Close sidebar after a short delay to let the click register
+      setTimeout(() => {
+        closeSidebar();
+      }, 100);
+    } else {
+      console.log('QuickJobSwitcher: No jobs found, just closing sidebar');
+      closeSidebar();
+    }
   }
 
   /**
