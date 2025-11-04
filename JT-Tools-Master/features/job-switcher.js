@@ -5,7 +5,6 @@ const QuickJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearching = false;
   let searchQuery = '';
-  let modifierKey = null; // Track which key was pressed (ctrl or meta)
 
   // UI Elements
   let floatingPopup = null;
@@ -25,7 +24,6 @@ const QuickJobSwitcherFeature = (() => {
 
     // Listen for keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown, true);
-    document.addEventListener('keyup', handleKeyUp, true);
 
     console.log('QuickJobSwitcher: ✅ Listening for Ctrl/Cmd+J keyboard shortcut');
   }
@@ -43,7 +41,6 @@ const QuickJobSwitcherFeature = (() => {
     isActive = false;
 
     document.removeEventListener('keydown', handleKeyDown, true);
-    document.removeEventListener('keyup', handleKeyUp, true);
 
     closeQuickSearch();
 
@@ -54,18 +51,26 @@ const QuickJobSwitcherFeature = (() => {
    * Handle keydown events
    */
   function handleKeyDown(e) {
-    // Start quick search: Ctrl+J or Cmd+J
+    // Toggle quick search: Ctrl+J or Cmd+J
     if ((e.ctrlKey || e.metaKey) && (e.key === 'j' || e.key === 'J') && !isSearching) {
       console.log('QuickJobSwitcher: 🎯 Ctrl+J detected!');
       e.preventDefault();
       e.stopPropagation();
-      modifierKey = e.ctrlKey ? 'ctrl' : 'meta';
       openQuickSearch();
       return;
     }
 
     // If we're in search mode
     if (isSearching) {
+      // Select top result on Enter
+      if (e.key === 'Enter') {
+        console.log('QuickJobSwitcher: Enter pressed, selecting top result');
+        e.preventDefault();
+        e.stopPropagation();
+        selectTopResult();
+        return;
+      }
+
       // Cancel on Escape
       if (e.key === 'Escape') {
         console.log('QuickJobSwitcher: ESC pressed, canceling search');
@@ -80,23 +85,6 @@ const QuickJobSwitcherFeature = (() => {
         e.preventDefault();
         e.stopPropagation();
         handleSearchInput(e);
-      }
-    }
-  }
-
-  /**
-   * Handle keyup events - release modifier key to select
-   */
-  function handleKeyUp(e) {
-    // If we're searching and they released the modifier key
-    if (isSearching) {
-      // Check if ctrl or meta key was released
-      const ctrlReleased = modifierKey === 'ctrl' && !e.ctrlKey && e.key === 'Control';
-      const metaReleased = modifierKey === 'meta' && !e.metaKey && (e.key === 'Meta' || e.key === 'Command');
-
-      if (ctrlReleased || metaReleased) {
-        console.log('QuickJobSwitcher: Modifier key released, selecting top result');
-        selectTopResult();
       }
     }
   }
@@ -210,7 +198,7 @@ const QuickJobSwitcherFeature = (() => {
             </svg>
           </div>
           <div class="search-query empty" id="quickSearchQuery">Search jobs...</div>
-          <div class="search-hint">Release ${modifierKey === 'ctrl' ? 'Ctrl' : 'Cmd'} to select</div>
+          <div class="search-hint">Press Enter to select</div>
         </div>
       </div>
     `;
@@ -442,7 +430,6 @@ const QuickJobSwitcherFeature = (() => {
     console.log('QuickJobSwitcher: Closing quick search...');
     isSearching = false;
     searchQuery = '';
-    modifierKey = null;
 
     // Remove floating popup
     if (floatingPopup) {
