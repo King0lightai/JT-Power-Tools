@@ -1,4 +1,4 @@
-// JobTread Budget Formatter Feature Module - COMPLETE VERSION
+// JobTread Text Formatter Feature Module - COMPLETE VERSION
 // Add formatting toolbar to budget description fields
 
 const FormatterFeature = (() => {
