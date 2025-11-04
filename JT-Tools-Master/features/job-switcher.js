@@ -47,11 +47,23 @@ const QuickJobSwitcherFeature = (() => {
    */
   function handleKeyDown(e) {
     // Open sidebar: Alt+J
-    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'j' || e.key === 'J') && !isSearchOpen) {
-      console.log('QuickJobSwitcher: 🎯 Alt+J detected!');
-      e.preventDefault();
-      e.stopPropagation();
-      openSidebar();
+    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'j' || e.key === 'J')) {
+      // Check if sidebar actually exists (user may have manually closed it)
+      const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+
+      if (!sidebar) {
+        // Sidebar doesn't exist, reset state and allow opening
+        isSearchOpen = false;
+      }
+
+      if (!isSearchOpen) {
+        console.log('QuickJobSwitcher: 🎯 Alt+J detected!');
+        e.preventDefault();
+        e.stopPropagation();
+        openSidebar();
+      } else {
+        console.log('QuickJobSwitcher: Sidebar already open, ignoring Alt+J');
+      }
       return;
     }
 
