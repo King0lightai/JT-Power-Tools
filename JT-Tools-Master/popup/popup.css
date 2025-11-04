@@ -182,12 +182,19 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 12px;
 }
 
 .color-group label {
   font-size: 11px;
   font-weight: 500;
   color: #666;
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .color-input-wrapper {
@@ -221,31 +228,16 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
-/* Theme Preview */
-.theme-preview {
-  margin-bottom: 16px;
-}
-
-.preview-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.preview-samples {
-  display: flex;
-  gap: 8px;
-}
-
+/* Preview Boxes - now inline with color pickers */
 .preview-box {
   flex: 1;
-  padding: 12px 8px;
+  padding: 8px 12px;
   border-radius: 4px;
   text-align: center;
   font-size: 10px;
   font-weight: 500;
   border: 1px solid #e8e8e8;
+  min-width: 100px;
 }
 
 .preview-box.primary {
@@ -262,6 +254,13 @@ input:checked + .slider:before {
 .preview-box.text {
   background: #ffffff;
   color: #1F1B29;
+}
+
+.preview-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 8px;
 }
 
 /* Saved Themes */
