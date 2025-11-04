@@ -9,6 +9,8 @@ const FormatterFeature = (() => {
   let observer = null;
   let isActive = false;
   let styleElement = null;
+  let isPromptingUser = false; // Prevent blur handlers from hiding toolbar during prompts
+  let isInsertingText = false; // Prevent MutationObserver from interfering during text insertion
 
   // Initialize the feature
   function init() {
@@ -122,6 +124,12 @@ const FormatterFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
+    // Don't re-initialize while we're inserting text - prevents interference
+    if (isInsertingText) {
+      console.log('Formatter: Skipping initializeFields - text insertion in progress');
+      return;
+    }
+
     // Clean up stale references
     if (activeField && !document.body.contains(activeField)) {
       activeField = null;
@@ -201,6 +209,12 @@ const FormatterFeature = (() => {
   }
 
   function handleFieldBlur(e, field) {
+    // Don't hide toolbar if we're prompting user (e.g., for alert data)
+    if (isPromptingUser) {
+      console.log('Formatter: Skipping blur handler - user is being prompted');
+      return;
+    }
+
     if (hideTimeout) {
       clearTimeout(hideTimeout);
     }
@@ -618,14 +632,8 @@ const FormatterFeature = (() => {
         const format = btn.dataset.format;
         const color = btn.dataset.color;
 
-        // Store local reference to field in case activeField becomes null during prompts
+        // Store field reference (defensive, in case activeField changes)
         const targetField = activeField;
-
-        // Clear hide timeout to prevent toolbar from hiding during prompts
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
 
         if (format === 'color') {
           applyFormat(targetField, format, { color });
@@ -637,10 +645,9 @@ const FormatterFeature = (() => {
           });
         }
 
-        // Add null checks before calling focus and updateToolbarState
+        // Restore focus and update toolbar state
         if (targetField && document.body.contains(targetField)) {
           targetField.focus();
-          // Restore activeField reference if it was cleared
           activeField = targetField;
           setTimeout(() => {
             if (document.body.contains(toolbar) && document.body.contains(targetField)) {
@@ -665,6 +672,30 @@ const FormatterFeature = (() => {
 
     toolbar.style.left = `${rect.left + window.scrollX}px`;
     toolbar.style.width = `auto`;
+  }
+
+  // Collect alert data from user with proper prompt locking
+  function collectAlertData() {
+    isPromptingUser = true;
+
+    try {
+      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
+      if (!alertColor) return null;
+
+      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
+      if (!alertIcon) return null;
+
+      const alertSubject = prompt('Alert subject:', 'Important');
+      if (!alertSubject) return null;
+
+      const alertBody = prompt('Alert body text:', 'Your alert message here.');
+      if (!alertBody) return null;
+
+      return { alertColor, alertIcon, alertSubject, alertBody };
+    } finally {
+      // Always unlock prompting, even if user cancels
+      isPromptingUser = false;
+    }
   }
 
   // Format detection
@@ -900,7 +931,6 @@ const FormatterFeature = (() => {
           newCursorPos = lineStart;
         } else {
           // No color tag found on this line, nothing to remove
-          console.log('Formatter: No color formatting found to remove on this line');
           return;
         }
         break;
@@ -922,12 +952,12 @@ const FormatterFeature = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
+    isInsertingText = true; // Lock to prevent MutationObserver interference
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Dispatch event with React-compatible timing and error handling
-    // Also handle cursor positioning in the delayed context to avoid triggering React early
-    dispatchReactSafeEvent(field, newCursorPos);
+    // Dispatch events immediately - React will clear value if we delay
+    dispatchReactSafeEventImmediate(field, newCursorPos);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1076,8 +1106,14 @@ const FormatterFeature = (() => {
         break;
 
       case 'link':
+        isPromptingUser = true;
         const url = prompt('Enter URL:', 'https://');
-        if (!url) return;
+        isPromptingUser = false;
+
+        if (!url) {
+          return;
+        }
+
         replacement = `[${hasSelection ? selection : 'link text'}](${url})`;
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
@@ -1085,52 +1121,53 @@ const FormatterFeature = (() => {
       case 'color':
         const color = options.color;
         const cLineStart = before.lastIndexOf('\n') + 1;
-        const cLineBefore = text.substring(cLineStart, start);
-        const existingColorMatch = cLineBefore.match(/\[!color:\w+\]\s*/);
+        const cLineEnd = text.indexOf('\n', start);
+        const lineEndPos = cLineEnd === -1 ? text.length : cLineEnd;
+
+        // Check the FULL line for existing color (not just before cursor)
+        const fullLine = text.substring(cLineStart, lineEndPos);
+        const existingColorMatch = fullLine.match(/^\[!color:(\w+)\]\s*/);
 
         if (existingColorMatch) {
           // Found existing color formatting on this line
-          const colorTagStart = cLineStart + cLineBefore.indexOf(existingColorMatch[0]);
-          const colorTagEnd = colorTagStart + existingColorMatch[0].length;
+          const existingColor = existingColorMatch[1];
+          const colorTagEnd = cLineStart + existingColorMatch[0].length;
 
-          // Extract the existing text after the color tag (up to end of line or selection end)
-          const lineEnd = text.indexOf('\n', colorTagEnd);
-          const existingTextEnd = lineEnd === -1 ? text.length : lineEnd;
-          const existingText = text.substring(colorTagEnd, hasSelection ? end : existingTextEnd).trim();
+          // Extract the text after the color tag (excluding the tag itself)
+          const existingText = text.substring(colorTagEnd, lineEndPos).trim();
 
           // Determine what text to use
           let textToUse;
           if (hasSelection) {
             // User has selection, use that
             textToUse = selection;
-          } else if (existingText && existingText !== 'Your text here') {
-            // Reuse existing meaningful content (not placeholder)
+          } else if (existingText) {
+            // Reuse existing content
             textToUse = existingText;
           } else {
-            // No meaningful content, use minimal placeholder
+            // No content, use placeholder
             textToUse = 'text';
           }
 
-          // Replace the color tag and content
-          before = text.substring(0, colorTagStart);
+          // Replace the entire line with new color (or remove if same color being toggled)
+          before = text.substring(0, cLineStart);
           replacement = `[!color:${color}] ${textToUse}`;
-          after = text.substring(hasSelection ? end : existingTextEnd);
+          after = text.substring(lineEndPos);
         } else {
-          // No existing color on this line
+          // No existing color on this line - add new color
           if (hasSelection) {
             replacement = `[!color:${color}] ${selection}`;
           } else {
             // Check if cursor is on a line with content
-            const lineEnd = text.indexOf('\n', start);
-            const lineText = text.substring(cLineStart, lineEnd === -1 ? text.length : lineEnd).trim();
+            const lineText = fullLine.trim();
 
             if (lineText.length > 0) {
-              // There's content on this line, just add color tag at start
+              // There's content on this line, add color tag at start
               replacement = `[!color:${color}] ${lineText}`;
               before = text.substring(0, cLineStart);
-              after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+              after = text.substring(lineEndPos);
             } else {
-              // Empty line, use minimal placeholder
+              // Empty line, use placeholder
               replacement = `[!color:${color}] text`;
             }
           }
@@ -1139,19 +1176,20 @@ const FormatterFeature = (() => {
         break;
 
       case 'alert':
-        const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
-        if (!alertColor) return;
+        const alertData = collectAlertData();
+        if (!alertData) {
+          return;
+        }
 
-        const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
-        if (!alertIcon) return;
+        // Restore focus immediately after prompts complete
+        if (field && document.body.contains(field)) {
+          field.focus();
+        } else {
+          console.error('Formatter: Field is not in DOM after alert prompts!');
+          return;
+        }
 
-        const alertSubject = prompt('Alert subject:', 'Important');
-        if (!alertSubject) return;
-
-        const alertBody = prompt('Alert body text:', 'Your alert message here.');
-        if (!alertBody) return;
-
-        replacement = `> [!color:${alertColor}] #### [!icon:${alertIcon}] ${alertSubject}\n> ${alertBody}`;
+        replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
         cursorPos = start + replacement.length;
         break;
 
@@ -1170,15 +1208,58 @@ const FormatterFeature = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
-    nativeInputValueSetter.call(field, before + replacement + after);
+    // Lock to prevent MutationObserver from interfering
+    isInsertingText = true;
 
-    // Dispatch event with React-compatible timing and error handling
-    // Also handle cursor positioning in the delayed context to avoid triggering React early
-    dispatchReactSafeEvent(field, cursorPos);
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    const newValue = before + replacement + after;
+    nativeInputValueSetter.call(field, newValue);
+
+    // Dispatch events IMMEDIATELY - React will clear value if we delay!
+    dispatchReactSafeEventImmediate(field, cursorPos);
   }
 
-  // Helper function to dispatch events in a React-safe way
+  // Immediate event dispatch - for cases where React clears value during delays
+  function dispatchReactSafeEventImmediate(field, cursorPos = null) {
+    try {
+      // Set cursor position first
+      if (cursorPos !== null) {
+        field.setSelectionRange(cursorPos, cursorPos);
+      }
+
+      // Dispatch input event IMMEDIATELY (synchronously)
+      const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: false,
+        composed: true,
+        data: null,
+        dataTransfer: null,
+        inputType: 'insertText',
+        isComposing: false
+      });
+
+      field.dispatchEvent(inputEvent);
+
+      // Dispatch change event immediately too
+      const changeEvent = new Event('change', {
+        bubbles: true,
+        cancelable: false
+      });
+      field.dispatchEvent(changeEvent);
+
+      // Unlock after a small delay to ensure React has processed the events
+      setTimeout(() => {
+        isInsertingText = false;
+      }, 100);
+    } catch (error) {
+      console.error('Formatter: Event dispatch error:', error);
+      isInsertingText = false;
+    }
+  }
+
+  // Helper function to dispatch events in a React-safe way (with delay)
+  // Note: This delayed version is kept for backwards compatibility but may not be used
+  // for all formatting operations. See dispatchReactSafeEventImmediate for the preferred approach.
   function dispatchReactSafeEvent(field, cursorPos = null) {
     // Use multiple animation frames + setTimeout to ensure React has fully settled
     // This gives React time to complete its internal state updates
@@ -1189,7 +1270,7 @@ const FormatterFeature = (() => {
           try {
             // Verify field still exists in DOM
             if (!document.body.contains(field)) {
-              console.log('Formatter: Field removed from DOM, skipping event dispatch');
+              isInsertingText = false; // Unlock even if field is gone
               return;
             }
 
@@ -1220,10 +1301,14 @@ const FormatterFeature = (() => {
                 });
                 field.dispatchEvent(changeEvent);
               }
+
+              // Unlock after all events are dispatched
+              isInsertingText = false;
             }, 10);
           } catch (error) {
             // If dispatching fails, silently log and continue
             console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
+            isInsertingText = false; // Unlock even on error
           }
         }, 50); // 50ms delay to let React settle
       });
