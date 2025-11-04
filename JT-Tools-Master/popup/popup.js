@@ -5,6 +5,7 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
+  quickJobSwitcher: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -101,6 +102,7 @@ async function loadSettings() {
     document.getElementById('formatter').checked = settings.formatter;
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
+    document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -139,12 +141,17 @@ async function saveSettings(settings) {
       showStatus('RGB Custom Theme requires a premium license', 'error');
       document.getElementById('rgbTheme').checked = false;
       settings.rgbTheme = false;
+      // Hide panel since RGB theme can't be enabled
+      const themeCustomization = document.getElementById('themeCustomization');
+      themeCustomization.style.display = 'none';
       return;
     }
 
-    // Show/hide theme customization panel
+    // Show/hide theme customization panel (requires both license and toggle)
     const themeCustomization = document.getElementById('themeCustomization');
-    themeCustomization.style.display = settings.rgbTheme ? 'block' : 'none';
+    const shouldShowPanel = hasLicense && settings.rgbTheme;
+    themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
+    console.log('saveSettings: Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -174,6 +181,7 @@ async function getCurrentSettings() {
     formatter: document.getElementById('formatter').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
+    quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
@@ -454,7 +462,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Get settings and update theme panel visibility immediately
       const settings = await getCurrentSettings();
+
+      // Update theme panel visibility right away (before saveSettings validation)
+      const themeCustomization = document.getElementById('themeCustomization');
+      const hasLicense = await LicenseService.hasValidLicense();
+      const shouldShowPanel = hasLicense && settings.rgbTheme;
+      themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
+      console.log('Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
+
       await saveSettings(settings);
     });
   });

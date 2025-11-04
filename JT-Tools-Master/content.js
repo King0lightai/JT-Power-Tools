@@ -29,6 +29,11 @@ const featureModules = {
     name: 'RGB Custom Theme',
     feature: () => window.RGBThemeFeature,
     instance: null
+  },
+  quickJobSwitcher: {
+    name: 'Quick Job Switcher',
+    feature: () => window.QuickJobSwitcherFeature,
+    instance: null
   }
 };
 
@@ -39,6 +44,7 @@ let currentSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
+  quickJobSwitcher: true,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',

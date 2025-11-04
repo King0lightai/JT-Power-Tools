@@ -3,25 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JT Power Tools Settings</title>
+  <title>JT Power Tools</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="container">
+    <!-- Header -->
     <header>
-      <h1>⚡ JT Power Tools</h1>
-      <p class="subtitle">Toggle features on or off</p>
+      <div class="header-content">
+        <h1>JT Power Tools</h1>
+        <span class="version">v3.1.0</span>
+      </div>
     </header>
 
-    <div class="features-list">
-      <!-- Feature 1: Drag & Drop -->
-      <div class="feature-item" id="dragDropFeature">
+    <!-- Features List -->
+    <div class="features-section">
+      <div class="section-label">Features</div>
+
+      <div class="feature-item premium" id="dragDropFeature">
         <div class="feature-info">
-          <div class="feature-icon">📅</div>
-          <div class="feature-details">
-            <h3>Schedule Drag & Drop <span class="premium-badge">⭐ PREMIUM</span></h3>
-            <p>Change schedule dates in month view</p>
-          </div>
+          <h3>Schedule Drag & Drop <span class="badge">Premium</span></h3>
+          <p>Change schedule dates in month view</p>
         </div>
         <label class="toggle">
           <input type="checkbox" id="dragDrop" data-feature="dragDrop">
@@ -29,14 +31,10 @@
         </label>
       </div>
 
-      <!-- Feature 2: Contrast Fix -->
       <div class="feature-item">
         <div class="feature-info">
-          <div class="feature-icon">🎨</div>
-          <div class="feature-details">
-            <h3>Contrast Fix</h3>
-            <p>Better text readability in schedule view</p>
-          </div>
+          <h3>Contrast Fix</h3>
+          <p>Better text readability in schedule view</p>
         </div>
         <label class="toggle">
           <input type="checkbox" id="contrastFix" data-feature="contrastFix">
@@ -44,14 +42,10 @@
         </label>
       </div>
 
-      <!-- Feature 3: Budget Formatter -->
       <div class="feature-item">
         <div class="feature-info">
-          <div class="feature-icon">📝</div>
-          <div class="feature-details">
-            <h3>Budget Formatter</h3>
-            <p>Rich text toolbar for budget descriptions</p>
-          </div>
+          <h3>Text Formatter</h3>
+          <p>Rich text toolbar for budgets, logs & tasks</p>
         </div>
         <label class="toggle">
           <input type="checkbox" id="formatter" data-feature="formatter">
@@ -59,14 +53,21 @@
         </label>
       </div>
 
-      <!-- Feature 4: Dark Mode -->
       <div class="feature-item">
         <div class="feature-info">
-          <div class="feature-icon">🌙</div>
-          <div class="feature-details">
-            <h3>Dark Mode</h3>
-            <p>Dark theme for JobTread interface</p>
-          </div>
+          <h3>Quick Job Switcher</h3>
+          <p>Alt+J to open, type to search, Enter to select</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="quickJobSwitcher" data-feature="quickJobSwitcher">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="feature-item">
+        <div class="feature-info">
+          <h3>Dark Mode</h3>
+          <p>Dark theme for JobTread interface</p>
         </div>
         <label class="toggle">
           <input type="checkbox" id="darkMode" data-feature="darkMode">
@@ -74,14 +75,10 @@
         </label>
       </div>
 
-      <!-- Feature 5: Custom Theme -->
-      <div class="feature-item" id="rgbThemeFeature">
+      <div class="feature-item premium" id="rgbThemeFeature">
         <div class="feature-info">
-          <div class="feature-icon">🎨</div>
-          <div class="feature-details">
-            <h3>Custom Theme <span class="premium-badge">⭐ PREMIUM</span></h3>
-            <p>Create your own custom color theme</p>
-          </div>
+          <h3>Custom Theme <span class="badge">Premium</span></h3>
+          <p>Create your own custom color theme</p>
         </div>
         <label class="toggle">
           <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
@@ -90,122 +87,108 @@
       </div>
     </div>
 
-    <!-- Custom Theme Customization Panel -->
+    <!-- Custom Theme Panel -->
     <div class="theme-customization" id="themeCustomization" style="display: none;">
-      <h3>🎨 Create Your Custom Theme</h3>
-      <p class="theme-description">Choose your primary, background, and text colors</p>
+      <div class="section-label">Theme Customization</div>
 
-      <!-- Color Pickers -->
-      <div class="color-pickers-grid">
-        <!-- Primary Color -->
-        <div class="color-picker-group">
-          <label for="primaryColorPicker" class="color-picker-label">
-            <span class="color-picker-text">Primary</span>
-          </label>
-          <input type="color" id="primaryColorPicker" value="#3B82F6" class="color-picker-input">
-          <span class="color-value" id="primaryColorValue">#3B82F6</span>
+      <div class="color-pickers">
+        <div class="color-group">
+          <label>Primary Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="primaryColorPicker" value="#3B82F6">
+              <span class="color-value" id="primaryColorValue">#3B82F6</span>
+            </div>
+            <div class="preview-box primary" id="previewPrimary">Primary</div>
+          </div>
         </div>
 
-        <!-- Background Color -->
-        <div class="color-picker-group">
-          <label for="backgroundColorPicker" class="color-picker-label">
-            <span class="color-picker-text">Background</span>
-          </label>
-          <input type="color" id="backgroundColorPicker" value="#F3E8FF" class="color-picker-input">
-          <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
+        <div class="color-group">
+          <label>Background Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="backgroundColorPicker" value="#F3E8FF">
+              <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
+            </div>
+            <div class="preview-box background" id="previewBackground">Background</div>
+          </div>
         </div>
 
-        <!-- Text Color -->
-        <div class="color-picker-group">
-          <label for="textColorPicker" class="color-picker-label">
-            <span class="color-picker-text">Text</span>
-          </label>
-          <input type="color" id="textColorPicker" value="#1F1B29" class="color-picker-input">
-          <span class="color-value" id="textColorValue">#1F1B29</span>
-        </div>
-      </div>
-
-      <!-- Theme Preview -->
-      <div class="theme-preview">
-        <h4>Preview</h4>
-        <div class="preview-samples">
-          <div class="preview-sample primary" id="previewPrimary">Primary</div>
-          <div class="preview-sample background" id="previewBackground">Background</div>
-          <div class="preview-sample text" id="previewText">Text</div>
+        <div class="color-group">
+          <label>Text Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="textColorPicker" value="#1F1B29">
+              <span class="color-value" id="textColorValue">#1F1B29</span>
+            </div>
+            <div class="preview-box text" id="previewText">Text</div>
+          </div>
         </div>
       </div>
 
-      <!-- Theme Actions -->
-      <div class="theme-actions">
-        <button id="applyThemeBtn" class="apply-btn">Apply Theme</button>
-      </div>
+      <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
 
       <!-- Saved Themes -->
       <div class="saved-themes">
-        <h4>💾 Saved Themes</h4>
-        <div class="saved-theme-slots">
+        <div class="preview-label">Saved Themes</div>
+        <div class="theme-slots">
           <div class="theme-slot" data-slot="0">
-            <input type="text" class="theme-name-input" id="themeName0" placeholder="Theme 1" maxlength="20">
-            <div class="theme-colors-preview">
+            <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
+            <div class="theme-colors">
               <span class="color-dot" id="slot0Primary"></span>
               <span class="color-dot" id="slot0Background"></span>
               <span class="color-dot" id="slot0Text"></span>
             </div>
-            <button class="save-theme-btn" data-slot="0">Save</button>
-            <button class="load-theme-btn" data-slot="0" style="display: none;">Load</button>
+            <button class="btn-save" data-slot="0">Save</button>
+            <button class="btn-load" data-slot="0" style="display: none;">Load</button>
           </div>
-
           <div class="theme-slot" data-slot="1">
-            <input type="text" class="theme-name-input" id="themeName1" placeholder="Theme 2" maxlength="20">
-            <div class="theme-colors-preview">
+            <input type="text" class="theme-name" id="themeName1" placeholder="Theme 2" maxlength="20">
+            <div class="theme-colors">
               <span class="color-dot" id="slot1Primary"></span>
               <span class="color-dot" id="slot1Background"></span>
               <span class="color-dot" id="slot1Text"></span>
             </div>
-            <button class="save-theme-btn" data-slot="1">Save</button>
-            <button class="load-theme-btn" data-slot="1" style="display: none;">Load</button>
+            <button class="btn-save" data-slot="1">Save</button>
+            <button class="btn-load" data-slot="1" style="display: none;">Load</button>
           </div>
-
           <div class="theme-slot" data-slot="2">
-            <input type="text" class="theme-name-input" id="themeName2" placeholder="Theme 3" maxlength="20">
-            <div class="theme-colors-preview">
+            <input type="text" class="theme-name" id="themeName2" placeholder="Theme 3" maxlength="20">
+            <div class="theme-colors">
               <span class="color-dot" id="slot2Primary"></span>
               <span class="color-dot" id="slot2Background"></span>
               <span class="color-dot" id="slot2Text"></span>
             </div>
-            <button class="save-theme-btn" data-slot="2">Save</button>
-            <button class="load-theme-btn" data-slot="2" style="display: none;">Load</button>
+            <button class="btn-save" data-slot="2">Save</button>
+            <button class="btn-load" data-slot="2" style="display: none;">Load</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="actions">
-      <button id="refreshBtn" class="refresh-btn">
-        <span class="btn-icon">🔄</span>
-        Refresh Current Tab
-      </button>
+    <!-- Actions -->
+    <div class="actions-section">
+      <button id="refreshBtn" class="btn-secondary">Refresh Current Tab</button>
       <div class="status-message" id="statusMessage"></div>
     </div>
 
-    <!-- Premium License Section -->
-    <div class="premium-section">
-      <h2>🔐 Premium License</h2>
+    <!-- License Section -->
+    <div class="license-section">
+      <div class="section-label">Premium License</div>
+
       <div id="licenseStatus" class="license-status">
         <p class="status-text"></p>
       </div>
-      <div class="license-input-group">
-        <input type="text" id="licenseKey" placeholder="Enter your license key" class="license-input">
-        <button id="verifyBtn" class="verify-btn">Verify</button>
+
+      <div class="license-input">
+        <input type="text" id="licenseKey" placeholder="Enter license key">
+        <button id="verifyBtn" class="btn-verify">Verify</button>
       </div>
-      <p class="license-info">
-        Don't have a license? <a href="https://lightking7.gumroad.com/l/jtpowertools" target="_blank">Get one here</a>
+
+      <p class="license-link">
+        <a href="https://lightking7.gumroad.com/l/jtpowertools" target="_blank">Purchase a license</a>
       </p>
     </div>
-
-    <footer>
-      <p>Version 1.0.0</p>
-    </footer>
   </div>
 
   <script src="../services/license.js"></script>
