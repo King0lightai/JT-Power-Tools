@@ -1,7 +1,7 @@
 # Chrome Web Store Listing - JT Power Tools
 
 ## Short Description (132 characters max)
-Powerful productivity tools for JobTread: Drag & Drop scheduling, Dark Mode, Budget Formatter, and enhanced text contrast.
+Powerful productivity tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Quick Job Switcher & Custom Themes.
 
 ## Detailed Description
 
@@ -24,8 +24,8 @@ Powerful productivity tools for JobTread: Drag & Drop scheduling, Dark Mode, Bud
 • Real-time updates as content changes
 • Dark mode compatible
 
-**📝 Budget Formatter (Free)**
-• Rich text formatting toolbar for budget descriptions and daily logs
+**📝 Text Formatter (Free)**
+• Rich text formatting toolbar for text fields
 • Supports: Bold, Italic, Underline, Strikethrough
 • Headings (H1, H2, H3)
 • Lists (bullets, numbered, with auto-continuation)
@@ -33,6 +33,15 @@ Powerful productivity tools for JobTread: Drag & Drop scheduling, Dark Mode, Bud
 • Links, blockquotes, alerts with icons
 • Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 • MS Word-style active button states
+• Works on budget descriptions and other text areas
+
+**⚡ Quick Job Switcher (Free)**
+• Keyboard shortcut (Alt+J) to instantly open job switcher
+• Type to search and filter jobs in real-time
+• Press Enter to select top result and navigate
+• Press Escape to cancel
+• Fully keyboard-driven workflow for power users
+• No mouse needed for job switching
 
 **🌙 Dark Mode (Free)**
 • Beautiful dark theme for JobTread interface
@@ -40,6 +49,13 @@ Powerful productivity tools for JobTread: Drag & Drop scheduling, Dark Mode, Bud
 • Customized for construction management workflows
 • Smooth toggle on/off
 • Syncs across devices
+
+**🎨 Custom Theme (Premium)**
+• Personalize JobTread with your own color palette
+• Choose primary, background, and text colors
+• Inline color preview boxes
+• Save up to 3 custom themes for quick switching
+• Intelligent color coordination across entire interface
 
 💼 **PROFESSIONAL DESIGN**
 Clean, minimalistic interface that matches JobTread's aesthetic. Simple controls with thin lines and professional styling.
@@ -51,7 +67,7 @@ Clean, minimalistic interface that matches JobTread's aesthetic. Simple controls
 • Premium features use Gumroad's secure licensing (optional)
 
 ⭐ **PREMIUM FEATURES**
-Unlock Schedule Drag & Drop with a one-time license purchase. All other features are completely free!
+Unlock Schedule Drag & Drop and Custom Theme with a one-time license purchase. All other features are completely free!
 
 🛠️ **PERFECT FOR**
 • Construction project managers

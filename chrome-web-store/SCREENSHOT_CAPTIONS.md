@@ -2,12 +2,12 @@
 
 ## Screenshot 1: Main Popup Interface
 **Caption:**
-"Clean, professional interface with easy toggle controls for all features. Premium features clearly marked."
+"Clean, minimal interface with easy toggle controls for all 6 features. Premium features clearly marked."
 
 **What to Show:**
 - Open the extension popup
-- Show all 4 features with toggles
-- Include the premium badge on Drag & Drop
+- Show all 6 features with toggles (Drag & Drop, Contrast Fix, Text Formatter, Quick Job Switcher, Dark Mode, Custom Theme)
+- Include the premium badges on Drag & Drop and Custom Theme
 - Show the refresh button and license section
 
 ---
@@ -24,7 +24,7 @@
 
 ---
 
-## Screenshot 3: Budget Formatter Toolbar
+## Screenshot 3: Text Formatter Toolbar
 **Caption:**
 "Rich text formatting toolbar with bold, italic, headings, colors, lists, and more. Keyboard shortcuts supported."
 
@@ -36,7 +36,31 @@
 
 ---
 
-## Screenshot 4: Dark Mode Comparison
+## Screenshot 4: Quick Job Switcher
+**Caption:**
+"Press Alt+J to instantly search jobs. Type to filter, Enter to select. Fully keyboard-driven workflow."
+
+**What to Show:**
+- Job switcher sidebar open with search focused
+- Show filtered job results based on search query
+- Keyboard shortcut indicator (Alt+J)
+- Multiple jobs visible in the list
+
+---
+
+## Screenshot 5: Custom Theme Panel
+**Caption:**
+"Create your own color palette with inline previews. Choose primary, background, and text colors. Save up to 3 themes."
+
+**What to Show:**
+- Popup with Custom Theme toggle enabled
+- Theme customization panel visible
+- Color pickers with inline preview boxes
+- Saved theme slots showing different saved themes
+
+---
+
+## Screenshot 6: Dark Mode Comparison
 **Caption:**
 "Beautiful dark theme reduces eye strain during long work sessions. Toggle on/off instantly."
 
@@ -48,9 +72,9 @@
 
 ---
 
-## Screenshot 5: License Activation (Optional)
+## Screenshot 7: License Activation (Optional)
 **Caption:**
-"Simple premium license activation. Enter your key and unlock drag & drop scheduling instantly."
+"Simple premium license activation. Enter your key and unlock Drag & Drop and Custom Theme instantly."
 
 **What to Show:**
 - Popup with license section expanded
@@ -125,12 +149,14 @@ Instead of (or in addition to) screenshots, create a short video:
 
 **Content:**
 1. Open JobTread (3 seconds)
-2. Click extension icon, show popup (5 seconds)
-3. Enable features, toggle dark mode (5 seconds)
-4. Show drag & drop in action (10 seconds)
-5. Show formatter toolbar (10 seconds)
-6. Quick montage of all features working (10 seconds)
-7. End card with extension name and "Install Now" (5 seconds)
+2. Click extension icon, show popup with all 6 features (5 seconds)
+3. Enable features, show toggles (5 seconds)
+4. Show drag & drop in action (8 seconds)
+5. Show text formatter toolbar (8 seconds)
+6. Show quick job switcher (Alt+J shortcut) (8 seconds)
+7. Show custom theme customization (8 seconds)
+8. Quick montage of dark mode and all features working (10 seconds)
+9. End card with extension name and "Install Now" (5 seconds)
 
 **Upload to:**
 - YouTube (unlisted)
