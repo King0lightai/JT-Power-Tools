@@ -4,7 +4,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 🎯 Features
 
-### 📅 Schedule Drag & Drop
+### 📅 Schedule Drag & Drop (Premium)
 - Drag schedule items between dates seamlessly with full year boundary support
 - Works across December→January transitions (2025→2026)
 - Automatically updates dates invisibly in the background
@@ -19,8 +19,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
 
-### 📝 Budget Formatter
-- Rich text formatting toolbar for budget descriptions
+### 📝 Text Formatter
+- Rich text formatting toolbar for text fields
 - Supports bold, italic, underline, strikethrough
 - Headings (H1, H2, H3)
 - Lists (bullets, numbered)
@@ -30,6 +30,15 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Tables, links, quotes, and alerts
 - Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 - MS Word-style active button states
+- Works on budget descriptions and other text areas
+
+### ⚡ Quick Job Switcher
+- Keyboard shortcut (Alt+J) to instantly open job switcher
+- Type to search and filter jobs in real-time
+- Press Enter to select top result and navigate
+- Press Escape to cancel and close
+- Fully keyboard-driven workflow for power users
+- No mouse needed for job switching
 
 ### 🌙 Dark Mode
 - Beautiful dark theme for JobTread interface
@@ -41,11 +50,13 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ### 🎨 Custom Theme (Premium)
 - Personalize JobTread with your own color palette
-- Choose primary, background, and text colors via RGB sliders
+- Choose primary, background, and text colors with inline previews
 - Intelligent color coordination across entire interface
 - Preserves task type colors with enhanced visibility
+- Preserves yellow highlighting on edited budget cells
 - 5px thick colored borders for clear task identification
 - Themed formatter toolbar, buttons, links, and inputs
+- Save up to 3 custom themes for quick switching
 - Task cards blend seamlessly with custom background
 - Mutual exclusivity with Contrast Fix and Dark Mode
 
@@ -69,7 +80,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to any JobTread page (`*.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT Power Tools control panel with four toggle switches
+3. You'll see the JT Power Tools control panel with six toggle switches
 
 ### Toggling Features
 
@@ -91,11 +102,18 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - No user interaction needed
 - Adjusts text colors in real-time
 
-#### Budget Formatter
-1. Go to JobTread Budget page
-2. Click in any description field
+#### Text Formatter
+1. Go to any page with text fields (Budget, Notes, etc.)
+2. Click in any text field
 3. Formatting toolbar appears above the field
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
+
+#### Quick Job Switcher
+1. Press Alt+J from any JobTread page
+2. Job switcher sidebar opens with search focused
+3. Type to filter jobs in real-time
+4. Press Enter to select top result and navigate
+5. Press Escape to close without selecting
 
 ## 🔑 Premium Features
 
@@ -130,9 +148,11 @@ JT-Tools-Master/
 ├── background/
 │   └── service-worker.js     # Background service worker
 ├── features/
-│   ├── drag-drop.js          # Drag & Drop module
+│   ├── drag-drop.js          # Drag & Drop module (Premium)
+│   ├── drag-drop-modules/   # Drag & Drop sub-modules
 │   ├── contrast-fix.js       # Contrast Fix module
-│   ├── formatter.js          # Budget Formatter module
+│   ├── formatter.js          # Text Formatter module
+│   ├── job-switcher.js       # Quick Job Switcher module
 │   ├── dark-mode.js          # Dark Mode module
 │   └── rgb-theme.js          # Custom Theme module (Premium)
 ├── styles/
@@ -238,17 +258,36 @@ const featureModules = {
 ## 📝 Version History
 
 ### v3.1.0 (Current)
-- **Major Drag & Drop Fixes**: Complete rewrite of year boundary handling
+- **New Feature: Quick Job Switcher**
+  - Alt+J keyboard shortcut to instantly open job switcher
+  - Type to search and filter jobs in real-time
+  - Enter to select top result and navigate
+  - Escape to cancel and close
+  - Fully keyboard-driven workflow for power users
+- **Drag & Drop Modularization**:
+  - Refactored from 1,475 lines to modular architecture
+  - Split into 6 focused modules: date-utils, weekend-utils, ui-utils, sidebar-manager, date-changer, event-handlers
+  - Main file reduced to 149 lines (90% reduction)
+  - Easier to maintain and extend
+- **UI/UX Improvements**:
+  - Renamed "Budget Formatter" to "Text Formatter" for clarity
+  - Redesigned theme customization with inline color previews
+  - Moved Dark Mode below Quick Job Switcher in popup
+  - Added Premium badge to Schedule Drag & Drop feature
+  - Simplified popup to minimal white aesthetic
+- **Custom Theme Enhancements** (Premium):
+  - Inline color preview boxes next to each color picker
+  - Preserves yellow highlighting on edited budget cells
+  - Enhanced task type color visibility with 5px thick borders
+  - Task cards now use theme background with colored border
+  - Subtle shadow effect for better visual depth
+  - Preserves task type identification while unifying appearance
+- **Major Drag & Drop Fixes**:
   - Fixed December→January year transitions (2025→2026)
   - Fixed date moves in future years (Jan 2026, Feb 2026)
   - Always includes year in date format for accuracy
   - Intelligent year inference using source date as baseline
   - Year validation when page shows different months
-- **Custom Theme Enhancements** (Premium):
-  - Enhanced task type color visibility with 5px thick borders
-  - Task cards now use theme background with colored border
-  - Subtle shadow effect for better visual depth
-  - Preserves task type identification while unifying appearance
 - **Formatter Improvements**:
   - Color switching: Change colors by clicking different color buttons
   - Active color detection and button highlighting
@@ -263,7 +302,7 @@ const featureModules = {
 
 ### v1.0.0
 - Initial public release
-- Four core features: Schedule Drag & Drop, Contrast Fix, Budget Formatter, Dark Mode
+- Four core features: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode
 - Premium licensing system via Gumroad
 - Clean, professional popup interface
 - Cross-year drag & drop support
