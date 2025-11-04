@@ -677,39 +677,24 @@ const FormatterFeature = (() => {
   // Collect alert data from user with proper prompt locking
   function collectAlertData() {
     isPromptingUser = true;
-    console.log('Formatter: Starting alert data collection (prompt lock enabled)');
 
     try {
       const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
-      if (!alertColor) {
-        console.log('Formatter: Alert cancelled at color prompt');
-        return null;
-      }
+      if (!alertColor) return null;
 
       const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
-      if (!alertIcon) {
-        console.log('Formatter: Alert cancelled at icon prompt');
-        return null;
-      }
+      if (!alertIcon) return null;
 
       const alertSubject = prompt('Alert subject:', 'Important');
-      if (!alertSubject) {
-        console.log('Formatter: Alert cancelled at subject prompt');
-        return null;
-      }
+      if (!alertSubject) return null;
 
       const alertBody = prompt('Alert body text:', 'Your alert message here.');
-      if (!alertBody) {
-        console.log('Formatter: Alert cancelled at body prompt');
-        return null;
-      }
+      if (!alertBody) return null;
 
-      console.log('Formatter: Alert data collected successfully');
       return { alertColor, alertIcon, alertSubject, alertBody };
     } finally {
       // Always unlock prompting, even if user cancels
       isPromptingUser = false;
-      console.log('Formatter: Alert data collection complete (prompt lock released)');
     }
   }
 
@@ -977,13 +962,11 @@ const FormatterFeature = (() => {
   }
 
   function applyFormat(field, format, options = {}) {
-    console.log('Formatter: applyFormat called with format:', format);
     const start = field.selectionStart;
     const end = field.selectionEnd;
     const text = field.value;
     const selection = text.substring(start, end);
     const hasSelection = selection.length > 0;
-    console.log('Formatter: Field state - start:', start, 'end:', end, 'textLength:', text.length);
 
     // Check if format is already active
     const activeFormats = detectActiveFormats(field);
@@ -1129,7 +1112,6 @@ const FormatterFeature = (() => {
         isPromptingUser = false;
 
         if (!url) {
-          console.log('Formatter: Link insertion cancelled by user');
           return;
         }
 
@@ -1196,23 +1178,19 @@ const FormatterFeature = (() => {
       case 'alert':
         const alertData = collectAlertData();
         if (!alertData) {
-          console.log('Formatter: Alert insertion cancelled by user');
           return;
         }
 
-        console.log('Formatter: Alert data received, restoring focus to field');
         // Restore focus immediately after prompts complete
         if (field && document.body.contains(field)) {
           field.focus();
-          console.log('Formatter: Field focused, active element is:', document.activeElement?.tagName);
         } else {
-          console.error('Formatter: Field is not in DOM!');
+          console.error('Formatter: Field is not in DOM after alert prompts!');
           return;
         }
 
         replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
         cursorPos = start + replacement.length;
-        console.log('Formatter: Alert replacement ready, length:', replacement.length);
         break;
 
       case 'hr':
@@ -1230,17 +1208,12 @@ const FormatterFeature = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
-    console.log('Formatter: Setting field value, replacement length:', replacement?.length);
-
     // Lock to prevent MutationObserver from interfering
     isInsertingText = true;
-    console.log('Formatter: Text insertion lock enabled');
 
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     const newValue = before + replacement + after;
-    console.log('Formatter: New value length:', newValue.length, 'old length:', text.length);
     nativeInputValueSetter.call(field, newValue);
-    console.log('Formatter: Field value set immediately after:', field.value.length);
 
     // Dispatch events IMMEDIATELY - React will clear value if we delay!
     dispatchReactSafeEventImmediate(field, cursorPos);
@@ -1249,8 +1222,6 @@ const FormatterFeature = (() => {
   // Immediate event dispatch - for cases where React clears value during delays
   function dispatchReactSafeEventImmediate(field, cursorPos = null) {
     try {
-      console.log('Formatter: Immediate dispatch - field value length:', field.value.length);
-
       // Set cursor position first
       if (cursorPos !== null) {
         field.setSelectionRange(cursorPos, cursorPos);
@@ -1268,7 +1239,6 @@ const FormatterFeature = (() => {
       });
 
       field.dispatchEvent(inputEvent);
-      console.log('Formatter: Input event dispatched immediately, field value now:', field.value.length);
 
       // Dispatch change event immediately too
       const changeEvent = new Event('change', {
@@ -1276,12 +1246,10 @@ const FormatterFeature = (() => {
         cancelable: false
       });
       field.dispatchEvent(changeEvent);
-      console.log('Formatter: Change event dispatched immediately, field value now:', field.value.length);
 
       // Unlock after a small delay to ensure React has processed the events
       setTimeout(() => {
         isInsertingText = false;
-        console.log('Formatter: Text insertion lock released');
       }, 100);
     } catch (error) {
       console.error('Formatter: Event dispatch error:', error);
@@ -1290,6 +1258,8 @@ const FormatterFeature = (() => {
   }
 
   // Helper function to dispatch events in a React-safe way (with delay)
+  // Note: This delayed version is kept for backwards compatibility but may not be used
+  // for all formatting operations. See dispatchReactSafeEventImmediate for the preferred approach.
   function dispatchReactSafeEvent(field, cursorPos = null) {
     // Use multiple animation frames + setTimeout to ensure React has fully settled
     // This gives React time to complete its internal state updates
@@ -1300,12 +1270,9 @@ const FormatterFeature = (() => {
           try {
             // Verify field still exists in DOM
             if (!document.body.contains(field)) {
-              console.log('Formatter: Field removed from DOM, skipping event dispatch');
               isInsertingText = false; // Unlock even if field is gone
               return;
             }
-
-            console.log('Formatter: Dispatching input event, field value length:', field.value.length);
 
             // Set cursor position now that React has settled
             if (cursorPos !== null) {
@@ -1324,7 +1291,6 @@ const FormatterFeature = (() => {
             });
 
             field.dispatchEvent(inputEvent);
-            console.log('Formatter: Input event dispatched');
 
             // Also dispatch a change event after a tiny delay
             setTimeout(() => {
@@ -1334,12 +1300,10 @@ const FormatterFeature = (() => {
                   cancelable: false
                 });
                 field.dispatchEvent(changeEvent);
-                console.log('Formatter: Change event dispatched');
               }
 
               // Unlock after all events are dispatched
               isInsertingText = false;
-              console.log('Formatter: Text insertion lock released');
             }, 10);
           } catch (error) {
             // If dispatching fails, silently log and continue
