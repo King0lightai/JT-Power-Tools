@@ -972,9 +972,8 @@ const FormatterFeature = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Dispatch event with React-compatible timing and error handling
-    // Also handle cursor positioning in the delayed context to avoid triggering React early
-    dispatchReactSafeEvent(field, newCursorPos);
+    // Dispatch events immediately - React will clear value if we delay
+    dispatchReactSafeEventImmediate(field, newCursorPos);
   }
 
   function applyFormat(field, format, options = {}) {
@@ -1241,14 +1240,56 @@ const FormatterFeature = (() => {
     const newValue = before + replacement + after;
     console.log('Formatter: New value length:', newValue.length, 'old length:', text.length);
     nativeInputValueSetter.call(field, newValue);
-    console.log('Formatter: Field value set, dispatching events...');
+    console.log('Formatter: Field value set immediately after:', field.value.length);
 
-    // Dispatch event with React-compatible timing and error handling
-    // Also handle cursor positioning in the delayed context to avoid triggering React early
-    dispatchReactSafeEvent(field, cursorPos);
+    // Dispatch events IMMEDIATELY - React will clear value if we delay!
+    dispatchReactSafeEventImmediate(field, cursorPos);
   }
 
-  // Helper function to dispatch events in a React-safe way
+  // Immediate event dispatch - for cases where React clears value during delays
+  function dispatchReactSafeEventImmediate(field, cursorPos = null) {
+    try {
+      console.log('Formatter: Immediate dispatch - field value length:', field.value.length);
+
+      // Set cursor position first
+      if (cursorPos !== null) {
+        field.setSelectionRange(cursorPos, cursorPos);
+      }
+
+      // Dispatch input event IMMEDIATELY (synchronously)
+      const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: false,
+        composed: true,
+        data: null,
+        dataTransfer: null,
+        inputType: 'insertText',
+        isComposing: false
+      });
+
+      field.dispatchEvent(inputEvent);
+      console.log('Formatter: Input event dispatched immediately, field value now:', field.value.length);
+
+      // Dispatch change event immediately too
+      const changeEvent = new Event('change', {
+        bubbles: true,
+        cancelable: false
+      });
+      field.dispatchEvent(changeEvent);
+      console.log('Formatter: Change event dispatched immediately, field value now:', field.value.length);
+
+      // Unlock after a small delay to ensure React has processed the events
+      setTimeout(() => {
+        isInsertingText = false;
+        console.log('Formatter: Text insertion lock released');
+      }, 100);
+    } catch (error) {
+      console.error('Formatter: Event dispatch error:', error);
+      isInsertingText = false;
+    }
+  }
+
+  // Helper function to dispatch events in a React-safe way (with delay)
   function dispatchReactSafeEvent(field, cursorPos = null) {
     // Use multiple animation frames + setTimeout to ensure React has fully settled
     // This gives React time to complete its internal state updates
