@@ -631,7 +631,14 @@ const CustomThemeFeature = (() => {
     const style = element.getAttribute('style');
     if (!style) return;
 
-    // Skip draggable elements (tags) - they should keep their original colors
+    // Skip tags - they should keep their original colors
+    // Tags have the rounded-sm class and px-2/py-1 padding
+    if (element.classList.contains('rounded-sm') &&
+        (element.classList.contains('px-2') || element.classList.contains('py-1'))) {
+      return;
+    }
+
+    // Also skip draggable elements (alternative tag format)
     if (element.getAttribute('draggable') === 'true') {
       return;
     }
