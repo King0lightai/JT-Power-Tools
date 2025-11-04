@@ -153,23 +153,46 @@ const QuickJobSwitcherFeature = (() => {
 
     console.log('QuickJobSwitcher: ✅ Found job button:', jobNumberButton.textContent);
 
-    // Inject CSS to hide the sidebar
+    // Inject comprehensive CSS to hide the sidebar (like drag-drop feature)
     hideStyleElement = document.createElement('style');
     hideStyleElement.id = 'jt-quick-search-hide';
     hideStyleElement.textContent = `
-      /* Hide the job switcher sidebar */
-      div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"],
-      div.z-30.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary] {
+      /* Hide the outer sidebar container (the one with z-30) */
+      div.z-30.absolute.top-0.bottom-0.right-0 {
         opacity: 0 !important;
-        pointer-events: none !important;
         position: fixed !important;
         top: -9999px !important;
         left: -9999px !important;
-        visibility: hidden !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        pointer-events: none !important;
+      }
+      /* Hide the white background layer */
+      div.absolute.inset-0.bg-white.shadow-line-left {
+        opacity: 0 !important;
+        background: transparent !important;
+      }
+      /* Hide the inner sticky sidebar */
+      div.overflow-y-auto.overscroll-contain.sticky {
+        opacity: 0 !important;
+      }
+      /* Hide any fixed/absolute overlays and backdrops */
+      body > div.fixed.inset-0:not(#jt-quick-job-switcher),
+      div[style*="position: fixed"][style*="inset"]:not(#jt-quick-job-switcher),
+      div[class*="backdrop"]:not(#jt-quick-job-switcher) {
+        opacity: 0 !important;
+        position: fixed !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
       }
     `;
     document.head.appendChild(hideStyleElement);
-    console.log('QuickJobSwitcher: ✅ Injected sidebar hiding CSS');
+    console.log('QuickJobSwitcher: ✅ Injected comprehensive sidebar hiding CSS');
 
     // Click to open sidebar (invisibly)
     console.log('QuickJobSwitcher: Clicking job button to open sidebar...');
@@ -179,6 +202,7 @@ const QuickJobSwitcherFeature = (() => {
     setTimeout(() => {
       createFloatingPopup();
       focusSearchInput();
+      updateJobResults();
     }, 300);
   }
 
@@ -190,15 +214,18 @@ const QuickJobSwitcherFeature = (() => {
     floatingPopup.id = 'jt-quick-job-switcher';
     floatingPopup.innerHTML = `
       <div class="quick-search-overlay">
-        <div class="quick-search-box">
-          <div class="search-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
+        <div class="quick-search-container">
+          <div class="quick-search-box">
+            <div class="search-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+            </div>
+            <div class="search-query empty" id="quickSearchQuery">Search jobs...</div>
+            <div class="search-hint">Press Enter to select</div>
           </div>
-          <div class="search-query empty" id="quickSearchQuery">Search jobs...</div>
-          <div class="search-hint">Press Enter to select</div>
+          <div class="quick-search-results" id="quickSearchResults"></div>
         </div>
       </div>
     `;
@@ -234,17 +261,22 @@ const QuickJobSwitcherFeature = (() => {
         padding: 20px;
       }
 
-      .quick-search-box {
+      .quick-search-container {
         background: white;
         border-radius: 8px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        min-width: 500px;
+        max-width: 600px;
+        animation: slideUp 0.2s ease;
+        overflow: hidden;
+      }
+
+      .quick-search-box {
         padding: 20px 24px;
-        min-width: 400px;
-        max-width: 500px;
         display: flex;
         align-items: center;
         gap: 12px;
-        animation: slideUp 0.2s ease;
+        border-bottom: 1px solid #e8e8e8;
       }
 
       @keyframes slideUp {
@@ -286,6 +318,57 @@ const QuickJobSwitcherFeature = (() => {
         padding: 4px 8px;
         border-radius: 4px;
         font-weight: 500;
+      }
+
+      .quick-search-results {
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 8px 0;
+      }
+
+      .quick-search-results:empty {
+        display: none;
+      }
+
+      .result-item {
+        padding: 12px 24px;
+        cursor: pointer;
+        transition: background 0.1s ease;
+        border-left: 3px solid transparent;
+      }
+
+      .result-item:hover {
+        background: #f5f5f5;
+      }
+
+      .result-item.selected {
+        background: #f0f9ff;
+        border-left-color: #1a1a1a;
+      }
+
+      .result-job-number {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+      }
+
+      .result-job-name {
+        font-size: 13px;
+        color: #666;
+      }
+
+      .result-customer {
+        font-size: 12px;
+        color: #999;
+        margin-top: 2px;
+      }
+
+      .no-results {
+        padding: 32px 24px;
+        text-align: center;
+        color: #999;
+        font-size: 14px;
       }
     `;
     document.head.appendChild(style);
@@ -343,6 +426,7 @@ const QuickJobSwitcherFeature = (() => {
 
     // Update the floating popup display
     updatePopupDisplay();
+    updateJobResults();
 
     console.log('QuickJobSwitcher: Search query:', searchQuery);
   }
@@ -361,6 +445,89 @@ const QuickJobSwitcherFeature = (() => {
       queryDisplay.textContent = searchQuery;
       queryDisplay.classList.remove('empty');
     }
+  }
+
+  /**
+   * Update the job results list from the hidden sidebar
+   */
+  function updateJobResults() {
+    const resultsContainer = document.getElementById('quickSearchResults');
+    if (!resultsContainer) return;
+
+    // Find the sidebar
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"]') ||
+                    document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary]') ||
+                    document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+
+    if (!sidebar) {
+      resultsContainer.innerHTML = '<div class="no-results">Loading jobs...</div>';
+      return;
+    }
+
+    // Find all job buttons
+    const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
+    const jobs = [];
+
+    for (const button of jobButtons) {
+      const text = button.textContent.trim();
+
+      // Skip close button and header
+      if (text.includes('Close') || text.includes('×') || text.includes('Job Switcher')) {
+        continue;
+      }
+
+      // Skip if it looks like a close button (has X icon path)
+      if (button.querySelector('path[d*="M18 6"]')) {
+        continue;
+      }
+
+      // Try to parse job information
+      // Format is usually: "Job <number>\n<name>\n<customer>"
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+
+      if (lines.length > 0) {
+        jobs.push({
+          element: button,
+          fullText: text,
+          lines: lines
+        });
+      }
+    }
+
+    // Display results
+    if (jobs.length === 0) {
+      resultsContainer.innerHTML = '<div class="no-results">No jobs found</div>';
+      return;
+    }
+
+    resultsContainer.innerHTML = jobs.map((job, index) => {
+      const isSelected = index === 0 ? 'selected' : '';
+
+      // Parse job info
+      let jobNumber = '';
+      let jobName = '';
+      let customer = '';
+
+      if (job.lines.length >= 1) {
+        jobNumber = job.lines[0]; // Usually "Job 12345"
+      }
+      if (job.lines.length >= 2) {
+        jobName = job.lines[1];
+      }
+      if (job.lines.length >= 3) {
+        customer = job.lines[2];
+      }
+
+      return `
+        <div class="result-item ${isSelected}">
+          <div class="result-job-number">${jobNumber}</div>
+          ${jobName ? `<div class="result-job-name">${jobName}</div>` : ''}
+          ${customer ? `<div class="result-customer">${customer}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    console.log(`QuickJobSwitcher: Displayed ${jobs.length} job results`);
   }
 
   /**
