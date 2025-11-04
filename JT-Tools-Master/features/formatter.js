@@ -931,7 +931,6 @@ const FormatterFeature = (() => {
           newCursorPos = lineStart;
         } else {
           // No color tag found on this line, nothing to remove
-          console.log('Formatter: No color formatting found to remove on this line');
           return;
         }
         break;
@@ -1122,52 +1121,53 @@ const FormatterFeature = (() => {
       case 'color':
         const color = options.color;
         const cLineStart = before.lastIndexOf('\n') + 1;
-        const cLineBefore = text.substring(cLineStart, start);
-        const existingColorMatch = cLineBefore.match(/\[!color:\w+\]\s*/);
+        const cLineEnd = text.indexOf('\n', start);
+        const lineEndPos = cLineEnd === -1 ? text.length : cLineEnd;
+
+        // Check the FULL line for existing color (not just before cursor)
+        const fullLine = text.substring(cLineStart, lineEndPos);
+        const existingColorMatch = fullLine.match(/^\[!color:(\w+)\]\s*/);
 
         if (existingColorMatch) {
           // Found existing color formatting on this line
-          const colorTagStart = cLineStart + cLineBefore.indexOf(existingColorMatch[0]);
-          const colorTagEnd = colorTagStart + existingColorMatch[0].length;
+          const existingColor = existingColorMatch[1];
+          const colorTagEnd = cLineStart + existingColorMatch[0].length;
 
-          // Extract the existing text after the color tag (up to end of line or selection end)
-          const lineEnd = text.indexOf('\n', colorTagEnd);
-          const existingTextEnd = lineEnd === -1 ? text.length : lineEnd;
-          const existingText = text.substring(colorTagEnd, hasSelection ? end : existingTextEnd).trim();
+          // Extract the text after the color tag (excluding the tag itself)
+          const existingText = text.substring(colorTagEnd, lineEndPos).trim();
 
           // Determine what text to use
           let textToUse;
           if (hasSelection) {
             // User has selection, use that
             textToUse = selection;
-          } else if (existingText && existingText !== 'Your text here') {
-            // Reuse existing meaningful content (not placeholder)
+          } else if (existingText) {
+            // Reuse existing content
             textToUse = existingText;
           } else {
-            // No meaningful content, use minimal placeholder
+            // No content, use placeholder
             textToUse = 'text';
           }
 
-          // Replace the color tag and content
-          before = text.substring(0, colorTagStart);
+          // Replace the entire line with new color (or remove if same color being toggled)
+          before = text.substring(0, cLineStart);
           replacement = `[!color:${color}] ${textToUse}`;
-          after = text.substring(hasSelection ? end : existingTextEnd);
+          after = text.substring(lineEndPos);
         } else {
-          // No existing color on this line
+          // No existing color on this line - add new color
           if (hasSelection) {
             replacement = `[!color:${color}] ${selection}`;
           } else {
             // Check if cursor is on a line with content
-            const lineEnd = text.indexOf('\n', start);
-            const lineText = text.substring(cLineStart, lineEnd === -1 ? text.length : lineEnd).trim();
+            const lineText = fullLine.trim();
 
             if (lineText.length > 0) {
-              // There's content on this line, just add color tag at start
+              // There's content on this line, add color tag at start
               replacement = `[!color:${color}] ${lineText}`;
               before = text.substring(0, cLineStart);
-              after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+              after = text.substring(lineEndPos);
             } else {
-              // Empty line, use minimal placeholder
+              // Empty line, use placeholder
               replacement = `[!color:${color}] text`;
             }
           }
