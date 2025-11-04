@@ -462,16 +462,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Get settings and update theme panel visibility immediately
+      // Get current settings from checkboxes
       const settings = await getCurrentSettings();
 
-      // Update theme panel visibility right away (before saveSettings validation)
-      const themeCustomization = document.getElementById('themeCustomization');
-      const hasLicense = await LicenseService.hasValidLicense();
-      const shouldShowPanel = hasLicense && settings.rgbTheme;
-      themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
-      console.log('Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
-
+      // Save settings (this will handle theme panel visibility)
       await saveSettings(settings);
     });
   });
