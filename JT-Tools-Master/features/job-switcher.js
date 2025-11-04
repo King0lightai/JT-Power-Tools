@@ -5,6 +5,7 @@ const QuickJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearching = false;
   let searchQuery = '';
+  let currentJobs = []; // Store current job list for click handlers
 
   // UI Elements
   let floatingPopup = null;
@@ -499,8 +500,12 @@ const QuickJobSwitcherFeature = (() => {
     // Display results
     if (jobs.length === 0) {
       resultsContainer.innerHTML = '<div class="no-results">No jobs found</div>';
+      currentJobs = [];
       return;
     }
+
+    // Store jobs for click handlers
+    currentJobs = jobs;
 
     resultsContainer.innerHTML = jobs.map((job, index) => {
       const isSelected = index === 0 ? 'selected' : '';
@@ -521,7 +526,7 @@ const QuickJobSwitcherFeature = (() => {
       }
 
       return `
-        <div class="result-item ${isSelected}">
+        <div class="result-item ${isSelected}" data-index="${index}">
           <div class="result-job-number">${jobNumber}</div>
           ${jobName ? `<div class="result-job-name">${jobName}</div>` : ''}
           ${customer ? `<div class="result-customer">${customer}</div>` : ''}
@@ -529,67 +534,51 @@ const QuickJobSwitcherFeature = (() => {
       `;
     }).join('');
 
-    console.log(`QuickJobSwitcher: Displayed ${jobs.length} job results`);
+    // Add click handlers to result items
+    const resultItems = resultsContainer.querySelectorAll('.result-item');
+    resultItems.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        console.log(`QuickJobSwitcher: Clicked job at index ${index}`);
+        selectJobByIndex(index);
+      });
+    });
+
+    console.log(`QuickJobSwitcher: Displayed ${jobs.length} job results with click handlers`);
   }
 
   /**
-   * Select the top result from the filtered list
+   * Select a job by index from the current results list
    */
-  function selectTopResult() {
-    console.log('QuickJobSwitcher: Selecting top result...');
+  function selectJobByIndex(index) {
+    console.log(`QuickJobSwitcher: Selecting job at index ${index}`);
 
-    // Find the sidebar
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[style*="width: 400px"]') ||
-                    document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary]');
-
-    if (!sidebar) {
-      console.error('QuickJobSwitcher: ❌ Could not find sidebar');
+    if (!currentJobs || index >= currentJobs.length) {
+      console.error(`QuickJobSwitcher: Invalid index ${index}`);
       closeQuickSearch();
       return;
     }
 
-    console.log('QuickJobSwitcher: ✅ Found sidebar');
-
-    // Find all job buttons
-    const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
-    console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
-
-    // Filter out the close button and header, find first visible job
-    let topResult = null;
-    for (const button of jobButtons) {
-      const text = button.textContent.trim();
-      console.log(`QuickJobSwitcher: Checking button: ${text.substring(0, 50)}`);
-
-      // Skip if it's the close button (has X or Close text)
-      if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
-        console.log('  → Skipping (close button)');
-        continue;
-      }
-
-      // Skip the header
-      if (text.includes('Job Switcher')) {
-        console.log('  → Skipping (header)');
-        continue;
-      }
-
-      // This should be a job result
-      topResult = button;
-      console.log(`QuickJobSwitcher: ✅ Top result: ${text.substring(0, 50)}`);
-      break;
-    }
-
-    if (topResult) {
-      console.log('QuickJobSwitcher: Clicking top result...');
-      topResult.click();
+    const selectedJob = currentJobs[index];
+    if (selectedJob && selectedJob.element) {
+      console.log(`QuickJobSwitcher: Clicking job: ${selectedJob.lines[0]}`);
+      selectedJob.element.click();
 
       // Small delay to let the click register before closing
       setTimeout(() => {
         closeQuickSearch();
       }, 100);
     } else {
-      console.log('QuickJobSwitcher: No results found');
+      console.error('QuickJobSwitcher: No job element found');
       closeQuickSearch();
     }
+  }
+
+  /**
+   * Select the top result from the filtered list
+   */
+  function selectTopResult() {
+    console.log('QuickJobSwitcher: Selecting top result (Enter pressed)');
+    selectJobByIndex(0);
   }
 
   /**
@@ -599,6 +588,7 @@ const QuickJobSwitcherFeature = (() => {
     console.log('QuickJobSwitcher: Closing quick search...');
     isSearching = false;
     searchQuery = '';
+    currentJobs = [];
 
     // Remove floating popup
     if (floatingPopup) {
