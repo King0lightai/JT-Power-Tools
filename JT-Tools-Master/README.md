@@ -4,11 +4,12 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 🎯 Features
 
-### 📅 Schedule Drag & Drop
+### 📅 Schedule Drag & Drop (Premium)
 - Drag schedule items between dates seamlessly
 - Automatically updates dates invisibly in the background
-- Multi-month support with intelligent date detection
+- Multi-month and multi-year support with intelligent date detection
 - Visual feedback with drop zone highlighting
+- Full year boundary support (Dec 2025 → Jan 2026)
 
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability
@@ -16,8 +17,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Highlights current date in schedule view
 - Real-time updates as content changes
 
-### 📝 Budget Formatter
-- Rich text formatting toolbar for budget descriptions
+### 📝 Text Formatter
+- Rich text formatting toolbar for text fields
 - Supports bold, italic, underline, strikethrough
 - Headings (H1, H2, H3)
 - Lists (bullets, numbered)
@@ -25,6 +26,24 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Tables, links, quotes, and alerts
 - Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 - MS Word-style active button states
+- Works on budget descriptions and other text areas
+
+### ⚡ Quick Job Switcher
+- Keyboard shortcut (Alt+J) to instantly open job switcher
+- Type to search and filter jobs in real-time
+- Press Enter to select top result and navigate
+- Fully keyboard-driven workflow for power users
+
+### 🌙 Dark Mode
+- Beautiful dark theme for JobTread interface
+- Reduces eye strain during long work sessions
+- Smooth toggle on/off
+
+### 🎨 Custom Theme (Premium)
+- Personalize JobTread with your own color palette
+- Choose primary, background, and text colors
+- Inline color preview boxes
+- Save up to 3 custom themes
 
 ## 📦 Installation
 
@@ -46,7 +65,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to any JobTread page (`*.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT Power Tools control panel with three toggle switches
+3. You'll see the JT Power Tools control panel with six toggle switches
 
 ### Toggling Features
 
@@ -68,11 +87,17 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - No user interaction needed
 - Adjusts text colors in real-time
 
-#### Budget Formatter
-1. Go to JobTread Budget page
-2. Click in any description field
+#### Text Formatter
+1. Go to any page with text fields (Budget, Notes, etc.)
+2. Click in any text field
 3. Formatting toolbar appears above the field
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
+
+#### Quick Job Switcher
+1. Press Alt+J from any JobTread page
+2. Type to search and filter jobs
+3. Press Enter to select top result
+4. Press Escape to cancel
 
 ## 🔑 Premium Features
 
@@ -107,9 +132,13 @@ JT-Tools-Master/
 ├── background/
 │   └── service-worker.js     # Background service worker
 ├── features/
-│   ├── drag-drop.js          # Drag & Drop module
+│   ├── drag-drop.js          # Drag & Drop module (Premium)
+│   ├── drag-drop-modules/   # Drag & Drop sub-modules
 │   ├── contrast-fix.js       # Contrast Fix module
-│   └── formatter.js          # Budget Formatter module
+│   ├── formatter.js          # Text Formatter module
+│   ├── job-switcher.js       # Quick Job Switcher module
+│   ├── dark-mode.js          # Dark Mode module
+│   └── rgb-theme.js          # Custom Theme module (Premium)
 ├── styles/
 │   └── formatter-toolbar.css # Formatter toolbar styles
 └── icons/
