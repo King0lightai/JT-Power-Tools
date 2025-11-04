@@ -157,38 +157,40 @@ const QuickJobSwitcherFeature = (() => {
     hideStyleElement = document.createElement('style');
     hideStyleElement.id = 'jt-quick-search-hide';
     hideStyleElement.textContent = `
-      /* Hide the outer sidebar container (the one with z-30) */
-      div.z-30.absolute.top-0.bottom-0.right-0 {
+      /* Hide ALL z-30 sidebars and overlays except our popup */
+      div.z-30:not(#jt-quick-job-switcher):not(#jt-quick-job-switcher *) {
+        display: none !important;
+        visibility: hidden !important;
         opacity: 0 !important;
         position: fixed !important;
         top: -9999px !important;
         left: -9999px !important;
-        width: 1px !important;
-        height: 1px !important;
+        width: 0 !important;
+        height: 0 !important;
         overflow: hidden !important;
         clip: rect(0, 0, 0, 0) !important;
         pointer-events: none !important;
       }
+      /* Hide the outer sidebar container more aggressively */
+      div.absolute.top-0.bottom-0.right-0:not(#jt-quick-job-switcher):not(#jt-quick-job-switcher *) {
+        display: none !important;
+        visibility: hidden !important;
+      }
       /* Hide the white background layer */
       div.absolute.inset-0.bg-white.shadow-line-left {
-        opacity: 0 !important;
-        background: transparent !important;
+        display: none !important;
+        visibility: hidden !important;
       }
       /* Hide the inner sticky sidebar */
       div.overflow-y-auto.overscroll-contain.sticky {
-        opacity: 0 !important;
+        display: none !important;
+        visibility: hidden !important;
       }
-      /* Hide any fixed/absolute overlays and backdrops */
+      /* Hide any fixed/absolute overlays and backdrops except ours */
       body > div.fixed.inset-0:not(#jt-quick-job-switcher),
-      div[style*="position: fixed"][style*="inset"]:not(#jt-quick-job-switcher),
-      div[class*="backdrop"]:not(#jt-quick-job-switcher) {
-        opacity: 0 !important;
-        position: fixed !important;
-        top: -9999px !important;
-        left: -9999px !important;
-        width: 1px !important;
-        height: 1px !important;
-        overflow: hidden !important;
+      div.fixed.inset-0:not(#jt-quick-job-switcher):not(#jt-quick-job-switcher *) {
+        display: none !important;
+        visibility: hidden !important;
       }
     `;
     document.head.appendChild(hideStyleElement);
