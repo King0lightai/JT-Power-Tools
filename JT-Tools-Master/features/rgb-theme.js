@@ -353,6 +353,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Background Colors === */
+      /* Note: .bg-yellow-100 is excluded to preserve edited cell highlighting */
       .bg-white,
       .bg-gray-50,
       .bg-gray-100,
@@ -360,8 +361,7 @@ const CustomThemeFeature = (() => {
       .bg-gray-700,
       .bg-slate-50,
       .bg-blue-50,
-      .bg-blue-100,
-      .bg-yellow-100 {
+      .bg-blue-100 {
         background-color: ${background};
       }
 
