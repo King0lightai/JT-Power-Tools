@@ -455,6 +455,7 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
       .hover\\:bg-gray-800:hover,
+      .hover\\:bg-gray-900:hover,
       .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
         background-color: ${background};
