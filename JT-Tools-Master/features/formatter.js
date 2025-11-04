@@ -618,18 +618,36 @@ const FormatterFeature = (() => {
         const format = btn.dataset.format;
         const color = btn.dataset.color;
 
+        // Store local reference to field in case activeField becomes null during prompts
+        const targetField = activeField;
+
+        // Clear hide timeout to prevent toolbar from hiding during prompts
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+
         if (format === 'color') {
-          applyFormat(activeField, format, { color });
+          applyFormat(targetField, format, { color });
           toolbar.querySelector('.jt-color-dropdown').classList.remove('jt-color-dropdown-visible');
         } else if (format && format !== 'color-picker') {
-          applyFormat(activeField, format);
+          applyFormat(targetField, format);
           toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
             menu.classList.remove('jt-dropdown-visible');
           });
         }
 
-        activeField.focus();
-        setTimeout(() => updateToolbarState(activeField, toolbar), 10);
+        // Add null checks before calling focus and updateToolbarState
+        if (targetField && document.body.contains(targetField)) {
+          targetField.focus();
+          // Restore activeField reference if it was cleared
+          activeField = targetField;
+          setTimeout(() => {
+            if (document.body.contains(toolbar) && document.body.contains(targetField)) {
+              updateToolbarState(targetField, toolbar);
+            }
+          }, 10);
+        }
       });
     });
   }
