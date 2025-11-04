@@ -9,6 +9,7 @@ const FormatterFeature = (() => {
   let observer = null;
   let isActive = false;
   let styleElement = null;
+  let isPromptingUser = false; // Prevent blur handlers from hiding toolbar during prompts
 
   // Initialize the feature
   function init() {
@@ -201,6 +202,12 @@ const FormatterFeature = (() => {
   }
 
   function handleFieldBlur(e, field) {
+    // Don't hide toolbar if we're prompting user (e.g., for alert data)
+    if (isPromptingUser) {
+      console.log('Formatter: Skipping blur handler - user is being prompted');
+      return;
+    }
+
     if (hideTimeout) {
       clearTimeout(hideTimeout);
     }
@@ -618,14 +625,8 @@ const FormatterFeature = (() => {
         const format = btn.dataset.format;
         const color = btn.dataset.color;
 
-        // Store local reference to field in case activeField becomes null during prompts
+        // Store field reference (defensive, in case activeField changes)
         const targetField = activeField;
-
-        // Clear hide timeout to prevent toolbar from hiding during prompts
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
-          hideTimeout = null;
-        }
 
         if (format === 'color') {
           applyFormat(targetField, format, { color });
@@ -637,10 +638,9 @@ const FormatterFeature = (() => {
           });
         }
 
-        // Add null checks before calling focus and updateToolbarState
+        // Restore focus and update toolbar state
         if (targetField && document.body.contains(targetField)) {
           targetField.focus();
-          // Restore activeField reference if it was cleared
           activeField = targetField;
           setTimeout(() => {
             if (document.body.contains(toolbar) && document.body.contains(targetField)) {
@@ -665,6 +665,45 @@ const FormatterFeature = (() => {
 
     toolbar.style.left = `${rect.left + window.scrollX}px`;
     toolbar.style.width = `auto`;
+  }
+
+  // Collect alert data from user with proper prompt locking
+  function collectAlertData() {
+    isPromptingUser = true;
+    console.log('Formatter: Starting alert data collection (prompt lock enabled)');
+
+    try {
+      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
+      if (!alertColor) {
+        console.log('Formatter: Alert cancelled at color prompt');
+        return null;
+      }
+
+      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
+      if (!alertIcon) {
+        console.log('Formatter: Alert cancelled at icon prompt');
+        return null;
+      }
+
+      const alertSubject = prompt('Alert subject:', 'Important');
+      if (!alertSubject) {
+        console.log('Formatter: Alert cancelled at subject prompt');
+        return null;
+      }
+
+      const alertBody = prompt('Alert body text:', 'Your alert message here.');
+      if (!alertBody) {
+        console.log('Formatter: Alert cancelled at body prompt');
+        return null;
+      }
+
+      console.log('Formatter: Alert data collected successfully');
+      return { alertColor, alertIcon, alertSubject, alertBody };
+    } finally {
+      // Always unlock prompting, even if user cancels
+      isPromptingUser = false;
+      console.log('Formatter: Alert data collection complete (prompt lock released)');
+    }
   }
 
   // Format detection
@@ -1076,8 +1115,15 @@ const FormatterFeature = (() => {
         break;
 
       case 'link':
+        isPromptingUser = true;
         const url = prompt('Enter URL:', 'https://');
-        if (!url) return;
+        isPromptingUser = false;
+
+        if (!url) {
+          console.log('Formatter: Link insertion cancelled by user');
+          return;
+        }
+
         replacement = `[${hasSelection ? selection : 'link text'}](${url})`;
         cursorPos = hasSelection ? start + replacement.length : start + 1;
         break;
@@ -1139,19 +1185,13 @@ const FormatterFeature = (() => {
         break;
 
       case 'alert':
-        const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
-        if (!alertColor) return;
+        const alertData = collectAlertData();
+        if (!alertData) {
+          console.log('Formatter: Alert insertion cancelled by user');
+          return;
+        }
 
-        const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
-        if (!alertIcon) return;
-
-        const alertSubject = prompt('Alert subject:', 'Important');
-        if (!alertSubject) return;
-
-        const alertBody = prompt('Alert body text:', 'Your alert message here.');
-        if (!alertBody) return;
-
-        replacement = `> [!color:${alertColor}] #### [!icon:${alertIcon}] ${alertSubject}\n> ${alertBody}`;
+        replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
         cursorPos = start + replacement.length;
         break;
 
