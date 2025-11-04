@@ -10,6 +10,7 @@ const FormatterFeature = (() => {
   let isActive = false;
   let styleElement = null;
   let isPromptingUser = false; // Prevent blur handlers from hiding toolbar during prompts
+  let isInsertingText = false; // Prevent MutationObserver from interfering during text insertion
 
   // Initialize the feature
   function init() {
@@ -122,6 +123,12 @@ const FormatterFeature = (() => {
   // Initialize fields
   function initializeFields() {
     if (!isActive) return;
+
+    // Don't re-initialize while we're inserting text - prevents interference
+    if (isInsertingText) {
+      console.log('Formatter: Skipping initializeFields - text insertion in progress');
+      return;
+    }
 
     // Clean up stale references
     if (activeField && !document.body.contains(activeField)) {
@@ -961,6 +968,7 @@ const FormatterFeature = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
+    isInsertingText = true; // Lock to prevent MutationObserver interference
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
@@ -1224,6 +1232,11 @@ const FormatterFeature = (() => {
 
     // Update field value using native setter to avoid React state issues
     console.log('Formatter: Setting field value, replacement length:', replacement?.length);
+
+    // Lock to prevent MutationObserver from interfering
+    isInsertingText = true;
+    console.log('Formatter: Text insertion lock enabled');
+
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     const newValue = before + replacement + after;
     console.log('Formatter: New value length:', newValue.length, 'old length:', text.length);
@@ -1247,8 +1260,11 @@ const FormatterFeature = (() => {
             // Verify field still exists in DOM
             if (!document.body.contains(field)) {
               console.log('Formatter: Field removed from DOM, skipping event dispatch');
+              isInsertingText = false; // Unlock even if field is gone
               return;
             }
+
+            console.log('Formatter: Dispatching input event, field value length:', field.value.length);
 
             // Set cursor position now that React has settled
             if (cursorPos !== null) {
@@ -1267,6 +1283,7 @@ const FormatterFeature = (() => {
             });
 
             field.dispatchEvent(inputEvent);
+            console.log('Formatter: Input event dispatched');
 
             // Also dispatch a change event after a tiny delay
             setTimeout(() => {
@@ -1276,11 +1293,17 @@ const FormatterFeature = (() => {
                   cancelable: false
                 });
                 field.dispatchEvent(changeEvent);
+                console.log('Formatter: Change event dispatched');
               }
+
+              // Unlock after all events are dispatched
+              isInsertingText = false;
+              console.log('Formatter: Text insertion lock released');
             }, 10);
           } catch (error) {
             // If dispatching fails, silently log and continue
             console.warn('Formatter: Event dispatch warning (non-critical):', error.message);
+            isInsertingText = false; // Unlock even on error
           }
         }, 50); // 50ms delay to let React settle
       });
