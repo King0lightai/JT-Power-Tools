@@ -5,6 +5,7 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
+  quickJobSwitcher: true,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',

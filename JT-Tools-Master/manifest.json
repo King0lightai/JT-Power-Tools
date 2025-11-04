@@ -32,6 +32,7 @@
         "features/formatter.js",
         "features/dark-mode.js",
         "features/rgb-theme.js",
+        "features/job-switcher.js",
         "content.js"
       ],
       "run_at": "document_end"
