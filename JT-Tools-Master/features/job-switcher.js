@@ -1,5 +1,5 @@
 // JobTread Quick Job Switcher Feature
-// Keyboard shortcut (Ctrl/Cmd+J) to quickly search and switch jobs
+// Keyboard shortcut (Alt+J) to quickly search and switch jobs
 
 const QuickJobSwitcherFeature = (() => {
   let isActive = false;
@@ -25,7 +25,7 @@ const QuickJobSwitcherFeature = (() => {
     // Listen for keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown, true);
 
-    console.log('QuickJobSwitcher: ✅ Listening for Ctrl/Cmd+J keyboard shortcut');
+    console.log('QuickJobSwitcher: ✅ Listening for Alt+J keyboard shortcut');
   }
 
   /**
@@ -51,9 +51,9 @@ const QuickJobSwitcherFeature = (() => {
    * Handle keydown events
    */
   function handleKeyDown(e) {
-    // Toggle quick search: Ctrl+J or Cmd+J
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'j' || e.key === 'J') && !isSearching) {
-      console.log('QuickJobSwitcher: 🎯 Ctrl+J detected!');
+    // Toggle quick search: Alt+J
+    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'j' || e.key === 'J') && !isSearching) {
+      console.log('QuickJobSwitcher: 🎯 Alt+J detected!');
       e.preventDefault();
       e.stopPropagation();
       openQuickSearch();

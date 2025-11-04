@@ -5,6 +5,7 @@ const defaultSettings = {
   formatter: true,
   darkMode: false,
   rgbTheme: false,
+  quickJobSwitcher: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -101,6 +102,7 @@ async function loadSettings() {
     document.getElementById('formatter').checked = settings.formatter;
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
+    document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -174,6 +176,7 @@ async function getCurrentSettings() {
     formatter: document.getElementById('formatter').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
+    quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
