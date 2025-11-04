@@ -141,12 +141,17 @@ async function saveSettings(settings) {
       showStatus('RGB Custom Theme requires a premium license', 'error');
       document.getElementById('rgbTheme').checked = false;
       settings.rgbTheme = false;
+      // Hide panel since RGB theme can't be enabled
+      const themeCustomization = document.getElementById('themeCustomization');
+      themeCustomization.style.display = 'none';
       return;
     }
 
-    // Show/hide theme customization panel
+    // Show/hide theme customization panel (requires both license and toggle)
     const themeCustomization = document.getElementById('themeCustomization');
-    themeCustomization.style.display = settings.rgbTheme ? 'block' : 'none';
+    const shouldShowPanel = hasLicense && settings.rgbTheme;
+    themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
+    console.log('saveSettings: Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -457,7 +462,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Get settings and update theme panel visibility immediately
       const settings = await getCurrentSettings();
+
+      // Update theme panel visibility right away (before saveSettings validation)
+      const themeCustomization = document.getElementById('themeCustomization');
+      const hasLicense = await LicenseService.hasValidLicense();
+      const shouldShowPanel = hasLicense && settings.rgbTheme;
+      themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
+      console.log('Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
+
       await saveSettings(settings);
     });
   });
