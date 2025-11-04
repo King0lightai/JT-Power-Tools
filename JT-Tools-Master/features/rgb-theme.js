@@ -631,6 +631,11 @@ const CustomThemeFeature = (() => {
     const style = element.getAttribute('style');
     if (!style) return;
 
+    // Skip draggable elements (tags) - they should keep their original colors
+    if (element.getAttribute('draggable') === 'true') {
+      return;
+    }
+
     // Check if element has both background-color and color in inline styles
     const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
     const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
