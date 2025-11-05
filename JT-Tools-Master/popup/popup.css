@@ -60,6 +60,82 @@ header h1 {
   background: #ffffff;
 }
 
+/* Feature Categories (Collapsible) */
+.feature-category {
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  cursor: pointer;
+  background: #fafafa;
+  transition: background 0.1s ease;
+  user-select: none;
+}
+
+.category-header:hover {
+  background: #f5f5f5;
+}
+
+.category-icon {
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.category-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.category-count {
+  font-size: 10px;
+  color: #999;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 8px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.category-toggle {
+  font-size: 10px;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.category-header.collapsed .category-toggle {
+  transform: rotate(-90deg);
+}
+
+.category-features {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.category-features.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Feature items inside categories */
+.category-features .feature-item {
+  border-bottom: 1px solid #f5f5f5;
+  background: #ffffff;
+}
+
+.category-features .feature-item:last-child {
+  border-bottom: none;
+}
+
 .feature-item {
   display: flex;
   align-items: center;
