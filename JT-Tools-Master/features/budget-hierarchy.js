@@ -52,27 +52,30 @@ const BudgetHierarchyFeature = (() => {
   }
 
   // Generate 5 shades from a base color
-  function generateShades(baseColor) {
+  function generateShades(baseColor, isDarkMode = false) {
     const luminance = getLuminance(baseColor);
     const isDark = luminance < 0.5;
+
+    // For dark mode, use smaller steps for closer shading
+    const step = isDarkMode ? 10 : 15;
 
     if (isDark) {
       // For dark backgrounds, progressively lighten
       return [
         baseColor,                           // Level 1: Base (darkest)
-        adjustBrightness(baseColor, 15),    // Level 2
-        adjustBrightness(baseColor, 30),    // Level 3
-        adjustBrightness(baseColor, 45),    // Level 4
-        adjustBrightness(baseColor, 60)     // Level 5 (lightest)
+        adjustBrightness(baseColor, step),       // Level 2
+        adjustBrightness(baseColor, step * 2),   // Level 3
+        adjustBrightness(baseColor, step * 3),   // Level 4
+        adjustBrightness(baseColor, step * 4)    // Level 5 (lightest)
       ];
     } else {
       // For light backgrounds, progressively darken
       return [
-        adjustBrightness(baseColor, -60),   // Level 1 (darkest)
-        adjustBrightness(baseColor, -45),   // Level 2
-        adjustBrightness(baseColor, -30),   // Level 3
-        adjustBrightness(baseColor, -15),   // Level 4
-        baseColor                            // Level 5: Base (lightest)
+        adjustBrightness(baseColor, -step * 4), // Level 1 (darkest)
+        adjustBrightness(baseColor, -step * 3), // Level 2
+        adjustBrightness(baseColor, -step * 2), // Level 3
+        adjustBrightness(baseColor, -step),     // Level 4
+        baseColor                                // Level 5: Base (lightest)
       ];
     }
   }
@@ -92,7 +95,7 @@ const BudgetHierarchyFeature = (() => {
     if (window.DarkModeFeature && window.DarkModeFeature.isActive()) {
       return {
         type: 'dark',
-        baseColor: '#374151' // gray-700 as base for dark mode
+        baseColor: '#424242' // Neutral dark gray (less blue)
       };
     }
 
@@ -162,7 +165,8 @@ const BudgetHierarchyFeature = (() => {
 
     // Get active theme and generate shades
     const theme = getActiveTheme();
-    const shades = generateShades(theme.baseColor);
+    const isDarkMode = theme.type === 'dark';
+    const shades = generateShades(theme.baseColor, isDarkMode);
 
     // Generate hover shades (slightly darker/lighter than base)
     const hoverShades = shades.map(shade => {
@@ -199,6 +203,24 @@ const BudgetHierarchyFeature = (() => {
       .jt-group-level-3 > div,
       .jt-group-level-4 > div,
       .jt-group-level-5 > div {
+        background-color: inherit !important;
+      }
+
+      /* Apply shading to indent spacer divs specifically */
+      .jt-group-level-1 > div.pl-3\\.5,
+      .jt-group-level-2 > div.pl-3\\.5,
+      .jt-group-level-3 > div.pl-3\\.5,
+      .jt-group-level-4 > div.pl-3\\.5,
+      .jt-group-level-5 > div.pl-3\\.5 {
+        background-color: inherit !important;
+      }
+
+      /* Override JobTread's bg-white and bg-blue-* classes on spacers */
+      .jt-group-level-1 > div.pl-3\\.5[class*="bg-"],
+      .jt-group-level-2 > div.pl-3\\.5[class*="bg-"],
+      .jt-group-level-3 > div.pl-3\\.5[class*="bg-"],
+      .jt-group-level-4 > div.pl-3\\.5[class*="bg-"],
+      .jt-group-level-5 > div.pl-3\\.5[class*="bg-"] {
         background-color: inherit !important;
       }
     `;
