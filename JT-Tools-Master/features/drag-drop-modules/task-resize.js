@@ -43,17 +43,30 @@ const TaskResize = (() => {
   function addResizeHandle(card) {
     // Make the card position relative for absolute positioning of handle
     card.style.position = 'relative';
+    // Ensure card doesn't prevent handle interaction
+    card.style.overflow = 'visible';
 
     // Create resize handle element (solid bar like left border)
     const handle = document.createElement('div');
     handle.className = 'jt-task-resize-handle';
     handle.title = 'Drag to extend task end date';
 
+    // Ensure the handle is interactive
+    handle.style.pointerEvents = 'auto';
+    handle.style.cursor = 'ew-resize';
+
     // Append handle to card
     card.appendChild(handle);
 
-    // Attach event listener
-    handle.addEventListener('mousedown', (e) => handleResizeStart(e, card));
+    // Attach event listeners
+    handle.addEventListener('mousedown', (e) => handleResizeStart(e, card), { capture: true });
+
+    // Add visual feedback on hover
+    handle.addEventListener('mouseenter', () => {
+      console.log('[TaskResize] Mouse entered resize handle');
+    });
+
+    console.log('[TaskResize] Added resize handle to card');
   }
 
   /**
@@ -62,10 +75,19 @@ const TaskResize = (() => {
    * @param {HTMLElement} card - The task card being resized
    */
   function handleResizeStart(e, card) {
+    // Only trigger on left mouse button
+    if (e.button !== 0) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
 
-    console.log('[TaskResize] Resize started');
+    console.log('[TaskResize] ========================================');
+    console.log('[TaskResize] Resize started!');
+    console.log('[TaskResize] Mouse position:', e.clientX, e.clientY);
+    console.log('[TaskResize] ========================================');
 
     // Get the parent cell of this task
     const startCell = card.closest('td.group.text-xs');
@@ -87,14 +109,18 @@ const TaskResize = (() => {
     startCell.classList.add('jt-resize-preview');
 
     // Prevent dragging the task card itself
+    const originalDraggable = card.getAttribute('draggable');
     card.setAttribute('draggable', 'false');
+    card.dataset.originalDraggable = originalDraggable || 'true';
 
     // Attach document-level listeners
-    document.addEventListener('mousemove', handleResizeMove);
-    document.addEventListener('mouseup', handleResizeEnd);
+    document.addEventListener('mousemove', handleResizeMove, { capture: true });
+    document.addEventListener('mouseup', handleResizeEnd, { capture: true });
 
     // Prevent text selection
     document.body.style.userSelect = 'none';
+
+    console.log('[TaskResize] Event listeners attached, ready to resize');
   }
 
   /**
@@ -184,7 +210,11 @@ const TaskResize = (() => {
     // Clean up visual feedback
     if (resizeState.taskElement) {
       resizeState.taskElement.classList.remove('jt-task-resizing');
-      resizeState.taskElement.setAttribute('draggable', 'true');
+
+      // Restore original draggable state
+      const originalDraggable = resizeState.taskElement.dataset.originalDraggable || 'true';
+      resizeState.taskElement.setAttribute('draggable', originalDraggable);
+      delete resizeState.taskElement.dataset.originalDraggable;
     }
 
     resizeState.highlightedCells.forEach(cell => {
@@ -198,12 +228,14 @@ const TaskResize = (() => {
     resizeState.currentEndCell = null;
     resizeState.highlightedCells = [];
 
-    // Remove document-level listeners
-    document.removeEventListener('mousemove', handleResizeMove);
-    document.removeEventListener('mouseup', handleResizeEnd);
+    // Remove document-level listeners with capture
+    document.removeEventListener('mousemove', handleResizeMove, { capture: true });
+    document.removeEventListener('mouseup', handleResizeEnd, { capture: true });
 
     // Restore text selection
     document.body.style.userSelect = '';
+
+    console.log('[TaskResize] Resize ended, cleanup complete');
   }
 
   /**
