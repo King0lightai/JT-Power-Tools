@@ -176,6 +176,22 @@ const BudgetHierarchyFeature = (() => {
         : adjustBrightness(shade, -10); // Darken for light backgrounds
     });
 
+    // Generate lighter shades for line items under groups
+    const itemShades = shades.map(shade => {
+      const luminance = getLuminance(shade);
+      // Make items slightly lighter than their parent group
+      return luminance < 0.5
+        ? adjustBrightness(shade, 8)  // Lighten for dark backgrounds
+        : adjustBrightness(shade, -8); // Darken less for light backgrounds
+    });
+
+    const itemHoverShades = itemShades.map(shade => {
+      const luminance = getLuminance(shade);
+      return luminance < 0.5
+        ? adjustBrightness(shade, -12)
+        : adjustBrightness(shade, -8);
+    });
+
     styleElement = document.createElement('style');
     styleElement.id = 'jt-budget-hierarchy-styles';
     styleElement.textContent = `
@@ -190,12 +206,26 @@ const BudgetHierarchyFeature = (() => {
       .jt-group-level-4 { background-color: ${shades[3]} !important; }
       .jt-group-level-5 { background-color: ${shades[4]} !important; }
 
-      /* Hover states */
+      /* Hover states for groups */
       .jt-group-level-1:hover { background-color: ${hoverShades[0]} !important; }
       .jt-group-level-2:hover { background-color: ${hoverShades[1]} !important; }
       .jt-group-level-3:hover { background-color: ${hoverShades[2]} !important; }
       .jt-group-level-4:hover { background-color: ${hoverShades[3]} !important; }
       .jt-group-level-5:hover { background-color: ${hoverShades[4]} !important; }
+
+      /* Line items under groups (slightly lighter) */
+      .jt-item-under-level-1 { background-color: ${itemShades[0]} !important; }
+      .jt-item-under-level-2 { background-color: ${itemShades[1]} !important; }
+      .jt-item-under-level-3 { background-color: ${itemShades[2]} !important; }
+      .jt-item-under-level-4 { background-color: ${itemShades[3]} !important; }
+      .jt-item-under-level-5 { background-color: ${itemShades[4]} !important; }
+
+      /* Hover states for items */
+      .jt-item-under-level-1:hover { background-color: ${itemHoverShades[0]} !important; }
+      .jt-item-under-level-2:hover { background-color: ${itemHoverShades[1]} !important; }
+      .jt-item-under-level-3:hover { background-color: ${itemHoverShades[2]} !important; }
+      .jt-item-under-level-4:hover { background-color: ${itemHoverShades[3]} !important; }
+      .jt-item-under-level-5:hover { background-color: ${itemHoverShades[4]} !important; }
 
       /* Apply shading to all cells in the group row */
       /* BUT preserve yellow highlighting for unsaved changes */
@@ -229,6 +259,16 @@ const BudgetHierarchyFeature = (() => {
       .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
       .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
+        background-color: inherit !important;
+      }
+
+      /* Apply shading to all cells in line item rows */
+      /* BUT preserve yellow highlighting for unsaved changes */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]),
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]),
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]),
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]),
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) {
         background-color: inherit !important;
       }
     `;
@@ -299,24 +339,78 @@ const BudgetHierarchyFeature = (() => {
     console.log(`BudgetHierarchy: Applied level ${level} shading to group`);
   }
 
+  // Apply shading to line items under a group
+  function shadeItemsUnderGroup(groupRow, level) {
+    if (!groupRow || !groupRow.parentElement) return;
+
+    // Find all sibling rows after this group
+    let currentRow = groupRow.nextElementSibling;
+
+    while (currentRow) {
+      // Stop if we hit another group (has font-bold class in first cell)
+      const firstCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
+      if (firstCell) {
+        // This is another group, stop here
+        break;
+      }
+
+      // Check if this is a valid budget row (has the group/row class)
+      if (currentRow.classList.contains('group/row')) {
+        // Remove any existing item-level classes
+        for (let i = 1; i <= 5; i++) {
+          currentRow.classList.remove(`jt-item-under-level-${i}`);
+        }
+
+        // Add the appropriate item-level class
+        currentRow.classList.add(`jt-item-under-level-${level}`);
+      }
+
+      currentRow = currentRow.nextElementSibling;
+    }
+  }
+
+  // Remove all item shading
+  function removeAllItemShading() {
+    for (let i = 1; i <= 5; i++) {
+      const shadedItems = document.querySelectorAll(`.jt-item-under-level-${i}`);
+      shadedItems.forEach(el => {
+        el.classList.remove(`jt-item-under-level-${i}`);
+      });
+    }
+  }
+
   // Apply shading to all groups
   function applyGroupShading() {
     const groupCells = findAllGroupCells();
     console.log(`BudgetHierarchy: Found ${groupCells.length} groups`);
 
+    // First, remove all existing shading from items
+    removeAllItemShading();
+
     groupCells.forEach(groupCell => {
+      const level = getGroupNestingLevel(groupCell);
+      const row = findParentRow(groupCell);
+
+      // Apply shading to the group
       applyShading(groupCell);
+
+      // Apply shading to items under this group
+      shadeItemsUnderGroup(row, level);
     });
   }
 
   // Remove all shading classes
   function removeAllShading() {
+    // Remove group shading
     for (let i = 1; i <= 5; i++) {
       const shadedElements = document.querySelectorAll(`.jt-group-level-${i}`);
       shadedElements.forEach(el => {
         el.classList.remove(`jt-group-level-${i}`);
       });
     }
+
+    // Remove item shading
+    removeAllItemShading();
   }
 
   // Start observing for new groups
