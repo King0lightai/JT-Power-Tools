@@ -34,6 +34,11 @@ const featureModules = {
     name: 'Quick Job Switcher',
     feature: () => window.QuickJobSwitcherFeature,
     instance: null
+  },
+  budgetHierarchy: {
+    name: 'Budget Hierarchy Shading',
+    feature: () => window.BudgetHierarchyFeature,
+    instance: null
   }
 };
 
@@ -45,6 +50,7 @@ let currentSettings = {
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
+  budgetHierarchy: false,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
@@ -159,6 +165,20 @@ function handleSettingsChange(newSettings) {
         RGBThemeFeature.updateColors(newSettings.themeColors);
       }
     }
+  }
+
+  // Refresh budget hierarchy shading when theme changes
+  const themeChanged =
+    newSettings.darkMode !== currentSettings.darkMode ||
+    newSettings.rgbTheme !== currentSettings.rgbTheme ||
+    (newSettings.rgbTheme && JSON.stringify(newSettings.themeColors) !== JSON.stringify(currentSettings.themeColors));
+
+  if (themeChanged && window.BudgetHierarchyFeature && window.BudgetHierarchyFeature.isActive()) {
+    console.log('JT-Tools: Theme changed, refreshing budget hierarchy shading');
+    // Small delay to ensure theme is applied first
+    setTimeout(() => {
+      window.BudgetHierarchyFeature.refreshShading();
+    }, 100);
   }
 
   // Update current settings

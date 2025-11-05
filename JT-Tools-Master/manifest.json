@@ -33,6 +33,7 @@
         "features/dark-mode.js",
         "features/rgb-theme.js",
         "features/job-switcher.js",
+        "features/budget-hierarchy.js",
         "content.js"
       ],
       "run_at": "document_end"
