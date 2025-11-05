@@ -372,45 +372,6 @@ const BudgetHierarchyFeature = (() => {
     console.log(`BudgetHierarchy: Applied level ${level} shading to group`);
   }
 
-  // Apply shading to line items under a group
-  function shadeItemsUnderGroup(groupRow, groupLevel) {
-    if (!groupRow || !groupRow.parentElement) return;
-
-    // Find all sibling rows after this group
-    let currentRow = groupRow.nextElementSibling;
-
-    while (currentRow) {
-      // Stop if we hit another group at the same or shallower level
-      const firstCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
-      if (firstCell) {
-        const otherGroupLevel = getGroupNestingLevel(firstCell);
-        // Stop if this group is at the same or shallower level (sibling or parent)
-        if (otherGroupLevel <= groupLevel) {
-          break;
-        }
-        // If it's a deeper nested group, continue (it's a child group)
-      }
-
-      // Check if this is a valid budget row (has the group/row class)
-      if (currentRow.classList.contains('group/row')) {
-        const itemLevel = getRowNestingLevel(currentRow);
-
-        // Only shade items that are deeper than this group (children, not siblings)
-        if (itemLevel > groupLevel) {
-          // Remove any existing item-level classes
-          for (let i = 1; i <= 5; i++) {
-            currentRow.classList.remove(`jt-item-under-level-${i}`);
-          }
-
-          // Add the appropriate item-level class (use the group's level)
-          currentRow.classList.add(`jt-item-under-level-${groupLevel}`);
-        }
-        // If itemLevel <= groupLevel, it's a sibling or at parent level, skip it
-      }
-
-      currentRow = currentRow.nextElementSibling;
-    }
-  }
 
   // Remove all item shading
   function removeAllItemShading() {
@@ -422,6 +383,29 @@ const BudgetHierarchyFeature = (() => {
     }
   }
 
+  // Find the parent group for a line item by looking backwards
+  function findParentGroupForItem(itemRow) {
+    if (!itemRow) return null;
+
+    const itemLevel = getRowNestingLevel(itemRow);
+    let currentRow = itemRow.previousElementSibling;
+
+    // Look backwards to find the nearest group at a shallower level
+    while (currentRow) {
+      const groupCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
+      if (groupCell) {
+        const groupLevel = getGroupNestingLevel(groupCell);
+        // If this group is at a shallower level, it's the parent
+        if (groupLevel < itemLevel) {
+          return { row: currentRow, level: groupLevel };
+        }
+      }
+      currentRow = currentRow.previousElementSibling;
+    }
+
+    return null; // No parent group found
+  }
+
   // Apply shading to all groups
   function applyGroupShading() {
     const groupCells = findAllGroupCells();
@@ -430,15 +414,33 @@ const BudgetHierarchyFeature = (() => {
     // First, remove all existing shading from items
     removeAllItemShading();
 
+    // Apply shading to all groups
     groupCells.forEach(groupCell => {
-      const level = getGroupNestingLevel(groupCell);
-      const row = findParentRow(groupCell);
-
-      // Apply shading to the group
       applyShading(groupCell);
+    });
 
-      // Apply shading to items under this group
-      shadeItemsUnderGroup(row, level);
+    // Now shade all line items by finding their parent groups
+    const allRows = document.querySelectorAll('.group\\/row');
+    console.log(`BudgetHierarchy: Found ${allRows.length} total rows`);
+
+    allRows.forEach(row => {
+      // Skip if it's a group row
+      const isGroup = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
+      if (isGroup) return;
+
+      // This is a line item, find its parent group
+      const parentGroup = findParentGroupForItem(row);
+      if (parentGroup) {
+        console.log(`BudgetHierarchy: Item found parent at level ${parentGroup.level}`);
+        // Remove any existing item-level classes
+        for (let i = 1; i <= 5; i++) {
+          row.classList.remove(`jt-item-under-level-${i}`);
+        }
+        // Add the parent group's level
+        row.classList.add(`jt-item-under-level-${parentGroup.level}`);
+      } else {
+        console.log(`BudgetHierarchy: Item has no parent group`);
+      }
     });
   }
 
