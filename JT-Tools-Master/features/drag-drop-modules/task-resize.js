@@ -44,15 +44,10 @@ const TaskResize = (() => {
     // Make the card position relative for absolute positioning of handle
     card.style.position = 'relative';
 
-    // Create resize handle element
+    // Create resize handle element (solid bar like left border)
     const handle = document.createElement('div');
     handle.className = 'jt-task-resize-handle';
-    handle.title = 'Drag to expand task across days';
-    handle.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M9 5l7 7-7 7"/>
-      </svg>
-    `;
+    handle.title = 'Drag to extend task end date';
 
     // Append handle to card
     card.appendChild(handle);
@@ -157,25 +152,32 @@ const TaskResize = (() => {
 
     console.log('[TaskResize] Resize ended');
 
-    // Calculate the number of days
+    // Calculate the number of days spanned
     const numberOfDays = resizeState.highlightedCells.length;
 
-    // Update the task's Days field if it changed
-    if (numberOfDays > 1 && numberOfDays !== resizeState.originalDays) {
-      const updated = updateTaskDays(numberOfDays);
+    // Get the end date from the last cell
+    if (numberOfDays > 1 && resizeState.highlightedCells.length > 0) {
+      const lastCell = resizeState.highlightedCells[resizeState.highlightedCells.length - 1];
+      const endDateInfo = window.DateUtils ? window.DateUtils.extractFullDateInfo(lastCell) : null;
+
+      console.log('[TaskResize] End date info:', endDateInfo);
+
+      // Update the task's End date
+      const updated = updateTaskEndDate(endDateInfo);
 
       // Show notification
       if (window.UIUtils) {
-        if (updated) {
-          window.UIUtils.showNotification(`Task expanded to ${numberOfDays} days`);
-        } else {
-          window.UIUtils.showNotification(`Click task to open sidebar, then try resizing to ${numberOfDays} days`);
+        if (updated && endDateInfo) {
+          const endDateStr = formatDate(endDateInfo);
+          window.UIUtils.showNotification(`Task extended to ${endDateStr} (${numberOfDays} days)`);
+        } else if (!updated) {
+          window.UIUtils.showNotification('Click task to open sidebar, then try resizing again');
         }
       }
     } else if (numberOfDays === 1) {
-      // If dragged back to 1 day, just show a message
+      // If dragged back to 1 day
       if (window.UIUtils) {
-        window.UIUtils.showNotification('Task kept at 1 day');
+        window.UIUtils.showNotification('Task end date unchanged');
       }
     }
 
@@ -237,61 +239,93 @@ const TaskResize = (() => {
   }
 
   /**
-   * Update the task's Days field in the sidebar
-   * @param {number} days - The new number of days
+   * Format date info into readable string
+   * @param {Object} dateInfo - Date info object with day, month, year
+   * @returns {string} - Formatted date string
+   */
+  function formatDate(dateInfo) {
+    if (!dateInfo || !dateInfo.day || !dateInfo.month || !dateInfo.year) {
+      return 'Unknown Date';
+    }
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthName = months[dateInfo.month - 1] || dateInfo.month;
+
+    return `${monthName} ${dateInfo.day}, ${dateInfo.year}`;
+  }
+
+  /**
+   * Update the task's End date in the sidebar
+   * @param {Object} endDateInfo - Date info object with day, month, year
    * @returns {boolean} - True if update was successful
    */
-  function updateTaskDays(days) {
-    console.log(`[TaskResize] Attempting to update task to ${days} days`);
+  function updateTaskEndDate(endDateInfo) {
+    console.log(`[TaskResize] Attempting to update task end date to:`, endDateInfo);
 
-    // Find the Days input field in the sidebar
+    if (!endDateInfo || !endDateInfo.day || !endDateInfo.month || !endDateInfo.year) {
+      console.warn('[TaskResize] Invalid end date info');
+      return false;
+    }
+
+    // Find the task sidebar
     const sidebar = document.querySelector('.overflow-y-auto.overscroll-contain.sticky');
     if (!sidebar) {
-      console.warn('[TaskResize] Task sidebar not open - cannot update Days field');
+      console.warn('[TaskResize] Task sidebar not open - cannot update End date');
       return false;
     }
 
-    // Find the Days input - look for the label with "Days" text and "Add Baseline" button nearby
-    const labels = Array.from(sidebar.querySelectorAll('div.font-bold'));
-    const daysLabel = labels.find(div => {
-      const text = div.textContent.trim();
-      return text === 'Days' || text.startsWith('Days');
+    // Find the End date section - look for "End" label
+    const labels = Array.from(sidebar.querySelectorAll('span.font-bold'));
+    const endLabel = labels.find(span => span.textContent.trim() === 'End');
+
+    if (!endLabel) {
+      console.warn('[TaskResize] Could not find End label in sidebar');
+      return false;
+    }
+
+    // Find the date dropdown container
+    const endSection = endLabel.closest('div.flex-1');
+    const dateDropdown = endSection?.querySelector('div.group.items-center');
+
+    if (!dateDropdown) {
+      console.warn('[TaskResize] Could not find End date dropdown');
+      return false;
+    }
+
+    // Click on the dropdown to open the date picker
+    console.log('[TaskResize] Clicking End date dropdown to open picker');
+    dateDropdown.click();
+
+    // Wait for date picker to open, then select the date
+    setTimeout(() => {
+      selectDateInPicker(endDateInfo);
+    }, 100);
+
+    return true;
+  }
+
+  /**
+   * Select a date in the opened date picker
+   * @param {Object} dateInfo - Date info object with day, month, year
+   */
+  function selectDateInPicker(dateInfo) {
+    console.log('[TaskResize] Attempting to select date in picker:', dateInfo);
+
+    // Look for the calendar popup/modal
+    // The date picker might be in a popup, look for buttons with the day number
+    const dayButtons = Array.from(document.querySelectorAll('button, div[role="button"]'));
+
+    // Find button with matching day number
+    const dayButton = dayButtons.find(btn => {
+      const text = btn.textContent.trim();
+      return text === dateInfo.day.toString();
     });
 
-    if (!daysLabel) {
-      console.warn('[TaskResize] Could not find Days label in sidebar');
-      return false;
-    }
-
-    // Find the input field after the Days label
-    // Based on the HTML structure, it's a sibling of the label's parent
-    const daysSection = daysLabel.parentElement?.parentElement;
-    const daysInput = daysSection?.querySelector('input.rounded-sm.border.p-2');
-
-    if (daysInput) {
-      // Store old value for logging
-      const oldValue = daysInput.value;
-
-      // Update the input value
-      daysInput.value = days.toString();
-
-      // Trigger input event to notify the application
-      const inputEvent = new Event('input', { bubbles: true });
-      daysInput.dispatchEvent(inputEvent);
-
-      // Also trigger change event
-      const changeEvent = new Event('change', { bubbles: true });
-      daysInput.dispatchEvent(changeEvent);
-
-      // Also trigger blur to ensure the change is committed
-      const blurEvent = new Event('blur', { bubbles: true });
-      daysInput.dispatchEvent(blurEvent);
-
-      console.log(`[TaskResize] Updated Days field from ${oldValue} to ${days}`);
-      return true;
+    if (dayButton) {
+      console.log('[TaskResize] Found day button, clicking:', dateInfo.day);
+      dayButton.click();
     } else {
-      console.warn('[TaskResize] Could not find Days input field in sidebar');
-      return false;
+      console.warn('[TaskResize] Could not find day button in date picker');
     }
   }
 
