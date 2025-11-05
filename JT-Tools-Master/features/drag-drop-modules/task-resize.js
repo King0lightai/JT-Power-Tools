@@ -79,16 +79,12 @@ const TaskResize = (() => {
       return;
     }
 
-    // Get current days value
-    const daysInput = document.querySelector('input[value]');
-    const currentDays = daysInput ? parseInt(daysInput.value) || 1 : 1;
-
     resizeState.isResizing = true;
     resizeState.taskElement = card;
     resizeState.startCell = startCell;
     resizeState.currentEndCell = startCell;
     resizeState.startX = e.clientX;
-    resizeState.originalDays = currentDays;
+    resizeState.originalDays = 1; // We'll assume starting at 1 day
     resizeState.highlightedCells = [startCell];
 
     // Add visual feedback
@@ -166,11 +162,20 @@ const TaskResize = (() => {
 
     // Update the task's Days field if it changed
     if (numberOfDays > 1 && numberOfDays !== resizeState.originalDays) {
-      updateTaskDays(numberOfDays);
+      const updated = updateTaskDays(numberOfDays);
 
       // Show notification
       if (window.UIUtils) {
-        window.UIUtils.showNotification(`Task expanded to ${numberOfDays} days`);
+        if (updated) {
+          window.UIUtils.showNotification(`Task expanded to ${numberOfDays} days`);
+        } else {
+          window.UIUtils.showNotification(`Click task to open sidebar, then try resizing to ${numberOfDays} days`);
+        }
+      }
+    } else if (numberOfDays === 1) {
+      // If dragged back to 1 day, just show a message
+      if (window.UIUtils) {
+        window.UIUtils.showNotification('Task kept at 1 day');
       }
     }
 
@@ -234,31 +239,39 @@ const TaskResize = (() => {
   /**
    * Update the task's Days field in the sidebar
    * @param {number} days - The new number of days
+   * @returns {boolean} - True if update was successful
    */
   function updateTaskDays(days) {
-    console.log(`[TaskResize] Updating task to ${days} days`);
+    console.log(`[TaskResize] Attempting to update task to ${days} days`);
 
     // Find the Days input field in the sidebar
     const sidebar = document.querySelector('.overflow-y-auto.overscroll-contain.sticky');
     if (!sidebar) {
-      console.error('[TaskResize] Could not find task sidebar');
-      return;
+      console.warn('[TaskResize] Task sidebar not open - cannot update Days field');
+      return false;
     }
 
-    // Find the Days input - look for the label with "Days" text
-    const labels = Array.from(sidebar.querySelectorAll('div'));
-    const daysLabel = labels.find(div => div.textContent.trim() === 'Days');
+    // Find the Days input - look for the label with "Days" text and "Add Baseline" button nearby
+    const labels = Array.from(sidebar.querySelectorAll('div.font-bold'));
+    const daysLabel = labels.find(div => {
+      const text = div.textContent.trim();
+      return text === 'Days' || text.startsWith('Days');
+    });
 
     if (!daysLabel) {
-      console.error('[TaskResize] Could not find Days label');
-      return;
+      console.warn('[TaskResize] Could not find Days label in sidebar');
+      return false;
     }
 
-    // Find the input field near the Days label
-    const daysContainer = daysLabel.closest('div');
-    const daysInput = daysContainer?.querySelector('input[value]');
+    // Find the input field after the Days label
+    // Based on the HTML structure, it's a sibling of the label's parent
+    const daysSection = daysLabel.parentElement?.parentElement;
+    const daysInput = daysSection?.querySelector('input.rounded-sm.border.p-2');
 
     if (daysInput) {
+      // Store old value for logging
+      const oldValue = daysInput.value;
+
       // Update the input value
       daysInput.value = days.toString();
 
@@ -270,9 +283,15 @@ const TaskResize = (() => {
       const changeEvent = new Event('change', { bubbles: true });
       daysInput.dispatchEvent(changeEvent);
 
-      console.log(`[TaskResize] Updated Days field to ${days}`);
+      // Also trigger blur to ensure the change is committed
+      const blurEvent = new Event('blur', { bubbles: true });
+      daysInput.dispatchEvent(blurEvent);
+
+      console.log(`[TaskResize] Updated Days field from ${oldValue} to ${days}`);
+      return true;
     } else {
-      console.error('[TaskResize] Could not find Days input field');
+      console.warn('[TaskResize] Could not find Days input field in sidebar');
+      return false;
     }
   }
 
@@ -293,6 +312,14 @@ const TaskResize = (() => {
     // Remove all resize handles
     const handles = document.querySelectorAll('.jt-task-resize-handle');
     handles.forEach(handle => handle.remove());
+
+    // Reset position style on all task cards
+    const taskCards = document.querySelectorAll('div.cursor-pointer[style*="background-color"]');
+    taskCards.forEach(card => {
+      if (card.style.position === 'relative') {
+        card.style.position = '';
+      }
+    });
 
     // Remove document-level listeners
     document.removeEventListener('mousemove', handleResizeMove);
