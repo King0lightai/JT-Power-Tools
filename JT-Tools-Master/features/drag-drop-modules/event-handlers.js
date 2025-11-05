@@ -10,6 +10,13 @@ const DragDropEventHandlers = (() => {
    */
   function createHandlers(state, attemptDateChangeFn) {
     function handleDragStart(e) {
+      // Prevent dragging if currently resizing a task
+      if (window.TaskResize && window.TaskResize.isCurrentlyResizing()) {
+        e.preventDefault();
+        console.log('EventHandlers: Drag prevented - task resize in progress');
+        return false;
+      }
+
       state.draggedElement = this;
       this.style.cursor = 'grabbing';
       this.style.opacity = '0.5';
