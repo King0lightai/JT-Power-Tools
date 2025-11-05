@@ -173,8 +173,14 @@ const CustomThemeFeature = (() => {
       /* Use theme background for cards, keep task type color in thick border */
       td div.cursor-pointer[style*="border-left"] {
         background-color: ${background} !important;
+        color: ${text} !important;
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Ensure all text elements within task cards inherit the theme text color */
+      td div.cursor-pointer[style*="border-left"] * {
+        color: inherit !important;
       }
 
       /* === General Styles === */
