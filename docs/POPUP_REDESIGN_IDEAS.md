@@ -25,13 +25,13 @@ Organize features into logical categories with tabs at the top.
 - Schedule Drag & Drop (Premium)
 - Task Duration Adjustment (Premium)
 - Infinite Calendar Scroll (Premium)
-- Contrast Fix
 
 **Tab: Productivity**
 - Text Formatter
 - Quick Job Switcher
 
 **Tab: Appearance**
+- Contrast Fix
 - Dark Mode
 - Custom Theme (Premium)
   - Expands to color pickers when enabled
@@ -58,13 +58,13 @@ Keep single-page scrollable view but organize into collapsible sections.
    - Schedule Drag & Drop (Premium)
    - Task Duration Adjustment (Premium)
    - Infinite Calendar Scroll (Premium)
-   - Contrast Fix
 
 2. **⚡ Productivity Tools** (collapsed by default)
    - Text Formatter
    - Quick Job Switcher
 
 3. **🎨 Appearance & Themes** (collapsed by default)
+   - Contrast Fix
    - Dark Mode
    - Custom Theme (Premium)
    - Budget Hierarchy Shading
@@ -90,7 +90,6 @@ Organize by where features are used in JobTread.
    - Schedule Drag & Drop (Premium)
    - Task Duration Adjustment (Premium)
    - Infinite Calendar Scroll (Premium)
-   - Contrast Fix
 
 2. **Budget View Features**
    - Budget Hierarchy Shading
@@ -98,6 +97,7 @@ Organize by where features are used in JobTread.
 
 3. **Global Features** (work everywhere)
    - Quick Job Switcher
+   - Contrast Fix
    - Dark Mode
    - Custom Theme (Premium)
 
@@ -120,14 +120,14 @@ Split features into two columns for more compact view.
 - Schedule Drag & Drop (Premium)
 - Task Duration Adjustment (Premium)
 - Infinite Calendar Scroll (Premium)
-- Contrast Fix
-- Budget Hierarchy Shading
-
-**Right Column:**
 - Text Formatter
 - Quick Job Switcher
+
+**Right Column:**
+- Contrast Fix
 - Dark Mode
 - Custom Theme (Premium)
+- Budget Hierarchy Shading
 
 **Pros:**
 - More features visible at once
@@ -157,7 +157,6 @@ Combine tabs for major categories with collapsible sub-sections where needed.
   ☐ Schedule Drag & Drop (Premium)
   ☐ Task Duration Adjustment (Premium)
   ☐ Infinite Calendar Scroll (Premium)
-  ☐ Contrast Fix
 
 ⚡ Productivity ▼
   ☐ Text Formatter
@@ -169,6 +168,7 @@ Combine tabs for major categories with collapsible sub-sections where needed.
 
 **Appearance Tab:**
 ```
+☐ Contrast Fix
 ☐ Dark Mode
 ☐ Custom Theme (Premium)
   [Color pickers expand here]
@@ -209,14 +209,13 @@ Why this option works best:
     <div class="category-header" data-category="schedule">
       <span class="category-icon">🗓️</span>
       <span class="category-title">Schedule & Calendar</span>
-      <span class="category-count">4</span>
+      <span class="category-count">3</span>
       <span class="category-toggle">▼</span>
     </div>
     <div class="category-features" data-category-content="schedule">
       <div class="feature-item premium">...</div>
       <div class="feature-item premium">...</div>
       <div class="feature-item premium">...</div>
-      <div class="feature-item">...</div>
     </div>
   </div>
 
@@ -239,10 +238,11 @@ Why this option works best:
     <div class="category-header" data-category="appearance">
       <span class="category-icon">🎨</span>
       <span class="category-title">Appearance & Themes</span>
-      <span class="category-count">3</span>
+      <span class="category-count">4</span>
       <span class="category-toggle">▼</span>
     </div>
     <div class="category-features" data-category-content="appearance">
+      <div class="feature-item">...</div>
       <div class="feature-item">...</div>
       <div class="feature-item premium">...</div>
       <div class="feature-item">...</div>
@@ -363,7 +363,7 @@ document.querySelectorAll('.category-header').forEach(header => {
 │  JT Power Tools              v3.2.0 │
 ├─────────────────────────────────────┤
 │                                     │
-│  🗓️ SCHEDULE & CALENDAR      4   ▼  │
+│  🗓️ SCHEDULE & CALENDAR      3   ▼  │
 │  ┌───────────────────────────────┐ │
 │  │ Schedule Drag & Drop  Premium │ │
 │  │ Change dates in month view  ◉ │ │
@@ -373,9 +373,6 @@ document.querySelectorAll('.category-header').forEach(header => {
 │  ├───────────────────────────────┤ │
 │  │ Infinite Calendar Scroll      │ │
 │  │ Auto-load next/prev months ○  │ │
-│  ├───────────────────────────────┤ │
-│  │ Contrast Fix                  │ │
-│  │ Better text readability    ◉  │ │
 │  └───────────────────────────────┘ │
 │                                     │
 │  ⚡ PRODUCTIVITY TOOLS        2   ▼  │
@@ -387,8 +384,11 @@ document.querySelectorAll('.category-header').forEach(header => {
 │  │ Alt+J to search jobs       ◉  │ │
 │  └───────────────────────────────┘ │
 │                                     │
-│  🎨 APPEARANCE & THEMES      3   ▼  │
+│  🎨 APPEARANCE & THEMES      4   ▼  │
 │  ┌───────────────────────────────┐ │
+│  │ Contrast Fix                  │ │
+│  │ Better text readability    ○  │ │
+│  ├───────────────────────────────┤ │
 │  │ Dark Mode                     │ │
 │  │ Dark theme for interface   ○  │ │
 │  ├───────────────────────────────┤ │
