@@ -36,7 +36,7 @@ Powerful productivity tools for JobTread: Drag & Drop, Dark Mode, Text Formatter
 • Works on budget descriptions and other text areas
 
 **⚡ Quick Job Switcher (Free)**
-• Keyboard shortcut (Alt+J) to instantly open job switcher
+• Keyboard shortcut (J+S) to instantly open job switcher
 • Type to search and filter jobs in real-time
 • Press Enter to select top result and navigate
 • Press Escape to cancel

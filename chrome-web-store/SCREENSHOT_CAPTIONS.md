@@ -38,12 +38,12 @@
 
 ## Screenshot 4: Quick Job Switcher
 **Caption:**
-"Press Alt+J to instantly search jobs. Type to filter, Enter to select. Fully keyboard-driven workflow."
+"Press J+S to instantly search jobs. Type to filter, Enter to select. Fully keyboard-driven workflow."
 
 **What to Show:**
 - Job switcher sidebar open with search focused
 - Show filtered job results based on search query
-- Keyboard shortcut indicator (Alt+J)
+- Keyboard shortcut indicator (J+S)
 - Multiple jobs visible in the list
 
 ---
@@ -153,7 +153,7 @@ Instead of (or in addition to) screenshots, create a short video:
 3. Enable features, show toggles (5 seconds)
 4. Show drag & drop in action (8 seconds)
 5. Show text formatter toolbar (8 seconds)
-6. Show quick job switcher (Alt+J shortcut) (8 seconds)
+6. Show quick job switcher (J+S shortcut) (8 seconds)
 7. Show custom theme customization (8 seconds)
 8. Quick montage of dark mode and all features working (10 seconds)
 9. End card with extension name and "Install Now" (5 seconds)

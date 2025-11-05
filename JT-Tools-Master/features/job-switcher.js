@@ -1,9 +1,10 @@
 // JobTread Quick Job Switcher Feature
-// Keyboard shortcut (Alt+J) to quickly search and switch jobs
+// Keyboard shortcut (J+S) to quickly search and switch jobs
 
 const QuickJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
+  let jKeyPressed = false;
 
   /**
    * Initialize the feature
@@ -19,8 +20,9 @@ const QuickJobSwitcherFeature = (() => {
 
     // Listen for keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('keyup', handleKeyUp, true);
 
-    console.log('QuickJobSwitcher: ✅ Listening for Alt+J keyboard shortcut');
+    console.log('QuickJobSwitcher: ✅ Listening for J+S keyboard shortcut');
   }
 
   /**
@@ -36,6 +38,7 @@ const QuickJobSwitcherFeature = (() => {
     isActive = false;
 
     document.removeEventListener('keydown', handleKeyDown, true);
+    document.removeEventListener('keyup', handleKeyUp, true);
 
     closeSidebar();
 
@@ -46,8 +49,13 @@ const QuickJobSwitcherFeature = (() => {
    * Handle keydown events
    */
   function handleKeyDown(e) {
-    // Open sidebar: Alt+J
-    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'j' || e.key === 'J')) {
+    // Track J key press
+    if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'j' || e.key === 'J')) {
+      jKeyPressed = true;
+    }
+
+    // Open sidebar: J+S (both keys pressed together)
+    if (jKeyPressed && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 's' || e.key === 'S')) {
       // Check if sidebar actually exists (user may have manually closed it)
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
 
@@ -57,12 +65,12 @@ const QuickJobSwitcherFeature = (() => {
       }
 
       if (!isSearchOpen) {
-        console.log('QuickJobSwitcher: 🎯 Alt+J detected!');
+        console.log('QuickJobSwitcher: 🎯 J+S detected!');
         e.preventDefault();
         e.stopPropagation();
         openSidebar();
       } else {
-        console.log('QuickJobSwitcher: Sidebar already open, ignoring Alt+J');
+        console.log('QuickJobSwitcher: Sidebar already open, ignoring J+S');
       }
       return;
     }
@@ -86,6 +94,16 @@ const QuickJobSwitcherFeature = (() => {
       e.stopPropagation();
       closeSidebar();
       return;
+    }
+  }
+
+  /**
+   * Handle keyup events
+   */
+  function handleKeyUp(e) {
+    // Reset J key state when released
+    if (e.key === 'j' || e.key === 'J') {
+      jKeyPressed = false;
     }
   }
 
