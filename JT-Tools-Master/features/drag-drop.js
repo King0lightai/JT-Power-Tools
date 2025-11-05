@@ -115,6 +115,11 @@ const DragDropFeature = (() => {
       window.UIUtils.cleanupDragDrop();
     }
 
+    // Cleanup task resize functionality
+    if (window.TaskResize) {
+      window.TaskResize.cleanup();
+    }
+
     // Remove weekend CSS
     if (window.WeekendUtils) {
       window.WeekendUtils.removeWeekendCSS();
@@ -133,6 +138,11 @@ const DragDropFeature = (() => {
     }
 
     window.UIUtils.initDragAndDrop(eventHandlers);
+
+    // Initialize task card resize functionality
+    if (window.TaskResize) {
+      window.TaskResize.initializeTaskResize();
+    }
   }
 
   // Public API
