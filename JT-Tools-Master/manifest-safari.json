@@ -1,0 +1,56 @@
+{
+  "manifest_version": 2,
+  "name": "JT Power Tools",
+  "version": "3.1.0",
+  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Quick Job Switcher, Dark Mode, and Custom Theme with toggle controls",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "https://*.jobtread.com/*",
+    "https://api.gumroad.com/*"
+  ],
+  "browser_action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "JT Power Tools"
+  },
+  "background": {
+    "scripts": [
+      "utils/browser-polyfill.js",
+      "background/background-safari.js"
+    ],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.jobtread.com/*"],
+      "js": [
+        "utils/browser-polyfill.js",
+        "features/drag-drop-modules/date-utils.js",
+        "features/drag-drop-modules/weekend-utils.js",
+        "features/drag-drop-modules/ui-utils.js",
+        "features/drag-drop-modules/sidebar-manager.js",
+        "features/drag-drop-modules/date-changer.js",
+        "features/drag-drop-modules/event-handlers.js",
+        "features/drag-drop.js",
+        "features/contrast-fix.js",
+        "features/formatter.js",
+        "features/dark-mode.js",
+        "features/rgb-theme.js",
+        "features/job-switcher.js",
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    "styles/formatter-toolbar.css",
+    "styles/dark-mode.css"
+  ],
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "browser_specific_settings": {
+    "safari": {
+      "strict_min_version": "14.0"
+    }
+  }
+}
