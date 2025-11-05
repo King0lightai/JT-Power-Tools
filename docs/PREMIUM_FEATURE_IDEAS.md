@@ -288,25 +288,72 @@ Automatic backup of all extension data:
 
 ---
 
-## Recommended Premium Features (Top 3)
+## User Feedback on Ideas (2025-11-05)
 
-### 1st Priority: **Bulk Budget Operations**
-- **Highest ROI for users:** Saves hours per week
-- **Clear value proposition:** "Edit 50 line items in 30 seconds"
-- **Medium complexity:** Achievable in reasonable timeframe
-- **Broad appeal:** Every JobTread user edits budgets
+**VIABLE:**
+- ✅ **Budget Change Tracker** - Only feature deemed useful and feasible
 
-### 2nd Priority: **Budget Change Tracker**
-- **Addresses user request:** From "budget changelog" idea
-- **Business critical:** Accountability and audit trail
-- **Unique value:** JobTread doesn't offer this
-- **Professional feature:** Appeals to serious businesses
+**NOT VIABLE:**
+- ❌ **Bulk Budget Operations** - Already part of JobTread
+- ❌ **Schedule Analytics Dashboard** - Requires too much data collection
+- ❌ **Advanced Export** - JobTread likely has this
+- ❌ **Smart Budget Templates** - Requires too much data infrastructure
+- ❌ **Multi-Job Dashboard** - Requires too much data
+- ❌ **Change Order Tracker** - Requires too much data
+- ❌ **Automated Backup** - Limited value for extension settings
 
-### 3rd Priority: **Smart Budget Templates**
-- **Massive time saver:** Hours → minutes per estimate
-- **Competitive advantage:** Professional contractors want this
-- **High perceived value:** Template libraries are industry standard
-- **Recurring value:** Used on every new job
+## Priority: Budget Change Tracker
+
+This is the only premium feature idea that:
+- Solves a real problem JobTread doesn't address
+- Doesn't require excessive data infrastructure
+- Provides clear business value
+- Is technically feasible as a browser extension
+
+---
+
+## Alternative Lightweight Premium Ideas
+
+What other premium features could work that are:
+- Lightweight (minimal data storage)
+- UI/UX enhancements only
+- Don't duplicate JobTread features
+- Provide clear value
+
+### Idea: Budget Cell Formulas
+Allow users to write Excel-like formulas in budget cells for dynamic calculations:
+- `=A1*1.15` for markup calculations
+- `=SUM(A1:A10)` for custom totals
+- Store formulas in chrome.storage per job
+- Recalculate on page load
+**Feasibility:** Medium - requires formula parser and cell reference system
+
+### Idea: Quick Budget Notes
+Sticky notes/comments attached to any budget line item:
+- Click to add note icon next to any row
+- Type quick notes (vendor contact, material source, etc.)
+- Visual indicator when notes present
+- Minimal data storage (notes per line item)
+**Feasibility:** High - simple data structure
+
+### Idea: Budget Search & Filter
+Enhanced search within budgets:
+- Search by description, cost, vendor
+- Filter by category, date range, status
+- Highlight matching rows
+- No data storage needed (operates on DOM)
+**Feasibility:** High - pure DOM manipulation
+
+### Idea: Keyboard Shortcuts for Budget
+Power user keyboard shortcuts for budget editing:
+- Tab to next cell (like Excel)
+- Ctrl+C/V to copy values between rows
+- Ctrl+D to duplicate row
+- Arrow keys for navigation
+- No data storage needed
+**Feasibility:** Medium - event handling and form automation
+
+**Question for user:** Any of these lightweight ideas interesting? Or should we focus solely on Budget Change Tracker?
 
 ---
 
