@@ -34,6 +34,11 @@ const featureModules = {
     name: 'Quick Job Switcher',
     feature: () => window.QuickJobSwitcherFeature,
     instance: null
+  },
+  budgetHierarchy: {
+    name: 'Budget Hierarchy Shading',
+    feature: () => window.BudgetHierarchyFeature,
+    instance: null
   }
 };
 
@@ -45,6 +50,7 @@ let currentSettings = {
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
+  budgetHierarchy: false,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',

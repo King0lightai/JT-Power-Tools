@@ -6,6 +6,7 @@ const defaultSettings = {
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
+  budgetHierarchy: false,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -103,6 +104,7 @@ async function loadSettings() {
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
+    document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -182,6 +184,7 @@ async function getCurrentSettings() {
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
     quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
+    budgetHierarchy: document.getElementById('budgetHierarchy').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
