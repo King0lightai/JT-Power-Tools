@@ -49,8 +49,8 @@ const QuickJobSwitcherFeature = (() => {
    * Handle keydown events
    */
   function handleKeyDown(e) {
-    // Track J key press
-    if (!e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'j' || e.key === 'J')) {
+    // Don't track J key if sidebar is already open (prevents interference with typing)
+    if (!isSearchOpen && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'j' || e.key === 'J')) {
       jKeyPressed = true;
     }
 
@@ -71,6 +71,8 @@ const QuickJobSwitcherFeature = (() => {
         console.log(`QuickJobSwitcher: 🎯 ${isAltJShortcut ? 'ALT+J' : 'J+S'} detected!`);
         e.preventDefault();
         e.stopPropagation();
+        // Reset J key state immediately after opening
+        jKeyPressed = false;
         openSidebar();
       } else {
         console.log('QuickJobSwitcher: Sidebar already open, ignoring shortcut');
@@ -80,6 +82,8 @@ const QuickJobSwitcherFeature = (() => {
 
     // If sidebar is open and Enter is pressed, select top job and close
     if (isSearchOpen && e.key === 'Enter') {
+      console.log('QuickJobSwitcher: Enter pressed while sidebar open');
+
       // Try multiple selectors for the search input
       const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
                          document.querySelector('div.z-30.absolute input[type="text"]') ||
@@ -89,12 +93,18 @@ const QuickJobSwitcherFeature = (() => {
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
       const isInSidebar = sidebar && sidebar.contains(document.activeElement);
 
+      console.log('QuickJobSwitcher: searchInput exists:', !!searchInput);
+      console.log('QuickJobSwitcher: activeElement is searchInput:', document.activeElement === searchInput);
+      console.log('QuickJobSwitcher: isInSidebar:', isInSidebar);
+
       if ((searchInput && document.activeElement === searchInput) || isInSidebar) {
-        console.log('QuickJobSwitcher: Enter pressed in search, selecting top job');
+        console.log('QuickJobSwitcher: Conditions met, selecting top job');
         e.preventDefault();
         e.stopPropagation();
         selectTopJobAndClose();
         return;
+      } else {
+        console.log('QuickJobSwitcher: Conditions NOT met, not handling Enter');
       }
     }
 
