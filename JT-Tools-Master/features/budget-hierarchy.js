@@ -7,6 +7,102 @@ const BudgetHierarchyFeature = (() => {
   let styleElement = null;
   let observer = null;
 
+  // Helper function to convert hex to RGB
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
+  // Helper function to convert RGB to hex
+  function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  // Calculate luminance to determine if color is light or dark
+  function getLuminance(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return 0.5;
+
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  // Adjust color brightness (amount: positive to lighten, negative to darken)
+  function adjustBrightness(hex, amount) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+
+    const adjust = (value) => {
+      const newValue = value + amount;
+      return Math.max(0, Math.min(255, newValue));
+    };
+
+    return rgbToHex(
+      adjust(rgb.r),
+      adjust(rgb.g),
+      adjust(rgb.b)
+    );
+  }
+
+  // Generate 5 shades from a base color
+  function generateShades(baseColor) {
+    const luminance = getLuminance(baseColor);
+    const isDark = luminance < 0.5;
+
+    if (isDark) {
+      // For dark backgrounds, progressively lighten
+      return [
+        baseColor,                           // Level 1: Base (darkest)
+        adjustBrightness(baseColor, 15),    // Level 2
+        adjustBrightness(baseColor, 30),    // Level 3
+        adjustBrightness(baseColor, 45),    // Level 4
+        adjustBrightness(baseColor, 60)     // Level 5 (lightest)
+      ];
+    } else {
+      // For light backgrounds, progressively darken
+      return [
+        adjustBrightness(baseColor, -60),   // Level 1 (darkest)
+        adjustBrightness(baseColor, -45),   // Level 2
+        adjustBrightness(baseColor, -30),   // Level 3
+        adjustBrightness(baseColor, -15),   // Level 4
+        baseColor                            // Level 5: Base (lightest)
+      ];
+    }
+  }
+
+  // Detect which theme is active
+  function getActiveTheme() {
+    // Check if custom theme is active
+    if (window.CustomThemeFeature && window.CustomThemeFeature.isActive()) {
+      const colors = window.CustomThemeFeature.getColors();
+      return {
+        type: 'custom',
+        baseColor: colors.background
+      };
+    }
+
+    // Check if dark mode is active
+    if (window.DarkModeFeature && window.DarkModeFeature.isActive()) {
+      return {
+        type: 'dark',
+        baseColor: '#374151' // gray-700 as base for dark mode
+      };
+    }
+
+    // Default to light mode
+    return {
+      type: 'light',
+      baseColor: '#F9FAFB' // gray-50 as base for light mode
+    };
+  }
+
   // Initialize the feature
   function init() {
     if (isActive) {
@@ -59,42 +155,43 @@ const BudgetHierarchyFeature = (() => {
 
   // Inject CSS for shading
   function injectShadingCSS() {
-    if (styleElement) return;
+    // Remove old style if exists
+    if (styleElement) {
+      styleElement.remove();
+    }
+
+    // Get active theme and generate shades
+    const theme = getActiveTheme();
+    const shades = generateShades(theme.baseColor);
+
+    // Generate hover shades (slightly darker/lighter than base)
+    const hoverShades = shades.map(shade => {
+      const luminance = getLuminance(shade);
+      return luminance < 0.5
+        ? adjustBrightness(shade, -15)  // Darken for dark backgrounds
+        : adjustBrightness(shade, -10); // Darken for light backgrounds
+    });
 
     styleElement = document.createElement('style');
     styleElement.id = 'jt-budget-hierarchy-styles';
     styleElement.textContent = `
       /* Budget Group Hierarchy Shading */
+      /* Generated for ${theme.type} theme */
       /* Level 1 = Darkest (Top level groups) */
       /* Level 5 = Lightest (Deepest nested groups) */
 
-      /* Light Mode Shading */
-      .jt-group-level-1 { background-color: rgb(229, 231, 235) !important; } /* gray-200 */
-      .jt-group-level-2 { background-color: rgb(243, 244, 246) !important; } /* gray-100 */
-      .jt-group-level-3 { background-color: rgb(249, 250, 251) !important; } /* gray-50 */
-      .jt-group-level-4 { background-color: rgb(255, 255, 255) !important; } /* white */
-      .jt-group-level-5 { background-color: rgb(249, 250, 251) !important; } /* gray-50 lightest */
+      .jt-group-level-1 { background-color: ${shades[0]} !important; }
+      .jt-group-level-2 { background-color: ${shades[1]} !important; }
+      .jt-group-level-3 { background-color: ${shades[2]} !important; }
+      .jt-group-level-4 { background-color: ${shades[3]} !important; }
+      .jt-group-level-5 { background-color: ${shades[4]} !important; }
 
       /* Hover states */
-      .jt-group-level-1:hover { background-color: rgb(209, 213, 219) !important; } /* gray-300 */
-      .jt-group-level-2:hover { background-color: rgb(229, 231, 235) !important; } /* gray-200 */
-      .jt-group-level-3:hover { background-color: rgb(243, 244, 246) !important; } /* gray-100 */
-      .jt-group-level-4:hover { background-color: rgb(249, 250, 251) !important; } /* gray-50 */
-      .jt-group-level-5:hover { background-color: rgb(243, 244, 246) !important; } /* gray-100 */
-
-      /* Dark Mode Shading (when dark mode is active) */
-      [data-theme="dark"] .jt-group-level-1 { background-color: rgb(55, 65, 81) !important; } /* gray-700 */
-      [data-theme="dark"] .jt-group-level-2 { background-color: rgb(75, 85, 99) !important; } /* gray-600 */
-      [data-theme="dark"] .jt-group-level-3 { background-color: rgb(107, 114, 128) !important; } /* gray-500 */
-      [data-theme="dark"] .jt-group-level-4 { background-color: rgb(156, 163, 175) !important; } /* gray-400 */
-      [data-theme="dark"] .jt-group-level-5 { background-color: rgb(209, 213, 219) !important; } /* gray-300 */
-
-      /* Dark mode hover states */
-      [data-theme="dark"] .jt-group-level-1:hover { background-color: rgb(31, 41, 55) !important; } /* gray-800 */
-      [data-theme="dark"] .jt-group-level-2:hover { background-color: rgb(55, 65, 81) !important; } /* gray-700 */
-      [data-theme="dark"] .jt-group-level-3:hover { background-color: rgb(75, 85, 99) !important; } /* gray-600 */
-      [data-theme="dark"] .jt-group-level-4:hover { background-color: rgb(107, 114, 128) !important; } /* gray-500 */
-      [data-theme="dark"] .jt-group-level-5:hover { background-color: rgb(156, 163, 175) !important; } /* gray-400 */
+      .jt-group-level-1:hover { background-color: ${hoverShades[0]} !important; }
+      .jt-group-level-2:hover { background-color: ${hoverShades[1]} !important; }
+      .jt-group-level-3:hover { background-color: ${hoverShades[2]} !important; }
+      .jt-group-level-4:hover { background-color: ${hoverShades[3]} !important; }
+      .jt-group-level-5:hover { background-color: ${hoverShades[4]} !important; }
 
       /* Apply shading to all cells in the group row */
       .jt-group-level-1 > div,
@@ -107,6 +204,16 @@ const BudgetHierarchyFeature = (() => {
     `;
 
     document.head.appendChild(styleElement);
+    console.log(`BudgetHierarchy: Generated shades for ${theme.type} theme:`, shades);
+  }
+
+  // Refresh shading when theme changes
+  function refreshShading() {
+    if (!isActive) return;
+
+    console.log('BudgetHierarchy: Refreshing shading due to theme change...');
+    injectShadingCSS();
+    applyGroupShading();
   }
 
   // Get nesting level of a group element
@@ -224,6 +331,7 @@ const BudgetHierarchyFeature = (() => {
   return {
     init,
     cleanup,
+    refreshShading,
     isActive: () => isActive
   };
 })();
