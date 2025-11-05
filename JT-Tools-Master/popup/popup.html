@@ -12,90 +12,123 @@
     <header>
       <div class="header-content">
         <h1>JT Power Tools</h1>
-        <span class="version">v3.1.0</span>
+        <span class="version">v3.2.0</span>
       </div>
     </header>
 
     <!-- Features List -->
     <div class="features-section">
-      <div class="section-label">Features</div>
 
-      <div class="feature-item premium" id="dragDropFeature">
-        <div class="feature-info">
-          <h3>Schedule Drag & Drop <span class="badge">Premium</span></h3>
-          <p>Change schedule dates in month view</p>
+      <!-- Schedule & Calendar Category -->
+      <div class="feature-category">
+        <div class="category-header" data-category="schedule">
+          <span class="category-icon">🗓️</span>
+          <span class="category-title">Schedule & Calendar</span>
+          <span class="category-count">1</span>
+          <span class="category-toggle">▼</span>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="dragDrop" data-feature="dragDrop">
-          <span class="slider"></span>
-        </label>
+        <div class="category-features" data-category-content="schedule">
+          <div class="feature-item premium" id="dragDropFeature">
+            <div class="feature-info">
+              <h3>Schedule Drag & Drop <span class="badge">Premium</span></h3>
+              <p>Change schedule dates in month view</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="dragDrop" data-feature="dragDrop">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
 
-      <div class="feature-item">
-        <div class="feature-info">
-          <h3>Contrast Fix</h3>
-          <p>Better text readability in schedule view</p>
+      <!-- Productivity Tools Category -->
+      <div class="feature-category">
+        <div class="category-header" data-category="productivity">
+          <span class="category-icon">⚡</span>
+          <span class="category-title">Productivity Tools</span>
+          <span class="category-count">2</span>
+          <span class="category-toggle">▼</span>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="contrastFix" data-feature="contrastFix">
-          <span class="slider"></span>
-        </label>
+        <div class="category-features" data-category-content="productivity">
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Text Formatter</h3>
+              <p>Rich text toolbar for budgets, logs & tasks</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="formatter" data-feature="formatter">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Quick Job Switcher</h3>
+              <p>Alt+J to open, type to search, Enter to select</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="quickJobSwitcher" data-feature="quickJobSwitcher">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
 
-      <div class="feature-item">
-        <div class="feature-info">
-          <h3>Text Formatter</h3>
-          <p>Rich text toolbar for budgets, logs & tasks</p>
+      <!-- Appearance & Themes Category -->
+      <div class="feature-category">
+        <div class="category-header" data-category="appearance">
+          <span class="category-icon">🎨</span>
+          <span class="category-title">Appearance & Themes</span>
+          <span class="category-count">4</span>
+          <span class="category-toggle">▼</span>
         </div>
-        <label class="toggle">
-          <input type="checkbox" id="formatter" data-feature="formatter">
-          <span class="slider"></span>
-        </label>
+        <div class="category-features" data-category-content="appearance">
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Contrast Fix</h3>
+              <p>Better text readability in schedule view</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Dark Mode</h3>
+              <p>Dark theme for JobTread interface</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="darkMode" data-feature="darkMode">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item premium" id="rgbThemeFeature">
+            <div class="feature-info">
+              <h3>Custom Theme <span class="badge">Premium</span></h3>
+              <p>Create your own custom color theme</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Budget Hierarchy Shading</h3>
+              <p>Visual shading for nested budget groups</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
       </div>
 
-      <div class="feature-item">
-        <div class="feature-info">
-          <h3>Quick Job Switcher</h3>
-          <p>J+S to open, type to search, Enter to select</p>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="quickJobSwitcher" data-feature="quickJobSwitcher">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="feature-item">
-        <div class="feature-info">
-          <h3>Dark Mode</h3>
-          <p>Dark theme for JobTread interface</p>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="darkMode" data-feature="darkMode">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="feature-item premium" id="rgbThemeFeature">
-        <div class="feature-info">
-          <h3>Custom Theme <span class="badge">Premium</span></h3>
-          <p>Create your own custom color theme</p>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="feature-item">
-        <div class="feature-info">
-          <h3>Budget Hierarchy Shading</h3>
-          <p>Visual shading for nested budget groups</p>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
-          <span class="slider"></span>
-        </label>
-      </div>
     </div>
 
     <!-- Custom Theme Panel -->

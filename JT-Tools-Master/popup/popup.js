@@ -409,6 +409,40 @@ async function loadThemeFromSlot(slotIndex) {
 }
 
 // Initialize popup
+// Initialize collapsible category functionality
+function initializeCategories() {
+  // Get all category headers
+  const categoryHeaders = document.querySelectorAll('.category-header');
+
+  categoryHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const category = header.dataset.category;
+      const content = document.querySelector(`[data-category-content="${category}"]`);
+
+      // Toggle collapsed state
+      header.classList.toggle('collapsed');
+      content.classList.toggle('collapsed');
+
+      // Save state to chrome.storage.local
+      chrome.storage.local.set({
+        [`category_${category}_collapsed`]: header.classList.contains('collapsed')
+      });
+    });
+
+    // Restore state from storage
+    const category = header.dataset.category;
+    chrome.storage.local.get(`category_${category}_collapsed`, (result) => {
+      if (result[`category_${category}_collapsed`]) {
+        header.classList.add('collapsed');
+        const content = document.querySelector(`[data-category-content="${category}"]`);
+        if (content) {
+          content.classList.add('collapsed');
+        }
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
 
@@ -417,6 +451,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Load current settings and update UI
   await loadSettings();
+
+  // Initialize collapsible categories
+  initializeCategories();
 
   // If no license, ensure premium features stay disabled
   if (!hasLicense) {
