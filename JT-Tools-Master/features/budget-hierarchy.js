@@ -1,6 +1,6 @@
 // JobTread Budget Group Hierarchy Shading Feature Module
 // Applies progressive shading to nested budget groups (up to 5 levels)
-// Level 1 (top) = Darkest, Level 5 (deepest) = Lightest
+// Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
 
 const BudgetHierarchyFeature = (() => {
   let isActive = false;
@@ -60,22 +60,22 @@ const BudgetHierarchyFeature = (() => {
     const step = isDarkMode ? 10 : 15;
 
     if (isDark) {
-      // For dark backgrounds, progressively lighten
+      // For dark backgrounds, progressively darken
       return [
-        baseColor,                           // Level 1: Base (darkest)
-        adjustBrightness(baseColor, step),       // Level 2
+        adjustBrightness(baseColor, step * 4),   // Level 1 (lightest)
+        adjustBrightness(baseColor, step * 3),   // Level 2
         adjustBrightness(baseColor, step * 2),   // Level 3
-        adjustBrightness(baseColor, step * 3),   // Level 4
-        adjustBrightness(baseColor, step * 4)    // Level 5 (lightest)
+        adjustBrightness(baseColor, step),       // Level 4
+        baseColor                                // Level 5: Base (darkest)
       ];
     } else {
       // For light backgrounds, progressively darken
       return [
-        adjustBrightness(baseColor, -step * 4), // Level 1 (darkest)
-        adjustBrightness(baseColor, -step * 3), // Level 2
-        adjustBrightness(baseColor, -step * 2), // Level 3
-        adjustBrightness(baseColor, -step),     // Level 4
-        baseColor                                // Level 5: Base (lightest)
+        baseColor,                               // Level 1: Base (lightest)
+        adjustBrightness(baseColor, -step),      // Level 2
+        adjustBrightness(baseColor, -step * 2),  // Level 3
+        adjustBrightness(baseColor, -step * 3),  // Level 4
+        adjustBrightness(baseColor, -step * 4)   // Level 5 (darkest)
       ];
     }
   }
@@ -176,29 +176,18 @@ const BudgetHierarchyFeature = (() => {
         : adjustBrightness(shade, -10); // Darken for light backgrounds
     });
 
-    // Generate lighter shades for line items under groups
-    const itemShades = shades.map(shade => {
-      const luminance = getLuminance(shade);
-      // Make items slightly lighter than their parent group
-      return luminance < 0.5
-        ? adjustBrightness(shade, 8)  // Lighten for dark backgrounds
-        : adjustBrightness(shade, -8); // Darken less for light backgrounds
-    });
+    // Line items should match their parent group shades exactly
+    const itemShades = [...shades];
 
-    const itemHoverShades = itemShades.map(shade => {
-      const luminance = getLuminance(shade);
-      return luminance < 0.5
-        ? adjustBrightness(shade, -12)
-        : adjustBrightness(shade, -8);
-    });
+    const itemHoverShades = [...hoverShades];
 
     styleElement = document.createElement('style');
     styleElement.id = 'jt-budget-hierarchy-styles';
     styleElement.textContent = `
       /* Budget Group Hierarchy Shading */
       /* Generated for ${theme.type} theme */
-      /* Level 1 = Darkest (Top level groups) */
-      /* Level 5 = Lightest (Deepest nested groups) */
+      /* Level 1 = Lightest (Top level groups) */
+      /* Level 5 = Darkest (Deepest nested groups) */
 
       .jt-group-level-1 { background-color: ${shades[0]} !important; }
       .jt-group-level-2 { background-color: ${shades[1]} !important; }
