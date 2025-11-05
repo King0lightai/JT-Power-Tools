@@ -260,6 +260,31 @@ const BudgetHierarchyFeature = (() => {
       .jt-item-under-level-5 > div:not([class*="bg-yellow"]) {
         background-color: inherit !important;
       }
+
+      /* Apply shading to indent spacer divs in line items */
+      /* Only if parent cell doesn't have yellow background */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2 {
+        background-color: inherit !important;
+      }
+
+      /* Override specific background classes on spacers in line items */
+      /* Only if parent cell doesn't have yellow background */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
+        background-color: inherit !important;
+      }
     `;
 
     document.head.appendChild(styleElement);
@@ -406,39 +431,85 @@ const BudgetHierarchyFeature = (() => {
   function startObserver() {
     if (observer) return;
 
+    let reapplyTimeout = null;
+
     observer = new MutationObserver((mutations) => {
       if (!isActive) return;
 
-      // Check if any new groups were added
+      // Check if any changes warrant reapplying shading
       let shouldReapply = false;
 
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
-          // Check if added nodes contain group cells
+          // Check if added nodes contain group cells or budget rows
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1) { // Element node
               if (node.classList?.contains('font-bold') ||
-                  node.querySelector?.('div.font-bold.flex[style*="width: 300px"]')) {
+                  node.classList?.contains('group/row') ||
+                  node.querySelector?.('div.font-bold.flex[style*="width: 300px"]') ||
+                  node.querySelector?.('.group\\/row')) {
                 shouldReapply = true;
               }
             }
           });
+
+          // Also check if rows were removed (collapse scenario)
+          if (mutation.removedNodes.length > 0) {
+            mutation.removedNodes.forEach(node => {
+              if (node.nodeType === 1 && node.classList?.contains('group/row')) {
+                shouldReapply = true;
+              }
+            });
+          }
+        }
+
+        // Watch for attribute changes (like style or class changes on expand/collapse)
+        if (mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (target.classList?.contains('group/row') ||
+              target.querySelector?.('.group\\/row')) {
+            shouldReapply = true;
+          }
         }
       }
 
       if (shouldReapply) {
-        console.log('BudgetHierarchy: DOM changed, reapplying shading...');
-        applyGroupShading();
+        // Debounce reapply to avoid excessive calls
+        if (reapplyTimeout) clearTimeout(reapplyTimeout);
+        reapplyTimeout = setTimeout(() => {
+          console.log('BudgetHierarchy: DOM changed, reapplying shading...');
+          applyGroupShading();
+        }, 50); // 50ms debounce
       }
     });
 
-    // Observe the entire document for changes
+    // Observe the entire document for changes with more aggressive options
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
     });
 
-    console.log('BudgetHierarchy: Observer started');
+    // Add click listener for expand/collapse buttons to force immediate reapply
+    document.body.addEventListener('click', (e) => {
+      if (!isActive) return;
+
+      // Check if the click was on or near a collapse/expand button
+      const target = e.target;
+      const isExpandCollapseButton = target.closest('button')?.querySelector('svg') ||
+                                     target.closest('svg')?.closest('button');
+
+      if (isExpandCollapseButton) {
+        // Force reapply after a short delay to let DOM update
+        setTimeout(() => {
+          console.log('BudgetHierarchy: Expand/collapse detected, reapplying shading...');
+          applyGroupShading();
+        }, 100);
+      }
+    });
+
+    console.log('BudgetHierarchy: Observer started with aggressive monitoring');
   }
 
   return {
