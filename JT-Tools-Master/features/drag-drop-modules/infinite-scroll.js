@@ -152,44 +152,68 @@ const InfiniteScroll = (() => {
    * @returns {HTMLElement|null} The next button element
    */
   function findNextMonthButton() {
-    // Look for common patterns for next month buttons
-    // Usually they have "next", "forward", or right arrow in them
+    // Look for the calendar navigation buttons specifically
+    // They should be near the month/year header (like "December 2024")
 
-    // Try finding by SVG path (right arrow icon)
-    const svgs = document.querySelectorAll('svg');
-    for (const svg of svgs) {
-      const paths = svg.querySelectorAll('path');
-      for (const path of paths) {
-        const d = path.getAttribute('d');
-        // Right arrow pattern: "m9 18 6-6-6-6" or similar
-        if (d && (d.includes('m9 18') || d.includes('M9 18') || d.includes('m13 5 7 7-7 7'))) {
-          // Found right arrow, get the clickable parent
-          const button = svg.closest('button, div[role="button"], a');
-          if (button) {
-            console.log('[InfiniteScroll] Found next button by arrow SVG');
-            return button;
-          }
+    // First, find the calendar container or month header
+    // Look for elements that contain month names
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+
+    let calendarHeader = null;
+    const allText = document.querySelectorAll('*');
+
+    for (const el of allText) {
+      const text = el.textContent;
+      // Look for "Month Year" pattern like "December 2024"
+      for (const month of monthNames) {
+        if (text.includes(month) && /\d{4}/.test(text) && text.length < 50) {
+          // Found a potential calendar header
+          calendarHeader = el;
+          break;
         }
       }
+      if (calendarHeader) break;
     }
 
-    // Try finding buttons with "Next" text
-    const buttons = document.querySelectorAll('button, div[role="button"], a');
-    for (const button of buttons) {
-      const text = button.textContent.toLowerCase();
-      if (text.includes('next') && (text.includes('month') || text.includes('week'))) {
-        console.log('[InfiniteScroll] Found next button by text');
-        return button;
+    if (!calendarHeader) {
+      console.warn('[InfiniteScroll] Could not find calendar header');
+      return null;
+    }
+
+    console.log('[InfiniteScroll] Found calendar header:', calendarHeader.textContent);
+
+    // Now find navigation buttons near this header
+    // Look within the same parent or nearby siblings
+    let searchRoot = calendarHeader.parentElement;
+
+    // Search up a few levels to find the container with nav buttons
+    for (let i = 0; i < 5; i++) {
+      if (!searchRoot) break;
+
+      // Look for right arrow button in this container
+      const buttons = searchRoot.querySelectorAll('div[role="button"], button');
+
+      for (const button of buttons) {
+        const svg = button.querySelector('svg');
+        if (!svg) continue;
+
+        const path = svg.querySelector('path');
+        if (!path) continue;
+
+        const d = path.getAttribute('d');
+
+        // Right arrow: "m9 18 6-6-6-6"
+        if (d && d.includes('m9 18 6-6-6-6')) {
+          console.log('[InfiniteScroll] Found next month button near calendar header');
+          return button;
+        }
       }
+
+      searchRoot = searchRoot.parentElement;
     }
 
-    // Try finding by aria-label
-    const ariaButtons = document.querySelectorAll('[aria-label*="next" i], [aria-label*="forward" i]');
-    if (ariaButtons.length > 0) {
-      console.log('[InfiniteScroll] Found next button by aria-label');
-      return ariaButtons[0];
-    }
-
+    console.warn('[InfiniteScroll] Could not find next month button near calendar');
     return null;
   }
 
@@ -198,45 +222,66 @@ const InfiniteScroll = (() => {
    * @returns {HTMLElement|null} The previous button element
    */
   function findPreviousMonthButton() {
-    // Look for common patterns for previous month buttons
-    // Usually they have "prev", "previous", "back", or left arrow in them
+    // Look for the calendar navigation buttons specifically
+    // They should be near the month/year header (like "December 2024")
 
-    // Try finding by SVG path (left arrow icon)
-    const svgs = document.querySelectorAll('svg');
-    for (const svg of svgs) {
-      const paths = svg.querySelectorAll('path');
-      for (const path of paths) {
-        const d = path.getAttribute('d');
-        // Left arrow pattern: "m15 18-6-6 6-6" or similar
-        if (d && (d.includes('m15 18') || d.includes('M15 18') || d.includes('m11 19-7-7 7-7'))) {
-          // Found left arrow, get the clickable parent
-          const button = svg.closest('button, div[role="button"], a');
-          if (button) {
-            console.log('[InfiniteScroll] Found previous button by arrow SVG');
-            return button;
-          }
+    // First, find the calendar container or month header
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+
+    let calendarHeader = null;
+    const allText = document.querySelectorAll('*');
+
+    for (const el of allText) {
+      const text = el.textContent;
+      // Look for "Month Year" pattern like "December 2024"
+      for (const month of monthNames) {
+        if (text.includes(month) && /\d{4}/.test(text) && text.length < 50) {
+          // Found a potential calendar header
+          calendarHeader = el;
+          break;
         }
       }
+      if (calendarHeader) break;
     }
 
-    // Try finding buttons with "Previous" or "Prev" text
-    const buttons = document.querySelectorAll('button, div[role="button"], a');
-    for (const button of buttons) {
-      const text = button.textContent.toLowerCase();
-      if ((text.includes('prev') || text.includes('back')) &&
-          (text.includes('month') || text.includes('week'))) {
-        console.log('[InfiniteScroll] Found previous button by text');
-        return button;
+    if (!calendarHeader) {
+      console.warn('[InfiniteScroll] Could not find calendar header');
+      return null;
+    }
+
+    console.log('[InfiniteScroll] Found calendar header:', calendarHeader.textContent);
+
+    // Now find navigation buttons near this header
+    let searchRoot = calendarHeader.parentElement;
+
+    // Search up a few levels to find the container with nav buttons
+    for (let i = 0; i < 5; i++) {
+      if (!searchRoot) break;
+
+      // Look for left arrow button in this container
+      const buttons = searchRoot.querySelectorAll('div[role="button"], button');
+
+      for (const button of buttons) {
+        const svg = button.querySelector('svg');
+        if (!svg) continue;
+
+        const path = svg.querySelector('path');
+        if (!path) continue;
+
+        const d = path.getAttribute('d');
+
+        // Left arrow: "m15 18-6-6 6-6"
+        if (d && d.includes('m15 18-6-6 6-6')) {
+          console.log('[InfiniteScroll] Found previous month button near calendar header');
+          return button;
+        }
       }
+
+      searchRoot = searchRoot.parentElement;
     }
 
-    // Try finding by aria-label
-    const ariaButtons = document.querySelectorAll('[aria-label*="prev" i], [aria-label*="back" i]');
-    if (ariaButtons.length > 0) {
-      console.log('[InfiniteScroll] Found previous button by aria-label');
-      return ariaButtons[0];
-    }
-
+    console.warn('[InfiniteScroll] Could not find previous month button near calendar');
     return null;
   }
 
