@@ -206,21 +206,26 @@ const BudgetHierarchyFeature = (() => {
         background-color: inherit !important;
       }
 
-      /* Apply shading to indent spacer divs specifically */
-      .jt-group-level-1 > div.pl-3\\.5,
-      .jt-group-level-2 > div.pl-3\\.5,
-      .jt-group-level-3 > div.pl-3\\.5,
-      .jt-group-level-4 > div.pl-3\\.5,
-      .jt-group-level-5 > div.pl-3\\.5 {
+      /* Apply shading to indent spacer divs (nested inside first cell) */
+      .jt-group-level-1 div.pl-3\\.5.border-r-2,
+      .jt-group-level-2 div.pl-3\\.5.border-r-2,
+      .jt-group-level-3 div.pl-3\\.5.border-r-2,
+      .jt-group-level-4 div.pl-3\\.5.border-r-2,
+      .jt-group-level-5 div.pl-3\\.5.border-r-2 {
         background-color: inherit !important;
       }
 
-      /* Override JobTread's bg-white and bg-blue-* classes on spacers */
-      .jt-group-level-1 > div.pl-3\\.5[class*="bg-"],
-      .jt-group-level-2 > div.pl-3\\.5[class*="bg-"],
-      .jt-group-level-3 > div.pl-3\\.5[class*="bg-"],
-      .jt-group-level-4 > div.pl-3\\.5[class*="bg-"],
-      .jt-group-level-5 > div.pl-3\\.5[class*="bg-"] {
+      /* Override specific background classes on spacers */
+      .jt-group-level-1 div.pl-3\\.5.bg-white,
+      .jt-group-level-1 div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-2 div.pl-3\\.5.bg-white,
+      .jt-group-level-2 div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-3 div.pl-3\\.5.bg-white,
+      .jt-group-level-3 div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-4 div.pl-3\\.5.bg-white,
+      .jt-group-level-4 div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-5 div.pl-3\\.5.bg-white,
+      .jt-group-level-5 div.pl-3\\.5.bg-blue-50 {
         background-color: inherit !important;
       }
     `;
