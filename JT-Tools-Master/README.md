@@ -29,7 +29,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Works on budget descriptions and other text areas
 
 ### ⚡ Quick Job Switcher
-- Keyboard shortcut (Alt+J) to instantly open job switcher
+- Keyboard shortcut (J+S) to instantly open job switcher
 - Type to search and filter jobs in real-time
 - Press Enter to select top result and navigate
 - Fully keyboard-driven workflow for power users
@@ -94,7 +94,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
 #### Quick Job Switcher
-1. Press Alt+J from any JobTread page
+1. Press J+S from any JobTread page
 2. Type to search and filter jobs
 3. Press Enter to select top result
 4. Press Escape to cancel
