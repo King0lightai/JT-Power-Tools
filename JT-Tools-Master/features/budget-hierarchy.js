@@ -198,34 +198,37 @@ const BudgetHierarchyFeature = (() => {
       .jt-group-level-5:hover { background-color: ${hoverShades[4]} !important; }
 
       /* Apply shading to all cells in the group row */
-      .jt-group-level-1 > div,
-      .jt-group-level-2 > div,
-      .jt-group-level-3 > div,
-      .jt-group-level-4 > div,
-      .jt-group-level-5 > div {
+      /* BUT preserve yellow highlighting for unsaved changes */
+      .jt-group-level-1 > div:not([class*="bg-yellow"]),
+      .jt-group-level-2 > div:not([class*="bg-yellow"]),
+      .jt-group-level-3 > div:not([class*="bg-yellow"]),
+      .jt-group-level-4 > div:not([class*="bg-yellow"]),
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) {
         background-color: inherit !important;
       }
 
       /* Apply shading to indent spacer divs (nested inside first cell) */
-      .jt-group-level-1 div.pl-3\\.5.border-r-2,
-      .jt-group-level-2 div.pl-3\\.5.border-r-2,
-      .jt-group-level-3 div.pl-3\\.5.border-r-2,
-      .jt-group-level-4 div.pl-3\\.5.border-r-2,
-      .jt-group-level-5 div.pl-3\\.5.border-r-2 {
+      /* Only if parent cell doesn't have yellow background */
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2 {
         background-color: inherit !important;
       }
 
       /* Override specific background classes on spacers */
-      .jt-group-level-1 div.pl-3\\.5.bg-white,
-      .jt-group-level-1 div.pl-3\\.5.bg-blue-50,
-      .jt-group-level-2 div.pl-3\\.5.bg-white,
-      .jt-group-level-2 div.pl-3\\.5.bg-blue-50,
-      .jt-group-level-3 div.pl-3\\.5.bg-white,
-      .jt-group-level-3 div.pl-3\\.5.bg-blue-50,
-      .jt-group-level-4 div.pl-3\\.5.bg-white,
-      .jt-group-level-4 div.pl-3\\.5.bg-blue-50,
-      .jt-group-level-5 div.pl-3\\.5.bg-white,
-      .jt-group-level-5 div.pl-3\\.5.bg-blue-50 {
+      /* Only if parent cell doesn't have yellow background */
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
         background-color: inherit !important;
       }
     `;
