@@ -388,21 +388,30 @@ const BudgetHierarchyFeature = (() => {
     if (!itemRow) return null;
 
     const itemLevel = getRowNestingLevel(itemRow);
+    console.log(`BudgetHierarchy: Looking for parent of item at level ${itemLevel}`);
+
     let currentRow = itemRow.previousElementSibling;
+    let stepsBack = 0;
 
     // Look backwards to find the nearest group at a shallower level
     while (currentRow) {
+      stepsBack++;
       const groupCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
       if (groupCell) {
         const groupLevel = getGroupNestingLevel(groupCell);
+        console.log(`BudgetHierarchy: Found group at level ${groupLevel} (${stepsBack} steps back)`);
         // If this group is at a shallower level, it's the parent
         if (groupLevel < itemLevel) {
+          console.log(`BudgetHierarchy: This is the parent (level ${groupLevel} < item level ${itemLevel})`);
           return { row: currentRow, level: groupLevel };
+        } else {
+          console.log(`BudgetHierarchy: Not a parent (level ${groupLevel} >= item level ${itemLevel}), continuing...`);
         }
       }
       currentRow = currentRow.previousElementSibling;
     }
 
+    console.log(`BudgetHierarchy: No parent found after ${stepsBack} steps`);
     return null; // No parent group found
   }
 
@@ -420,13 +429,30 @@ const BudgetHierarchyFeature = (() => {
     });
 
     // Now shade all line items by finding their parent groups
-    const allRows = document.querySelectorAll('.group\\/row');
-    console.log(`BudgetHierarchy: Found ${allRows.length} total rows`);
+    // Try different selector approaches
+    let allRows = document.querySelectorAll('[class*="group/row"]');
+    console.log(`BudgetHierarchy: Found ${allRows.length} total rows with [class*="group/row"]`);
+
+    if (allRows.length === 0) {
+      // Try without escape
+      allRows = document.querySelectorAll('.group\\/row');
+      console.log(`BudgetHierarchy: Trying .group\\/row selector: found ${allRows.length} rows`);
+    }
+
+    let lineItemCount = 0;
+    let groupCount = 0;
 
     allRows.forEach(row => {
       // Skip if it's a group row
       const isGroup = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
-      if (isGroup) return;
+      if (isGroup) {
+        groupCount++;
+        console.log(`BudgetHierarchy: Skipping group row`);
+        return;
+      }
+
+      lineItemCount++;
+      console.log(`BudgetHierarchy: Processing line item #${lineItemCount}`);
 
       // This is a line item, find its parent group
       const parentGroup = findParentGroupForItem(row);
@@ -438,10 +464,13 @@ const BudgetHierarchyFeature = (() => {
         }
         // Add the parent group's level
         row.classList.add(`jt-item-under-level-${parentGroup.level}`);
+        console.log(`BudgetHierarchy: Applied jt-item-under-level-${parentGroup.level} to item`);
       } else {
-        console.log(`BudgetHierarchy: Item has no parent group`);
+        console.log(`BudgetHierarchy: Item has no parent group (might be top-level)`);
       }
     });
+
+    console.log(`BudgetHierarchy: Processed ${lineItemCount} line items and ${groupCount} group rows`);
   }
 
   // Remove all shading classes
