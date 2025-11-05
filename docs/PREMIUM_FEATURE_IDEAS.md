@@ -302,13 +302,34 @@ Automatic backup of all extension data:
 - ❌ **Change Order Tracker** - Requires too much data
 - ❌ **Automated Backup** - Limited value for extension settings
 
-## Priority: Budget Change Tracker
+## Priority Premium Features
 
-This is the only premium feature idea that:
-- Solves a real problem JobTread doesn't address
-- Doesn't require excessive data infrastructure
-- Provides clear business value
-- Is technically feasible as a browser extension
+### 1. Budget Change Tracker (CONFIRMED PREMIUM)
+**Status:** Definitely premium worthy
+
+**Technical Challenge Identified:**
+- JobTread's DOM dynamically removes/adds line items on expand/collapse
+- Makes tracking changes more complex
+- Need to identify line items by unique attributes (data-id, etc.) not DOM position
+- Will require careful observation strategy
+
+**Implementation Note:** "Issue for another day" - acknowledged complexity
+
+### 2. Floating Scratchpad Notes (STRONG PREMIUM CANDIDATE)
+**Status:** User likes this idea
+
+**Key Insight from User:**
+- Not per-line-item notes, but floating draggable notepad
+- Stays on screen while working
+- Quick capture without navigation
+- Can move around screen as needed
+
+**Why This Works:**
+- Lightweight (minimal data storage)
+- Clear productivity value
+- Doesn't duplicate JobTread features
+- Easy to demonstrate value
+- Works across all JobTread pages
 
 ---
 
@@ -328,13 +349,44 @@ Allow users to write Excel-like formulas in budget cells for dynamic calculation
 - Recalculate on page load
 **Feasibility:** Medium - requires formula parser and cell reference system
 
-### Idea: Quick Budget Notes
-Sticky notes/comments attached to any budget line item:
-- Click to add note icon next to any row
-- Type quick notes (vendor contact, material source, etc.)
-- Visual indicator when notes present
-- Minimal data storage (notes per line item)
-**Feasibility:** High - simple data structure
+### Idea: Floating Scratchpad Notes (PREMIUM CANDIDATE)
+Draggable floating notepad overlay for quick capture while working:
+
+**Features:**
+- Press button to open floating note window
+- Type anything: thoughts, tasks, calculations, reminders
+- **Draggable:** Move note anywhere on screen
+- **Persistent:** Stays open while navigating JobTread
+- Multiple notes possible (create new note button)
+- Minimal/maximize buttons
+- Auto-saves as you type
+- Per-job notes (different notes for different jobs)
+- Rich text formatting (optional)
+
+**Use Cases:**
+- Quick calculations while building budget
+- Client phone call notes during meeting
+- Task reminders while reviewing schedule
+- Material quantities to research later
+- Vendor phone numbers/contacts
+- "Don't forget to..." lists
+
+**Why Premium:**
+- High productivity value (no context switching)
+- Always accessible quick capture
+- Professional workflow enhancement
+- Minimal data storage required (just note text per job)
+
+**Implementation:**
+- Floating div with position: fixed
+- Drag and drop using mousedown/mousemove events
+- Store notes in chrome.storage.local by job ID
+- Simple textarea or rich text editor
+- CSS for minimize/maximize states
+
+**Feasibility:** High - straightforward UI overlay with drag functionality
+
+**User Quote:** "Capture things quickly without needing to navigate to where they need the info"
 
 ### Idea: Budget Search & Filter
 Enhanced search within budgets:
