@@ -1,5 +1,5 @@
 // JobTread Quick Job Switcher Feature
-// Keyboard shortcut (J+S) to quickly search and switch jobs
+// Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
 
 const QuickJobSwitcherFeature = (() => {
   let isActive = false;
@@ -22,7 +22,7 @@ const QuickJobSwitcherFeature = (() => {
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
 
-    console.log('QuickJobSwitcher: ✅ Listening for J+S keyboard shortcut');
+    console.log('QuickJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
   }
 
   /**
@@ -54,8 +54,11 @@ const QuickJobSwitcherFeature = (() => {
       jKeyPressed = true;
     }
 
-    // Open sidebar: J+S (both keys pressed together)
-    if (jKeyPressed && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 's' || e.key === 'S')) {
+    // Open sidebar: J+S (both keys pressed together) or ALT+J
+    const isJSShortcut = jKeyPressed && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 's' || e.key === 'S');
+    const isAltJShortcut = e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'j' || e.key === 'J');
+
+    if (isJSShortcut || isAltJShortcut) {
       // Check if sidebar actually exists (user may have manually closed it)
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
 
@@ -65,20 +68,28 @@ const QuickJobSwitcherFeature = (() => {
       }
 
       if (!isSearchOpen) {
-        console.log('QuickJobSwitcher: 🎯 J+S detected!');
+        console.log(`QuickJobSwitcher: 🎯 ${isAltJShortcut ? 'ALT+J' : 'J+S'} detected!`);
         e.preventDefault();
         e.stopPropagation();
         openSidebar();
       } else {
-        console.log('QuickJobSwitcher: Sidebar already open, ignoring J+S');
+        console.log('QuickJobSwitcher: Sidebar already open, ignoring shortcut');
       }
       return;
     }
 
-    // If sidebar is open and Enter is pressed in the search input, select top job and close
+    // If sidebar is open and Enter is pressed, select top job and close
     if (isSearchOpen && e.key === 'Enter') {
-      const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]');
-      if (searchInput && document.activeElement === searchInput) {
+      // Try multiple selectors for the search input
+      const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
+                         document.querySelector('div.z-30.absolute input[type="text"]') ||
+                         document.querySelector('div.z-30 input');
+
+      // If we're in the sidebar (search input exists and is focused, or just in the sidebar)
+      const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+      const isInSidebar = sidebar && sidebar.contains(document.activeElement);
+
+      if ((searchInput && document.activeElement === searchInput) || isInSidebar) {
         console.log('QuickJobSwitcher: Enter pressed in search, selecting top job');
         e.preventDefault();
         e.stopPropagation();
@@ -157,6 +168,20 @@ const QuickJobSwitcherFeature = (() => {
     jobNumberButton.click();
     isSearchOpen = true;
 
+    // Focus the search input after a short delay to let sidebar render
+    setTimeout(() => {
+      const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
+                         document.querySelector('div.z-30.absolute input[type="text"]') ||
+                         document.querySelector('div.z-30 input');
+
+      if (searchInput) {
+        searchInput.focus();
+        console.log('QuickJobSwitcher: ✅ Search input focused');
+      } else {
+        console.log('QuickJobSwitcher: ⚠️ Could not find search input to focus');
+      }
+    }, 150);
+
     console.log('QuickJobSwitcher: ✅ Sidebar opened');
   }
 
@@ -226,12 +251,16 @@ const QuickJobSwitcherFeature = (() => {
 
     if (topJobButton) {
       console.log('QuickJobSwitcher: Clicking top job...');
+
+      // Click the job button to navigate
       topJobButton.click();
 
-      // Close sidebar after a short delay to let the click register
+      // Close sidebar immediately after clicking
+      // If navigation happens, sidebar will be removed anyway
+      // If it doesn't navigate (same job), we want it to close
       setTimeout(() => {
         closeSidebar();
-      }, 100);
+      }, 50);
     } else {
       console.log('QuickJobSwitcher: No jobs found, just closing sidebar');
       closeSidebar();
