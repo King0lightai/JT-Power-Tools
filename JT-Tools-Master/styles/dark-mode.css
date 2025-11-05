@@ -7,32 +7,33 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
+    width: 6px;
     cursor: ew-resize !important;
     opacity: 0;
-    transition: opacity 0.2s, width 0.1s;
-    background: rgba(255, 255, 255, 0.7);
+    transition: opacity 0.2s, width 0.15s;
+    background: rgba(255, 255, 255, 0.8);
     z-index: 100;
     pointer-events: auto !important;
+    user-select: none;
 }
 
 /* Show resize handle on hover - make it more visible */
 div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
     opacity: 1;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .jt-task-resize-handle:hover {
     opacity: 1 !important;
-    width: 6px;
+    width: 8px;
     background: rgba(255, 255, 255, 1) !important;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.2);
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Keep visible during resize */
 .jt-task-resizing .jt-task-resize-handle {
     opacity: 1 !important;
-    width: 6px;
+    width: 8px;
     background: rgba(255, 255, 255, 1) !important;
 }
 
