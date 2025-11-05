@@ -1,6 +1,6 @@
 // JobTread Budget Group Hierarchy Shading Feature Module
 // Applies progressive shading to nested budget groups (up to 5 levels)
-// Level 1 (top) = Darkest, Level 5 (deepest) = Lightest
+// Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
 
 const BudgetHierarchyFeature = (() => {
   let isActive = false;
@@ -56,26 +56,26 @@ const BudgetHierarchyFeature = (() => {
     const luminance = getLuminance(baseColor);
     const isDark = luminance < 0.5;
 
-    // For dark mode, use smaller steps for closer shading
-    const step = isDarkMode ? 10 : 15;
+    // Use smaller steps for more subtle, lighter shading (better for black text)
+    const step = isDarkMode ? 5 : 8;
 
     if (isDark) {
-      // For dark backgrounds, progressively lighten
+      // For dark backgrounds, progressively darken
       return [
-        baseColor,                           // Level 1: Base (darkest)
-        adjustBrightness(baseColor, step),       // Level 2
+        adjustBrightness(baseColor, step * 4),   // Level 1 (lightest)
+        adjustBrightness(baseColor, step * 3),   // Level 2
         adjustBrightness(baseColor, step * 2),   // Level 3
-        adjustBrightness(baseColor, step * 3),   // Level 4
-        adjustBrightness(baseColor, step * 4)    // Level 5 (lightest)
+        adjustBrightness(baseColor, step),       // Level 4
+        baseColor                                // Level 5: Base (darkest)
       ];
     } else {
       // For light backgrounds, progressively darken
       return [
-        adjustBrightness(baseColor, -step * 4), // Level 1 (darkest)
-        adjustBrightness(baseColor, -step * 3), // Level 2
-        adjustBrightness(baseColor, -step * 2), // Level 3
-        adjustBrightness(baseColor, -step),     // Level 4
-        baseColor                                // Level 5: Base (lightest)
+        baseColor,                               // Level 1: Base (lightest)
+        adjustBrightness(baseColor, -step),      // Level 2
+        adjustBrightness(baseColor, -step * 2),  // Level 3
+        adjustBrightness(baseColor, -step * 3),  // Level 4
+        adjustBrightness(baseColor, -step * 4)   // Level 5 (darkest)
       ];
     }
   }
@@ -108,12 +108,8 @@ const BudgetHierarchyFeature = (() => {
 
   // Initialize the feature
   function init() {
-    if (isActive) {
-      console.log('BudgetHierarchy: Already initialized');
-      return;
-    }
+    if (isActive) return;
 
-    console.log('BudgetHierarchy: Initializing...');
     isActive = true;
 
     // Inject shading CSS
@@ -124,18 +120,12 @@ const BudgetHierarchyFeature = (() => {
 
     // Start observing for new groups
     startObserver();
-
-    console.log('BudgetHierarchy: Shading applied');
   }
 
   // Cleanup the feature
   function cleanup() {
-    if (!isActive) {
-      console.log('BudgetHierarchy: Not active, nothing to cleanup');
-      return;
-    }
+    if (!isActive) return;
 
-    console.log('BudgetHierarchy: Cleaning up...');
     isActive = false;
 
     // Disconnect observer
@@ -152,8 +142,6 @@ const BudgetHierarchyFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
-
-    console.log('BudgetHierarchy: Shading removed');
   }
 
   // Inject CSS for shading
@@ -176,29 +164,18 @@ const BudgetHierarchyFeature = (() => {
         : adjustBrightness(shade, -10); // Darken for light backgrounds
     });
 
-    // Generate lighter shades for line items under groups
-    const itemShades = shades.map(shade => {
-      const luminance = getLuminance(shade);
-      // Make items slightly lighter than their parent group
-      return luminance < 0.5
-        ? adjustBrightness(shade, 8)  // Lighten for dark backgrounds
-        : adjustBrightness(shade, -8); // Darken less for light backgrounds
-    });
+    // Line items should match their parent group shades exactly
+    const itemShades = [...shades];
 
-    const itemHoverShades = itemShades.map(shade => {
-      const luminance = getLuminance(shade);
-      return luminance < 0.5
-        ? adjustBrightness(shade, -12)
-        : adjustBrightness(shade, -8);
-    });
+    const itemHoverShades = [...hoverShades];
 
     styleElement = document.createElement('style');
     styleElement.id = 'jt-budget-hierarchy-styles';
     styleElement.textContent = `
       /* Budget Group Hierarchy Shading */
       /* Generated for ${theme.type} theme */
-      /* Level 1 = Darkest (Top level groups) */
-      /* Level 5 = Lightest (Deepest nested groups) */
+      /* Level 1 = Lightest (Top level groups) */
+      /* Level 5 = Darkest (Deepest nested groups) */
 
       .jt-group-level-1 { background-color: ${shades[0]} !important; }
       .jt-group-level-2 { background-color: ${shades[1]} !important; }
@@ -271,17 +248,40 @@ const BudgetHierarchyFeature = (() => {
       .jt-item-under-level-5 > div:not([class*="bg-yellow"]) {
         background-color: inherit !important;
       }
+
+      /* Apply shading to indent spacer divs in line items */
+      /* Only if parent cell doesn't have yellow background */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2 {
+        background-color: inherit !important;
+      }
+
+      /* Override specific background classes on spacers in line items */
+      /* Only if parent cell doesn't have yellow background */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
+        background-color: inherit !important;
+      }
     `;
 
     document.head.appendChild(styleElement);
-    console.log(`BudgetHierarchy: Generated shades for ${theme.type} theme:`, shades);
   }
 
   // Refresh shading when theme changes
   function refreshShading() {
     if (!isActive) return;
 
-    console.log('BudgetHierarchy: Refreshing shading due to theme change...');
     injectShadingCSS();
     applyGroupShading();
   }
@@ -293,6 +293,25 @@ const BudgetHierarchyFeature = (() => {
     const level = indentDivs.length + 1; // 0 indents = level 1, 1 indent = level 2, etc.
 
     return Math.min(level, 5); // Cap at level 5
+  }
+
+  // Get nesting level of any row (group or line item)
+  function getRowNestingLevel(row) {
+    // First try to find a group cell (font-bold)
+    const groupCell = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
+    if (groupCell) {
+      return getGroupNestingLevel(groupCell);
+    }
+
+    // For line items, check the first cell for indent divs
+    const firstCell = row.querySelector(':scope > div');
+    if (firstCell) {
+      const indentDivs = firstCell.querySelectorAll(':scope > div.pl-3\\.5.border-r-2');
+      const level = indentDivs.length + 1;
+      return Math.min(level, 5);
+    }
+
+    return 1; // Default to level 1 if we can't determine
   }
 
   // Find all group cells (first cell with font-bold class)
@@ -335,39 +354,8 @@ const BudgetHierarchyFeature = (() => {
 
     // Add the appropriate level class
     row.classList.add(`jt-group-level-${level}`);
-
-    console.log(`BudgetHierarchy: Applied level ${level} shading to group`);
   }
 
-  // Apply shading to line items under a group
-  function shadeItemsUnderGroup(groupRow, level) {
-    if (!groupRow || !groupRow.parentElement) return;
-
-    // Find all sibling rows after this group
-    let currentRow = groupRow.nextElementSibling;
-
-    while (currentRow) {
-      // Stop if we hit another group (has font-bold class in first cell)
-      const firstCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
-      if (firstCell) {
-        // This is another group, stop here
-        break;
-      }
-
-      // Check if this is a valid budget row (has the group/row class)
-      if (currentRow.classList.contains('group/row')) {
-        // Remove any existing item-level classes
-        for (let i = 1; i <= 5; i++) {
-          currentRow.classList.remove(`jt-item-under-level-${i}`);
-        }
-
-        // Add the appropriate item-level class
-        currentRow.classList.add(`jt-item-under-level-${level}`);
-      }
-
-      currentRow = currentRow.nextElementSibling;
-    }
-  }
 
   // Remove all item shading
   function removeAllItemShading() {
@@ -379,23 +367,63 @@ const BudgetHierarchyFeature = (() => {
     }
   }
 
+  // Find the parent group for a line item by looking backwards
+  function findParentGroupForItem(itemRow) {
+    if (!itemRow) return null;
+
+    const itemLevel = getRowNestingLevel(itemRow);
+    let currentRow = itemRow.previousElementSibling;
+
+    // Look backwards to find the nearest group at a shallower level
+    while (currentRow) {
+      const groupCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
+      if (groupCell) {
+        const groupLevel = getGroupNestingLevel(groupCell);
+        // If this group is at a shallower level, it's the parent
+        if (groupLevel < itemLevel) {
+          return { row: currentRow, level: groupLevel };
+        }
+      }
+      currentRow = currentRow.previousElementSibling;
+    }
+
+    return null; // No parent group found
+  }
+
   // Apply shading to all groups
   function applyGroupShading() {
     const groupCells = findAllGroupCells();
-    console.log(`BudgetHierarchy: Found ${groupCells.length} groups`);
 
     // First, remove all existing shading from items
     removeAllItemShading();
 
+    // Apply shading to all groups
     groupCells.forEach(groupCell => {
-      const level = getGroupNestingLevel(groupCell);
-      const row = findParentRow(groupCell);
-
-      // Apply shading to the group
       applyShading(groupCell);
+    });
 
-      // Apply shading to items under this group
-      shadeItemsUnderGroup(row, level);
+    // Now shade all line items by finding their parent groups
+    let allRows = document.querySelectorAll('[class*="group/row"]');
+
+    if (allRows.length === 0) {
+      allRows = document.querySelectorAll('.group\\/row');
+    }
+
+    allRows.forEach(row => {
+      // Skip if it's a group row
+      const isGroup = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
+      if (isGroup) return;
+
+      // This is a line item, find its parent group
+      const parentGroup = findParentGroupForItem(row);
+      if (parentGroup) {
+        // Remove any existing item-level classes
+        for (let i = 1; i <= 5; i++) {
+          row.classList.remove(`jt-item-under-level-${i}`);
+        }
+        // Add the parent group's level
+        row.classList.add(`jt-item-under-level-${parentGroup.level}`);
+      }
     });
   }
 
@@ -417,39 +445,81 @@ const BudgetHierarchyFeature = (() => {
   function startObserver() {
     if (observer) return;
 
+    let reapplyTimeout = null;
+
     observer = new MutationObserver((mutations) => {
       if (!isActive) return;
 
-      // Check if any new groups were added
+      // Check if any changes warrant reapplying shading
       let shouldReapply = false;
 
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
-          // Check if added nodes contain group cells
+          // Check if added nodes contain group cells or budget rows
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1) { // Element node
               if (node.classList?.contains('font-bold') ||
-                  node.querySelector?.('div.font-bold.flex[style*="width: 300px"]')) {
+                  node.classList?.contains('group/row') ||
+                  node.querySelector?.('div.font-bold.flex[style*="width: 300px"]') ||
+                  node.querySelector?.('.group\\/row')) {
                 shouldReapply = true;
               }
             }
           });
+
+          // Also check if rows were removed (collapse scenario)
+          if (mutation.removedNodes.length > 0) {
+            mutation.removedNodes.forEach(node => {
+              if (node.nodeType === 1 && node.classList?.contains('group/row')) {
+                shouldReapply = true;
+              }
+            });
+          }
+        }
+
+        // Watch for attribute changes (like style or class changes on expand/collapse)
+        if (mutation.type === 'attributes') {
+          const target = mutation.target;
+          if (target.classList?.contains('group/row') ||
+              target.querySelector?.('.group\\/row')) {
+            shouldReapply = true;
+          }
         }
       }
 
       if (shouldReapply) {
-        console.log('BudgetHierarchy: DOM changed, reapplying shading...');
-        applyGroupShading();
+        // Debounce reapply to avoid excessive calls
+        if (reapplyTimeout) clearTimeout(reapplyTimeout);
+        reapplyTimeout = setTimeout(() => {
+          applyGroupShading();
+        }, 50); // 50ms debounce
       }
     });
 
-    // Observe the entire document for changes
+    // Observe the entire document for changes with more aggressive options
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style']
     });
 
-    console.log('BudgetHierarchy: Observer started');
+    // Add click listener for expand/collapse buttons to force immediate reapply
+    document.body.addEventListener('click', (e) => {
+      if (!isActive) return;
+
+      // Check if the click was on or near a collapse/expand button
+      const target = e.target;
+      const isExpandCollapseButton = target.closest('button')?.querySelector('svg') ||
+                                     target.closest('svg')?.closest('button');
+
+      if (isExpandCollapseButton) {
+        // Force reapply after a short delay to let DOM update
+        setTimeout(() => {
+          applyGroupShading();
+        }, 100);
+      }
+    });
   }
 
   return {
