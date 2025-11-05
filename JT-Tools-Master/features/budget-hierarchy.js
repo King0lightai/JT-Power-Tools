@@ -309,6 +309,25 @@ const BudgetHierarchyFeature = (() => {
     return Math.min(level, 5); // Cap at level 5
   }
 
+  // Get nesting level of any row (group or line item)
+  function getRowNestingLevel(row) {
+    // First try to find a group cell (font-bold)
+    const groupCell = row.querySelector('div.font-bold.flex[style*="width: 300px"]');
+    if (groupCell) {
+      return getGroupNestingLevel(groupCell);
+    }
+
+    // For line items, check the first cell for indent divs
+    const firstCell = row.querySelector(':scope > div');
+    if (firstCell) {
+      const indentDivs = firstCell.querySelectorAll(':scope > div.pl-3\\.5.border-r-2');
+      const level = indentDivs.length + 1;
+      return Math.min(level, 5);
+    }
+
+    return 1; // Default to level 1 if we can't determine
+  }
+
   // Find all group cells (first cell with font-bold class)
   function findAllGroupCells() {
     // Group cells have font-bold class and contain the expand/collapse button
@@ -354,29 +373,39 @@ const BudgetHierarchyFeature = (() => {
   }
 
   // Apply shading to line items under a group
-  function shadeItemsUnderGroup(groupRow, level) {
+  function shadeItemsUnderGroup(groupRow, groupLevel) {
     if (!groupRow || !groupRow.parentElement) return;
 
     // Find all sibling rows after this group
     let currentRow = groupRow.nextElementSibling;
 
     while (currentRow) {
-      // Stop if we hit another group (has font-bold class in first cell)
+      // Stop if we hit another group at the same or shallower level
       const firstCell = currentRow.querySelector('div.font-bold.flex[style*="width: 300px"]');
       if (firstCell) {
-        // This is another group, stop here
-        break;
+        const otherGroupLevel = getGroupNestingLevel(firstCell);
+        // Stop if this group is at the same or shallower level (sibling or parent)
+        if (otherGroupLevel <= groupLevel) {
+          break;
+        }
+        // If it's a deeper nested group, continue (it's a child group)
       }
 
       // Check if this is a valid budget row (has the group/row class)
       if (currentRow.classList.contains('group/row')) {
-        // Remove any existing item-level classes
-        for (let i = 1; i <= 5; i++) {
-          currentRow.classList.remove(`jt-item-under-level-${i}`);
-        }
+        const itemLevel = getRowNestingLevel(currentRow);
 
-        // Add the appropriate item-level class
-        currentRow.classList.add(`jt-item-under-level-${level}`);
+        // Only shade items that are deeper than this group (children, not siblings)
+        if (itemLevel > groupLevel) {
+          // Remove any existing item-level classes
+          for (let i = 1; i <= 5; i++) {
+            currentRow.classList.remove(`jt-item-under-level-${i}`);
+          }
+
+          // Add the appropriate item-level class (use the group's level)
+          currentRow.classList.add(`jt-item-under-level-${groupLevel}`);
+        }
+        // If itemLevel <= groupLevel, it's a sibling or at parent level, skip it
       }
 
       currentRow = currentRow.nextElementSibling;
