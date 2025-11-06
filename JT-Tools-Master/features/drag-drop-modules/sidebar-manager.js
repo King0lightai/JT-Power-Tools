@@ -122,14 +122,37 @@ const SidebarManager = (() => {
   }
 
   /**
-   * Find the start date field in the sidebar
+   * Find the date field in the sidebar (Start or End)
    * @param {HTMLElement} sidebar - The sidebar element
    * @param {Object} sourceDateInfo - The source date info for year inference
+   * @param {string} fieldType - "Start" or "End" - which date field to find
    * @returns {Object} {startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts}
    */
-  function findDateField(sidebar, sourceDateInfo) {
-    const allDateFields = sidebar.querySelectorAll('div.text-gray-700.truncate.leading-tight');
-    console.log(`SidebarManager: findDateField - Found ${allDateFields.length} potential date fields`);
+  function findDateField(sidebar, sourceDateInfo, fieldType = 'Start') {
+    console.log(`SidebarManager: findDateField - Looking for "${fieldType}" date field`);
+
+    // Find the label (Start or End)
+    const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
+    const targetLabel = allLabels.find(span => span.textContent.trim() === fieldType);
+
+    if (!targetLabel) {
+      console.error(`SidebarManager: Could not find "${fieldType}" label in sidebar`);
+      console.log('SidebarManager: Available labels:', allLabels.map(l => l.textContent.trim()));
+      return { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
+    }
+
+    console.log(`SidebarManager: ✓ Found "${fieldType}" label`);
+
+    // Find the container for this label (it's in a div.flex-1)
+    const labelContainer = targetLabel.closest('div.flex-1');
+    if (!labelContainer) {
+      console.error(`SidebarManager: Could not find container for "${fieldType}" label`);
+      return { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
+    }
+
+    // Find date fields within this container only
+    const allDateFields = labelContainer.querySelectorAll('div.text-gray-700.truncate.leading-tight');
+    console.log(`SidebarManager: findDateField - Found ${allDateFields.length} potential date fields in "${fieldType}" section`);
 
     let startDateParent = null;
     let sidebarSourceYear = null;

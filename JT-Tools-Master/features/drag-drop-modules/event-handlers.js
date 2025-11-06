@@ -21,8 +21,9 @@ const DragDropEventHandlers = (() => {
       this.style.cursor = 'grabbing';
       this.style.opacity = '0.5';
 
-      // Capture Shift key state at drag start
+      // Capture Shift and Alt key states at drag start
       state.shiftKeyAtDragStart = e.shiftKey;
+      state.altKeyAtDragStart = e.altKey;
 
       const sourceCell = this.closest('td');
       state.sourceDateInfo = window.DateUtils ? window.DateUtils.extractFullDateInfo(sourceCell) : null;
@@ -31,6 +32,7 @@ const DragDropEventHandlers = (() => {
       console.log('EventHandlers: *** DRAG START ***');
       console.log('EventHandlers: Source date:', JSON.stringify(state.sourceDateInfo));
       console.log('EventHandlers: Shift key:', state.shiftKeyAtDragStart);
+      console.log('EventHandlers: Alt key:', state.altKeyAtDragStart, '(changes END date)');
       console.log('EventHandlers: ==========================================');
 
       state.draggedItemData = {
@@ -174,9 +176,11 @@ const DragDropEventHandlers = (() => {
               }
             }
 
-            // Check Shift key at drop time (OR the state captured at drag start)
+            // Check Shift and Alt keys at drop time (OR the states captured at drag start)
             const isShiftPressed = e.shiftKey || state.shiftKeyAtDragStart;
+            const isAltPressed = e.altKey || state.altKeyAtDragStart;
             console.log('EventHandlers: Drop - Shift at drop:', e.shiftKey, 'Shift at start:', state.shiftKeyAtDragStart, 'Final:', isShiftPressed);
+            console.log('EventHandlers: Drop - Alt at drop:', e.altKey, 'Alt at start:', state.altKeyAtDragStart, 'Final:', isAltPressed);
 
             // Check if dropping on weekend and Shift is NOT pressed
             if (!isShiftPressed && window.WeekendUtils && window.WeekendUtils.isWeekendCell(targetCell, dateInfo)) {
@@ -193,8 +197,10 @@ const DragDropEventHandlers = (() => {
 
             console.log(`EventHandlers: Final date before formatting: ${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`);
             console.log('EventHandlers: About to call attemptDateChange...');
+            console.log('EventHandlers: Alt pressed?', isAltPressed, '- Will change', isAltPressed ? 'END' : 'START', 'date');
             if (attemptDateChangeFn) {
-              attemptDateChangeFn(state.draggedElement, dateInfo.day, targetCell, dateInfo, state.sourceDateInfo);
+              // Pass Alt key state to change End date instead of Start date
+              attemptDateChangeFn(state.draggedElement, dateInfo.day, targetCell, dateInfo, state.sourceDateInfo, null, isAltPressed);
             }
             console.log('EventHandlers: attemptDateChange called (async operations continuing)');
           } else {
@@ -209,8 +215,9 @@ const DragDropEventHandlers = (() => {
           if (!state.draggedItemData) console.error('EventHandlers: draggedItemData is null/undefined');
         }
 
-        // Reset shift state
+        // Reset key states
         state.shiftKeyAtDragStart = false;
+        state.altKeyAtDragStart = false;
         console.log('EventHandlers: ========== DROP EVENT END ==========');
 
         return false;
