@@ -60,22 +60,6 @@ const UIUtils = (() => {
         item.setAttribute('draggable', 'true');
         item.style.cursor = 'grab';
 
-        // Add mousedown listener to check for resize handle clicks
-        item.addEventListener('mousedown', (e) => {
-          // If clicking on resize handle, prevent drag from starting
-          if (e.target && e.target.classList && e.target.classList.contains('jt-task-resize-handle')) {
-            item.setAttribute('draggable', 'false');
-            console.log('UIUtils: Disabled drag - clicking resize handle');
-
-            // Re-enable dragging after a short delay (after resize interaction)
-            setTimeout(() => {
-              if (!window.TaskResize || !window.TaskResize.isCurrentlyResizing()) {
-                item.setAttribute('draggable', 'true');
-              }
-            }, 100);
-          }
-        });
-
         if (handlers.onDragStart) {
           item.addEventListener('dragstart', handlers.onDragStart);
         }
