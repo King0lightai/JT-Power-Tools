@@ -8,6 +8,7 @@ const DragDropFeature = (() => {
     draggedItemData: null,
     sourceDateInfo: null,
     shiftKeyAtDragStart: false,
+    altKeyAtDragStart: false,
     isDateChangeInProgress: false
   };
 
@@ -28,9 +29,6 @@ const DragDropFeature = (() => {
     console.log('DragDrop: Initializing...');
     isActive = true;
 
-    // Inject task resize CSS
-    injectResizeCSS();
-
     // Inject weekend styling
     if (window.WeekendUtils) {
       window.WeekendUtils.injectWeekendCSS();
@@ -45,7 +43,7 @@ const DragDropFeature = (() => {
     if (window.DragDropEventHandlers && window.DateChanger) {
       eventHandlers = window.DragDropEventHandlers.createHandlers(
         state,
-        (element, newDateNumber, targetCell, dateInfo, sourceDateInfo) => {
+        (element, newDateNumber, targetCell, dateInfo, sourceDateInfo, callback, changeEndDate) => {
           // Set flag to prevent observer re-entry during date changes
           state.isDateChangeInProgress = true;
           console.log('DragDrop: Set isDateChangeInProgress = true');
@@ -60,7 +58,8 @@ const DragDropFeature = (() => {
               // Callback when date change is complete
               state.isDateChangeInProgress = false;
               console.log('DragDrop: Set isDateChangeInProgress = false');
-            }
+            },
+            changeEndDate  // Pass Alt key state to change End date
           );
         }
       );
