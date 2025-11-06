@@ -9,7 +9,7 @@
   ],
   "host_permissions": [
     "https://*.jobtread.com/*",
-    "https://api.gumroad.com/*"
+    "https://*.workers.dev/*"
   ],
   "action": {
     "default_popup": "popup/popup.html"
