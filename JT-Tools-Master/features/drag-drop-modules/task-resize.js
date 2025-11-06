@@ -43,30 +43,41 @@ const TaskResize = (() => {
   function addResizeHandle(card) {
     // Make the card position relative for absolute positioning of handle
     card.style.position = 'relative';
-    // Ensure card doesn't prevent handle interaction
     card.style.overflow = 'visible';
 
-    // Create resize handle element (solid bar like left border)
+    // Create resize handle element (solid bar)
     const handle = document.createElement('div');
     handle.className = 'jt-task-resize-handle';
     handle.title = 'Drag to extend task end date';
 
-    // Ensure the handle is interactive
-    handle.style.pointerEvents = 'auto';
+    // CRITICAL: Ensure handle is above everything and clickable
+    handle.style.position = 'absolute';
+    handle.style.right = '-2px'; // Extend beyond edge
+    handle.style.top = '0';
+    handle.style.bottom = '0';
+    handle.style.width = '10px'; // Wider for easier clicking
     handle.style.cursor = 'ew-resize';
+    handle.style.pointerEvents = 'auto';
+    handle.style.zIndex = '999999';
+    handle.style.userSelect = 'none';
 
     // Append handle to card
     card.appendChild(handle);
 
-    // Attach event listeners
-    handle.addEventListener('mousedown', (e) => handleResizeStart(e, card), { capture: true });
+    // SIMPLE APPROACH: Just one mousedown listener that handles everything
+    handle.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // Left click only
 
-    // Add visual feedback on hover
-    handle.addEventListener('mouseenter', () => {
-      console.log('[TaskResize] Mouse entered resize handle');
-    });
+      console.log('[TaskResize] Handle mousedown - starting resize');
 
-    console.log('[TaskResize] Added resize handle to card');
+      // Immediately disable dragging on parent card
+      card.setAttribute('draggable', 'false');
+
+      // Start resize
+      handleResizeStart(e, card);
+    }, true); // Use capture
+
+    console.log('[TaskResize] Added resize handle');
   }
 
   /**

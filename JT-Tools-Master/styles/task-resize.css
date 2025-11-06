@@ -2,39 +2,27 @@
 /* Solid bar handle on right edge of task cards for extending end dates */
 
 .jt-task-resize-handle {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    cursor: ew-resize !important;
+    /* Position set by JS for better control */
     opacity: 0;
-    transition: opacity 0.2s, width 0.15s, background 0.15s;
-    background: rgba(59, 130, 246, 0.6); /* Blue to match preview */
-    z-index: 100;
-    pointer-events: auto !important;
-    user-select: none;
+    transition: opacity 0.2s, background 0.15s;
+    background: rgba(59, 130, 246, 0.7); /* Blue */
 }
 
 /* Show resize handle on hover over task card */
 div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
-    opacity: 0.8;
-    background: rgba(59, 130, 246, 0.7);
+    opacity: 0.9;
 }
 
 /* Brighten handle when hovering directly over it */
 .jt-task-resize-handle:hover {
     opacity: 1 !important;
-    width: 8px;
-    background: rgb(59, 130, 246) !important; /* Solid blue */
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
+    background: rgb(59, 130, 246) !important;
 }
 
-/* Keep visible and bright during resize */
+/* Keep visible during resize */
 .jt-task-resizing .jt-task-resize-handle {
     opacity: 1 !important;
-    width: 8px;
-    background: rgb(59, 130, 246) !important; /* Solid blue */
+    background: rgb(59, 130, 246) !important;
 }
 
 /* Preview cells during resize - highlight in blue */
@@ -87,11 +75,7 @@ div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
 /* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
     .jt-task-resize-handle {
-        background: rgba(255, 255, 255, 0.6);
-    }
-
-    div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.7);
     }
 
     .jt-task-resize-handle:hover,
