@@ -8,6 +8,7 @@ const DragDropFeature = (() => {
     draggedItemData: null,
     sourceDateInfo: null,
     shiftKeyAtDragStart: false,
+    altKeyAtDragStart: false,
     isDateChangeInProgress: false
   };
 
@@ -33,11 +34,16 @@ const DragDropFeature = (() => {
       window.WeekendUtils.injectWeekendCSS();
     }
 
+    // Initialize infinite scroll
+    if (window.InfiniteScroll) {
+      window.InfiniteScroll.init();
+    }
+
     // Create event handlers with access to shared state
     if (window.DragDropEventHandlers && window.DateChanger) {
       eventHandlers = window.DragDropEventHandlers.createHandlers(
         state,
-        (element, newDateNumber, targetCell, dateInfo, sourceDateInfo) => {
+        (element, newDateNumber, targetCell, dateInfo, sourceDateInfo, callback, changeEndDate) => {
           // Set flag to prevent observer re-entry during date changes
           state.isDateChangeInProgress = true;
           console.log('DragDrop: Set isDateChangeInProgress = true');
@@ -52,7 +58,8 @@ const DragDropFeature = (() => {
               // Callback when date change is complete
               state.isDateChangeInProgress = false;
               console.log('DragDrop: Set isDateChangeInProgress = false');
-            }
+            },
+            changeEndDate  // Pass Alt key state to change End date
           );
         }
       );
@@ -92,6 +99,7 @@ const DragDropFeature = (() => {
     });
   }
 
+
   /**
    * Cleanup the drag & drop feature
    */
@@ -113,6 +121,11 @@ const DragDropFeature = (() => {
     // Cleanup drag & drop UI
     if (window.UIUtils) {
       window.UIUtils.cleanupDragDrop();
+    }
+
+    // Cleanup infinite scroll
+    if (window.InfiniteScroll) {
+      window.InfiniteScroll.cleanup();
     }
 
     // Remove weekend CSS
