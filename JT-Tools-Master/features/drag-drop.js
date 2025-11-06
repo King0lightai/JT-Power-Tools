@@ -28,6 +28,9 @@ const DragDropFeature = (() => {
     console.log('DragDrop: Initializing...');
     isActive = true;
 
+    // Inject task resize CSS
+    injectResizeCSS();
+
     // Inject weekend styling
     if (window.WeekendUtils) {
       window.WeekendUtils.injectWeekendCSS();
@@ -98,6 +101,31 @@ const DragDropFeature = (() => {
   }
 
   /**
+   * Inject task resize CSS
+   */
+  function injectResizeCSS() {
+    if (!document.getElementById('jt-task-resize-styles')) {
+      const link = document.createElement('link');
+      link.id = 'jt-task-resize-styles';
+      link.rel = 'stylesheet';
+      link.href = chrome.runtime.getURL('styles/task-resize.css');
+      document.head.appendChild(link);
+      console.log('DragDrop: Task resize CSS injected');
+    }
+  }
+
+  /**
+   * Remove task resize CSS
+   */
+  function removeResizeCSS() {
+    const link = document.getElementById('jt-task-resize-styles');
+    if (link) {
+      link.remove();
+      console.log('DragDrop: Task resize CSS removed');
+    }
+  }
+
+  /**
    * Cleanup the drag & drop feature
    */
   function cleanup() {
@@ -134,6 +162,9 @@ const DragDropFeature = (() => {
     if (window.WeekendUtils) {
       window.WeekendUtils.removeWeekendCSS();
     }
+
+    // Remove resize CSS
+    removeResizeCSS();
 
     console.log('DragDrop: Cleanup complete');
   }

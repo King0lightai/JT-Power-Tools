@@ -45,7 +45,8 @@
     {
       "resources": [
         "styles/formatter-toolbar.css",
-        "styles/dark-mode.css"
+        "styles/dark-mode.css",
+        "styles/task-resize.css"
       ],
       "matches": ["https://*.jobtread.com/*"]
     }

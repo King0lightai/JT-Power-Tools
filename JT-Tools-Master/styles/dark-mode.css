@@ -1,59 +1,6 @@
 /* === JT Power Tools - Dark Mode Theme === */
 /* Custom dark theme for JobTread interface */
 
-/* === Task Card Resize Handle === */
-.jt-task-resize-handle {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    cursor: ew-resize !important;
-    opacity: 0;
-    transition: opacity 0.2s, width 0.15s;
-    background: rgba(255, 255, 255, 0.8);
-    z-index: 100;
-    pointer-events: auto !important;
-    user-select: none;
-}
-
-/* Show resize handle on hover - make it more visible */
-div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.9);
-}
-
-.jt-task-resize-handle:hover {
-    opacity: 1 !important;
-    width: 8px;
-    background: rgba(255, 255, 255, 1) !important;
-    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Keep visible during resize */
-.jt-task-resizing .jt-task-resize-handle {
-    opacity: 1 !important;
-    width: 8px;
-    background: rgba(255, 255, 255, 1) !important;
-}
-
-/* Preview cells during resize */
-.jt-resize-preview {
-    background-color: rgba(59, 130, 246, 0.2) !important;
-    border: 2px dashed rgb(59, 130, 246) !important;
-    box-shadow: inset 0 0 8px rgba(59, 130, 246, 0.3);
-}
-
-/* Prevent pointer events on task content during resize */
-.jt-task-resizing * {
-    pointer-events: none;
-}
-
-.jt-task-resizing {
-    opacity: 0.8;
-    z-index: 1000;
-}
-
 /* === Schedule Card Overrides (Inline Styles) === */
 /* Target schedule cards in month view that have inline color/background styles */
 td div.cursor-pointer[style*="background-color"] {
