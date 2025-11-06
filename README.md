@@ -18,6 +18,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Highlights current date in schedule view
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
+- Hold Shift to drag a task to weekends
+- Hold Alt to change the tasks end date
 
 ### 📝 Text Formatter
 - Rich text formatting toolbar for text fields
@@ -60,6 +62,17 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Task cards blend seamlessly with custom background
 - Mutual exclusivity with Contrast Fix and Dark Mode
 
+### 📊 Budget Hierarchy Shading
+- Progressive visual shading for nested budget groups (up to 5 levels)
+- Level 1 (top-level groups) = Lightest shade
+- Level 5 (deepest nested groups) = Darkest shade
+- Line items automatically match their parent group's shading
+- Adapts intelligently to Dark Mode and Custom Theme
+- Preserves yellow highlighting for unsaved changes
+- Smooth hover states for better visual feedback
+- Real-time updates when expanding/collapsing groups
+- Helps quickly identify group hierarchy and relationships at a glance
+
 ## 📦 Installation
 
 ### Method 1: Load Unpacked (Development)
@@ -80,7 +93,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to any JobTread page (`*.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT Power Tools control panel with six toggle switches
+3. You'll see the JT Power Tools control panel with seven feature toggle switches
 
 ### Toggling Features
 
@@ -114,6 +127,14 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 3. Type to filter jobs in real-time
 4. Press Enter to select top result and navigate
 5. Press Escape to close without selecting
+
+#### Budget Hierarchy Shading
+- Automatically active on budget pages when enabled
+- No user interaction needed
+- Groups are shaded progressively darker as nesting increases
+- Line items automatically inherit their parent group's shade
+- Works seamlessly with other appearance features
+- Updates in real-time when groups are expanded or collapsed
 
 ## 🔑 Premium Features
 
@@ -154,7 +175,8 @@ JT-Tools-Master/
 │   ├── formatter.js          # Text Formatter module
 │   ├── job-switcher.js       # Quick Job Switcher module
 │   ├── dark-mode.js          # Dark Mode module
-│   └── rgb-theme.js          # Custom Theme module (Premium)
+│   ├── rgb-theme.js          # Custom Theme module (Premium)
+│   └── budget-hierarchy.js   # Budget Hierarchy Shading module
 ├── styles/
 │   ├── formatter-toolbar.css # Formatter toolbar styles
 │   └── dark-mode.css         # Dark mode styles
@@ -257,7 +279,18 @@ const featureModules = {
 
 ## 📝 Version History
 
-### v3.1.0 (Current)
+### v3.2.2 (Current)
+- **New Feature: Budget Hierarchy Shading**
+  - Progressive visual shading for nested budget groups (up to 5 levels)
+  - Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
+  - Line items automatically inherit parent group shading
+  - Adapts intelligently to Dark Mode and Custom Theme
+  - Preserves yellow highlighting for unsaved changes
+  - Smooth hover states for better visual feedback
+  - Real-time updates when expanding/collapsing groups
+  - Helps quickly identify group hierarchy at a glance
+
+### v3.1.0
 - **New Feature: Quick Job Switcher**
   - J+S keyboard shortcut to instantly open job switcher
   - Type to search and filter jobs in real-time
