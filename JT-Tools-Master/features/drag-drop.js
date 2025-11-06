@@ -100,30 +100,6 @@ const DragDropFeature = (() => {
     });
   }
 
-  /**
-   * Inject task resize CSS
-   */
-  function injectResizeCSS() {
-    if (!document.getElementById('jt-task-resize-styles')) {
-      const link = document.createElement('link');
-      link.id = 'jt-task-resize-styles';
-      link.rel = 'stylesheet';
-      link.href = chrome.runtime.getURL('styles/task-resize.css');
-      document.head.appendChild(link);
-      console.log('DragDrop: Task resize CSS injected');
-    }
-  }
-
-  /**
-   * Remove task resize CSS
-   */
-  function removeResizeCSS() {
-    const link = document.getElementById('jt-task-resize-styles');
-    if (link) {
-      link.remove();
-      console.log('DragDrop: Task resize CSS removed');
-    }
-  }
 
   /**
    * Cleanup the drag & drop feature
@@ -148,11 +124,6 @@ const DragDropFeature = (() => {
       window.UIUtils.cleanupDragDrop();
     }
 
-    // Cleanup task resize functionality
-    if (window.TaskResize) {
-      window.TaskResize.cleanup();
-    }
-
     // Cleanup infinite scroll
     if (window.InfiniteScroll) {
       window.InfiniteScroll.cleanup();
@@ -162,9 +133,6 @@ const DragDropFeature = (() => {
     if (window.WeekendUtils) {
       window.WeekendUtils.removeWeekendCSS();
     }
-
-    // Remove resize CSS
-    removeResizeCSS();
 
     console.log('DragDrop: Cleanup complete');
   }
@@ -179,11 +147,6 @@ const DragDropFeature = (() => {
     }
 
     window.UIUtils.initDragAndDrop(eventHandlers);
-
-    // Initialize task card resize functionality
-    if (window.TaskResize) {
-      window.TaskResize.initializeTaskResize();
-    }
   }
 
   // Public API

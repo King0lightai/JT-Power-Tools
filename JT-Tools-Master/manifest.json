@@ -27,7 +27,6 @@
         "features/drag-drop-modules/sidebar-manager.js",
         "features/drag-drop-modules/date-changer.js",
         "features/drag-drop-modules/event-handlers.js",
-        "features/drag-drop-modules/task-resize.js",
         "features/drag-drop-modules/infinite-scroll.js",
         "features/drag-drop.js",
         "features/contrast-fix.js",
@@ -45,8 +44,7 @@
     {
       "resources": [
         "styles/formatter-toolbar.css",
-        "styles/dark-mode.css",
-        "styles/task-resize.css"
+        "styles/dark-mode.css"
       ],
       "matches": ["https://*.jobtread.com/*"]
     }
