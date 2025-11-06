@@ -62,15 +62,26 @@ div.cursor-pointer[style*="background-color"]:hover .jt-task-resize-handle {
     z-index: 10;
 }
 
-/* Prevent pointer events on task content during resize */
-.jt-task-resizing * {
-    pointer-events: none;
+/* Make task transparent to pointer events during resize so we can detect cells underneath */
+.jt-task-resizing {
+    opacity: 0.6;
+    z-index: 1000;
+    pointer-events: none !important;
 }
 
-/* Make task slightly transparent during resize */
-.jt-task-resizing {
-    opacity: 0.8;
-    z-index: 1000;
+/* But keep the resize handle interactive */
+.jt-task-resizing .jt-task-resize-handle {
+    pointer-events: auto !important;
+}
+
+/* Prevent pointer events on all task content during resize */
+.jt-task-resizing * {
+    pointer-events: none !important;
+}
+
+/* Except the resize handle */
+.jt-task-resizing .jt-task-resize-handle {
+    pointer-events: auto !important;
 }
 
 /* Dark mode adjustments */
