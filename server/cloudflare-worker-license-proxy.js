@@ -19,17 +19,9 @@
  */
 
 // Rate limiting store (using Cloudflare KV in production)
+// Note: Workers are stateless and restart frequently, so this Map won't grow indefinitely
+// Old entries are cleaned up inline during rate limit checks
 const rateLimitStore = new Map();
-
-// Clean up old rate limit entries every hour
-setInterval(() => {
-  const oneHourAgo = Date.now() - (60 * 60 * 1000);
-  for (const [key, value] of rateLimitStore.entries()) {
-    if (value.timestamp < oneHourAgo) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 60 * 60 * 1000);
 
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request));
@@ -188,6 +180,13 @@ function isRateLimited(clientIP) {
   const now = Date.now();
   const oneHour = 60 * 60 * 1000;
   const maxRequests = parseInt(RATE_LIMIT_MAX || '100');
+
+  // Clean up old entries (inline cleanup to avoid setInterval in global scope)
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now - value.timestamp > oneHour) {
+      rateLimitStore.delete(key);
+    }
+  }
 
   if (!rateLimitStore.has(clientIP)) {
     rateLimitStore.set(clientIP, { count: 1, timestamp: now });
