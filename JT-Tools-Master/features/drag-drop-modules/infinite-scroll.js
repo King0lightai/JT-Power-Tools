@@ -8,8 +8,36 @@ const InfiniteScroll = (() => {
   let scrollTimeout = null;
   let isLoading = false;
   let lastScrollPosition = 0;
+  let scrollContainer = null; // The actual element that scrolls
   const SCROLL_THRESHOLD = 300; // pixels from top/bottom to trigger load
   const DEBOUNCE_DELAY = 150; // ms to wait before checking scroll
+
+  /**
+   * Find the scrollable container for the calendar
+   * @returns {Element|Window} The element that scrolls
+   */
+  function findScrollContainer() {
+    // First, try to find a scrollable div container
+    const allElements = document.querySelectorAll('*');
+
+    for (const el of allElements) {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+
+      // Check if element has scroll
+      if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+        // Check if this container has the calendar table
+        const hasCalendar = el.querySelector('table td.group') !== null;
+        if (hasCalendar) {
+          console.log('[InfiniteScroll] 🎯 Found scrollable calendar container:', el);
+          return el;
+        }
+      }
+    }
+
+    console.log('[InfiniteScroll] 📄 No scrollable container found, using window');
+    return window;
+  }
 
   /**
    * Initialize infinite scroll functionality
@@ -23,17 +51,40 @@ const InfiniteScroll = (() => {
     console.log('[InfiniteScroll] Initializing infinite calendar scroll');
     isEnabled = true;
 
-    // Attach scroll listener to window
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Find the scroll container
+    scrollContainer = findScrollContainer();
 
-    console.log('[InfiniteScroll] Infinite scroll enabled');
+    // Diagnostic: Check page scroll properties
+    console.log('[InfiniteScroll] 🔍 Page Diagnostics:');
+    if (scrollContainer === window) {
+      console.log(`  - Using: window (document scroll)`);
+      console.log(`  - window.pageYOffset: ${window.pageYOffset}`);
+      console.log(`  - document.documentElement.scrollTop: ${document.documentElement.scrollTop}`);
+      console.log(`  - document.documentElement.scrollHeight: ${document.documentElement.scrollHeight}`);
+      console.log(`  - document.documentElement.clientHeight: ${document.documentElement.clientHeight}`);
+      console.log(`  - Scrollable height: ${document.documentElement.scrollHeight - document.documentElement.clientHeight}px`);
+    } else {
+      console.log(`  - Using: scrollable container element`);
+      console.log(`  - scrollTop: ${scrollContainer.scrollTop}`);
+      console.log(`  - scrollHeight: ${scrollContainer.scrollHeight}`);
+      console.log(`  - clientHeight: ${scrollContainer.clientHeight}`);
+      console.log(`  - Scrollable height: ${scrollContainer.scrollHeight - scrollContainer.clientHeight}px`);
+    }
+
+    // Attach scroll listener to the appropriate container
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+    console.log('[InfiniteScroll] ✅ Infinite scroll enabled - scroll the page to test!');
   }
 
   /**
    * Handle scroll events with debouncing
    */
   function handleScroll() {
+    console.log(`[InfiniteScroll] 📜 Scroll event detected - enabled: ${isEnabled}, isLoading: ${isLoading}`);
+
     if (!isEnabled || isLoading) {
+      console.log(`[InfiniteScroll] ⏭️ Skipping scroll check (enabled: ${isEnabled}, isLoading: ${isLoading})`);
       return;
     }
 
@@ -52,26 +103,47 @@ const InfiniteScroll = (() => {
    * Check if we're at top or bottom and load more if needed
    */
   function checkScrollPosition() {
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = document.documentElement.clientHeight;
+    let scrollTop, scrollHeight, clientHeight;
+
+    // Get scroll properties based on container type
+    if (scrollContainer === window) {
+      scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      scrollHeight = document.documentElement.scrollHeight;
+      clientHeight = document.documentElement.clientHeight;
+    } else {
+      scrollTop = scrollContainer.scrollTop;
+      scrollHeight = scrollContainer.scrollHeight;
+      clientHeight = scrollContainer.clientHeight;
+    }
+
     const scrollBottom = scrollHeight - scrollTop - clientHeight;
 
     // Determine scroll direction
     const scrollingDown = scrollTop > lastScrollPosition;
     lastScrollPosition = scrollTop;
 
-    console.log(`[InfiniteScroll] Scroll position: top=${scrollTop}, bottom=${scrollBottom}, direction=${scrollingDown ? 'down' : 'up'}`);
+    console.log(`[InfiniteScroll] ========== SCROLL CHECK ==========`);
+    console.log(`[InfiniteScroll] Container: ${scrollContainer === window ? 'window' : 'element'}`);
+    console.log(`[InfiniteScroll] scrollTop: ${scrollTop}px`);
+    console.log(`[InfiniteScroll] scrollHeight: ${scrollHeight}px`);
+    console.log(`[InfiniteScroll] clientHeight: ${clientHeight}px`);
+    console.log(`[InfiniteScroll] scrollBottom: ${scrollBottom}px`);
+    console.log(`[InfiniteScroll] THRESHOLD: ${SCROLL_THRESHOLD}px`);
+    console.log(`[InfiniteScroll] Direction: ${scrollingDown ? 'DOWN' : 'UP'}`);
+    console.log(`[InfiniteScroll] isLoading: ${isLoading}`);
+    console.log(`[InfiniteScroll] ===================================`);
 
     // Check if near bottom (scrolling down)
     if (scrollingDown && scrollBottom < SCROLL_THRESHOLD) {
-      console.log('[InfiniteScroll] Near bottom, loading next month');
+      console.log('[InfiniteScroll] ✅ TRIGGER: Near bottom, loading next month');
       loadNextMonth();
     }
     // Check if near top (scrolling up)
     else if (!scrollingDown && scrollTop < SCROLL_THRESHOLD) {
-      console.log('[InfiniteScroll] Near top, loading previous month');
+      console.log('[InfiniteScroll] ✅ TRIGGER: Near top, loading previous month');
       loadPreviousMonth();
+    } else {
+      console.log('[InfiniteScroll] ❌ No trigger - not near threshold');
     }
   }
 
@@ -297,8 +369,11 @@ const InfiniteScroll = (() => {
     console.log('[InfiniteScroll] Cleaning up infinite scroll');
     isEnabled = false;
 
-    // Remove scroll listener
-    window.removeEventListener('scroll', handleScroll);
+    // Remove scroll listener from the correct container
+    if (scrollContainer) {
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      scrollContainer = null;
+    }
 
     // Clear timeout
     if (scrollTimeout) {
