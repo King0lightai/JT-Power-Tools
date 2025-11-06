@@ -34,11 +34,6 @@ const DragDropFeature = (() => {
       window.WeekendUtils.injectWeekendCSS();
     }
 
-    // Initialize infinite scroll
-    if (window.InfiniteScroll) {
-      window.InfiniteScroll.init();
-    }
-
     // Create event handlers with access to shared state
     if (window.DragDropEventHandlers && window.DateChanger) {
       eventHandlers = window.DragDropEventHandlers.createHandlers(
@@ -121,11 +116,6 @@ const DragDropFeature = (() => {
     // Cleanup drag & drop UI
     if (window.UIUtils) {
       window.UIUtils.cleanupDragDrop();
-    }
-
-    // Cleanup infinite scroll
-    if (window.InfiniteScroll) {
-      window.InfiniteScroll.cleanup();
     }
 
     // Remove weekend CSS
