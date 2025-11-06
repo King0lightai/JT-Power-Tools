@@ -18,6 +18,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Highlights current date in schedule view
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
+- Hold Shift to drag a task to weekends
+- Hold Alt to change the tasks end date
 
 ### 📝 Text Formatter
 - Rich text formatting toolbar for text fields
