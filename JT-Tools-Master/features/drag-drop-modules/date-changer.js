@@ -10,11 +10,13 @@ const DateChanger = (() => {
    * @param {Object} providedDateInfo - The full date info {day, month, year}
    * @param {Object} sourceDateInfo - The source date info from drag start
    * @param {Function} onDateChangeComplete - Callback when date change is complete
+   * @param {boolean} changeEndDate - If true, change End date instead of Start date (Alt key)
    * @returns {Promise} Resolves when date change is complete
    */
-  function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo, sourceDateInfo, onDateChangeComplete) {
+  function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo, sourceDateInfo, onDateChangeComplete, changeEndDate = false) {
     console.log('DateChanger: ==========================================');
     console.log('DateChanger: attemptDateChange - *** START ***');
+    console.log('DateChanger: changeEndDate?', changeEndDate, '(Alt key pressed)');
     console.log('DateChanger: ==========================================');
 
     try {
@@ -59,12 +61,22 @@ const DateChanger = (() => {
         if (sidebar) {
           console.log('DateChanger: attemptDateChange - Sidebar found, processing date change...');
 
-          // Find start date field
+          // Determine which field to change based on Alt key
+          const fieldType = changeEndDate ? 'End' : 'Start';
+          console.log(`DateChanger: Looking for "${fieldType}" date field`);
+
+          // Find date field (Start or End)
           const fieldResult = window.SidebarManager
-            ? window.SidebarManager.findDateField(sidebar, sourceDateInfo)
+            ? window.SidebarManager.findDateField(sidebar, sourceDateInfo, fieldType)
             : { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
 
           const { startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts } = fieldResult;
+
+          // Show notification about which date is being changed
+          if (window.UIUtils) {
+            const formattedNewDate = `${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`;
+            window.UIUtils.showNotification(`Changing ${fieldType} date to ${formattedNewDate}`);
+          }
 
           // If we found year and month in sidebar, recalculate target year
           if (sidebarSourceYear && sidebarSourceMonth && providedDateInfo && window.DateUtils) {
