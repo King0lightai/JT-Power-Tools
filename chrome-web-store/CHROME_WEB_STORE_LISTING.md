@@ -1,7 +1,7 @@
 # Chrome Web Store Listing - JT Power Tools
 
 ## Short Description (132 characters max)
-Powerful productivity tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Quick Job Switcher & Custom Themes.
+7 powerful tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Job Switcher, Custom Theme & Budget Hierarchy.
 
 ## Detailed Description
 
@@ -56,6 +56,15 @@ Powerful productivity tools for JobTread: Drag & Drop, Dark Mode, Text Formatter
 • Inline color preview boxes
 • Save up to 3 custom themes for quick switching
 • Intelligent color coordination across entire interface
+
+**📊 Budget Hierarchy Shading (Free)**
+• Progressive visual shading for nested budget groups (up to 5 levels)
+• Level 1 (top-level) = Lightest shade, Level 5 (deepest) = Darkest shade
+• Line items automatically match their parent group's shading
+• Adapts intelligently to Dark Mode and Custom Theme
+• Preserves yellow highlighting for unsaved changes
+• Real-time updates when expanding/collapsing groups
+• Helps quickly identify group hierarchy and relationships at a glance
 
 💼 **PROFESSIONAL DESIGN**
 Clean, minimalistic interface that matches JobTread's aesthetic. Simple controls with thin lines and professional styling.

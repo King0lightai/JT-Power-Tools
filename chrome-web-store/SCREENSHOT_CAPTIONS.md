@@ -2,11 +2,11 @@
 
 ## Screenshot 1: Main Popup Interface
 **Caption:**
-"Clean, minimal interface with easy toggle controls for all 6 features. Premium features clearly marked."
+"Clean, minimal interface with easy toggle controls for all 7 features. Premium features clearly marked."
 
 **What to Show:**
 - Open the extension popup
-- Show all 6 features with toggles (Drag & Drop, Contrast Fix, Text Formatter, Quick Job Switcher, Dark Mode, Custom Theme)
+- Show all 7 features with toggles (Drag & Drop, Contrast Fix, Text Formatter, Quick Job Switcher, Dark Mode, Custom Theme, Budget Hierarchy)
 - Include the premium badges on Drag & Drop and Custom Theme
 - Show the refresh button and license section
 
@@ -72,7 +72,20 @@
 
 ---
 
-## Screenshot 7: License Activation (Optional)
+## Screenshot 7: Budget Hierarchy Shading
+**Caption:**
+"Progressive shading shows nested budget groups at a glance. Deeper nesting = darker shade. Updates in real-time."
+
+**What to Show:**
+- Budget page with multiple nested groups (at least 3-4 levels deep)
+- Clear visual distinction between different hierarchy levels
+- Line items matching their parent group's shade
+- Maybe show one group expanded and another collapsed
+- Demonstrate the progressive darkening from Level 1 to Level 5
+
+---
+
+## Screenshot 8: License Activation (Optional)
 **Caption:**
 "Simple premium license activation. Enter your key and unlock Drag & Drop and Custom Theme instantly."
 

@@ -8,7 +8,7 @@
 JT Power Tools
 
 **Short Description (132 characters max):**
-Powerful productivity tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Quick Job Switcher & Custom Themes.
+7 powerful tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Job Switcher, Custom Theme & Budget Hierarchy.
 
 **Category:**
 Productivity
@@ -37,7 +37,7 @@ Host the PRIVACY_POLICY.md file on:
 - Option 3: Paste into Chrome Web Store directly
 
 **Single Purpose Description (Required):**
-"JT Power Tools enhances JobTread with productivity features including drag-and-drop scheduling, dark mode, text formatting, quick job switching, custom themes, and improved text contrast for construction project management."
+"JT Power Tools enhances JobTread with productivity features including drag-and-drop scheduling, dark mode, text formatting, quick job switching, custom themes, improved text contrast, and budget hierarchy visualization for construction project management."
 
 **Permission Justifications:**
 
@@ -65,14 +65,15 @@ Host the PRIVACY_POLICY.md file on:
 **Screenshots (Required - at least 1):**
 - Size: 1280x800 or 640x400 pixels
 - Format: PNG or JPEG
-- Recommended: 5-7 screenshots showing:
-  1. Popup interface with feature toggles
+- Recommended: 6-8 screenshots showing:
+  1. Popup interface with all 7 feature toggles
   2. Drag & Drop in action (month view)
   3. Text Formatter toolbar
   4. Quick Job Switcher in action
   5. Custom Theme customization panel
   6. Dark mode comparison (before/after)
-  7. Premium license activation
+  7. Budget Hierarchy Shading with nested groups
+  8. Premium license activation (optional)
 
 **Promotional Images (Optional but Recommended):**
 - Small Promo Tile: 440x280 pixels
@@ -157,7 +158,7 @@ Before submitting, verify:
 - [ ] Permissions are justified
 - [ ] Store listing mentions it's not officially affiliated with JobTread
 - [ ] Premium features are clearly marked as requiring separate purchase
-- [ ] Version number matches manifest.json (1.0.0)
+- [ ] Version number matches manifest.json (3.2.3)
 - [ ] Extension package (.zip) is under 100MB
 - [ ] No minified or obfuscated code (except React from JobTread)
 
