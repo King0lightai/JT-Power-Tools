@@ -16,15 +16,16 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Multi-month and multi-year support with intelligent date detection
 - Visual feedback with drop zone highlighting
 - Preserves task details and assignments during moves
+- Hold Shift to drag a task to weekends
+- Hold Alt to change the tasks end date
 
 ### 🎨 Contrast Fix
-- Automatically adjusts text colors for better readability
+- Automatically adjusts text colors for better readability in schedule views
+- Works on Month, Week, and Day schedule views only
 - Uses WCAG contrast formula for optimal visibility
 - Highlights current date in schedule view
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
-- Hold Shift to drag a task to weekends
-- Hold Alt to change the tasks end date
 
 ### 📝 Text Formatter
 - Rich text formatting toolbar for text fields
@@ -106,7 +107,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ### First-Time Setup
 
-1. After installation, navigate to any JobTread page (`*.jobtread.com`)
+1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
 3. You'll see the JT Power Tools control panel with seven feature toggle switches
 
@@ -137,7 +138,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
 #### Quick Job Switcher
-1. Press J+S from any JobTread page
+1. Press J+S from JobTread (app.jobtread.com)
 2. Job switcher sidebar opens with search focused
 3. Type to filter jobs in real-time
 4. Press Enter to select top result and navigate
@@ -161,6 +162,8 @@ Some features require a premium license to unlock:
 
 **⚠️ Important:** Premium features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn). Install from there before purchasing.
 
+**💼 Company Licensing:** Licenses are designed for company-wide use. Purchase **one license per company** and share it with all employees in your organization. No need to buy individual licenses for each team member!
+
 1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 2. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
 3. Open the extension popup
@@ -168,6 +171,7 @@ Some features require a premium license to unlock:
 5. Enter your license key
 6. Click "Activate"
 7. Premium features will be unlocked immediately
+8. Share the license key with other employees in your company
 
 ### Product Configuration
 The extension is configured with:
@@ -209,7 +213,7 @@ JT-Tools-Master/
 
 ### How It Works
 
-1. **Content Script** (`content.js`) loads on all JobTread pages
+1. **Content Script** (`content.js`) loads on app.jobtread.com
 2. **Feature Modules** are loaded dynamically based on user settings
 3. **Popup UI** allows users to toggle features on/off
 4. **Background Service Worker** manages settings and coordinates updates
@@ -395,19 +399,7 @@ The extension is now live on the Chrome Web Store! For documentation related to 
 ## 🐛 Known Issues
 
 - **Formatter**: Some complex formatting scenarios may require page refresh
-- **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
-
-## 🔮 Future Enhancements (susceptible to change)
-
-- [ ] End date adjustment for drag & drop
-- [ ] Multi-select drag for multiple tasks
-- [ ] click and drag task cards edges to expand and shrink days.
-- [ ] Custom keyboard shortcuts
-- [ ] Export/import settings
-- [ ] Additional custom theme presets
-- [ ] Theme sharing and import/export
-- [ ] Budget changelog captured in a line item
-- [ ] Record "why" schedule items shifted
+- **Drag & Drop**: Only changes start date by default (use Alt key to modify end date)
 
 ## 📧 Support
 

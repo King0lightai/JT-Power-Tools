@@ -7,45 +7,84 @@ const UIUtils = (() => {
    * @param {string} message - The message to display
    */
   function showNotification(message) {
+    // Find the search box container
+    const searchContainer = document.querySelector('div.relative.h-10.cursor-pointer.grow.min-w-0.rounded-sm');
+
+    if (!searchContainer) {
+      console.warn('DragDrop: Search container not found, notification not displayed');
+      return;
+    }
+
+    // Create notification element
     const notification = document.createElement('div');
     notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
         background: rgb(59, 130, 246);
         color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        padding: 6px 12px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         z-index: 10000;
-        max-width: 400px;
-        font-size: 14px;
-        font-weight: bold;
-        animation: slideIn 0.3s ease-out;
+        max-width: 250px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        animation: fadeIn 0.2s ease-out;
     `;
     notification.textContent = message;
 
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-    `;
-    document.head.appendChild(style);
+    // Inject animation styles if not already present
+    if (!document.getElementById('jt-notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'jt-notification-styles';
+      style.textContent = `
+          @keyframes fadeIn {
+              from {
+                  opacity: 0;
+                  transform: translateY(-50%) translateX(20px);
+              }
+              to {
+                  opacity: 1;
+                  transform: translateY(-50%) translateX(0);
+              }
+          }
+          @keyframes fadeOut {
+              from {
+                  opacity: 1;
+                  transform: translateY(-50%) translateX(0);
+              }
+              to {
+                  opacity: 0;
+                  transform: translateY(-50%) translateX(20px);
+              }
+          }
+      `;
+      document.head.appendChild(style);
+    }
 
-    document.body.appendChild(notification);
+    // Ensure the search container has relative positioning
+    const originalPosition = searchContainer.style.position;
+    if (!originalPosition || originalPosition === 'static') {
+      searchContainer.style.position = 'relative';
+    }
 
+    searchContainer.appendChild(notification);
+
+    // Remove after 3 seconds with fade out animation
     setTimeout(() => {
-      notification.style.animation = 'slideIn 0.3s ease-out reverse';
-      setTimeout(() => notification.remove(), 300);
-    }, 5000);
+      notification.style.animation = 'fadeOut 0.2s ease-out';
+      setTimeout(() => {
+        notification.remove();
+        // Restore original position if it was changed
+        if (!originalPosition || originalPosition === 'static') {
+          searchContainer.style.position = originalPosition || '';
+        }
+      }, 200);
+    }, 3000);
   }
 
   /**
