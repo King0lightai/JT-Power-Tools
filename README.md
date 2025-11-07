@@ -107,7 +107,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ### First-Time Setup
 
-1. After installation, navigate to any JobTread page (`*.jobtread.com`)
+1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
 3. You'll see the JT Power Tools control panel with seven feature toggle switches
 
@@ -138,7 +138,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
 #### Quick Job Switcher
-1. Press J+S from any JobTread page
+1. Press J+S from JobTread (app.jobtread.com)
 2. Job switcher sidebar opens with search focused
 3. Type to filter jobs in real-time
 4. Press Enter to select top result and navigate
@@ -213,7 +213,7 @@ JT-Tools-Master/
 
 ### How It Works
 
-1. **Content Script** (`content.js`) loads on all JobTread pages
+1. **Content Script** (`content.js`) loads on app.jobtread.com
 2. **Feature Modules** are loaded dynamically based on user settings
 3. **Popup UI** allows users to toggle features on/off
 4. **Background Service Worker** manages settings and coordinates updates

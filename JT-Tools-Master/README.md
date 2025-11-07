@@ -74,7 +74,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ### First-Time Setup
 
-1. After installation, navigate to any JobTread page (`*.jobtread.com`)
+1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
 3. You'll see the JT Power Tools control panel with six toggle switches
 
