@@ -36,132 +36,149 @@ const DateChanger = (() => {
 
       console.log('DateChanger: attemptDateChange - Using dateInfo:', JSON.stringify(dateInfo));
 
-      // Inject CSS to hide sidebar
-      const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
-
-      // Failsafe: Remove CSS after 5 seconds no matter what
-      const failsafeTimeout = setTimeout(() => {
-        if (window.SidebarManager) {
-          window.SidebarManager.removeSidebarCSS();
-          console.log('DateChanger: Failsafe removed hiding CSS');
-        }
-      }, 5000);
-
-      // Click to open sidebar
+      // Close any open sidebar first to prevent conflicts
       if (window.SidebarManager) {
-        window.SidebarManager.openSidebar(element);
-      } else {
-        element.click();
+        const hadOpenSidebar = window.SidebarManager.closeAnySidebar();
+        if (hadOpenSidebar) {
+          console.log('DateChanger: Closed existing sidebar, waiting before opening new one...');
+          // Wait a bit for the sidebar to close
+          setTimeout(() => continueWithDateChange(), 300);
+          return;
+        }
       }
 
-      // Wait for sidebar and process
-      setTimeout(() => {
-        const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+      continueWithDateChange();
 
-        if (sidebar) {
-          console.log('DateChanger: attemptDateChange - Sidebar found, processing date change...');
+      function continueWithDateChange() {
+        console.log('DateChanger: Continuing with date change operation...');
 
-          // Determine which field to change based on Alt key
-          const fieldType = changeEndDate ? 'End' : 'Start';
-          console.log(`DateChanger: Looking for "${fieldType}" date field`);
+        // Inject CSS to hide sidebar
+        const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
 
-          // Find date field (Start or End)
-          const fieldResult = window.SidebarManager
-            ? window.SidebarManager.findDateField(sidebar, sourceDateInfo, fieldType)
-            : { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
-
-          const { startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts } = fieldResult;
-
-          // Show notification about which date is being changed
-          if (window.UIUtils) {
-            const formattedNewDate = `${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`;
-            window.UIUtils.showNotification(`Changing ${fieldType} date to ${formattedNewDate}`);
+        // Failsafe: Remove CSS after 5 seconds no matter what
+        const failsafeTimeout = setTimeout(() => {
+          if (window.SidebarManager) {
+            window.SidebarManager.removeSidebarCSS();
+            console.log('DateChanger: Failsafe removed hiding CSS');
           }
+        }, 5000);
 
-          // If we found year and month in sidebar, recalculate target year
-          if (sidebarSourceYear && sidebarSourceMonth && providedDateInfo && window.DateUtils) {
-            console.log(`DateChanger: attemptDateChange - *** USING SIDEBAR DATA FOR YEAR CALCULATION ***`);
-            console.log(`DateChanger: attemptDateChange - Sidebar source: ${sidebarSourceMonth} ${sidebarSourceYear}`);
-            console.log(`DateChanger: attemptDateChange - Original target: ${dateInfo.month} ${dateInfo.year}`);
+        // Click to open sidebar
+        if (window.SidebarManager) {
+          window.SidebarManager.openSidebar(element);
+        } else {
+          element.click();
+        }
 
-            const monthMap = window.DateUtils.MONTH_MAP;
-            const sourceMonthIndex = monthMap[sidebarSourceMonth];
-            const targetMonthIndex = monthMap[dateInfo.month];
+        // Wait for sidebar and process
+        setTimeout(() => {
+          const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
-            // Apply year boundary logic using ACTUAL source year from sidebar
-            if (sourceMonthIndex === targetMonthIndex) {
-              // Same month - use source year
-              dateInfo.year = sidebarSourceYear;
-              console.log(`DateChanger: attemptDateChange - ✓ Same month, corrected target year to: ${dateInfo.year}`);
-            } else if (sourceMonthIndex === 11 && targetMonthIndex === 0) {
-              // Dec → Jan: next year
-              dateInfo.year = sidebarSourceYear + 1;
-              console.log(`DateChanger: attemptDateChange - ✓ Dec→Jan transition, corrected target year to: ${dateInfo.year}`);
-            } else if (sourceMonthIndex === 0 && targetMonthIndex === 11) {
-              // Jan → Dec: previous year
-              dateInfo.year = sidebarSourceYear - 1;
-              console.log(`DateChanger: attemptDateChange - ✓ Jan→Dec transition, corrected target year to: ${dateInfo.year}`);
-            } else {
-              // Other month change - use source year
-              dateInfo.year = sidebarSourceYear;
-              console.log(`DateChanger: attemptDateChange - ✓ Different month, corrected target year to: ${dateInfo.year}`);
-            }
-          }
+          if (sidebar) {
+            console.log('DateChanger: attemptDateChange - Sidebar found, processing date change...');
 
-          if (startDateParent) {
-            const formattedDate = window.DateUtils
-              ? window.DateUtils.formatDateForInput(dateInfo, sidebarSourceMonth)
-              : `${dateInfo.month} ${dateInfo.day} ${dateInfo.year}`;
+            // Determine which field to change based on Alt key
+            const fieldType = changeEndDate ? 'End' : 'Start';
+            console.log(`DateChanger: Looking for "${fieldType}" date field`);
 
-            console.log('DateChanger: attemptDateChange - Formatted date for input:', formattedDate);
+            // Find date field (Start or End)
+            const fieldResult = window.SidebarManager
+              ? window.SidebarManager.findDateField(sidebar, sourceDateInfo, fieldType)
+              : { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
 
-            // Check update checkboxes
-            if (window.SidebarManager) {
-              window.SidebarManager.checkUpdateCheckboxes(sidebar);
-            }
+            const { startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts } = fieldResult;
 
-            console.log('DateChanger: attemptDateChange - Clicking start date parent to open date picker');
-            startDateParent.click();
-
-            setTimeout(() => {
-              console.log('DateChanger: attemptDateChange - Looking for date input method...');
-
-              // PRIORITY 1: Try to find a date input field to type into
-              const inputField = window.SidebarManager
-                ? window.SidebarManager.findInputField(sidebar)
-                : null;
-
-              // If we found an input field, use the typing method (most reliable)
-              if (inputField) {
-                typeIntoDateField(inputField, formattedDate, dateInfo, failsafeTimeout, onDateChangeComplete);
-              } else {
-                // PRIORITY 2: Fallback to calendar dropdown manipulation
-                useCalendarPicker(dateInfo, failsafeTimeout, onDateChangeComplete);
-              }
-            }, 400);
-          } else {
-            console.error('DateChanger: attemptDateChange - *** ERROR *** Could not find start date field');
-            console.error(`DateChanger: attemptDateChange - Checked ${fieldResult.fieldTexts.length} fields in sidebar`);
-            console.error('DateChanger: attemptDateChange - Field texts found:', JSON.stringify(fieldTexts));
+            // Show notification about which date is being changed
             if (window.UIUtils) {
-              window.UIUtils.showNotification('Could not find date field. Check console for details.');
+              const formattedNewDate = `${dateInfo.month} ${dateInfo.day}, ${dateInfo.year}`;
+              window.UIUtils.showNotification(`Changing ${fieldType} date to ${formattedNewDate}`);
+            }
+
+            // If we found year and month in sidebar, recalculate target year
+            if (sidebarSourceYear && sidebarSourceMonth && providedDateInfo && window.DateUtils) {
+              console.log(`DateChanger: attemptDateChange - *** USING SIDEBAR DATA FOR YEAR CALCULATION ***`);
+              console.log(`DateChanger: attemptDateChange - Sidebar source: ${sidebarSourceMonth} ${sidebarSourceYear}`);
+              console.log(`DateChanger: attemptDateChange - Original target: ${dateInfo.month} ${dateInfo.year}`);
+
+              const monthMap = window.DateUtils.MONTH_MAP;
+              const sourceMonthIndex = monthMap[sidebarSourceMonth];
+              const targetMonthIndex = monthMap[dateInfo.month];
+
+              // Apply year boundary logic using ACTUAL source year from sidebar
+              if (sourceMonthIndex === targetMonthIndex) {
+                // Same month - use source year
+                dateInfo.year = sidebarSourceYear;
+                console.log(`DateChanger: attemptDateChange - ✓ Same month, corrected target year to: ${dateInfo.year}`);
+              } else if (sourceMonthIndex === 11 && targetMonthIndex === 0) {
+                // Dec → Jan: next year
+                dateInfo.year = sidebarSourceYear + 1;
+                console.log(`DateChanger: attemptDateChange - ✓ Dec→Jan transition, corrected target year to: ${dateInfo.year}`);
+              } else if (sourceMonthIndex === 0 && targetMonthIndex === 11) {
+                // Jan → Dec: previous year
+                dateInfo.year = sidebarSourceYear - 1;
+                console.log(`DateChanger: attemptDateChange - ✓ Jan→Dec transition, corrected target year to: ${dateInfo.year}`);
+              } else {
+                // Other month change - use source year
+                dateInfo.year = sidebarSourceYear;
+                console.log(`DateChanger: attemptDateChange - ✓ Different month, corrected target year to: ${dateInfo.year}`);
+              }
+            }
+
+            if (startDateParent) {
+              const formattedDate = window.DateUtils
+                ? window.DateUtils.formatDateForInput(dateInfo, sidebarSourceMonth)
+                : `${dateInfo.month} ${dateInfo.day} ${dateInfo.year}`;
+
+              console.log('DateChanger: attemptDateChange - Formatted date for input:', formattedDate);
+
+              // Check update checkboxes
+              if (window.SidebarManager) {
+                window.SidebarManager.checkUpdateCheckboxes(sidebar);
+              }
+
+              console.log('DateChanger: attemptDateChange - Clicking start date parent to open date picker');
+              startDateParent.click();
+
+              setTimeout(() => {
+                console.log('DateChanger: attemptDateChange - Looking for date input method...');
+
+                // PRIORITY 1: Try to find a date input field to type into
+                const inputField = window.SidebarManager
+                  ? window.SidebarManager.findInputField(sidebar)
+                  : null;
+
+                // If we found an input field, use the typing method (most reliable)
+                if (inputField) {
+                  typeIntoDateField(inputField, formattedDate, dateInfo, failsafeTimeout, onDateChangeComplete);
+                } else {
+                  // PRIORITY 2: Fallback to calendar dropdown manipulation
+                  useCalendarPicker(dateInfo, failsafeTimeout, onDateChangeComplete);
+                }
+              }, 400);
+            } else {
+              console.error('DateChanger: attemptDateChange - *** ERROR *** Could not find start date field');
+              console.error(`DateChanger: attemptDateChange - Checked ${fieldResult.fieldTexts.length} fields in sidebar`);
+              console.error('DateChanger: attemptDateChange - Field texts found:', JSON.stringify(fieldTexts));
+              if (window.UIUtils) {
+                window.UIUtils.showNotification('Could not find date field. Check console for details.');
+              }
+              if (window.SidebarManager) {
+                window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
+              }
+            }
+          } else {
+            console.error('DateChanger: attemptDateChange - *** ERROR *** Sidebar did not open after clicking element');
+            if (window.UIUtils) {
+              window.UIUtils.showNotification('Sidebar did not open. Please try manually.');
             }
             if (window.SidebarManager) {
               window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
             }
           }
-        } else {
-          console.error('DateChanger: attemptDateChange - *** ERROR *** Sidebar did not open after clicking element');
-          if (window.UIUtils) {
-            window.UIUtils.showNotification('Sidebar did not open. Please try manually.');
-          }
-          if (window.SidebarManager) {
-            window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
-          }
-        }
-      }, 500);
+        }, 500);
 
-      console.log('DateChanger: attemptDateChange - END (async operations still running)');
+        console.log('DateChanger: attemptDateChange - END (async operations still running)');
+      }  // End of continueWithDateChange function
 
     } catch (error) {
       console.error('DateChanger: *** EXCEPTION IN attemptDateChange ***');

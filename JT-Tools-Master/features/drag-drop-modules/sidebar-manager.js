@@ -70,6 +70,36 @@ const SidebarManager = (() => {
   }
 
   /**
+   * Close any currently open sidebar (without callbacks)
+   * This is called before opening a new sidebar to prevent conflicts
+   */
+  function closeAnySidebar() {
+    console.log('SidebarManager: Checking for any open sidebars to close...');
+
+    const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+
+    if (sidebar) {
+      console.log('SidebarManager: Found open sidebar, closing it...');
+      const closeButtons = sidebar.querySelectorAll('div[role="button"]');
+
+      for (const button of closeButtons) {
+        const text = button.textContent.trim();
+        if (text.includes('Close')) {
+          console.log('SidebarManager: Clicking Close button on existing sidebar');
+          button.click();
+          return true;
+        }
+      }
+
+      console.log('SidebarManager: Could not find Close button, sidebar may remain open');
+      return false;
+    }
+
+    console.log('SidebarManager: No open sidebar found');
+    return false;
+  }
+
+  /**
    * Close the sidebar and cleanup hiding CSS
    * @param {number} failsafeTimeout - The timeout ID to clear
    * @param {Function} onDateChangeComplete - Callback when date change is complete
@@ -319,6 +349,7 @@ const SidebarManager = (() => {
     injectHideSidebarCSS,
     removeSidebarCSS,
     openSidebar,
+    closeAnySidebar,
     closeSidebar,
     findDateField,
     findInputField,
