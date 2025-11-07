@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode, and Custom Theme with toggle controls",
   "permissions": [
     "storage",
