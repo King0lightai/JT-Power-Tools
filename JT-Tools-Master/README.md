@@ -279,19 +279,8 @@ Contributions are welcome! To contribute:
 ## 🐛 Known Issues
 
 - **Formatter**: Some complex formatting scenarios may require page refresh
-- **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
+- **Drag & Drop**: Only changes start date by default (use Alt key to modify end date)
 - **General**: Extension must be reloaded after Chrome browser restart for optimal performance
-
-## 🔮 Future Enhancements
-
-- [ ] End date adjustment for drag & drop
-- [ ] Multi-select drag for multiple tasks
-- [ ] Undo functionality for drag operations
-- [ ] More formatting options (code blocks, inline code, etc.)
-- [ ] Dark mode support
-- [ ] Custom keyboard shortcuts
-- [ ] Export/import settings
-- [ ] Feature statistics and usage tracking
 
 ## 📧 Support
 

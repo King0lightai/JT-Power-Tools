@@ -398,19 +398,7 @@ The extension is now live on the Chrome Web Store! For documentation related to 
 ## 🐛 Known Issues
 
 - **Formatter**: Some complex formatting scenarios may require page refresh
-- **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
-
-## 🔮 Future Enhancements (susceptible to change)
-
-- [ ] End date adjustment for drag & drop
-- [ ] Multi-select drag for multiple tasks
-- [ ] click and drag task cards edges to expand and shrink days.
-- [ ] Custom keyboard shortcuts
-- [ ] Export/import settings
-- [ ] Additional custom theme presets
-- [ ] Theme sharing and import/export
-- [ ] Budget changelog captured in a line item
-- [ ] Record "why" schedule items shifted
+- **Drag & Drop**: Only changes start date by default (use Alt key to modify end date)
 
 ## 📧 Support
 
