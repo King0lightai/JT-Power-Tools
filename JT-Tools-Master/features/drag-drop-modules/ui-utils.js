@@ -56,9 +56,14 @@ const UIUtils = (() => {
     const scheduleItems = document.querySelectorAll('div.cursor-pointer[style*="background-color"]');
 
     scheduleItems.forEach(item => {
-      if (!item.hasAttribute('draggable')) {
-        item.setAttribute('draggable', 'true');
-        item.style.cursor = 'grab';
+      // Always ensure draggable attribute and cursor are set
+      item.setAttribute('draggable', 'true');
+      item.style.cursor = 'grab';
+
+      // Remove old event listeners if they exist to prevent duplicates
+      // Note: We can't remove specific listeners without references, so we mark items
+      if (!item.hasAttribute('data-jt-drag-initialized')) {
+        item.setAttribute('data-jt-drag-initialized', 'true');
 
         if (handlers.onDragStart) {
           item.addEventListener('dragstart', handlers.onDragStart);
@@ -131,6 +136,7 @@ const UIUtils = (() => {
     const scheduleItems = document.querySelectorAll('div.cursor-pointer[draggable="true"]');
     scheduleItems.forEach(item => {
       item.removeAttribute('draggable');
+      item.removeAttribute('data-jt-drag-initialized');
       item.style.cursor = '';
       // Note: We can't easily remove event listeners without references
       // But since we're likely reloading the page, this is acceptable

@@ -53,6 +53,12 @@ const DragDropFeature = (() => {
               // Callback when date change is complete
               state.isDateChangeInProgress = false;
               console.log('DragDrop: Set isDateChangeInProgress = false');
+
+              // Force re-initialization to ensure items are draggable again
+              console.log('DragDrop: Re-initializing drag and drop after date change');
+              setTimeout(() => {
+                initDragAndDrop();
+              }, 100);
             },
             changeEndDate  // Pass Alt key state to change End date
           );
