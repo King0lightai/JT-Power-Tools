@@ -12,7 +12,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Full year boundary support (Dec 2025 → Jan 2026)
 
 ### 🎨 Contrast Fix
-- Automatically adjusts text colors for better readability
+- Automatically adjusts text colors for better readability in schedule views
+- Works on Month, Week, and Day schedule views only
 - Uses WCAG contrast formula for optimal visibility
 - Highlights current date in schedule view
 - Real-time updates as content changes
@@ -73,7 +74,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ### First-Time Setup
 
-1. After installation, navigate to any JobTread page (`*.jobtread.com`)
+1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
 3. You'll see the JT Power Tools control panel with six toggle switches
 
@@ -279,19 +280,8 @@ Contributions are welcome! To contribute:
 ## 🐛 Known Issues
 
 - **Formatter**: Some complex formatting scenarios may require page refresh
-- **Drag & Drop**: Only changes start date (end date adjustment coming in future version)
+- **Drag & Drop**: Only changes start date by default (use Alt key to modify end date)
 - **General**: Extension must be reloaded after Chrome browser restart for optimal performance
-
-## 🔮 Future Enhancements
-
-- [ ] End date adjustment for drag & drop
-- [ ] Multi-select drag for multiple tasks
-- [ ] Undo functionality for drag operations
-- [ ] More formatting options (code blocks, inline code, etc.)
-- [ ] Dark mode support
-- [ ] Custom keyboard shortcuts
-- [ ] Export/import settings
-- [ ] Feature statistics and usage tracking
 
 ## 📧 Support
 
