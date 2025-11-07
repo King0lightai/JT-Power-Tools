@@ -279,7 +279,7 @@ const featureModules = {
 
 ## 📝 Version History
 
-### v3.2.2 (Current)
+### v3.2.3 (Current)
 - **New Feature: Budget Hierarchy Shading**
   - Progressive visual shading for nested budget groups (up to 5 levels)
   - Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
