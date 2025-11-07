@@ -164,15 +164,25 @@ function bufferToHex(buffer) {
 }
 
 function isValidOrigin(origin) {
-  if (!origin) return false;
+  console.log('[DEBUG] Checking origin:', origin);
+  console.log('[DEBUG] ALLOWED_ORIGINS env var:', typeof ALLOWED_ORIGINS, ALLOWED_ORIGINS);
+
+  if (!origin) {
+    console.log('[DEBUG] No origin provided');
+    return false;
+  }
 
   // Allow Chrome extension origins
   if (origin.startsWith('chrome-extension://')) {
     // In production, check against specific extension ID
     const allowedExtensions = (ALLOWED_ORIGINS || '').split(',');
-    return allowedExtensions.some(allowed => origin === allowed.trim());
+    console.log('[DEBUG] Allowed extensions:', allowedExtensions);
+    const isAllowed = allowedExtensions.some(allowed => origin === allowed.trim());
+    console.log('[DEBUG] Origin allowed?', isAllowed);
+    return isAllowed;
   }
 
+  console.log('[DEBUG] Origin does not start with chrome-extension://');
   return false;
 }
 
