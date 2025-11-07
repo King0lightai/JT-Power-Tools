@@ -161,6 +161,8 @@ Some features require a premium license to unlock:
 
 **⚠️ Important:** Premium features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn). Install from there before purchasing.
 
+**💼 Company Licensing:** Licenses are designed for company-wide use. Purchase **one license per company** and share it with all employees in your organization. No need to buy individual licenses for each team member!
+
 1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 2. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
 3. Open the extension popup
@@ -168,6 +170,7 @@ Some features require a premium license to unlock:
 5. Enter your license key
 6. Click "Activate"
 7. Premium features will be unlocked immediately
+8. Share the license key with other employees in your company
 
 ### Product Configuration
 The extension is configured with:
