@@ -160,10 +160,13 @@ const FormatterFeature = (() => {
       // Check if this label has any bold heading
       const heading = label.querySelector('div.font-bold');
       if (heading && heading.textContent.trim().length > 0) {
-        const textarea = label.querySelector('textarea');
-        if (textarea && !fields.includes(textarea)) {
-          fields.push(textarea);
-        }
+        // Find ALL textareas in this label (for multi-text custom fields)
+        const textareas = label.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+          if (textarea && !fields.includes(textarea)) {
+            fields.push(textarea);
+          }
+        });
       }
     });
 
