@@ -12,6 +12,9 @@ const FormatterFeature = (() => {
   let isPromptingUser = false; // Prevent blur handlers from hiding toolbar during prompts
   let isInsertingText = false; // Prevent MutationObserver from interfering during text insertion
 
+  // Store AbortControllers for event listeners (for proper cleanup)
+  const fieldControllers = new WeakMap();
+
   // Initialize the feature
   function init() {
     if (isActive) {
@@ -79,13 +82,19 @@ const FormatterFeature = (() => {
       styleElement = null;
     }
 
-    // Remove formatter markers from fields
+    // Remove event listeners and formatter markers from fields
     const fields = document.querySelectorAll('textarea[data-formatter-ready="true"]');
     fields.forEach(field => {
+      // Abort all event listeners for this field
+      const controller = fieldControllers.get(field);
+      if (controller) {
+        controller.abort();
+        fieldControllers.delete(field);
+      }
       delete field.dataset.formatterReady;
     });
 
-    console.log('Formatter: Cleanup complete');
+    console.log('Formatter: Cleanup complete (all event listeners removed)');
   }
 
   // Inject CSS dynamically
@@ -164,12 +173,18 @@ const FormatterFeature = (() => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
         field.dataset.formatterReady = 'true';
 
-        field.addEventListener('focus', (e) => handleFieldFocus(e, field));
-        field.addEventListener('mousedown', (e) => handleFieldMousedown(e, field));
-        field.addEventListener('blur', (e) => handleFieldBlur(e, field));
-        field.addEventListener('input', () => handleFieldInput(field));
-        field.addEventListener('click', () => handleFieldClick(field));
-        field.addEventListener('keyup', () => handleFieldKeyup(field));
+        // Create AbortController for this field's event listeners
+        const controller = new AbortController();
+        const signal = controller.signal;
+        fieldControllers.set(field, controller);
+
+        // Add event listeners with AbortSignal for automatic cleanup
+        field.addEventListener('focus', (e) => handleFieldFocus(e, field), { signal });
+        field.addEventListener('mousedown', (e) => handleFieldMousedown(e, field), { signal });
+        field.addEventListener('blur', (e) => handleFieldBlur(e, field), { signal });
+        field.addEventListener('input', () => handleFieldInput(field), { signal });
+        field.addEventListener('click', () => handleFieldClick(field), { signal });
+        field.addEventListener('keyup', () => handleFieldKeyup(field), { signal });
       }
     });
   }

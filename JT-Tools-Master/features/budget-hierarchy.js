@@ -6,6 +6,7 @@ const BudgetHierarchyFeature = (() => {
   let isActive = false;
   let styleElement = null;
   let observer = null;
+  let clickController = null; // AbortController for click listener
 
   // Helper function to convert hex to RGB
   function hexToRgb(hex) {
@@ -134,6 +135,12 @@ const BudgetHierarchyFeature = (() => {
       observer = null;
     }
 
+    // Remove click event listener
+    if (clickController) {
+      clickController.abort();
+      clickController = null;
+    }
+
     // Remove shading classes
     removeAllShading();
 
@@ -142,6 +149,8 @@ const BudgetHierarchyFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
+
+    console.log('BudgetHierarchy: Cleanup complete (event listeners removed)');
   }
 
   // Inject CSS for shading
@@ -505,6 +514,7 @@ const BudgetHierarchyFeature = (() => {
     });
 
     // Add click listener for expand/collapse buttons to force immediate reapply
+    clickController = new AbortController();
     document.body.addEventListener('click', (e) => {
       if (!isActive) return;
 
@@ -519,7 +529,7 @@ const BudgetHierarchyFeature = (() => {
           applyGroupShading();
         }, 100);
       }
-    });
+    }, { signal: clickController.signal });
   }
 
   return {
