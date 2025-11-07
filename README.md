@@ -1,6 +1,11 @@
 # ⚡ JT Power Tools
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.2.3-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
+
+**[📥 Install from Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)**
 
 ## 🎯 Features
 
@@ -75,17 +80,27 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 📦 Installation
 
-### Method 1: Load Unpacked (Development)
+### ⭐ Recommended: Chrome Web Store (For All Users)
+
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)**
+
+1. Click the link above
+2. Click **Add to Chrome**
+3. Confirm the installation
+4. The extension icon will appear in your Chrome toolbar
+
+**Important:** Premium features (Schedule Drag & Drop, Custom Theme) ONLY work with the Chrome Web Store version due to additional security features. GitHub/unpacked versions cannot activate premium licenses.
+
+### For Developers: Load Unpacked
+
+**Note:** This method is for development only. Premium features will not work.
 
 1. **Download or clone** this repository
 2. Open Chrome and navigate to `chrome://extensions`
 3. Enable **Developer mode** (toggle in top right)
 4. Click **Load unpacked**
 5. Select the `JT-Tools-Master` folder
-6. The extension is now installed!
-
-### Method 2: From Chrome Web Store (Coming Soon)
-*Once published, users can install directly from the Chrome Web Store*
+6. The extension is now installed (free features only)
 
 ## 🚀 Usage
 
@@ -139,14 +154,20 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 ## 🔑 Premium Features
 
 Some features require a premium license to unlock:
+- **Schedule Drag & Drop** - Drag schedule items between dates
+- **Custom Theme** - Personalize JobTread with your own colors
 
 ### Premium License Activation
-1. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
-2. Open the extension popup
-3. Navigate to the License section
-4. Enter your license key
-5. Click "Activate"
-6. Premium features will be unlocked immediately
+
+**⚠️ Important:** Premium features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn). Install from there before purchasing.
+
+1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+2. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
+3. Open the extension popup
+4. Navigate to the License section
+5. Enter your license key
+6. Click "Activate"
+7. Premium features will be unlocked immediately
 
 ### Product Configuration
 The extension is configured with:
@@ -359,9 +380,11 @@ Contributions are welcome! To contribute:
 
 MIT License - See [LICENSE](LICENSE) file for details.
 
-## 📦 Chrome Web Store Submission
+## 📦 Chrome Web Store
 
-All documentation for publishing to the Chrome Web Store is in the [`chrome-web-store/`](chrome-web-store/) folder:
+**[🌟 Install JT Power Tools from Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)**
+
+The extension is now live on the Chrome Web Store! For documentation related to the store listing, see the [`chrome-web-store/`](chrome-web-store/) folder:
 
 - **Store Listing**: [CHROME_WEB_STORE_LISTING.md](chrome-web-store/CHROME_WEB_STORE_LISTING.md)
 - **Privacy Policy**: [PRIVACY_POLICY.md](chrome-web-store/PRIVACY_POLICY.md)
