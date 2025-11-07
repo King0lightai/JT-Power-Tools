@@ -16,15 +16,16 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Multi-month and multi-year support with intelligent date detection
 - Visual feedback with drop zone highlighting
 - Preserves task details and assignments during moves
+- Hold Shift to drag a task to weekends
+- Hold Alt to change the tasks end date
 
 ### 🎨 Contrast Fix
-- Automatically adjusts text colors for better readability
+- Automatically adjusts text colors for better readability in schedule views
+- Works on Month, Week, and Day schedule views only
 - Uses WCAG contrast formula for optimal visibility
 - Highlights current date in schedule view
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
-- Hold Shift to drag a task to weekends
-- Hold Alt to change the tasks end date
 
 ### 📝 Text Formatter
 - Rich text formatting toolbar for text fields
