@@ -4,7 +4,7 @@
 const LicenseService = (() => {
   // ⚠️ IMPORTANT: Set this to your deployed license proxy URL
   // See server/DEPLOYMENT.md for setup instructions
-  const LICENSE_PROXY_URL = 'https://YOUR_WORKER_URL.workers.dev/verify'; // UPDATE THIS!
+  const LICENSE_PROXY_URL = 'https://jt-tools-license-proxy.king0light-ai.workers.dev/'; // UPDATE THIS!
 
   // Product configuration (kept for compatibility)
   const PRODUCT_PERMALINK = 'jtpowertools';
