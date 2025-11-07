@@ -12,7 +12,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Full year boundary support (Dec 2025 → Jan 2026)
 
 ### 🎨 Contrast Fix
-- Automatically adjusts text colors for better readability
+- Automatically adjusts text colors for better readability in schedule views
+- Works on Month, Week, and Day schedule views only
 - Uses WCAG contrast formula for optimal visibility
 - Highlights current date in schedule view
 - Real-time updates as content changes
