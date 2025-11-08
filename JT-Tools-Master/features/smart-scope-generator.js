@@ -478,6 +478,97 @@ const SmartScopeGeneratorFeature = (() => {
     return false;
   }
 
+  // Find the Writing Assistant input field and paste text
+  async function pasteIntoWritingAssistant(text) {
+    console.log('SmartScopeGenerator: Waiting for Writing Assistant input...');
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      // Look for input with placeholder "How can I help?"
+      const inputs = document.querySelectorAll('input[placeholder="How can I help?"]');
+
+      if (inputs.length > 0) {
+        const input = inputs[0];
+        console.log('SmartScopeGenerator: Found Writing Assistant input, pasting...');
+
+        // Set the value
+        input.value = text;
+
+        // Trigger input event to enable the Send button
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+
+        return true;
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    console.log('SmartScopeGenerator: Writing Assistant input not found');
+    return false;
+  }
+
+  // Click the Send button in Writing Assistant
+  async function clickSendButton() {
+    console.log('SmartScopeGenerator: Looking for Send button...');
+
+    // Look for the Send button
+    // It has text "Send" and an arrow SVG
+    const buttons = document.querySelectorAll('button');
+
+    for (const button of buttons) {
+      const text = button.textContent.trim();
+      if (text.includes('Send')) {
+        // Check if it's enabled (not disabled)
+        if (!button.disabled) {
+          console.log('SmartScopeGenerator: Found Send button, clicking...');
+          button.click();
+          return true;
+        }
+      }
+    }
+
+    console.log('SmartScopeGenerator: Send button not found or disabled');
+    return false;
+  }
+
+  // Wait for AI response and click Copy button
+  async function waitForAIResponseAndCopy() {
+    console.log('SmartScopeGenerator: Waiting for AI response...');
+
+    for (let attempt = 0; attempt < 50; attempt++) { // 15 seconds total (50 * 300ms)
+      // Look for the Copy button in the response
+      // It has an SVG with paths for a copy icon
+      const buttons = document.querySelectorAll('[role="button"]');
+
+      for (const button of buttons) {
+        const text = button.textContent.trim();
+        if (text === 'Copy' || text.includes('Copy')) {
+          // Verify it has the copy icon SVG
+          const svg = button.querySelector('svg');
+          if (svg) {
+            const paths = svg.querySelectorAll('path');
+            for (const path of paths) {
+              const d = path.getAttribute('d');
+              // Copy icon pattern: M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10
+              if (d && d.includes('M4 16c-1.1 0-2-.9-2-2V4c0-1.1')) {
+                console.log('SmartScopeGenerator: Found Copy button in AI response, clicking...');
+                button.click();
+                return true;
+              }
+            }
+          }
+        }
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    console.log('SmartScopeGenerator: AI response Copy button not found (timeout)');
+    return false;
+  }
+
   // Handle format button click
   async function handleFormatClick(e) {
     e.preventDefault();
@@ -550,17 +641,52 @@ const SmartScopeGeneratorFeature = (() => {
 
       console.log('SmartScopeGenerator: Formatted scope:', formattedScope);
 
-      // Step 6: Wait a moment, then click the Message button and compose button
+      // Step 6: Automated AI workflow
       setTimeout(async () => {
-        const messageClicked = clickMessageButton();
-        if (messageClicked) {
+        try {
+          // 6a. Click Message button
+          const messageClicked = clickMessageButton();
+          if (!messageClicked) {
+            showNotification('Could not find Message button', 'error');
+            return;
+          }
           showNotification('Opening message composer...', 'info');
 
-          // Wait for popup to appear, then click compose button
+          // 6b. Click compose button
           const composeClicked = await clickComposeButton();
-          if (composeClicked) {
-            showNotification('Ready to paste! Press Ctrl+V to paste scope.', 'success');
+          if (!composeClicked) {
+            showNotification('Could not find compose button', 'error');
+            return;
           }
+          showNotification('Writing Assistant opened...', 'info');
+
+          // 6c. Paste into Writing Assistant
+          const pasted = await pasteIntoWritingAssistant(formattedScope);
+          if (!pasted) {
+            showNotification('Could not find Writing Assistant input', 'error');
+            return;
+          }
+          showNotification('Scope pasted, sending to AI...', 'info');
+
+          // 6d. Click Send button
+          await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay
+          const sent = await clickSendButton();
+          if (!sent) {
+            showNotification('Could not send to AI', 'error');
+            return;
+          }
+          showNotification('Waiting for AI response (up to 15s)...', 'info');
+
+          // 6e. Wait for AI response and copy
+          const copied = await waitForAIResponseAndCopy();
+          if (copied) {
+            showNotification('✓ AI-enhanced scope copied to clipboard!', 'success');
+          } else {
+            showNotification('AI response timeout. Original scope in clipboard.', 'error');
+          }
+        } catch (error) {
+          console.error('SmartScopeGenerator: Error in AI workflow:', error);
+          showNotification('Error in AI workflow. Original scope in clipboard.', 'error');
         }
       }, 500);
 
