@@ -278,3 +278,104 @@ td div.cursor-pointer[style*="border-left"] {
 .group:hover .row\:bg-gray-50 {
     background-color: #383b3f;
 }
+
+/* === Text Formatter Dark Mode === */
+/* Main toolbar container */
+.jt-formatter-toolbar {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Toolbar dividers */
+.jt-toolbar-divider {
+    background: #464646 !important;
+}
+
+/* Toolbar buttons */
+.jt-formatter-toolbar button {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: transparent !important;
+}
+
+.jt-formatter-toolbar button:hover {
+    background: #464646 !important;
+    border-color: #5a5a5a !important;
+}
+
+.jt-formatter-toolbar button:active {
+    background: #2c2c2c !important;
+}
+
+/* Active state buttons (keep blue for visibility) */
+.jt-formatter-toolbar button.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+}
+
+.jt-formatter-toolbar button.active:hover {
+    background: #2563eb !important;
+    border-color: #1d4ed8 !important;
+}
+
+.jt-formatter-toolbar button.active:active {
+    background: #1d4ed8 !important;
+}
+
+/* Dropdown menus */
+.jt-dropdown-menu {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+.jt-dropdown-menu button {
+    color: #e0e0e0 !important;
+}
+
+.jt-dropdown-menu button:hover {
+    background: #464646 !important;
+}
+
+.jt-dropdown-menu button.active {
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+.jt-dropdown-menu button.active:hover {
+    background: #2563eb !important;
+}
+
+/* Color dropdown */
+.jt-color-dropdown {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Color options - darken hover backgrounds for better contrast */
+.jt-formatter-toolbar button.jt-color-green:hover {
+    background: #064e3b !important;
+}
+
+.jt-formatter-toolbar button.jt-color-yellow:hover {
+    background: #78350f !important;
+}
+
+.jt-formatter-toolbar button.jt-color-blue:hover {
+    background: #1e3a8a !important;
+}
+
+.jt-formatter-toolbar button.jt-color-red:hover {
+    background: #7f1d1d !important;
+}
+
+.jt-formatter-toolbar button.jt-color-orange:hover {
+    background: #7c2d12 !important;
+}
+
+.jt-formatter-toolbar button.jt-color-purple:hover {
+    background: #4c1d95 !important;
+}
