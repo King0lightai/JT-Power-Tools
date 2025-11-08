@@ -681,6 +681,14 @@ const SmartScopeGeneratorFeature = (() => {
           const copied = await waitForAIResponseAndCopy();
           if (copied) {
             showNotification('✓ AI-enhanced scope copied to clipboard!', 'success');
+
+            // 6f. Press Escape twice to close dialogs
+            await new Promise(resolve => setTimeout(resolve, 500));
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+            await new Promise(resolve => setTimeout(resolve, 300));
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+
+            console.log('SmartScopeGenerator: Closed dialogs with Escape');
           } else {
             showNotification('AI response timeout. Original scope in clipboard.', 'error');
           }
