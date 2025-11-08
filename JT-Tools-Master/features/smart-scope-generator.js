@@ -5,14 +5,13 @@ const SmartScopeGeneratorFeature = (() => {
   let isActive = false;
   let observer = null;
   let formatButton = null;
-  let selectedItems = new Set();
-  let checkboxListeners = new Map();
   let buttonContainer = null;
+  let updateInterval = null;
 
   // Configuration
   const BUTTON_ID = 'jt-smart-scope-button';
   const CONTAINER_ID = 'jt-smart-scope-container';
-  const BUTTON_TEXT = '✨ Format with AI';
+  const BUTTON_TEXT = '✨ Format Scope with AI';
 
   // Initialize the feature
   function init() {
@@ -27,17 +26,20 @@ const SmartScopeGeneratorFeature = (() => {
     // Create the format button (initially hidden)
     createFormatButton();
 
-    // Initialize existing checkboxes
-    initializeCheckboxes();
+    // Check for selected items periodically
+    // (JobTread uses React and updates selection dynamically)
+    updateInterval = setInterval(updateButtonVisibility, 500);
 
-    // Watch for new checkboxes being added to the DOM
+    // Also watch for DOM changes
     observer = new MutationObserver(() => {
-      initializeCheckboxes();
+      updateButtonVisibility();
     });
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'] // Watch for class changes (selection state)
     });
 
     console.log('SmartScopeGenerator: Feature loaded');
@@ -53,6 +55,12 @@ const SmartScopeGeneratorFeature = (() => {
     console.log('SmartScopeGenerator: Cleaning up...');
     isActive = false;
 
+    // Clear interval
+    if (updateInterval) {
+      clearInterval(updateInterval);
+      updateInterval = null;
+    }
+
     // Disconnect observer
     if (observer) {
       observer.disconnect();
@@ -65,13 +73,6 @@ const SmartScopeGeneratorFeature = (() => {
       buttonContainer = null;
       formatButton = null;
     }
-
-    // Clear checkbox listeners
-    checkboxListeners.forEach((listener, checkbox) => {
-      checkbox.removeEventListener('change', listener);
-    });
-    checkboxListeners.clear();
-    selectedItems.clear();
 
     console.log('SmartScopeGenerator: Cleanup complete');
   }
@@ -100,9 +101,9 @@ const SmartScopeGeneratorFeature = (() => {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
@@ -147,170 +148,118 @@ const SmartScopeGeneratorFeature = (() => {
     }
   }
 
-  // Initialize checkboxes on the page
-  function initializeCheckboxes() {
-    if (!isActive) return;
+  // Find selected budget line items
+  // JobTread highlights selected items with bg-blue-* classes
+  function getSelectedItems() {
+    const selectedRows = [];
 
-    // Find all checkboxes that might be part of line items
-    // We'll look for checkboxes in common budget/line item contexts
-    const checkboxes = findLineItemCheckboxes();
+    // Strategy 1: Find rows with blue selection classes
+    // These are JobTread's selected budget items
+    const blueRows = document.querySelectorAll('.group\\/row');
 
-    checkboxes.forEach(checkbox => {
-      // Skip if already initialized
-      if (checkboxListeners.has(checkbox)) return;
+    blueRows.forEach(row => {
+      // Check if row has blue selection classes
+      const hasBlueSelection = Array.from(row.querySelectorAll('*')).some(el => {
+        const classes = el.className || '';
+        return classes.includes('bg-blue-50') ||
+               classes.includes('bg-blue-100') ||
+               classes.includes('bg-blue-200');
+      });
 
-      // Create listener for this checkbox
-      const listener = () => handleCheckboxChange(checkbox);
-      checkbox.addEventListener('change', listener);
-      checkboxListeners.set(checkbox, listener);
-
-      // Check if it's already selected
-      if (checkbox.checked) {
-        selectedItems.add(checkbox);
+      if (hasBlueSelection) {
+        selectedRows.push(row);
       }
     });
 
-    // Update button visibility
-    updateButtonVisibility();
+    // Strategy 2: Also check for checked SVG checkboxes
+    // JobTread uses SVG icons for checkboxes at the end of rows
+    const checkedCheckboxes = document.querySelectorAll('[class*="group/row"]');
+
+    checkedCheckboxes.forEach(row => {
+      // Look for the checked checkbox SVG pattern
+      // The checked state has a specific SVG path pattern
+      const svgs = row.querySelectorAll('svg');
+      svgs.forEach(svg => {
+        const paths = svg.querySelectorAll('path');
+        paths.forEach(path => {
+          const d = path.getAttribute('d');
+          // This is the checkmark pattern in JobTread
+          if (d && d.includes('m9 11 3 3')) {
+            if (!selectedRows.includes(row)) {
+              selectedRows.push(row);
+            }
+          }
+        });
+      });
+    });
+
+    return selectedRows;
   }
 
-  // Find checkboxes that are likely part of line items
-  function findLineItemCheckboxes() {
-    const checkboxes = [];
-
-    // Strategy 1: Find checkboxes in table rows (common pattern for line items)
-    const tableCheckboxes = document.querySelectorAll('table input[type="checkbox"]');
-    checkboxes.push(...tableCheckboxes);
-
-    // Strategy 2: Find checkboxes in list items
-    const listCheckboxes = document.querySelectorAll('li input[type="checkbox"], [role="listitem"] input[type="checkbox"]');
-    checkboxes.push(...listCheckboxes);
-
-    // Strategy 3: Find checkboxes in divs that might be budget items
-    // (looking for patterns like data-testid, class names with 'item', 'row', 'line', etc.)
-    const budgetCheckboxes = document.querySelectorAll(`
-      [class*="budget"] input[type="checkbox"],
-      [class*="line-item"] input[type="checkbox"],
-      [class*="item-row"] input[type="checkbox"],
-      [data-testid*="item"] input[type="checkbox"]
-    `);
-    checkboxes.push(...budgetCheckboxes);
-
-    // Remove duplicates
-    return [...new Set(checkboxes)];
-  }
-
-  // Handle checkbox state change
-  function handleCheckboxChange(checkbox) {
-    if (checkbox.checked) {
-      selectedItems.add(checkbox);
-    } else {
-      selectedItems.delete(checkbox);
+  // Extract name/description from a row
+  function extractItemName(row) {
+    // Strategy 1: Look for textarea with placeholder="Name"
+    const nameField = row.querySelector('textarea[placeholder="Name"]');
+    if (nameField && nameField.value.trim()) {
+      return nameField.value.trim();
     }
 
-    updateButtonVisibility();
+    // Strategy 2: Look for the name in the second column (after row number)
+    // The name is usually in the second div with font-bold class
+    const boldDivs = row.querySelectorAll('.font-bold');
+    for (const div of boldDivs) {
+      const text = div.textContent.trim();
+      if (text && text.length > 0 && text.length < 200) {
+        return text;
+      }
+    }
+
+    // Strategy 3: Look in any textarea in the name column
+    const textareas = row.querySelectorAll('textarea');
+    for (const textarea of textareas) {
+      const value = textarea.value.trim();
+      if (value && value.length > 0 && value.length < 200) {
+        return value;
+      }
+    }
+
+    // Strategy 4: Look for text in draggable elements
+    const draggables = row.querySelectorAll('[draggable="true"]');
+    for (const draggable of draggables) {
+      const text = draggable.textContent.trim();
+      if (text && text.length > 0 && text.length < 200 && !text.match(/^\d+$/)) {
+        return text;
+      }
+    }
+
+    return 'Unnamed Item';
   }
 
   // Update button visibility based on selection
   function updateButtonVisibility() {
-    if (!buttonContainer || !formatButton) return;
+    if (!isActive || !buttonContainer || !formatButton) return;
 
-    // Clean up stale checkboxes (removed from DOM)
-    selectedItems.forEach(checkbox => {
-      if (!document.body.contains(checkbox)) {
-        selectedItems.delete(checkbox);
-      }
-    });
+    const selectedRows = getSelectedItems();
+    const count = selectedRows.length;
 
-    const selectedCount = selectedItems.size;
-
-    if (selectedCount > 0) {
+    if (count > 0) {
       buttonContainer.style.display = 'block';
-      formatButton.textContent = `${BUTTON_TEXT} (${selectedCount} item${selectedCount === 1 ? '' : 's'})`;
+      formatButton.textContent = `${BUTTON_TEXT} (${count} item${count === 1 ? '' : 's'})`;
     } else {
       buttonContainer.style.display = 'none';
     }
   }
 
-  // Extract description text from a checkbox's associated item
-  function extractItemDescription(checkbox) {
-    // Try to find the description text near the checkbox
-    // This is adaptive - it tries multiple strategies
-
-    // Strategy 1: Look in the same row (for table-based layouts)
-    const row = checkbox.closest('tr');
-    if (row) {
-      // Try to find description column (usually has placeholder or specific class)
-      const descriptionCell = row.querySelector('textarea[placeholder*="Description"], textarea[placeholder*="description"]');
-      if (descriptionCell && descriptionCell.value) {
-        return descriptionCell.value.trim();
-      }
-
-      // Try to find any text content in the row
-      const cellTexts = Array.from(row.querySelectorAll('td'))
-        .map(td => td.textContent.trim())
-        .filter(text => text.length > 0 && text.length < 500); // Reasonable description length
-
-      if (cellTexts.length > 0) {
-        return cellTexts.join(' - ');
-      }
-    }
-
-    // Strategy 2: Look in parent container (for div-based layouts)
-    const container = checkbox.closest('[class*="item"], [class*="row"], li, [role="listitem"]');
-    if (container) {
-      // Try to find textarea or input fields
-      const descField = container.querySelector('textarea, input[type="text"]');
-      if (descField && descField.value) {
-        return descField.value.trim();
-      }
-
-      // Get text content, excluding the checkbox itself
-      const clone = container.cloneNode(true);
-      const cloneCheckbox = clone.querySelector('input[type="checkbox"]');
-      if (cloneCheckbox) {
-        cloneCheckbox.remove();
-      }
-      const text = clone.textContent.trim();
-      if (text.length > 0 && text.length < 500) {
-        return text;
-      }
-    }
-
-    // Strategy 3: Look for adjacent labels or text
-    const label = checkbox.closest('label') || document.querySelector(`label[for="${checkbox.id}"]`);
-    if (label) {
-      const text = label.textContent.trim();
-      if (text.length > 0) {
-        return text;
-      }
-    }
-
-    // Strategy 4: Look for next sibling text elements
-    let sibling = checkbox.nextElementSibling;
-    let attempts = 0;
-    while (sibling && attempts < 5) {
-      const text = sibling.textContent.trim();
-      if (text.length > 0 && text.length < 500) {
-        return text;
-      }
-      sibling = sibling.nextElementSibling;
-      attempts++;
-    }
-
-    return 'Item description not found';
-  }
-
-  // Format the selected items into a professional scope
-  function formatScope(items) {
-    const descriptions = items.map((checkbox, index) => {
-      const description = extractItemDescription(checkbox);
-      return `${index + 1}. ${description}`;
+  // Format selected items into professional scope
+  function formatScope(rows) {
+    const items = rows.map((row, index) => {
+      const name = extractItemName(row);
+      return `${index + 1}. ${name}`;
     });
 
-    const scopeText = descriptions.join('\n\n');
+    const scopeText = items.join('\n\n');
 
-    // Create a professional formatted version
+    // Create professional formatted version
     const formattedScope = `SCOPE OF WORK\n\n${scopeText}\n\nPlease review and let us know if you have any questions.`;
 
     return formattedScope;
@@ -318,31 +267,32 @@ const SmartScopeGeneratorFeature = (() => {
 
   // Handle format button click
   async function handleFormatClick() {
-    if (selectedItems.size === 0) {
+    const selectedRows = getSelectedItems();
+
+    if (selectedRows.length === 0) {
       showNotification('No items selected', 'error');
       return;
     }
 
     // Disable button during processing
     formatButton.disabled = true;
+    const originalText = formatButton.textContent;
     formatButton.textContent = 'Processing...';
 
     try {
-      // Get selected checkboxes as array
-      const items = Array.from(selectedItems);
-
       // Format the scope
-      const formattedScope = formatScope(items);
+      const formattedScope = formatScope(selectedRows);
 
       // Copy to clipboard
       await copyToClipboard(formattedScope);
 
       // Show success notification
-      showNotification(`Formatted ${items.length} item${items.length === 1 ? '' : 's'} and copied to clipboard!`, 'success');
+      showNotification(
+        `Formatted ${selectedRows.length} item${selectedRows.length === 1 ? '' : 's'} and copied to clipboard!`,
+        'success'
+      );
 
-      // Optional: Try to open JobTread's AI assistant
-      // This is a bonus feature - we'll try to find and open it
-      tryOpenAIAssistant(formattedScope);
+      console.log('SmartScopeGenerator: Formatted scope:', formattedScope);
 
     } catch (error) {
       console.error('SmartScopeGenerator: Error formatting scope:', error);
@@ -350,7 +300,7 @@ const SmartScopeGeneratorFeature = (() => {
     } finally {
       // Re-enable button
       formatButton.disabled = false;
-      updateButtonVisibility();
+      formatButton.textContent = originalText;
     }
   }
 
@@ -378,37 +328,6 @@ const SmartScopeGeneratorFeature = (() => {
     }
   }
 
-  // Try to open JobTread's AI assistant (if available)
-  function tryOpenAIAssistant(scopeText) {
-    // This is experimental - we'll try to find common patterns for AI assistants
-    // Look for buttons or links with text like "AI", "Assistant", "Send Message", etc.
-
-    const possibleSelectors = [
-      'button[aria-label*="AI"]',
-      'button[aria-label*="Assistant"]',
-      'a[href*="message"]',
-      'button:has-text("AI")',
-      '[data-testid*="ai"]',
-      '[class*="ai-assistant"]'
-    ];
-
-    for (const selector of possibleSelectors) {
-      try {
-        const element = document.querySelector(selector);
-        if (element) {
-          console.log('SmartScopeGenerator: Found potential AI assistant button:', element);
-          // We won't auto-click it, just log it for now
-          // User can manually open the AI assistant
-          return true;
-        }
-      } catch (e) {
-        // Invalid selector, continue
-      }
-    }
-
-    return false;
-  }
-
   // Show notification to user
   function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
@@ -426,18 +345,19 @@ const SmartScopeGeneratorFeature = (() => {
       font-size: 14px;
       font-weight: 500;
       animation: slideInFromTop 0.3s ease-out;
+      max-width: 400px;
     `;
     notification.textContent = message;
 
     document.body.appendChild(notification);
 
-    // Remove after 3 seconds
+    // Remove after 4 seconds
     setTimeout(() => {
       notification.style.animation = 'slideOutToTop 0.3s ease-in';
       setTimeout(() => {
         notification.remove();
       }, 300);
-    }, 3000);
+    }, 4000);
 
     // Add animations if not already present
     if (!document.getElementById('jt-notification-animations')) {
