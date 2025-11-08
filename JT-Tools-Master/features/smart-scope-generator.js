@@ -10,7 +10,8 @@ const SmartScopeGeneratorFeature = (() => {
   // Configuration
   const BUTTON_ID = 'jt-smart-scope-button';
   const BUTTON_TEXT = 'Generate Custom Scope';
-  const MAX_EXPAND_LEVELS = 5;
+  const MAX_EXPAND_LEVELS = 10; // Increased to handle deeply nested budgets
+  const EXPAND_DELAY = 500; // Increased delay between expansions (ms)
   const DEFAULT_PROMPT = 'Please rewrite the following scope of work into a professional, client-facing proposal with clear formatting, professional language, and proper structure:';
 
   // Store loaded prompts
@@ -414,11 +415,15 @@ const SmartScopeGeneratorFeature = (() => {
         expandedButtons.push(button);
       });
 
-      // Wait for DOM to update
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait for DOM to update (longer delay for complex budgets)
+      await new Promise(resolve => setTimeout(resolve, EXPAND_DELAY));
     }
 
     console.log(`SmartScopeGenerator: Expanded ${expandedButtons.length} total groups`);
+
+    // Extra wait to ensure all DOM rendering is complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     return expandedButtons;
   }
 
@@ -671,7 +676,7 @@ const SmartScopeGeneratorFeature = (() => {
     return false;
   }
 
-  // Find the Writing Assistant input field and paste text
+  // Find the Writing Assistant input field, paste text, and submit with Enter
   async function pasteIntoWritingAssistant(text) {
     console.log('SmartScopeGenerator: Waiting for Writing Assistant input...');
 
@@ -685,18 +690,58 @@ const SmartScopeGeneratorFeature = (() => {
 
         // Focus the input first
         input.focus();
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-        // Set the value
-        input.value = text;
+        // Use modern clipboard API if available, otherwise set value directly
+        try {
+          // Clear existing value
+          input.value = '';
 
-        // Trigger multiple events to ensure React picks it up
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
-        input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+          // Simulate typing by setting value and dispatching proper events
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+          nativeInputValueSetter.call(input, text);
 
-        console.log('SmartScopeGenerator: Text pasted, waiting for Send button to enable...');
-        return true;
+          // Dispatch input event (React listens to this)
+          const inputEvent = new Event('input', { bubbles: true });
+          input.dispatchEvent(inputEvent);
+
+          console.log('SmartScopeGenerator: Text pasted, submitting with Enter key...');
+          await new Promise(resolve => setTimeout(resolve, 200));
+
+          // Press Enter to submit (more reliable than clicking Send)
+          input.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true
+          }));
+
+          input.dispatchEvent(new KeyboardEvent('keypress', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true
+          }));
+
+          input.dispatchEvent(new KeyboardEvent('keyup', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true
+          }));
+
+          console.log('SmartScopeGenerator: Enter key pressed');
+          return true;
+
+        } catch (error) {
+          console.error('SmartScopeGenerator: Error pasting text:', error);
+        }
       }
 
       // Wait before next attempt
@@ -876,29 +921,21 @@ const SmartScopeGeneratorFeature = (() => {
           }
           showNotification('Writing Assistant opened...', 'info');
 
-          // 6c. Paste into Writing Assistant with selected prompt
+          // 6c. Paste into Writing Assistant with selected prompt and submit with Enter
           const promptedText = `${selectedPrompt}\n\n${formattedScope}`;
           const pasted = await pasteIntoWritingAssistant(promptedText);
           if (!pasted) {
-            showNotification('Could not find Writing Assistant input', 'error');
-            return;
-          }
-          showNotification('Scope pasted, clicking Send...', 'info');
-
-          // 6d. Click Send button (has built-in retry logic)
-          const sent = await clickSendButton();
-          if (!sent) {
-            showNotification('Could not send to AI - Send button not enabled', 'error');
+            showNotification('Could not paste and submit to AI', 'error');
             return;
           }
           showNotification('Waiting for AI response (up to 30s)...', 'info');
 
-          // 6e. Wait for AI response and copy
+          // 6d. Wait for AI response and copy
           const copied = await waitForAIResponseAndCopy();
           if (copied) {
             showNotification('✓ AI-enhanced scope copied to clipboard!', 'success');
 
-            // 6f. Press Escape twice to close dialogs
+            // 6e. Press Escape twice to close dialogs
             await new Promise(resolve => setTimeout(resolve, 500));
             document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
             await new Promise(resolve => setTimeout(resolve, 300));
