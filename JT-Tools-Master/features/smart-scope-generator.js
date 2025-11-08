@@ -334,18 +334,41 @@ const SmartScopeGeneratorFeature = (() => {
     });
   }
 
-  // Click JobTread's "Expand All" button
-  function clickExpandAllButton() {
-    console.log('SmartScopeGenerator: Looking for Expand All button...');
-
+  // Check if Expand All button is disabled (grayed out)
+  function isExpandButtonDisabled() {
     const buttons = document.querySelectorAll('[role="button"]');
 
     for (const button of buttons) {
       const classes = button.className || '';
 
-      // Skip if already disabled (all expanded)
+      // Check if this is the expand button and it's disabled
+      if (typeof classes === 'string' && classes.includes('p-2')) {
+        const svgs = button.querySelectorAll('svg');
+        for (const svg of svgs) {
+          const paths = svg.querySelectorAll('path');
+          for (const path of paths) {
+            const d = path.getAttribute('d');
+            if (d && d.includes('m9 18 6-6-6-6')) {
+              // This is the expand button - check if disabled
+              return classes.includes('opacity-50') || classes.includes('pointer-events-none');
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // Click the Expand All button once
+  function clickExpandAllButton() {
+    const buttons = document.querySelectorAll('[role="button"]');
+
+    for (const button of buttons) {
+      const classes = button.className || '';
+
+      // Skip if already disabled
       if (typeof classes === 'string' && (classes.includes('opacity-50') || classes.includes('pointer-events-none'))) {
-        console.log('SmartScopeGenerator: Expand button already disabled (all expanded)');
         continue;
       }
 
@@ -358,7 +381,6 @@ const SmartScopeGeneratorFeature = (() => {
           if (d && d.includes('m9 18 6-6-6-6')) {
             // Must be in toolbar with p-2 class
             if (typeof classes === 'string' && classes.includes('p-2')) {
-              console.log('SmartScopeGenerator: Found Expand All button, clicking...');
               button.click();
               return true;
             }
@@ -367,45 +389,46 @@ const SmartScopeGeneratorFeature = (() => {
       }
     }
 
-    console.log('SmartScopeGenerator: Expand All button not found');
     return false;
   }
 
-  // Wait for the Expand All button to become disabled (all groups expanded)
-  async function waitForExpansionComplete() {
-    console.log('SmartScopeGenerator: Waiting for expansion to complete...');
+  // Click Expand All button multiple times (once per level) until it's disabled
+  async function expandAllLevels() {
+    console.log('SmartScopeGenerator: Expanding all levels...');
 
-    for (let attempt = 0; attempt < 60; attempt++) {
-      const buttons = document.querySelectorAll('[role="button"]');
-
-      for (const button of buttons) {
-        const classes = button.className || '';
-
-        // Check if this is the expand button and it's now disabled
-        if (typeof classes === 'string' &&
-            classes.includes('p-2') &&
-            (classes.includes('opacity-50') || classes.includes('pointer-events-none'))) {
-
-          const svgs = button.querySelectorAll('svg');
-          for (const svg of svgs) {
-            const paths = svg.querySelectorAll('path');
-            for (const path of paths) {
-              const d = path.getAttribute('d');
-              if (d && d.includes('m9 18 6-6-6-6')) {
-                console.log(`SmartScopeGenerator: Expansion complete after ${attempt * 0.5} seconds`);
-                // Extra delay to ensure DOM is fully rendered
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return true;
-              }
-            }
-          }
-        }
+    // Click up to 5 times (5 levels deep)
+    for (let level = 0; level < 5; level++) {
+      // Check if already fully expanded
+      if (isExpandButtonDisabled()) {
+        console.log(`SmartScopeGenerator: All levels expanded after ${level} clicks`);
+        break;
       }
 
+      // Click the expand button
+      const clicked = clickExpandAllButton();
+      if (!clicked) {
+        console.log('SmartScopeGenerator: Expand button not found');
+        break;
+      }
+
+      console.log(`SmartScopeGenerator: Clicked Expand All (level ${level + 1})`);
+
+      // Wait for this level to expand
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+
+    // Final check - wait for button to be disabled
+    for (let attempt = 0; attempt < 20; attempt++) {
+      if (isExpandButtonDisabled()) {
+        console.log('SmartScopeGenerator: Expansion complete - button is disabled');
+        // Extra delay to ensure DOM is fully rendered
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return true;
+      }
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    console.log('SmartScopeGenerator: Timeout waiting for expansion, proceeding anyway');
+    console.log('SmartScopeGenerator: Expansion may be incomplete, but proceeding');
     return true;
   }
 
@@ -858,11 +881,8 @@ const SmartScopeGeneratorFeature = (() => {
     }
 
     try {
-      // Step 1: Click Expand All button
-      clickExpandAllButton();
-
-      // Step 2: Wait for all groups to be expanded (button becomes disabled)
-      await waitForExpansionComplete();
+      // Step 1: Expand all levels (clicks button 5 times, once per level)
+      await expandAllLevels();
 
       // Update button text
       if (iconSvg) {
@@ -871,7 +891,7 @@ const SmartScopeGeneratorFeature = (() => {
         formatButton.textContent = 'Extracting items...';
       }
 
-      // Step 3: Get selected items (now visible in DOM)
+      // Step 2: Get selected items (now visible in DOM)
       const selectedRows = getSelectedItems();
 
       if (selectedRows.length === 0) {
@@ -881,7 +901,7 @@ const SmartScopeGeneratorFeature = (() => {
         return;
       }
 
-      // Step 4: Format the scope
+      // Step 3: Format the scope
       const formattedScope = formatScope(selectedRows);
 
       if (!formattedScope) {
@@ -898,10 +918,10 @@ const SmartScopeGeneratorFeature = (() => {
         formatButton.textContent = 'Copying to clipboard...';
       }
 
-      // Step 5: Copy to clipboard
+      // Step 4: Copy to clipboard
       await copyToClipboard(formattedScope);
 
-      // Step 6: Collapse groups back to original state
+      // Step 5: Collapse groups back to original state
       clickCollapseAllButton();
 
       // Show success notification
