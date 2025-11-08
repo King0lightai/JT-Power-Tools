@@ -683,13 +683,19 @@ const SmartScopeGeneratorFeature = (() => {
         const input = inputs[0];
         console.log('SmartScopeGenerator: Found Writing Assistant input, pasting...');
 
+        // Focus the input first
+        input.focus();
+
         // Set the value
         input.value = text;
 
-        // Trigger input event to enable the Send button
+        // Trigger multiple events to ensure React picks it up
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+        input.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 
+        console.log('SmartScopeGenerator: Text pasted, waiting for Send button to enable...');
         return true;
       }
 
@@ -705,23 +711,29 @@ const SmartScopeGeneratorFeature = (() => {
   async function clickSendButton() {
     console.log('SmartScopeGenerator: Looking for Send button...');
 
-    // Look for the Send button
-    // It has text "Send" and an arrow SVG
-    const buttons = document.querySelectorAll('button');
+    // Retry for up to 5 seconds to find enabled Send button
+    for (let attempt = 0; attempt < 15; attempt++) {
+      const buttons = document.querySelectorAll('button');
 
-    for (const button of buttons) {
-      const text = button.textContent.trim();
-      if (text.includes('Send')) {
-        // Check if it's enabled (not disabled)
-        if (!button.disabled) {
-          console.log('SmartScopeGenerator: Found Send button, clicking...');
-          button.click();
-          return true;
+      for (const button of buttons) {
+        const text = button.textContent.trim();
+        if (text.includes('Send')) {
+          // Check if it's enabled (not disabled)
+          if (!button.disabled) {
+            console.log('SmartScopeGenerator: Found enabled Send button, clicking...');
+            button.click();
+            return true;
+          } else {
+            console.log(`SmartScopeGenerator: Send button found but disabled (attempt ${attempt + 1}/15)...`);
+          }
         }
       }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
-    console.log('SmartScopeGenerator: Send button not found or disabled');
+    console.log('SmartScopeGenerator: Send button not found or still disabled after 5 seconds');
     return false;
   }
 
@@ -729,7 +741,7 @@ const SmartScopeGeneratorFeature = (() => {
   async function waitForAIResponseAndCopy() {
     console.log('SmartScopeGenerator: Waiting for AI response...');
 
-    for (let attempt = 0; attempt < 50; attempt++) { // 15 seconds total (50 * 300ms)
+    for (let attempt = 0; attempt < 100; attempt++) { // 30 seconds total (100 * 300ms)
       // Look for the Copy button in the response
       // It has an SVG with paths for a copy icon
       const buttons = document.querySelectorAll('[role="button"]');
@@ -871,16 +883,15 @@ const SmartScopeGeneratorFeature = (() => {
             showNotification('Could not find Writing Assistant input', 'error');
             return;
           }
-          showNotification('Scope pasted, sending to AI...', 'info');
+          showNotification('Scope pasted, clicking Send...', 'info');
 
-          // 6d. Click Send button
-          await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay
+          // 6d. Click Send button (has built-in retry logic)
           const sent = await clickSendButton();
           if (!sent) {
-            showNotification('Could not send to AI', 'error');
+            showNotification('Could not send to AI - Send button not enabled', 'error');
             return;
           }
-          showNotification('Waiting for AI response (up to 15s)...', 'info');
+          showNotification('Waiting for AI response (up to 30s)...', 'info');
 
           // 6e. Wait for AI response and copy
           const copied = await waitForAIResponseAndCopy();
