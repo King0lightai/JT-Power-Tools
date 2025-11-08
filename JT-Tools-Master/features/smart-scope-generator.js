@@ -452,47 +452,46 @@ const SmartScopeGeneratorFeature = (() => {
   function getSelectedItems() {
     const selectedRows = [];
 
-    // Strategy 1: Find rows with blue selection classes
-    // These are JobTread's selected budget items
-    const blueRows = document.querySelectorAll('.group\\/row');
+    console.log('SmartScopeGenerator: Detecting selected items...');
 
-    blueRows.forEach(row => {
-      // Check if row has blue selection classes
-      const hasBlueSelection = Array.from(row.querySelectorAll('*')).some(el => {
-        // Use classList to avoid issues with SVGAnimatedString on SVG elements
-        if (!el.classList) return false;
-        return el.classList.contains('bg-blue-50') ||
-               el.classList.contains('bg-blue-100') ||
-               el.classList.contains('bg-blue-200');
-      });
+    // Strategy: Find rows with blue selection classes
+    // JobTread adds bg-blue-50, bg-blue-100, or bg-blue-200 to selected rows
+    const allRows = document.querySelectorAll('.group\\/row');
+    console.log(`SmartScopeGenerator: Found ${allRows.length} total rows`);
+
+    allRows.forEach(row => {
+      // Check if the row itself or its immediate children have blue selection classes
+      let hasBlueSelection = false;
+
+      // Check the row itself
+      if (row.classList) {
+        if (row.classList.contains('bg-blue-50') ||
+            row.classList.contains('bg-blue-100') ||
+            row.classList.contains('bg-blue-200')) {
+          hasBlueSelection = true;
+        }
+      }
+
+      // Check immediate child divs (more specific than checking ALL descendants)
+      if (!hasBlueSelection) {
+        const immediateChildren = row.querySelectorAll(':scope > div');
+        for (const child of immediateChildren) {
+          if (child.classList && (
+              child.classList.contains('bg-blue-50') ||
+              child.classList.contains('bg-blue-100') ||
+              child.classList.contains('bg-blue-200'))) {
+            hasBlueSelection = true;
+            break;
+          }
+        }
+      }
 
       if (hasBlueSelection) {
         selectedRows.push(row);
       }
     });
 
-    // Strategy 2: Also check for checked SVG checkboxes
-    // JobTread uses SVG icons for checkboxes at the end of rows
-    const checkedCheckboxes = document.querySelectorAll('[class*="group/row"]');
-
-    checkedCheckboxes.forEach(row => {
-      // Look for the checked checkbox SVG pattern
-      // The checked state has a specific SVG path pattern
-      const svgs = row.querySelectorAll('svg');
-      svgs.forEach(svg => {
-        const paths = svg.querySelectorAll('path');
-        paths.forEach(path => {
-          const d = path.getAttribute('d');
-          // This is the checkmark pattern in JobTread
-          if (d && d.includes('m9 11 3 3')) {
-            if (!selectedRows.includes(row)) {
-              selectedRows.push(row);
-            }
-          }
-        });
-      });
-    });
-
+    console.log(`SmartScopeGenerator: Found ${selectedRows.length} selected rows with blue highlight`);
     return selectedRows;
   }
 
@@ -569,22 +568,32 @@ const SmartScopeGeneratorFeature = (() => {
   // Format selected items into professional scope
   function formatScope(rows) {
     const items = [];
+    let skippedCount = 0;
+
+    console.log(`SmartScopeGenerator: Formatting ${rows.length} rows...`);
 
     rows.forEach((row, index) => {
       const name = extractItemName(row);
       const description = extractItemDescription(row);
 
-      if (!name) return; // Skip rows without names
+      if (!name) {
+        skippedCount++;
+        console.log(`SmartScopeGenerator: Skipping row ${index + 1} - no name found`);
+        return; // Skip rows without names
+      }
 
-      let itemText = `${index + 1}. ${name}`;
+      let itemText = `${items.length + 1}. ${name}`;
 
       // Add description if available
       if (description) {
         itemText += `\n   ${description}`;
       }
 
+      console.log(`SmartScopeGenerator: Item ${items.length + 1}: "${name}" ${description ? '(with description)' : '(no description)'}`);
       items.push(itemText);
     });
+
+    console.log(`SmartScopeGenerator: Formatted ${items.length} items, skipped ${skippedCount} rows without names`);
 
     if (items.length === 0) {
       return null;
