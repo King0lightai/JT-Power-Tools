@@ -17,6 +17,20 @@ const defaultSettings = {
     null, // Slot 1
     null, // Slot 2
     null  // Slot 3
+  ],
+  scopePrompts: [
+    {
+      name: 'Professional Proposal',
+      text: 'Please rewrite the following scope of work into a professional, client-facing proposal with clear formatting, professional language, and proper structure:'
+    },
+    {
+      name: 'Detailed Breakdown',
+      text: 'Please expand this scope of work with detailed explanations of each item, including materials, labor, and timeline considerations:'
+    },
+    {
+      name: 'Budget Justification',
+      text: 'Please rewrite this scope to emphasize value and justify the costs, explaining why each item is necessary for the project:'
+    }
   ]
 };
 
@@ -106,6 +120,15 @@ async function loadSettings() {
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
+    document.getElementById('smartScopeGenerator').checked = settings.smartScopeGenerator !== undefined ? settings.smartScopeGenerator : true;
+
+    // Load scope prompts
+    const scopePrompts = settings.scopePrompts || defaultSettings.scopePrompts;
+    loadScopePrompts(scopePrompts);
+
+    // Show/hide scope prompt customization panel
+    const scopePromptCustomization = document.getElementById('scopePromptCustomization');
+    scopePromptCustomization.style.display = settings.smartScopeGenerator ? 'block' : 'none';
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -177,6 +200,7 @@ async function getCurrentSettings() {
   const result = await chrome.storage.sync.get(['jtToolsSettings']);
   const currentColors = (result.jtToolsSettings && result.jtToolsSettings.themeColors) || defaultSettings.themeColors;
   const savedThemes = (result.jtToolsSettings && result.jtToolsSettings.savedThemes) || defaultSettings.savedThemes;
+  const scopePrompts = (result.jtToolsSettings && result.jtToolsSettings.scopePrompts) || defaultSettings.scopePrompts;
 
   return {
     dragDrop: document.getElementById('dragDrop').checked,
@@ -186,8 +210,10 @@ async function getCurrentSettings() {
     rgbTheme: document.getElementById('rgbTheme').checked,
     quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
+    smartScopeGenerator: document.getElementById('smartScopeGenerator').checked,
     themeColors: currentColors,
-    savedThemes: savedThemes
+    savedThemes: savedThemes,
+    scopePrompts: scopePrompts
   };
 }
 
@@ -409,6 +435,57 @@ async function loadThemeFromSlot(slotIndex) {
   }
 }
 
+// Load scope prompts into UI
+function loadScopePrompts(prompts) {
+  prompts.forEach((prompt, index) => {
+    const promptIndex = index + 1;
+    document.getElementById(`promptName${promptIndex}`).value = prompt.name || '';
+    document.getElementById(`promptText${promptIndex}`).value = prompt.text || '';
+  });
+}
+
+// Get current scope prompts from UI
+function getCurrentScopePrompts() {
+  return [
+    {
+      name: document.getElementById('promptName1').value.trim() || 'Professional Proposal',
+      text: document.getElementById('promptText1').value.trim() || defaultSettings.scopePrompts[0].text
+    },
+    {
+      name: document.getElementById('promptName2').value.trim() || 'Detailed Breakdown',
+      text: document.getElementById('promptText2').value.trim() || defaultSettings.scopePrompts[1].text
+    },
+    {
+      name: document.getElementById('promptName3').value.trim() || 'Budget Justification',
+      text: document.getElementById('promptText3').value.trim() || defaultSettings.scopePrompts[2].text
+    }
+  ];
+}
+
+// Save scope prompts
+async function saveScopePrompts() {
+  try {
+    const result = await chrome.storage.sync.get(['jtToolsSettings']);
+    const settings = result.jtToolsSettings || defaultSettings;
+
+    settings.scopePrompts = getCurrentScopePrompts();
+
+    await chrome.storage.sync.set({ jtToolsSettings: settings });
+    console.log('Scope prompts saved:', settings.scopePrompts);
+
+    // Notify background script of settings change
+    chrome.runtime.sendMessage({
+      type: 'SETTINGS_UPDATED',
+      settings: settings
+    });
+
+    showStatus('Prompts saved!', 'success');
+  } catch (error) {
+    console.error('Error saving prompts:', error);
+    showStatus('Error saving prompts', 'error');
+  }
+}
+
 // Initialize popup
 // Initialize collapsible category functionality
 function initializeCategories() {
@@ -503,6 +580,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Handle Smart Scope Generator panel visibility
+      if (checkbox.id === 'smartScopeGenerator') {
+        const scopePromptCustomization = document.getElementById('scopePromptCustomization');
+        scopePromptCustomization.style.display = checkbox.checked ? 'block' : 'none';
+      }
+
       // Get current settings from checkboxes
       const settings = await getCurrentSettings();
 
@@ -546,4 +629,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for refresh button
   document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);
+
+  // Listen for save prompts button
+  document.getElementById('savePromptsBtn').addEventListener('click', saveScopePrompts);
 });

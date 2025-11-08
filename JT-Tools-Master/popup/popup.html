@@ -85,6 +85,37 @@
         </div>
       </div>
 
+      <!-- Smart Scope Prompt Configuration -->
+      <div class="theme-customization" id="scopePromptCustomization" style="display: none;">
+        <div class="section-label">AI Prompt Configuration</div>
+        <p style="color: #6b7280; font-size: 13px; margin: 0 0 16px 0;">Configure custom prompts for the Smart Scope Generator. When you click the button, you'll select which prompt to use.</p>
+
+        <div class="prompt-slots">
+          <!-- Prompt Slot 1 -->
+          <div class="prompt-slot" style="margin-bottom: 20px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">Custom Prompt 1</label>
+            <input type="text" id="promptName1" class="prompt-name" placeholder="e.g., Professional Proposal" maxlength="30" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+            <textarea id="promptText1" class="prompt-text" placeholder="Enter the AI instructions (e.g., Please rewrite this scope into a professional proposal...)" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; resize: vertical; font-family: inherit;"></textarea>
+          </div>
+
+          <!-- Prompt Slot 2 -->
+          <div class="prompt-slot" style="margin-bottom: 20px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">Custom Prompt 2</label>
+            <input type="text" id="promptName2" class="prompt-name" placeholder="e.g., Detailed Breakdown" maxlength="30" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+            <textarea id="promptText2" class="prompt-text" placeholder="Enter the AI instructions (e.g., Break down this scope into detailed work items...)" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; resize: vertical; font-family: inherit;"></textarea>
+          </div>
+
+          <!-- Prompt Slot 3 -->
+          <div class="prompt-slot" style="margin-bottom: 20px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">Custom Prompt 3</label>
+            <input type="text" id="promptName3" class="prompt-name" placeholder="e.g., Budget Justification" maxlength="30" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+            <textarea id="promptText3" class="prompt-text" placeholder="Enter the AI instructions (e.g., Justify these budget items for client review...)" rows="3" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px; resize: vertical; font-family: inherit;"></textarea>
+          </div>
+        </div>
+
+        <button id="savePromptsBtn" class="btn-primary">Save Prompts</button>
+      </div>
+
       <!-- Appearance & Themes Category -->
       <div class="feature-category">
         <div class="category-header" data-category="appearance">

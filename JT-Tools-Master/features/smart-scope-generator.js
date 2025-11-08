@@ -11,6 +11,10 @@ const SmartScopeGeneratorFeature = (() => {
   const BUTTON_ID = 'jt-smart-scope-button';
   const BUTTON_TEXT = 'Generate Custom Scope';
   const MAX_EXPAND_LEVELS = 5;
+  const DEFAULT_PROMPT = 'Please rewrite the following scope of work into a professional, client-facing proposal with clear formatting, professional language, and proper structure:';
+
+  // Store loaded prompts
+  let customPrompts = null;
 
   // Initialize the feature
   function init() {
@@ -21,6 +25,9 @@ const SmartScopeGeneratorFeature = (() => {
 
     console.log('SmartScopeGenerator: Initializing...');
     isActive = true;
+
+    // Load custom prompts from storage
+    loadCustomPrompts();
 
     // Find and inject button into Mass Budget Actions sidebar
     injectButtonIntoSidebar();
@@ -139,6 +146,191 @@ const SmartScopeGeneratorFeature = (() => {
     }
 
     console.log('SmartScopeGenerator: Button injected into Mass Budget Actions sidebar');
+  }
+
+  // Load custom prompts from chrome.storage
+  async function loadCustomPrompts() {
+    try {
+      const result = await chrome.storage.sync.get(['jtToolsSettings']);
+      const settings = result.jtToolsSettings || {};
+      customPrompts = settings.scopePrompts || [
+        { name: 'Professional Proposal', text: DEFAULT_PROMPT },
+        { name: 'Detailed Breakdown', text: 'Please expand this scope of work with detailed explanations of each item, including materials, labor, and timeline considerations:' },
+        { name: 'Budget Justification', text: 'Please rewrite this scope to emphasize value and justify the costs, explaining why each item is necessary for the project:' }
+      ];
+      console.log('SmartScopeGenerator: Loaded custom prompts:', customPrompts);
+    } catch (error) {
+      console.error('SmartScopeGenerator: Error loading prompts:', error);
+      customPrompts = [
+        { name: 'Professional Proposal', text: DEFAULT_PROMPT },
+        { name: 'Detailed Breakdown', text: 'Please expand this scope of work with detailed explanations of each item, including materials, labor, and timeline considerations:' },
+        { name: 'Budget Justification', text: 'Please rewrite this scope to emphasize value and justify the costs, explaining why each item is necessary for the project:' }
+      ];
+    }
+  }
+
+  // Show prompt selection modal
+  function showPromptSelectionModal() {
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+      `;
+
+      // Create modal content
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        animation: slideIn 0.3s ease;
+      `;
+
+      // Create modal header
+      const header = document.createElement('div');
+      header.style.cssText = `
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 12px;
+      `;
+      header.innerHTML = `
+        <h2 style="margin: 0; font-size: 20px; font-weight: 600; color: #1f2937;">Select AI Prompt</h2>
+        <p style="margin: 8px 0 0 0; font-size: 14px; color: #6b7280;">Choose how the AI should enhance your scope:</p>
+      `;
+
+      // Create prompt options
+      const optionsContainer = document.createElement('div');
+      optionsContainer.style.cssText = 'margin-bottom: 20px;';
+
+      // Default prompt option
+      const defaultOption = createPromptOption('Default', DEFAULT_PROMPT, true);
+      optionsContainer.appendChild(defaultOption);
+
+      // Custom prompt options
+      if (customPrompts) {
+        customPrompts.forEach((prompt, index) => {
+          const option = createPromptOption(prompt.name, prompt.text, false);
+          optionsContainer.appendChild(option);
+        });
+      }
+
+      // Create buttons
+      const buttonsContainer = document.createElement('div');
+      buttonsContainer.style.cssText = `
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      `;
+
+      const cancelButton = document.createElement('button');
+      cancelButton.textContent = 'Cancel';
+      cancelButton.style.cssText = `
+        padding: 10px 20px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #374151;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      `;
+      cancelButton.onmouseover = () => cancelButton.style.background = '#f3f4f6';
+      cancelButton.onmouseout = () => cancelButton.style.background = 'white';
+      cancelButton.onclick = () => {
+        overlay.remove();
+        resolve(null);
+      };
+
+      buttonsContainer.appendChild(cancelButton);
+
+      // Assemble modal
+      modal.appendChild(header);
+      modal.appendChild(optionsContainer);
+      modal.appendChild(buttonsContainer);
+      overlay.appendChild(modal);
+
+      // Add animations
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideIn {
+          from { transform: translateY(-20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Close on overlay click
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+          resolve(null);
+        }
+      });
+
+      // Add to DOM
+      document.body.appendChild(overlay);
+
+      // Helper function to create prompt option
+      function createPromptOption(name, text, isDefault) {
+        const option = document.createElement('div');
+        option.style.cssText = `
+          padding: 16px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          margin-bottom: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+          background: ${isDefault ? '#f0f9ff' : 'white'};
+          border-color: ${isDefault ? '#3b82f6' : '#e5e7eb'};
+        `;
+
+        option.innerHTML = `
+          <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <div style="width: 20px; height: 20px; border-radius: 50%; border: 2px solid ${isDefault ? '#3b82f6' : '#d1d5db'}; margin-right: 12px; display: flex; align-items: center; justify-content: center; background: ${isDefault ? '#3b82f6' : 'white'};">
+              ${isDefault ? '<div style="width: 10px; height: 10px; border-radius: 50%; background: white;"></div>' : ''}
+            </div>
+            <div style="font-weight: 600; color: #1f2937; font-size: 15px;">${name}${isDefault ? ' <span style="color: #3b82f6; font-size: 13px;">(Recommended)</span>' : ''}</div>
+          </div>
+          <div style="font-size: 13px; color: #6b7280; margin-left: 32px; line-height: 1.5;">${text}</div>
+        `;
+
+        option.onmouseover = () => {
+          option.style.borderColor = '#3b82f6';
+          option.style.background = '#f0f9ff';
+        };
+        option.onmouseout = () => {
+          if (!isDefault) {
+            option.style.borderColor = '#e5e7eb';
+            option.style.background = 'white';
+          }
+        };
+
+        option.onclick = () => {
+          overlay.remove();
+          resolve(text);
+        };
+
+        return option;
+      }
+    });
   }
 
   // Find all collapsed group expand buttons (chevron right icons)
@@ -574,6 +766,17 @@ const SmartScopeGeneratorFeature = (() => {
     e.preventDefault();
     e.stopPropagation();
 
+    // Step 0: Show prompt selection modal
+    const selectedPrompt = await showPromptSelectionModal();
+
+    // User cancelled
+    if (selectedPrompt === null) {
+      console.log('SmartScopeGenerator: User cancelled prompt selection');
+      return;
+    }
+
+    console.log('SmartScopeGenerator: Selected prompt:', selectedPrompt);
+
     // Store original button content
     const originalHTML = formatButton.innerHTML;
     formatButton.disabled = true;
@@ -660,8 +863,9 @@ const SmartScopeGeneratorFeature = (() => {
           }
           showNotification('Writing Assistant opened...', 'info');
 
-          // 6c. Paste into Writing Assistant
-          const pasted = await pasteIntoWritingAssistant(formattedScope);
+          // 6c. Paste into Writing Assistant with selected prompt
+          const promptedText = `${selectedPrompt}\n\n${formattedScope}`;
+          const pasted = await pasteIntoWritingAssistant(promptedText);
           if (!pasted) {
             showNotification('Could not find Writing Assistant input', 'error');
             return;
