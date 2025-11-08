@@ -114,9 +114,14 @@ async function loadSettings() {
     const savedThemes = settings.savedThemes || defaultSettings.savedThemes;
     loadSavedThemes(savedThemes);
 
-    // Show/hide theme customization panel based on rgbTheme state
+    // Show/hide customize button based on rgbTheme state
+    const customizeBtn = document.getElementById('customizeThemeBtn');
+    customizeBtn.style.display = (hasLicense && settings.rgbTheme) ? 'inline-flex' : 'none';
+
+    // Always hide the customization panel initially
     const themeCustomization = document.getElementById('themeCustomization');
-    themeCustomization.style.display = (hasLicense && settings.rgbTheme) ? 'block' : 'none';
+    themeCustomization.style.display = 'none';
+    customizeBtn.classList.remove('expanded');
 
     console.log('Settings loaded:', settings);
   } catch (error) {
@@ -143,17 +148,27 @@ async function saveSettings(settings) {
       showStatus('RGB Custom Theme requires a premium license', 'error');
       document.getElementById('rgbTheme').checked = false;
       settings.rgbTheme = false;
-      // Hide panel since RGB theme can't be enabled
+      // Hide customize button and panel since RGB theme can't be enabled
+      const customizeBtn = document.getElementById('customizeThemeBtn');
       const themeCustomization = document.getElementById('themeCustomization');
+      customizeBtn.style.display = 'none';
       themeCustomization.style.display = 'none';
       return;
     }
 
-    // Show/hide theme customization panel (requires both license and toggle)
+    // Show/hide customize button based on rgbTheme toggle
+    const customizeBtn = document.getElementById('customizeThemeBtn');
     const themeCustomization = document.getElementById('themeCustomization');
-    const shouldShowPanel = hasLicense && settings.rgbTheme;
-    themeCustomization.style.display = shouldShowPanel ? 'block' : 'none';
-    console.log('saveSettings: Theme panel visibility:', shouldShowPanel ? 'visible' : 'hidden');
+    const shouldShowButton = hasLicense && settings.rgbTheme;
+    customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
+
+    // Hide panel when toggle is turned off
+    if (!shouldShowButton) {
+      themeCustomization.style.display = 'none';
+      customizeBtn.classList.remove('expanded');
+    }
+
+    console.log('saveSettings: Customize button visibility:', shouldShowButton ? 'visible' : 'hidden');
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -526,6 +541,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for apply theme button
   document.getElementById('applyThemeBtn').addEventListener('click', applyTheme);
+
+  // Listen for customize button to toggle theme customization panel
+  document.getElementById('customizeThemeBtn').addEventListener('click', () => {
+    const themeCustomization = document.getElementById('themeCustomization');
+    const customizeBtn = document.getElementById('customizeThemeBtn');
+    const isVisible = themeCustomization.style.display === 'block';
+
+    if (isVisible) {
+      themeCustomization.style.display = 'none';
+      customizeBtn.classList.remove('expanded');
+    } else {
+      themeCustomization.style.display = 'block';
+      customizeBtn.classList.add('expanded');
+    }
+  });
 
   // Listen for save theme buttons
   document.querySelectorAll('.save-theme-btn').forEach(btn => {
