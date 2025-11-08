@@ -440,6 +440,44 @@ const SmartScopeGeneratorFeature = (() => {
     return false;
   }
 
+  // Find and click the compose button in the message popup
+  async function clickComposeButton() {
+    // Wait for the popup to appear and the compose button to be available
+    console.log('SmartScopeGenerator: Waiting for compose button...');
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      // Look for the compose button by its SVG pattern
+      // The SVG has paths: "M12 8V4H8" and "M2 14h2M20 14h2M15 13v2M9 13v2"
+      const buttons = document.querySelectorAll('[role="button"]');
+
+      for (const button of buttons) {
+        const svgs = button.querySelectorAll('svg');
+        for (const svg of svgs) {
+          const paths = svg.querySelectorAll('path');
+          for (const path of paths) {
+            const d = path.getAttribute('d');
+            // Check for the compose icon pattern
+            if (d && (d.includes('M12 8V4H8') || d.includes('M2 14h2M20 14h2'))) {
+              // Verify it's a small button (py-1 px-2 classes)
+              const classes = button.className || '';
+              if (classes.includes('py-1') && classes.includes('px-2')) {
+                console.log('SmartScopeGenerator: Found compose button, clicking...');
+                button.click();
+                return true;
+              }
+            }
+          }
+        }
+      }
+
+      // Wait before next attempt
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    console.log('SmartScopeGenerator: Compose button not found');
+    return false;
+  }
+
   // Handle format button click
   async function handleFormatClick(e) {
     e.preventDefault();
@@ -512,11 +550,17 @@ const SmartScopeGeneratorFeature = (() => {
 
       console.log('SmartScopeGenerator: Formatted scope:', formattedScope);
 
-      // Step 6: Wait a moment, then click the Message button
-      setTimeout(() => {
-        const clicked = clickMessageButton();
-        if (clicked) {
+      // Step 6: Wait a moment, then click the Message button and compose button
+      setTimeout(async () => {
+        const messageClicked = clickMessageButton();
+        if (messageClicked) {
           showNotification('Opening message composer...', 'info');
+
+          // Wait for popup to appear, then click compose button
+          const composeClicked = await clickComposeButton();
+          if (composeClicked) {
+            showNotification('Ready to paste! Press Ctrl+V to paste scope.', 'success');
+          }
         }
       }, 500);
 
