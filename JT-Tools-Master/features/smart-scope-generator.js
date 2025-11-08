@@ -423,30 +423,29 @@ const SmartScopeGeneratorFeature = (() => {
     // Get all column divs in the row
     const columns = row.querySelectorAll(':scope > div');
 
-    // The Description column is the 5th column (index 4)
-    // It has style="width: 435px; flex-grow: 435;"
-    if (columns.length >= 5) {
-      const descColumn = columns[4];
+    console.log(`SmartScopeGenerator: Row has ${columns.length} columns`);
 
-      // Look for textarea in this column
-      const textareas = descColumn.querySelectorAll('textarea');
+    // Check each column to find the description
+    for (let i = 0; i < columns.length; i++) {
+      const column = columns[i];
+
+      // Look for textarea (description field)
+      const textareas = column.querySelectorAll('textarea');
       for (const textarea of textareas) {
+        const placeholder = textarea.getAttribute('placeholder');
         const value = textarea.value.trim();
-        if (value && value.length > 0) {
-          return value;
-        }
-      }
 
-      // Look for text content in divs
-      const textDivs = descColumn.querySelectorAll('div');
-      for (const div of textDivs) {
-        const text = div.textContent.trim();
-        if (text && text.length > 0 && text.length < 1000) {
-          return text;
+        console.log(`SmartScopeGenerator: Column ${i} has textarea with placeholder="${placeholder}", value="${value.substring(0, 50)}"`);
+
+        // Description field doesn't have a placeholder or has "Description" placeholder
+        if (value && value.length > 0 && placeholder !== 'Name') {
+          console.log(`SmartScopeGenerator: Found description in column ${i}: "${value.substring(0, 50)}"`);
+          return value;
         }
       }
     }
 
+    console.log('SmartScopeGenerator: No description found');
     return '';
   }
 
