@@ -126,9 +126,13 @@ async function loadSettings() {
     const scopePrompts = settings.scopePrompts || defaultSettings.scopePrompts;
     loadScopePrompts(scopePrompts);
 
-    // Show/hide scope prompt customization panel
+    // Show/hide configure prompts button based on Smart Scope Generator state
+    const configurePromptsBtn = document.getElementById('configurePromptsBtn');
+    configurePromptsBtn.style.display = settings.smartScopeGenerator ? 'inline-block' : 'none';
+
+    // Prompt customization panel is hidden by default (user clicks button to show)
     const scopePromptCustomization = document.getElementById('scopePromptCustomization');
-    scopePromptCustomization.style.display = settings.smartScopeGenerator ? 'block' : 'none';
+    scopePromptCustomization.style.display = 'none';
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -580,10 +584,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Handle Smart Scope Generator panel visibility
+      // Handle Smart Scope Generator configure button visibility
       if (checkbox.id === 'smartScopeGenerator') {
-        const scopePromptCustomization = document.getElementById('scopePromptCustomization');
-        scopePromptCustomization.style.display = checkbox.checked ? 'block' : 'none';
+        const configurePromptsBtn = document.getElementById('configurePromptsBtn');
+        configurePromptsBtn.style.display = checkbox.checked ? 'inline-block' : 'none';
+
+        // Hide the prompt panel when feature is disabled
+        if (!checkbox.checked) {
+          const scopePromptCustomization = document.getElementById('scopePromptCustomization');
+          scopePromptCustomization.style.display = 'none';
+        }
       }
 
       // Get current settings from checkboxes
@@ -632,4 +642,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for save prompts button
   document.getElementById('savePromptsBtn').addEventListener('click', saveScopePrompts);
+
+  // Listen for configure prompts button
+  document.getElementById('configurePromptsBtn').addEventListener('click', () => {
+    const scopePromptCustomization = document.getElementById('scopePromptCustomization');
+    const configurePromptsBtn = document.getElementById('configurePromptsBtn');
+
+    // Toggle visibility
+    if (scopePromptCustomization.style.display === 'none') {
+      scopePromptCustomization.style.display = 'block';
+      configurePromptsBtn.textContent = '⚙️ Hide AI Prompts';
+      configurePromptsBtn.style.background = '#e0e7ff';
+      configurePromptsBtn.style.borderColor = '#818cf8';
+      configurePromptsBtn.style.color = '#4f46e5';
+    } else {
+      scopePromptCustomization.style.display = 'none';
+      configurePromptsBtn.textContent = '⚙️ Configure AI Prompts';
+      configurePromptsBtn.style.background = '#f3f4f6';
+      configurePromptsBtn.style.borderColor = '#d1d5db';
+      configurePromptsBtn.style.color = '#374151';
+    }
+  });
 });
