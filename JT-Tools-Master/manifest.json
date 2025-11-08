@@ -1,16 +1,24 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.2.3",
-  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode, and Custom Theme with toggle controls",
+  "version": "3.3.0",
+  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode, Custom Theme, and Google Docs Integration",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "identity"
   ],
   "host_permissions": [
     "https://*.jobtread.com/*",
-    "https://*.workers.dev/*"
+    "https://*.workers.dev/*",
+    "https://www.googleapis.com/*"
   ],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  },
   "action": {
     "default_popup": "popup/popup.html"
   },
@@ -35,7 +43,26 @@
         "features/rgb-theme.js",
         "features/job-switcher.js",
         "features/budget-hierarchy.js",
+        "features/google-docs-integration/auth.js",
+        "features/google-docs-integration/ui.js",
+        "features/google-docs-integration/drive-uploader.js",
+        "features/google-docs-integration/drive-downloader.js",
+        "features/google-docs-integration/jobtread-uploader.js",
+        "features/google-docs-integration/workflow.js",
+        "features/google-docs-integration/detector.js",
         "content.js"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://docs.google.com/*"],
+      "js": [
+        "features/google-docs-integration/auth.js",
+        "features/google-docs-integration/drive-uploader.js",
+        "features/google-docs-integration/drive-downloader.js",
+        "features/google-docs-integration/workflow.js",
+        "features/google-docs-integration/ui.js",
+        "features/google-docs-integration/google-docs-injector.js"
       ],
       "run_at": "document_end"
     }
