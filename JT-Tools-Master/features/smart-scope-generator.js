@@ -454,10 +454,11 @@ const SmartScopeGeneratorFeature = (() => {
     blueRows.forEach(row => {
       // Check if row has blue selection classes
       const hasBlueSelection = Array.from(row.querySelectorAll('*')).some(el => {
-        const classes = el.className || '';
-        return classes.includes('bg-blue-50') ||
-               classes.includes('bg-blue-100') ||
-               classes.includes('bg-blue-200');
+        // Use classList to avoid issues with SVGAnimatedString on SVG elements
+        if (!el.classList) return false;
+        return el.classList.contains('bg-blue-50') ||
+               el.classList.contains('bg-blue-100') ||
+               el.classList.contains('bg-blue-200');
       });
 
       if (hasBlueSelection) {
