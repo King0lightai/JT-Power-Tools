@@ -188,51 +188,99 @@ const SmartScopeGeneratorFeature = (() => {
     return selectedRows;
   }
 
-  // Extract name/description from a row
+  // Extract name from the Name column (2nd column, width: 300px)
   function extractItemName(row) {
-    // Strategy 1: Look for textarea with placeholder="Name"
-    const nameField = row.querySelector('textarea[placeholder="Name"]');
-    if (nameField && nameField.value.trim()) {
-      return nameField.value.trim();
-    }
+    // Get all column divs in the row
+    const columns = row.querySelectorAll(':scope > div');
 
-    // Strategy 2: Look for the name in the second column (after row number)
-    // The name is usually in the second div with font-bold class
-    const boldDivs = row.querySelectorAll('.font-bold');
-    for (const div of boldDivs) {
-      const text = div.textContent.trim();
-      if (text && text.length > 0 && text.length < 200) {
-        return text;
+    // The Name column is the 2nd column (index 1)
+    // It has style="width: 300px; flex-grow: 300;"
+    if (columns.length >= 2) {
+      const nameColumn = columns[1];
+
+      // Look for textarea with placeholder="Name"
+      const nameField = nameColumn.querySelector('textarea[placeholder="Name"]');
+      if (nameField && nameField.value.trim()) {
+        return nameField.value.trim();
+      }
+
+      // Look for text in draggable elements
+      const draggables = nameColumn.querySelectorAll('[draggable="true"]');
+      for (const draggable of draggables) {
+        const text = draggable.textContent.trim();
+        if (text && text.length > 0 && !text.match(/^\d+$/)) {
+          return text;
+        }
+      }
+
+      // Look for any textarea
+      const textareas = nameColumn.querySelectorAll('textarea');
+      for (const textarea of textareas) {
+        const value = textarea.value.trim();
+        if (value && value.length > 0) {
+          return value;
+        }
       }
     }
 
-    // Strategy 3: Look in any textarea in the name column
-    const textareas = row.querySelectorAll('textarea');
-    for (const textarea of textareas) {
-      const value = textarea.value.trim();
-      if (value && value.length > 0 && value.length < 200) {
-        return value;
+    return '';
+  }
+
+  // Extract description from the Description column (5th column, width: 435px)
+  function extractItemDescription(row) {
+    // Get all column divs in the row
+    const columns = row.querySelectorAll(':scope > div');
+
+    // The Description column is the 5th column (index 4)
+    // It has style="width: 435px; flex-grow: 435;"
+    if (columns.length >= 5) {
+      const descColumn = columns[4];
+
+      // Look for textarea in this column
+      const textareas = descColumn.querySelectorAll('textarea');
+      for (const textarea of textareas) {
+        const value = textarea.value.trim();
+        if (value && value.length > 0) {
+          return value;
+        }
+      }
+
+      // Look for text content in divs
+      const textDivs = descColumn.querySelectorAll('div');
+      for (const div of textDivs) {
+        const text = div.textContent.trim();
+        if (text && text.length > 0 && text.length < 1000) {
+          return text;
+        }
       }
     }
 
-    // Strategy 4: Look for text in draggable elements
-    const draggables = row.querySelectorAll('[draggable="true"]');
-    for (const draggable of draggables) {
-      const text = draggable.textContent.trim();
-      if (text && text.length > 0 && text.length < 200 && !text.match(/^\d+$/)) {
-        return text;
-      }
-    }
-
-    return 'Unnamed Item';
+    return '';
   }
 
   // Format selected items into professional scope
   function formatScope(rows) {
-    const items = rows.map((row, index) => {
+    const items = [];
+
+    rows.forEach((row, index) => {
       const name = extractItemName(row);
-      return `${index + 1}. ${name}`;
+      const description = extractItemDescription(row);
+
+      if (!name) return; // Skip rows without names
+
+      let itemText = `${index + 1}. ${name}`;
+
+      // Add description if available
+      if (description) {
+        itemText += `\n   ${description}`;
+      }
+
+      items.push(itemText);
     });
+
+    if (items.length === 0) {
+      return null;
+    }
 
     const scopeText = items.join('\n\n');
 
@@ -240,6 +288,46 @@ const SmartScopeGeneratorFeature = (() => {
     const formattedScope = `SCOPE OF WORK\n\n${scopeText}\n\nPlease review and let us know if you have any questions.`;
 
     return formattedScope;
+  }
+
+  // Find and click the Message button in the job header toolbar
+  function clickMessageButton() {
+    // Look for the Message button in the toolbar
+    // It has text "Message" and is in a button group
+
+    // Strategy 1: Find by button text content
+    const buttons = document.querySelectorAll('[role="button"]');
+    for (const button of buttons) {
+      const text = button.textContent.trim();
+      if (text === 'Message' || text.includes(' Message')) {
+        // Check if it's in the toolbar (has specific classes)
+        const classes = button.className || '';
+        if (classes.includes('inline-block') &&
+            classes.includes('py-2') &&
+            classes.includes('px-4') &&
+            classes.includes('border-y')) {
+          console.log('SmartScopeGenerator: Found Message button, clicking...');
+          button.click();
+          return true;
+        }
+      }
+    }
+
+    // Strategy 2: Find by looking for the SVG pattern (plus icon) with "Message" text
+    const allElements = document.querySelectorAll('*');
+    for (const el of allElements) {
+      if (el.textContent.trim().endsWith(' Message') || el.textContent.trim() === 'Message') {
+        const svg = el.querySelector('svg path[d*="M5 12h14M12 5v14"]');
+        if (svg) {
+          console.log('SmartScopeGenerator: Found Message button via SVG, clicking...');
+          el.click();
+          return true;
+        }
+      }
+    }
+
+    console.log('SmartScopeGenerator: Message button not found');
+    return false;
   }
 
   // Handle format button click
@@ -273,6 +361,11 @@ const SmartScopeGeneratorFeature = (() => {
       // Format the scope
       const formattedScope = formatScope(selectedRows);
 
+      if (!formattedScope) {
+        showNotification('No valid items found to format', 'error');
+        return;
+      }
+
       // Copy to clipboard
       await copyToClipboard(formattedScope);
 
@@ -283,6 +376,14 @@ const SmartScopeGeneratorFeature = (() => {
       );
 
       console.log('SmartScopeGenerator: Formatted scope:', formattedScope);
+
+      // Wait a moment, then click the Message button
+      setTimeout(() => {
+        const clicked = clickMessageButton();
+        if (clicked) {
+          showNotification('Opening message composer...', 'info');
+        }
+      }, 500);
 
     } catch (error) {
       console.error('SmartScopeGenerator: Error formatting scope:', error);
@@ -344,13 +445,14 @@ const SmartScopeGeneratorFeature = (() => {
 
     document.body.appendChild(notification);
 
-    // Remove after 4 seconds
+    // Remove after 3 seconds (shorter for info messages)
+    const duration = type === 'info' ? 2000 : 4000;
     setTimeout(() => {
       notification.style.animation = 'slideOutToTop 0.3s ease-in';
       setTimeout(() => {
         notification.remove();
       }, 300);
-    }, 4000);
+    }, duration);
 
     // Add animations if not already present
     if (!document.getElementById('jt-notification-animations')) {
