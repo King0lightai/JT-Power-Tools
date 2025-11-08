@@ -10,8 +10,6 @@ const SmartScopeGeneratorFeature = (() => {
   // Configuration
   const BUTTON_ID = 'jt-smart-scope-button';
   const BUTTON_TEXT = 'Generate Custom Scope';
-  const MAX_EXPAND_LEVELS = 10; // Increased to handle deeply nested budgets
-  const EXPAND_DELAY = 500; // Increased delay between expansions (ms)
   const DEFAULT_PROMPT = 'Please rewrite the following scope of work into a professional, client-facing proposal with clear formatting, professional language, and proper structure:';
 
   // Store loaded prompts
@@ -332,140 +330,6 @@ const SmartScopeGeneratorFeature = (() => {
         return option;
       }
     });
-  }
-
-  // Check if Expand All button is disabled (grayed out)
-  function isExpandButtonDisabled() {
-    const buttons = document.querySelectorAll('[role="button"]');
-
-    for (const button of buttons) {
-      const classes = button.className || '';
-
-      // Check if this is the expand button and it's disabled
-      if (typeof classes === 'string' && classes.includes('p-2')) {
-        const svgs = button.querySelectorAll('svg');
-        for (const svg of svgs) {
-          const paths = svg.querySelectorAll('path');
-          for (const path of paths) {
-            const d = path.getAttribute('d');
-            if (d && d.includes('m9 18 6-6-6-6')) {
-              // This is the expand button - check if disabled
-              return classes.includes('opacity-50') || classes.includes('pointer-events-none');
-            }
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
-  // Click the Expand All button once
-  function clickExpandAllButton() {
-    const buttons = document.querySelectorAll('[role="button"]');
-
-    for (const button of buttons) {
-      const classes = button.className || '';
-
-      // Skip if already disabled
-      if (typeof classes === 'string' && (classes.includes('opacity-50') || classes.includes('pointer-events-none'))) {
-        continue;
-      }
-
-      const svgs = button.querySelectorAll('svg');
-      for (const svg of svgs) {
-        const paths = svg.querySelectorAll('path');
-        for (const path of paths) {
-          const d = path.getAttribute('d');
-          // Expand icon pattern: chevron pointing right
-          if (d && d.includes('m9 18 6-6-6-6')) {
-            // Must be in toolbar with p-2 class
-            if (typeof classes === 'string' && classes.includes('p-2')) {
-              button.click();
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    return false;
-  }
-
-  // Click Expand All button multiple times (once per level) until it's disabled
-  async function expandAllLevels() {
-    console.log('SmartScopeGenerator: Expanding all levels...');
-
-    // Click up to 5 times (5 levels deep)
-    for (let level = 0; level < 5; level++) {
-      // Check if already fully expanded
-      if (isExpandButtonDisabled()) {
-        console.log(`SmartScopeGenerator: All levels expanded after ${level} clicks`);
-        break;
-      }
-
-      // Click the expand button
-      const clicked = clickExpandAllButton();
-      if (!clicked) {
-        console.log('SmartScopeGenerator: Expand button not found');
-        break;
-      }
-
-      console.log(`SmartScopeGenerator: Clicked Expand All (level ${level + 1})`);
-
-      // Wait for this level to expand
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-
-    // Final check - wait for button to be disabled
-    for (let attempt = 0; attempt < 20; attempt++) {
-      if (isExpandButtonDisabled()) {
-        console.log('SmartScopeGenerator: Expansion complete - button is disabled');
-        // Extra delay to ensure DOM is fully rendered
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return true;
-      }
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    console.log('SmartScopeGenerator: Expansion may be incomplete, but proceeding');
-    return true;
-  }
-
-  // Click the Collapse All button
-  function clickCollapseAllButton() {
-    console.log('SmartScopeGenerator: Looking for Collapse All button...');
-
-    const buttons = document.querySelectorAll('[role="button"]');
-
-    for (const button of buttons) {
-      const classes = button.className || '';
-
-      // Skip if disabled
-      if (typeof classes === 'string' && (classes.includes('opacity-50') || classes.includes('pointer-events-none'))) {
-        continue;
-      }
-
-      const svgs = button.querySelectorAll('svg');
-      for (const svg of svgs) {
-        const paths = svg.querySelectorAll('path');
-        for (const path of paths) {
-          const d = path.getAttribute('d');
-          // Collapse icon pattern: chevron pointing down
-          if (d && d.includes('m6 9 6 6 6-6')) {
-            // Must be in toolbar with p-2 class
-            if (typeof classes === 'string' && classes.includes('p-2')) {
-              console.log('SmartScopeGenerator: Found Collapse All button, clicking...');
-              button.click();
-              return true;
-            }
-          }
-        }
-      }
-    }
-
-    console.log('SmartScopeGenerator: Collapse All button not found');
-    return false;
   }
 
   // Find selected budget line items
@@ -875,39 +739,25 @@ const SmartScopeGeneratorFeature = (() => {
     // Update button text
     const iconSvg = formatButton.querySelector('svg');
     if (iconSvg) {
-      formatButton.innerHTML = iconSvg.outerHTML + ' Expanding groups...';
+      formatButton.innerHTML = iconSvg.outerHTML + ' Extracting items...';
     } else {
-      formatButton.textContent = 'Expanding groups...';
+      formatButton.textContent = 'Extracting items...';
     }
 
     try {
-      // Step 1: Expand all levels (clicks button 5 times, once per level)
-      await expandAllLevels();
-
-      // Update button text
-      if (iconSvg) {
-        formatButton.innerHTML = iconSvg.outerHTML + ' Extracting items...';
-      } else {
-        formatButton.textContent = 'Extracting items...';
-      }
-
-      // Step 2: Get selected items (now visible in DOM)
+      // Step 1: Get selected items
       const selectedRows = getSelectedItems();
 
       if (selectedRows.length === 0) {
-        showNotification('No items selected', 'error');
-        // Collapse groups back
-        clickCollapseAllButton();
+        showNotification('⚠️ No items selected. Please select budget items first.', 'error');
         return;
       }
 
-      // Step 3: Format the scope
+      // Step 2: Format the scope
       const formattedScope = formatScope(selectedRows);
 
       if (!formattedScope) {
         showNotification('No valid items found to format', 'error');
-        // Collapse groups back
-        clickCollapseAllButton();
         return;
       }
 
@@ -918,11 +768,8 @@ const SmartScopeGeneratorFeature = (() => {
         formatButton.textContent = 'Copying to clipboard...';
       }
 
-      // Step 4: Copy to clipboard
+      // Step 3: Copy to clipboard
       await copyToClipboard(formattedScope);
-
-      // Step 5: Collapse groups back to original state
-      clickCollapseAllButton();
 
       // Show success notification
       showNotification(
