@@ -5,13 +5,12 @@ const SmartScopeGeneratorFeature = (() => {
   let isActive = false;
   let observer = null;
   let formatButton = null;
-  let buttonContainer = null;
   let updateInterval = null;
+  let toolbarContainer = null;
 
   // Configuration
   const BUTTON_ID = 'jt-smart-scope-button';
-  const CONTAINER_ID = 'jt-smart-scope-container';
-  const BUTTON_TEXT = '✨ Format Scope with AI';
+  const BUTTON_TEXT = 'Custom Scope';
 
   // Initialize the feature
   function init() {
@@ -23,15 +22,25 @@ const SmartScopeGeneratorFeature = (() => {
     console.log('SmartScopeGenerator: Initializing...');
     isActive = true;
 
-    // Create the format button (initially hidden)
-    createFormatButton();
+    // Find and inject button into toolbar
+    injectButtonIntoToolbar();
 
     // Check for selected items periodically
     // (JobTread uses React and updates selection dynamically)
-    updateInterval = setInterval(updateButtonVisibility, 500);
+    updateInterval = setInterval(() => {
+      updateButtonVisibility();
+      // Re-inject button if toolbar was rebuilt
+      if (!document.getElementById(BUTTON_ID)) {
+        injectButtonIntoToolbar();
+      }
+    }, 500);
 
-    // Also watch for DOM changes
+    // Watch for DOM changes
     observer = new MutationObserver(() => {
+      // Re-inject button if toolbar was rebuilt
+      if (!document.getElementById(BUTTON_ID)) {
+        injectButtonIntoToolbar();
+      }
       updateButtonVisibility();
     });
 
@@ -68,84 +77,78 @@ const SmartScopeGeneratorFeature = (() => {
     }
 
     // Remove button
-    if (buttonContainer) {
-      buttonContainer.remove();
-      buttonContainer = null;
+    if (formatButton && formatButton.parentNode) {
+      formatButton.remove();
       formatButton = null;
     }
+
+    toolbarContainer = null;
 
     console.log('SmartScopeGenerator: Cleanup complete');
   }
 
-  // Create the floating format button
-  function createFormatButton() {
-    if (buttonContainer) return;
+  // Find the job header toolbar and inject our button
+  function injectButtonIntoToolbar() {
+    // Don't inject if already exists
+    if (document.getElementById(BUTTON_ID)) {
+      formatButton = document.getElementById(BUTTON_ID);
+      return;
+    }
 
-    // Create container
-    buttonContainer = document.createElement('div');
-    buttonContainer.id = CONTAINER_ID;
-    buttonContainer.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 10000;
-      display: none;
-      animation: slideIn 0.3s ease-out;
-    `;
+    // Find the toolbar container
+    // Look for the button group with "Edit Job", "Message", etc.
+    const buttonGroups = document.querySelectorAll('.absolute.inset-0.flex.justify-end');
 
-    // Create button
-    formatButton = document.createElement('button');
+    let targetContainer = null;
+    for (const group of buttonGroups) {
+      // Verify this is the job header toolbar by checking for "Edit Job" button
+      const editButton = Array.from(group.querySelectorAll('[role="button"]')).find(btn =>
+        btn.textContent.includes('Edit Job')
+      );
+
+      if (editButton) {
+        targetContainer = group;
+        break;
+      }
+    }
+
+    if (!targetContainer) {
+      // Toolbar not found yet, will retry on next interval
+      return;
+    }
+
+    toolbarContainer = targetContainer;
+
+    // Create our button matching JobTread's style
+    formatButton = document.createElement('div');
     formatButton.id = BUTTON_ID;
-    formatButton.textContent = BUTTON_TEXT;
-    formatButton.style.cssText = `
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-      transition: all 0.3s ease;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    formatButton.setAttribute('role', 'button');
+    formatButton.setAttribute('tabindex', '0');
+    formatButton.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0';
+    formatButton.style.cssText = 'display: none; font-weight: 600; transition: all 0.2s ease;';
+
+    // Create button content with icon
+    formatButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] mr-1" viewBox="0 0 24 24">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275z"></path>
+      </svg>
+      ${BUTTON_TEXT}
     `;
-
-    // Button hover effects
-    formatButton.addEventListener('mouseenter', () => {
-      formatButton.style.transform = 'translateY(-2px)';
-      formatButton.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-    });
-
-    formatButton.addEventListener('mouseleave', () => {
-      formatButton.style.transform = 'translateY(0)';
-      formatButton.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-    });
 
     // Button click handler
     formatButton.addEventListener('click', handleFormatClick);
 
-    buttonContainer.appendChild(formatButton);
-    document.body.appendChild(buttonContainer);
-
-    // Add animation keyframes
-    if (!document.getElementById('jt-scope-animations')) {
-      const style = document.createElement('style');
-      style.id = 'jt-scope-animations';
-      style.textContent = `
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `;
-      document.head.appendChild(style);
+    // Insert button before the "..." menu button (last button)
+    const lastButton = targetContainer.lastElementChild;
+    if (lastButton && lastButton.previousElementSibling) {
+      // Insert before the last button (which is usually the "..." menu)
+      targetContainer.insertBefore(formatButton, lastButton);
+    } else {
+      // Just append if we can't find the right spot
+      targetContainer.appendChild(formatButton);
     }
+
+    console.log('SmartScopeGenerator: Button injected into toolbar');
   }
 
   // Find selected budget line items
@@ -237,16 +240,22 @@ const SmartScopeGeneratorFeature = (() => {
 
   // Update button visibility based on selection
   function updateButtonVisibility() {
-    if (!isActive || !buttonContainer || !formatButton) return;
+    if (!isActive || !formatButton) return;
 
     const selectedRows = getSelectedItems();
     const count = selectedRows.length;
 
     if (count > 0) {
-      buttonContainer.style.display = 'block';
-      formatButton.textContent = `${BUTTON_TEXT} (${count} item${count === 1 ? '' : 's'})`;
+      formatButton.style.display = 'inline-block';
+      // Update button text with count
+      const iconSvg = formatButton.querySelector('svg');
+      if (iconSvg) {
+        formatButton.innerHTML = iconSvg.outerHTML + ` ${BUTTON_TEXT} (${count})`;
+      } else {
+        formatButton.textContent = `${BUTTON_TEXT} (${count})`;
+      }
     } else {
-      buttonContainer.style.display = 'none';
+      formatButton.style.display = 'none';
     }
   }
 
@@ -274,10 +283,19 @@ const SmartScopeGeneratorFeature = (() => {
       return;
     }
 
-    // Disable button during processing
+    // Store original button content
+    const originalHTML = formatButton.innerHTML;
     formatButton.disabled = true;
-    const originalText = formatButton.textContent;
-    formatButton.textContent = 'Processing...';
+    formatButton.style.opacity = '0.6';
+    formatButton.style.cursor = 'wait';
+
+    // Update button text
+    const iconSvg = formatButton.querySelector('svg');
+    if (iconSvg) {
+      formatButton.innerHTML = iconSvg.outerHTML + ' Processing...';
+    } else {
+      formatButton.textContent = 'Processing...';
+    }
 
     try {
       // Format the scope
@@ -300,7 +318,9 @@ const SmartScopeGeneratorFeature = (() => {
     } finally {
       // Re-enable button
       formatButton.disabled = false;
-      formatButton.textContent = originalText;
+      formatButton.style.opacity = '1';
+      formatButton.style.cursor = 'pointer';
+      formatButton.innerHTML = originalHTML;
     }
   }
 
