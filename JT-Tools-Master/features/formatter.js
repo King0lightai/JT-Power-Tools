@@ -683,6 +683,11 @@ const FormatterFeature = (() => {
     let tooltipTimeout = null;
 
     toolbar.querySelectorAll('button[title]').forEach(btn => {
+      // Store title in data attribute and remove the title to prevent native tooltip
+      const title = btn.getAttribute('title');
+      btn.setAttribute('data-tooltip', title);
+      btn.removeAttribute('title');
+
       btn.addEventListener('mouseenter', (e) => {
         // Clear any existing timeout
         if (tooltipTimeout) {
@@ -691,7 +696,7 @@ const FormatterFeature = (() => {
 
         // Show tooltip after a short delay
         tooltipTimeout = setTimeout(() => {
-          const tooltipText = btn.getAttribute('title');
+          const tooltipText = btn.getAttribute('data-tooltip');
           if (!tooltipText) return;
 
           // Remove any existing tooltip

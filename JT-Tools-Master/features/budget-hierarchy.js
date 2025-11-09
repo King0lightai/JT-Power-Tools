@@ -399,8 +399,32 @@ const BudgetHierarchyFeature = (() => {
     return null; // No parent group found
   }
 
+  // Check if we're on a budget page or in a budget context
+  function isInBudgetContext() {
+    // Check if URL contains /budgets
+    if (window.location.pathname.includes('/budgets')) {
+      return true;
+    }
+
+    // Check if we're in a budget view by looking for budget-specific elements
+    // Budget pages have the main table structure with budget groups
+    const hasBudgetGroups = document.querySelectorAll('div.font-bold.flex[style*="width: 300px"]').length > 0;
+
+    // Only return true if we have budget groups AND we're not clearly on a task/schedule page
+    if (hasBudgetGroups && !window.location.pathname.includes('/tasks') && !window.location.pathname.includes('/schedule')) {
+      return true;
+    }
+
+    return false;
+  }
+
   // Apply shading to all groups
   function applyGroupShading() {
+    // Only apply shading if we're in a budget context
+    if (!isInBudgetContext()) {
+      return;
+    }
+
     const groupCells = findAllGroupCells();
 
     // First, remove all existing shading from items
