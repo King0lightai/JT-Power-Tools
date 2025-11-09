@@ -587,6 +587,7 @@ const FormatterFeature = (() => {
     setupDropdowns(toolbar);
     setupColorPicker(toolbar);
     setupFormatButtons(toolbar, field);
+    setupCustomTooltips(toolbar);
 
     document.body.appendChild(toolbar);
     return toolbar;
@@ -672,6 +673,73 @@ const FormatterFeature = (() => {
               updateToolbarState(targetField, toolbar);
             }
           }, 10);
+        }
+      });
+    });
+  }
+
+  function setupCustomTooltips(toolbar) {
+    let currentTooltip = null;
+    let tooltipTimeout = null;
+
+    toolbar.querySelectorAll('button[title]').forEach(btn => {
+      btn.addEventListener('mouseenter', (e) => {
+        // Clear any existing timeout
+        if (tooltipTimeout) {
+          clearTimeout(tooltipTimeout);
+        }
+
+        // Show tooltip after a short delay
+        tooltipTimeout = setTimeout(() => {
+          const tooltipText = btn.getAttribute('title');
+          if (!tooltipText) return;
+
+          // Remove any existing tooltip
+          if (currentTooltip && document.body.contains(currentTooltip)) {
+            document.body.removeChild(currentTooltip);
+          }
+
+          // Create tooltip element
+          const tooltip = document.createElement('div');
+          tooltip.className = 'jt-custom-tooltip';
+          tooltip.textContent = tooltipText;
+          document.body.appendChild(tooltip);
+
+          // Position tooltip above the button
+          const btnRect = btn.getBoundingClientRect();
+          const tooltipRect = tooltip.getBoundingClientRect();
+
+          const left = btnRect.left + (btnRect.width / 2) - (tooltipRect.width / 2);
+          const top = btnRect.top - tooltipRect.height - 10;
+
+          tooltip.style.left = `${left}px`;
+          tooltip.style.top = `${top}px`;
+
+          // Show tooltip with fade-in
+          setTimeout(() => {
+            tooltip.classList.add('visible');
+          }, 10);
+
+          currentTooltip = tooltip;
+        }, 500); // 500ms delay before showing tooltip
+      });
+
+      btn.addEventListener('mouseleave', () => {
+        // Clear timeout if mouse leaves before tooltip shows
+        if (tooltipTimeout) {
+          clearTimeout(tooltipTimeout);
+          tooltipTimeout = null;
+        }
+
+        // Remove tooltip
+        if (currentTooltip && document.body.contains(currentTooltip)) {
+          currentTooltip.classList.remove('visible');
+          setTimeout(() => {
+            if (currentTooltip && document.body.contains(currentTooltip)) {
+              document.body.removeChild(currentTooltip);
+            }
+            currentTooltip = null;
+          }, 200); // Match transition duration
         }
       });
     });
