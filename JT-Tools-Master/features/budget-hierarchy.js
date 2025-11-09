@@ -23,6 +23,81 @@ const BudgetHierarchyFeature = (() => {
     return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
   }
 
+  // Helper function to convert hex to HSL
+  function hexToHsl(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return null;
+
+    const r = rgb.r / 255;
+    const g = rgb.g / 255;
+    const b = rgb.b / 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0; // achromatic
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  // Helper function to convert HSL to hex
+  function hslToHex(h, s, l) {
+    h = h / 360;
+    s = s / 100;
+    l = l / 100;
+
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+
+    return rgbToHex(
+      Math.round(r * 255),
+      Math.round(g * 255),
+      Math.round(b * 255)
+    );
+  }
+
+  // Adjust color lightness in HSL (preserves hue and saturation)
+  function adjustLightness(hex, amount) {
+    const hsl = hexToHsl(hex);
+    if (!hsl) return hex;
+
+    // Adjust lightness and clamp between 0 and 100
+    const newL = Math.max(0, Math.min(100, hsl.l + amount));
+
+    return hslToHex(hsl.h, hsl.s, newL);
+  }
+
   // Calculate luminance to determine if color is light or dark
   function getLuminance(hex) {
     const rgb = hexToRgb(hex);
@@ -54,29 +129,32 @@ const BudgetHierarchyFeature = (() => {
 
   // Generate 5 shades from a base color
   function generateShades(baseColor, isDarkMode = false) {
-    const luminance = getLuminance(baseColor);
-    const isDark = luminance < 0.5;
+    const hsl = hexToHsl(baseColor);
+    if (!hsl) return [baseColor, baseColor, baseColor, baseColor, baseColor];
 
-    // Use smaller steps for more subtle, lighter shading (better for black text)
-    const step = isDarkMode ? 5 : 8;
+    const isDark = hsl.l < 50;
+
+    // Use smaller steps for more subtle shading
+    // In HSL, lightness ranges from 0-100, so we use percentage-based steps
+    const step = isDarkMode ? 2 : 3;
 
     if (isDark) {
-      // For dark backgrounds, progressively darken
+      // For dark backgrounds, progressively lighten from darker to lighter
       return [
-        adjustBrightness(baseColor, step * 4),   // Level 1 (lightest)
-        adjustBrightness(baseColor, step * 3),   // Level 2
-        adjustBrightness(baseColor, step * 2),   // Level 3
-        adjustBrightness(baseColor, step),       // Level 4
-        baseColor                                // Level 5: Base (darkest)
+        adjustLightness(baseColor, step * 4),   // Level 1 (lightest)
+        adjustLightness(baseColor, step * 3),   // Level 2
+        adjustLightness(baseColor, step * 2),   // Level 3
+        adjustLightness(baseColor, step),       // Level 4
+        baseColor                               // Level 5: Base (darkest)
       ];
     } else {
-      // For light backgrounds, progressively darken
+      // For light backgrounds, progressively darken from lighter to darker
       return [
-        baseColor,                               // Level 1: Base (lightest)
-        adjustBrightness(baseColor, -step),      // Level 2
-        adjustBrightness(baseColor, -step * 2),  // Level 3
-        adjustBrightness(baseColor, -step * 3),  // Level 4
-        adjustBrightness(baseColor, -step * 4)   // Level 5 (darkest)
+        baseColor,                              // Level 1: Base (lightest)
+        adjustLightness(baseColor, -step),      // Level 2
+        adjustLightness(baseColor, -step * 2),  // Level 3
+        adjustLightness(baseColor, -step * 3),  // Level 4
+        adjustLightness(baseColor, -step * 4)   // Level 5 (darkest)
       ];
     }
   }
@@ -165,12 +243,13 @@ const BudgetHierarchyFeature = (() => {
     const isDarkMode = theme.type === 'dark';
     const shades = generateShades(theme.baseColor, isDarkMode);
 
-    // Generate hover shades (slightly darker/lighter than base)
+    // Generate hover shades (slightly darker than base using HSL)
     const hoverShades = shades.map(shade => {
-      const luminance = getLuminance(shade);
-      return luminance < 0.5
-        ? adjustBrightness(shade, -15)  // Darken for dark backgrounds
-        : adjustBrightness(shade, -10); // Darken for light backgrounds
+      const hsl = hexToHsl(shade);
+      if (!hsl) return shade;
+
+      // Darken by reducing lightness in HSL
+      return adjustLightness(shade, hsl.l < 50 ? -3 : -4);
     });
 
     // Line items should match their parent group shades exactly
