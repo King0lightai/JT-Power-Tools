@@ -448,6 +448,15 @@ const CustomThemeFeature = (() => {
         border-top-color: ${primary};
       }
 
+      /* === Native JobTread Tooltips with Primary Color === */
+      /* Target Popper.js tooltips throughout JobTread interface */
+      div[data-popper-placement].bg-black,
+      div[data-popper-placement].bg-gray-800,
+      div[data-popper-placement].bg-gray-900 {
+        background-color: ${primary} !important;
+        color: #ffffff !important;
+      }
+
       /* === Black/Dark Background Overrides === */
       .bg-black,
       .bg-gray-800,
