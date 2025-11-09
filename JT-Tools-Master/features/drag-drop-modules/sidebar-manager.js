@@ -62,11 +62,21 @@ const SidebarManager = (() => {
 
   /**
    * Open the sidebar by clicking on an element
+   * Uses a synthetic click event that doesn't bubble to prevent closing popups
    * @param {HTMLElement} element - The element to click
    */
   function openSidebar(element) {
     console.log('SidebarManager: Clicking element to open sidebar');
-    element.click();
+
+    // Create a synthetic click event that doesn't bubble
+    // This prevents the click from propagating up and closing any parent popups
+    const clickEvent = new MouseEvent('click', {
+      bubbles: false,  // Don't bubble up to parent elements
+      cancelable: true,
+      view: window
+    });
+
+    element.dispatchEvent(clickEvent);
   }
 
   /**
@@ -86,7 +96,15 @@ const SidebarManager = (() => {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
           console.log('SidebarManager: Clicking Close button on existing sidebar');
-          button.click();
+
+          // Use synthetic click that doesn't bubble to prevent closing popups
+          const clickEvent = new MouseEvent('click', {
+            bubbles: false,
+            cancelable: true,
+            view: window
+          });
+          button.dispatchEvent(clickEvent);
+
           return true;
         }
       }
@@ -128,7 +146,14 @@ const SidebarManager = (() => {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
           console.log('SidebarManager: Found and clicking Close button');
-          button.click();
+
+          // Use synthetic click that doesn't bubble to prevent closing popups
+          const clickEvent = new MouseEvent('click', {
+            bubbles: false,
+            cancelable: true,
+            view: window
+          });
+          button.dispatchEvent(clickEvent);
 
           // Wait for sidebar to close BEFORE removing hiding CSS
           setTimeout(() => {
