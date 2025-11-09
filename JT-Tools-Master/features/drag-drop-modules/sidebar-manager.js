@@ -108,13 +108,23 @@ const SidebarManager = (() => {
         if (text.includes('Close')) {
           console.log('SidebarManager: Clicking Close button on existing sidebar');
 
-          // Use synthetic click that doesn't bubble to prevent closing popups
-          const clickEvent = new MouseEvent('click', {
-            bubbles: false,
-            cancelable: true,
-            view: window
-          });
-          button.dispatchEvent(clickEvent);
+          // Check if we're in availability view
+          const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+
+          if (isAvailabilityView) {
+            console.log('SidebarManager: Using non-bubbling click for availability view');
+            // Use synthetic click that doesn't bubble to prevent closing popups
+            const clickEvent = new MouseEvent('click', {
+              bubbles: false,
+              cancelable: true,
+              view: window
+            });
+            button.dispatchEvent(clickEvent);
+          } else {
+            console.log('SidebarManager: Using regular click for normal view');
+            // Use regular click for normal views
+            button.click();
+          }
 
           return true;
         }
@@ -158,13 +168,23 @@ const SidebarManager = (() => {
         if (text.includes('Close')) {
           console.log('SidebarManager: Found and clicking Close button');
 
-          // Use synthetic click that doesn't bubble to prevent closing popups
-          const clickEvent = new MouseEvent('click', {
-            bubbles: false,
-            cancelable: true,
-            view: window
-          });
-          button.dispatchEvent(clickEvent);
+          // Check if we're in availability view
+          const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+
+          if (isAvailabilityView) {
+            console.log('SidebarManager: Using non-bubbling click for availability view');
+            // Use synthetic click that doesn't bubble to prevent closing popups
+            const clickEvent = new MouseEvent('click', {
+              bubbles: false,
+              cancelable: true,
+              view: window
+            });
+            button.dispatchEvent(clickEvent);
+          } else {
+            console.log('SidebarManager: Using regular click for normal view');
+            // Use regular click for normal views
+            button.click();
+          }
 
           // Wait for sidebar to close BEFORE removing hiding CSS
           setTimeout(() => {
