@@ -7,6 +7,7 @@ const defaultSettings = {
   rgbTheme: false,
   quickJobSwitcher: true,
   budgetHierarchy: false,
+  quickNotes: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple

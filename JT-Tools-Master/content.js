@@ -39,6 +39,11 @@ const featureModules = {
     name: 'Budget Hierarchy Shading',
     feature: () => window.BudgetHierarchyFeature,
     instance: null
+  },
+  quickNotes: {
+    name: 'Quick Notes',
+    feature: () => window.QuickNotesFeature,
+    instance: null
   }
 };
 
@@ -51,6 +56,7 @@ let currentSettings = {
   rgbTheme: false,
   quickJobSwitcher: true,
   budgetHierarchy: false,
+  quickNotes: true,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
