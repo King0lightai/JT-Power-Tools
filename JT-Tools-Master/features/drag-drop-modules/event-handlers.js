@@ -18,11 +18,13 @@ const DragDropEventHandlers = (() => {
       state.shiftKeyAtDragStart = e.shiftKey;
       state.altKeyAtDragStart = e.altKey;
 
-      const sourceCell = this.closest('td');
+      // Find the source cell - could be td or th in availability view
+      const sourceCell = this.closest('td') || this.closest('th');
       state.sourceDateInfo = window.DateUtils ? window.DateUtils.extractFullDateInfo(sourceCell) : null;
 
       console.log('EventHandlers: ==========================================');
       console.log('EventHandlers: *** DRAG START ***');
+      console.log('EventHandlers: Source cell type:', sourceCell ? sourceCell.tagName : 'null');
       console.log('EventHandlers: Source date:', JSON.stringify(state.sourceDateInfo));
       console.log('EventHandlers: Shift key:', state.shiftKeyAtDragStart);
       console.log('EventHandlers: Alt key:', state.altKeyAtDragStart, '(changes END date)');
