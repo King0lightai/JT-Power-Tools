@@ -125,11 +125,76 @@ const ViewDetector = (() => {
     }
   }
 
+  /**
+   * Check if we're in a popup/modal availability view (vs main schedule page)
+   * @returns {boolean} True if in popup, false if on main schedule page
+   */
+  function isInPopup() {
+    // Look for common popup/modal container indicators
+    const tables = document.querySelectorAll('table');
+
+    for (const table of tables) {
+      // Check if this table has availability view structure
+      const tbody = table.querySelector('tbody');
+      if (!tbody) continue;
+
+      const hasUserRows = Array.from(tbody.querySelectorAll('tr')).some(row => {
+        const firstCell = row.querySelector('td');
+        if (!firstCell) return false;
+        return firstCell.querySelector('div.relative.bg-cover.bg-center') ||
+               firstCell.querySelector('div.font-bold.truncate');
+      });
+
+      if (hasUserRows) {
+        // This is an availability view table, now check if it's in a popup
+        // Look for parent elements that indicate a popup/modal
+        let element = table;
+        while (element && element !== document.body) {
+          const style = window.getComputedStyle(element);
+
+          // Check for fixed positioning (common in popups/modals)
+          if (style.position === 'fixed') {
+            console.log('ViewDetector: isInPopup - Found fixed positioned ancestor, this is a popup');
+            return true;
+          }
+
+          // Check for high z-index (popups typically have high z-index)
+          const zIndex = parseInt(style.zIndex);
+          if (!isNaN(zIndex) && zIndex > 40) {
+            console.log('ViewDetector: isInPopup - Found high z-index ancestor (z-index: ' + zIndex + '), this is a popup');
+            return true;
+          }
+
+          // Check for common modal/dialog class patterns
+          const className = element.className || '';
+          if (typeof className === 'string' && (
+              className.includes('modal') ||
+              className.includes('dialog') ||
+              className.includes('popup') ||
+              className.includes('overlay')
+          )) {
+            console.log('ViewDetector: isInPopup - Found modal/dialog/popup class, this is a popup');
+            return true;
+          }
+
+          element = element.parentElement;
+        }
+
+        console.log('ViewDetector: isInPopup - No popup indicators found, this is main schedule page');
+        return false;
+      }
+    }
+
+    console.log('ViewDetector: isInPopup - No availability view found');
+    return false;
+  }
+
   // Public API
   return {
     isAvailabilityView,
     getViewType,
-    getSelectorsForCurrentView
+    getSelectorsForCurrentView,
+    isInPopup
   };
 })();
 

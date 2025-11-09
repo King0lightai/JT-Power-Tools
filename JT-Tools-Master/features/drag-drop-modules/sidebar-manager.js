@@ -62,21 +62,22 @@ const SidebarManager = (() => {
 
   /**
    * Open the sidebar by clicking on an element
-   * Uses conditional click behavior based on view type:
-   * - Availability view: non-bubbling click to prevent popup closure
-   * - Normal view: regular click to allow proper sidebar opening
+   * Uses conditional click behavior based on view type and popup status:
+   * - Availability view in popup: non-bubbling click to prevent popup closure
+   * - All other cases: regular click to allow proper sidebar opening
    * @param {HTMLElement} element - The element to click
    */
   function openSidebar(element) {
     console.log('SidebarManager: Clicking element to open sidebar');
 
-    // Check if we're in availability view
+    // Only use non-bubbling click if we're in availability view AND in a popup
     const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+    const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
-    if (isAvailabilityView) {
-      console.log('SidebarManager: Using non-bubbling click for availability view');
+    if (isAvailabilityView && isInPopup) {
+      console.log('SidebarManager: Using non-bubbling click for availability view in popup');
       // Create a synthetic click event that doesn't bubble
-      // This prevents the click from propagating up and closing any parent popups
+      // This prevents the click from propagating up and closing the popup
       const clickEvent = new MouseEvent('click', {
         bubbles: false,  // Don't bubble up to parent elements
         cancelable: true,
@@ -84,8 +85,8 @@ const SidebarManager = (() => {
       });
       element.dispatchEvent(clickEvent);
     } else {
-      console.log('SidebarManager: Using regular click for normal view');
-      // Use regular click for normal views to ensure proper sidebar opening
+      console.log('SidebarManager: Using regular click');
+      // Use regular click for main schedule page (both normal and availability views)
       element.click();
     }
   }
@@ -108,11 +109,12 @@ const SidebarManager = (() => {
         if (text.includes('Close')) {
           console.log('SidebarManager: Clicking Close button on existing sidebar');
 
-          // Check if we're in availability view
+          // Only use non-bubbling click if we're in availability view AND in a popup
           const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+          const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
-          if (isAvailabilityView) {
-            console.log('SidebarManager: Using non-bubbling click for availability view');
+          if (isAvailabilityView && isInPopup) {
+            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
             // Use synthetic click that doesn't bubble to prevent closing popups
             const clickEvent = new MouseEvent('click', {
               bubbles: false,
@@ -121,8 +123,8 @@ const SidebarManager = (() => {
             });
             button.dispatchEvent(clickEvent);
           } else {
-            console.log('SidebarManager: Using regular click for normal view');
-            // Use regular click for normal views
+            console.log('SidebarManager: Using regular click');
+            // Use regular click for main schedule page
             button.click();
           }
 
@@ -168,11 +170,12 @@ const SidebarManager = (() => {
         if (text.includes('Close')) {
           console.log('SidebarManager: Found and clicking Close button');
 
-          // Check if we're in availability view
+          // Only use non-bubbling click if we're in availability view AND in a popup
           const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+          const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
-          if (isAvailabilityView) {
-            console.log('SidebarManager: Using non-bubbling click for availability view');
+          if (isAvailabilityView && isInPopup) {
+            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
             // Use synthetic click that doesn't bubble to prevent closing popups
             const clickEvent = new MouseEvent('click', {
               bubbles: false,
@@ -181,8 +184,8 @@ const SidebarManager = (() => {
             });
             button.dispatchEvent(clickEvent);
           } else {
-            console.log('SidebarManager: Using regular click for normal view');
-            // Use regular click for normal views
+            console.log('SidebarManager: Using regular click');
+            // Use regular click for main schedule page
             button.click();
           }
 
