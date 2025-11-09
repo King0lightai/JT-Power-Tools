@@ -1,5 +1,5 @@
-// JobTread Budget Group Hierarchy Shading Feature Module
-// Applies progressive shading to nested budget groups (up to 5 levels)
+// JobTread Group Hierarchy Shading Feature Module
+// Applies progressive shading to nested groups (budgets, tasks, schedules, etc.) - up to 5 levels
 // Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
 
 const BudgetHierarchyFeature = (() => {
@@ -150,7 +150,7 @@ const BudgetHierarchyFeature = (() => {
       styleElement = null;
     }
 
-    console.log('BudgetHierarchy: Cleanup complete (event listeners removed)');
+    console.log('GroupHierarchy: Cleanup complete (event listeners removed)');
   }
 
   // Inject CSS for shading
@@ -179,9 +179,9 @@ const BudgetHierarchyFeature = (() => {
     const itemHoverShades = [...hoverShades];
 
     styleElement = document.createElement('style');
-    styleElement.id = 'jt-budget-hierarchy-styles';
+    styleElement.id = 'jt-group-hierarchy-styles';
     styleElement.textContent = `
-      /* Budget Group Hierarchy Shading */
+      /* Group Hierarchy Shading (Budgets, Tasks, Schedules, etc.) */
       /* Generated for ${theme.type} theme */
       /* Level 1 = Lightest (Top level groups) */
       /* Level 5 = Darkest (Deepest nested groups) */
@@ -224,27 +224,44 @@ const BudgetHierarchyFeature = (() => {
       }
 
       /* Apply shading to indent spacer divs (nested inside first cell) */
+      /* Supports both budget (pl-3.5 border-r-2) and task (pl-2 border-r) patterns */
       /* Only if parent cell doesn't have yellow background */
       .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
-      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2 {
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-2.border-r {
         background-color: inherit !important;
       }
 
       /* Override specific background classes on spacers */
+      /* Supports both budget and task patterns */
       /* Only if parent cell doesn't have yellow background */
       .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-group-level-1 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-group-level-2 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-group-level-3 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-group-level-4 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
-      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-group-level-5 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50 {
         background-color: inherit !important;
       }
 
@@ -259,27 +276,44 @@ const BudgetHierarchyFeature = (() => {
       }
 
       /* Apply shading to indent spacer divs in line items */
+      /* Supports both budget and task patterns */
       /* Only if parent cell doesn't have yellow background */
       .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
       .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
-      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2 {
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-2.border-r,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.border-r-2,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-2.border-r {
         background-color: inherit !important;
       }
 
       /* Override specific background classes on spacers in line items */
+      /* Supports both budget and task patterns */
       /* Only if parent cell doesn't have yellow background */
       .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
       .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50,
       .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-white,
-      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50 {
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-3\\.5.bg-blue-50,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-2.bg-white,
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]) div.pl-2.bg-gray-50 {
         background-color: inherit !important;
       }
     `;
@@ -297,8 +331,11 @@ const BudgetHierarchyFeature = (() => {
 
   // Get nesting level of a group element
   function getGroupNestingLevel(groupCell) {
-    // Count the number of indent divs (pl-3.5 border-r-2)
-    const indentDivs = groupCell.querySelectorAll(':scope > div.pl-3\\.5.border-r-2');
+    // Count the number of indent divs
+    // Supports both patterns:
+    // - Budget hierarchy: pl-3.5 border-r-2
+    // - Schedule/Task hierarchy: pl-2 border-r border-gray-300
+    const indentDivs = groupCell.querySelectorAll(':scope > div[class*="pl-"][class*="border-r"]');
     const level = indentDivs.length + 1; // 0 indents = level 1, 1 indent = level 2, etc.
 
     return Math.min(level, 5); // Cap at level 5
@@ -315,7 +352,8 @@ const BudgetHierarchyFeature = (() => {
     // For line items, check the first cell for indent divs
     const firstCell = row.querySelector(':scope > div');
     if (firstCell) {
-      const indentDivs = firstCell.querySelectorAll(':scope > div.pl-3\\.5.border-r-2');
+      // Support both indent patterns
+      const indentDivs = firstCell.querySelectorAll(':scope > div[class*="pl-"][class*="border-r"]');
       const level = indentDivs.length + 1;
       return Math.min(level, 5);
     }
