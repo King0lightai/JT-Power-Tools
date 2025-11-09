@@ -1,11 +1,6 @@
 /* === JT Power Tools - Dark Mode Theme === */
 /* Custom dark theme for JobTread interface */
 
-/* === Logo Color === */
-.jt-logo {
-    color: #ffffff !important;
-}
-
 /* === Schedule Card Overrides (Inline Styles) === */
 /* Target schedule cards in month view that have inline color/background styles */
 td div.cursor-pointer[style*="background-color"] {

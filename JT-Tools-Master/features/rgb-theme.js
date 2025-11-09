@@ -169,11 +169,6 @@ const CustomThemeFeature = (() => {
       /* === JT Power Tools - Custom Color Theme === */
       /* Using user's chosen Primary, Background, and Text colors */
 
-      /* === Logo Color === */
-      .jt-logo {
-        color: ${primary} !important;
-      }
-
       /* === Task Cards === */
       /* Use theme background for cards, keep task type color in thick border */
       td div.cursor-pointer[style*="border-left"] {
