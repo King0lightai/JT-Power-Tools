@@ -1,0 +1,390 @@
+/**
+ * Quick Notes Feature
+ * Provides a persistent notepad accessible from any Jobtread page
+ */
+
+const QuickNotesFeature = (() => {
+  let isActive = false;
+  let notesPanel = null;
+  let floatingButton = null;
+  let notes = [];
+  let currentNoteId = null;
+  let searchTerm = '';
+  const STORAGE_KEY = 'jtToolsQuickNotes';
+
+  // Generate unique ID
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  }
+
+  // Load notes from storage
+  async function loadNotes() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get([STORAGE_KEY], (result) => {
+        notes = result[STORAGE_KEY] || [];
+        resolve(notes);
+      });
+    });
+  }
+
+  // Save notes to storage
+  async function saveNotes() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.set({ [STORAGE_KEY]: notes }, () => {
+        resolve();
+      });
+    });
+  }
+
+  // Create a new note
+  function createNote() {
+    const note = {
+      id: generateId(),
+      title: 'Untitled Note',
+      content: '',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    notes.unshift(note);
+    currentNoteId = note.id;
+    saveNotes();
+    renderNotesList();
+    renderNoteEditor();
+  }
+
+  // Delete a note
+  function deleteNote(noteId) {
+    if (confirm('Are you sure you want to delete this note?')) {
+      notes = notes.filter(n => n.id !== noteId);
+      if (currentNoteId === noteId) {
+        currentNoteId = notes.length > 0 ? notes[0].id : null;
+      }
+      saveNotes();
+      renderNotesList();
+      renderNoteEditor();
+    }
+  }
+
+  // Update note content
+  function updateNote(noteId, updates) {
+    const note = notes.find(n => n.id === noteId);
+    if (note) {
+      Object.assign(note, updates, { updatedAt: Date.now() });
+      saveNotes();
+      renderNotesList();
+    }
+  }
+
+  // Format date
+  function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) {
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      if (hours === 0) {
+        const minutes = Math.floor(diff / (1000 * 60));
+        return minutes === 0 ? 'Just now' : `${minutes}m ago`;
+      }
+      return `${hours}h ago`;
+    } else if (days === 1) {
+      return 'Yesterday';
+    } else if (days < 7) {
+      return `${days}d ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  }
+
+  // Render notes list
+  function renderNotesList() {
+    const notesList = notesPanel.querySelector('.jt-notes-list');
+    if (!notesList) return;
+
+    const filteredNotes = notes.filter(note => {
+      if (!searchTerm) return true;
+      const search = searchTerm.toLowerCase();
+      return note.title.toLowerCase().includes(search) ||
+             note.content.toLowerCase().includes(search);
+    });
+
+    if (filteredNotes.length === 0) {
+      notesList.innerHTML = `
+        <div class="jt-notes-empty">
+          ${searchTerm ? 'No notes match your search' : 'No notes yet. Click "New Note" to get started!'}
+        </div>
+      `;
+      return;
+    }
+
+    notesList.innerHTML = filteredNotes.map(note => `
+      <div class="jt-note-item ${currentNoteId === note.id ? 'active' : ''}" data-note-id="${note.id}">
+        <div class="jt-note-item-header">
+          <div class="jt-note-item-title">${escapeHtml(note.title)}</div>
+          <button class="jt-note-delete" data-note-id="${note.id}" title="Delete note">×</button>
+        </div>
+        <div class="jt-note-item-preview">${escapeHtml(note.content.slice(0, 100))}</div>
+        <div class="jt-note-item-date">${formatDate(note.updatedAt)}</div>
+      </div>
+    `).join('');
+
+    // Add click handlers
+    notesList.querySelectorAll('.jt-note-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('jt-note-delete')) {
+          currentNoteId = item.dataset.noteId;
+          renderNotesList();
+          renderNoteEditor();
+        }
+      });
+    });
+
+    notesList.querySelectorAll('.jt-note-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteNote(btn.dataset.noteId);
+      });
+    });
+  }
+
+  // Render note editor
+  function renderNoteEditor() {
+    const editorContainer = notesPanel.querySelector('.jt-notes-editor');
+    if (!editorContainer) return;
+
+    const currentNote = notes.find(n => n.id === currentNoteId);
+
+    if (!currentNote) {
+      editorContainer.innerHTML = `
+        <div class="jt-notes-editor-empty">
+          <div class="jt-notes-editor-empty-icon">📝</div>
+          <div class="jt-notes-editor-empty-text">Select a note to view or create a new one</div>
+        </div>
+      `;
+      return;
+    }
+
+    editorContainer.innerHTML = `
+      <div class="jt-notes-editor-header">
+        <input
+          type="text"
+          class="jt-notes-title-input"
+          value="${escapeHtml(currentNote.title)}"
+          placeholder="Note title..."
+        />
+      </div>
+      <textarea
+        class="jt-notes-content-input"
+        placeholder="Start typing your note..."
+      >${escapeHtml(currentNote.content)}</textarea>
+      <div class="jt-notes-editor-footer">
+        <span class="jt-notes-word-count">${countWords(currentNote.content)} words</span>
+        <span class="jt-notes-updated">Updated ${formatDate(currentNote.updatedAt)}</span>
+      </div>
+    `;
+
+    // Add input handlers with debouncing
+    const titleInput = editorContainer.querySelector('.jt-notes-title-input');
+    const contentInput = editorContainer.querySelector('.jt-notes-content-input');
+    let saveTimeout;
+
+    const debouncedSave = (field, value) => {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        updateNote(currentNoteId, { [field]: value });
+        if (field === 'content') {
+          const wordCount = editorContainer.querySelector('.jt-notes-word-count');
+          if (wordCount) {
+            wordCount.textContent = `${countWords(value)} words`;
+          }
+        }
+      }, 500);
+    };
+
+    titleInput.addEventListener('input', (e) => {
+      debouncedSave('title', e.target.value || 'Untitled Note');
+    });
+
+    contentInput.addEventListener('input', (e) => {
+      debouncedSave('content', e.target.value);
+    });
+
+    // Focus on content if title is already set
+    if (currentNote.title !== 'Untitled Note') {
+      contentInput.focus();
+    } else {
+      titleInput.focus();
+      titleInput.select();
+    }
+  }
+
+  // Count words
+  function countWords(text) {
+    return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  // Escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Toggle panel visibility
+  function togglePanel() {
+    if (!notesPanel) return;
+
+    const isVisible = notesPanel.classList.contains('visible');
+    if (isVisible) {
+      notesPanel.classList.remove('visible');
+      floatingButton.classList.remove('active');
+    } else {
+      notesPanel.classList.add('visible');
+      floatingButton.classList.add('active');
+      // Focus search if panel is opening
+      const searchInput = notesPanel.querySelector('.jt-notes-search-input');
+      if (searchInput && !currentNoteId) {
+        setTimeout(() => searchInput.focus(), 100);
+      }
+    }
+  }
+
+  // Create floating button
+  function createFloatingButton() {
+    floatingButton = document.createElement('button');
+    floatingButton.className = 'jt-quick-notes-button';
+    floatingButton.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+      <span class="jt-quick-notes-tooltip">Quick Notes (Ctrl+Shift+N)</span>
+    `;
+    floatingButton.addEventListener('click', togglePanel);
+    document.body.appendChild(floatingButton);
+  }
+
+  // Create notes panel
+  function createNotesPanel() {
+    notesPanel = document.createElement('div');
+    notesPanel.className = 'jt-quick-notes-panel';
+    notesPanel.innerHTML = `
+      <div class="jt-notes-sidebar">
+        <div class="jt-notes-sidebar-header">
+          <h3 class="jt-notes-sidebar-title">Quick Notes</h3>
+          <button class="jt-notes-new-button" title="New note">+ New</button>
+        </div>
+        <div class="jt-notes-search-container">
+          <input
+            type="text"
+            class="jt-notes-search-input"
+            placeholder="Search notes..."
+          />
+        </div>
+        <div class="jt-notes-list"></div>
+      </div>
+      <div class="jt-notes-editor"></div>
+      <button class="jt-notes-close-button" title="Close (Esc)">×</button>
+    `;
+
+    // Add event handlers
+    const newButton = notesPanel.querySelector('.jt-notes-new-button');
+    newButton.addEventListener('click', createNote);
+
+    const closeButton = notesPanel.querySelector('.jt-notes-close-button');
+    closeButton.addEventListener('click', togglePanel);
+
+    const searchInput = notesPanel.querySelector('.jt-notes-search-input');
+    searchInput.addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      renderNotesList();
+    });
+
+    document.body.appendChild(notesPanel);
+  }
+
+  // Keyboard shortcuts
+  function handleKeyboard(e) {
+    // Ctrl/Cmd + Shift + N to toggle panel
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'N') {
+      e.preventDefault();
+      togglePanel();
+    }
+
+    // Escape to close panel
+    if (e.key === 'Escape' && notesPanel && notesPanel.classList.contains('visible')) {
+      e.preventDefault();
+      togglePanel();
+    }
+  }
+
+  // Initialize feature
+  async function init() {
+    if (isActive) return;
+
+    // Load CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('styles/quick-notes.css');
+    link.id = 'jt-quick-notes-styles';
+    document.head.appendChild(link);
+
+    // Load notes from storage
+    await loadNotes();
+
+    // Create UI elements
+    createFloatingButton();
+    createNotesPanel();
+
+    // Render initial state
+    renderNotesList();
+    renderNoteEditor();
+
+    // Add keyboard listener
+    document.addEventListener('keydown', handleKeyboard);
+
+    isActive = true;
+    console.log('Quick Notes feature activated');
+  }
+
+  // Cleanup feature
+  function cleanup() {
+    if (!isActive) return;
+
+    // Remove UI elements
+    if (floatingButton) {
+      floatingButton.remove();
+      floatingButton = null;
+    }
+    if (notesPanel) {
+      notesPanel.remove();
+      notesPanel = null;
+    }
+
+    // Remove CSS
+    const styles = document.getElementById('jt-quick-notes-styles');
+    if (styles) styles.remove();
+
+    // Remove keyboard listener
+    document.removeEventListener('keydown', handleKeyboard);
+
+    // Reset state
+    notes = [];
+    currentNoteId = null;
+    searchTerm = '';
+    isActive = false;
+
+    console.log('Quick Notes feature deactivated');
+  }
+
+  return {
+    init,
+    cleanup,
+    isActive: () => isActive
+  };
+})();
+
+// Export to window
+window.QuickNotesFeature = QuickNotesFeature;
