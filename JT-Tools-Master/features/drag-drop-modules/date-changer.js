@@ -204,6 +204,8 @@ const DateChanger = (() => {
   /**
    * Click Save button if in availability view
    * In availability view, date changes must be saved explicitly
+   * The Save button is on the main page, not in the sidebar
+   * This should be called AFTER the sidebar closes
    * @returns {Promise} Resolves when save is complete (or immediately if not needed)
    */
   function clickSaveButtonIfNeeded() {
@@ -217,22 +219,13 @@ const DateChanger = (() => {
         return;
       }
 
-      console.log('DateChanger: In availability view, looking for Save button...');
+      console.log('DateChanger: In availability view, looking for Save button on main page...');
 
-      // Find the sidebar where the Save button should be
-      const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
-
-      if (!sidebar) {
-        console.warn('DateChanger: Could not find sidebar to locate Save button');
-        resolve();
-        return;
-      }
-
-      // Look for the Save button - it's a blue button with checkmark icon
+      // Look for the Save button on the main page (not in sidebar)
       // <div role="button" ... class="... bg-blue-500 border-blue-600 ...">
       //   <svg>...</svg> Save
       // </div>
-      const buttons = sidebar.querySelectorAll('div[role="button"]');
+      const buttons = document.querySelectorAll('div[role="button"]');
       let saveButton = null;
 
       for (const button of buttons) {
@@ -243,7 +236,7 @@ const DateChanger = (() => {
         if (text.includes('Save') &&
             (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
           saveButton = button;
-          console.log('DateChanger: Found Save button:', text);
+          console.log('DateChanger: Found Save button on main page:', text);
           break;
         }
       }
@@ -258,7 +251,7 @@ const DateChanger = (() => {
           resolve();
         }, 300);
       } else {
-        console.warn('DateChanger: Save button not found in sidebar');
+        console.warn('DateChanger: Save button not found on main page');
         resolve();
       }
     });
@@ -313,13 +306,18 @@ const DateChanger = (() => {
 
     console.log('DateChanger: Date typed and Enter key simulated - COMPLETE');
 
-    setTimeout(async () => {
-      // Click Save button if in availability view
-      await clickSaveButtonIfNeeded();
-
-      // Now close the sidebar
+    setTimeout(() => {
+      // Close the sidebar first
       if (window.SidebarManager) {
-        window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
+        window.SidebarManager.closeSidebar(failsafeTimeout, async () => {
+          // After sidebar closes, click Save button if in availability view
+          await clickSaveButtonIfNeeded();
+
+          // Then notify completion
+          if (onDateChangeComplete) {
+            onDateChangeComplete();
+          }
+        });
       }
     }, 500);
   }
@@ -561,13 +559,18 @@ const DateChanger = (() => {
 
           console.log('DateChanger: Date picker selection COMPLETE');
 
-          setTimeout(async () => {
-            // Click Save button if in availability view
-            await clickSaveButtonIfNeeded();
-
-            // Now close the sidebar
+          setTimeout(() => {
+            // Close the sidebar first
             if (window.SidebarManager) {
-              window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
+              window.SidebarManager.closeSidebar(failsafeTimeout, async () => {
+                // After sidebar closes, click Save button if in availability view
+                await clickSaveButtonIfNeeded();
+
+                // Then notify completion
+                if (onDateChangeComplete) {
+                  onDateChangeComplete();
+                }
+              });
             }
           }, 500);
         } else {

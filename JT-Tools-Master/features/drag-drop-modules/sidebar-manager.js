@@ -143,15 +143,10 @@ const SidebarManager = (() => {
   /**
    * Close the sidebar and cleanup hiding CSS
    * @param {number} failsafeTimeout - The timeout ID to clear
-   * @param {Function} onDateChangeComplete - Callback when date change is complete
+   * @param {Function} onDateChangeComplete - Callback when date change is complete (called AFTER sidebar closes)
    */
   function closeSidebar(failsafeTimeout, onDateChangeComplete) {
     console.log('SidebarManager: Attempting to close sidebar...');
-
-    // Notify that date change is complete
-    if (onDateChangeComplete) {
-      onDateChangeComplete();
-    }
 
     // Clear the failsafe timeout since we're handling cleanup now
     if (failsafeTimeout) {
@@ -189,9 +184,15 @@ const SidebarManager = (() => {
             button.click();
           }
 
-          // Wait for sidebar to close BEFORE removing hiding CSS
+          // Wait for sidebar to close BEFORE removing hiding CSS and calling callback
           setTimeout(() => {
             removeSidebarCSS();
+
+            // Notify that date change is complete (AFTER sidebar closes)
+            if (onDateChangeComplete) {
+              console.log('SidebarManager: Calling onDateChangeComplete callback');
+              onDateChangeComplete();
+            }
           }, 800);
 
           return;
@@ -202,11 +203,21 @@ const SidebarManager = (() => {
       // Still remove CSS even if close failed
       setTimeout(() => {
         removeSidebarCSS();
+
+        // Call callback even if close failed
+        if (onDateChangeComplete) {
+          onDateChangeComplete();
+        }
       }, 800);
     } else {
       console.log('SidebarManager: Sidebar not found during close');
       // Remove CSS anyway
       removeSidebarCSS();
+
+      // Call callback even if sidebar not found
+      if (onDateChangeComplete) {
+        onDateChangeComplete();
+      }
     }
   }
 
