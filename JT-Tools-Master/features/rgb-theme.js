@@ -417,6 +417,37 @@ const CustomThemeFeature = (() => {
         color: ${text} !important;
       }
 
+      /* === Custom Tooltips with Primary Color === */
+      .jt-custom-tooltip {
+        position: absolute;
+        background-color: ${primary} !important;
+        color: #ffffff !important;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 1000000;
+        pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .jt-custom-tooltip.visible {
+        opacity: 1;
+      }
+
+      .jt-custom-tooltip::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: ${primary};
+      }
+
       /* === Black/Dark Background Overrides === */
       .bg-black,
       .bg-gray-800,
