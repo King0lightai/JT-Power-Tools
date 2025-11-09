@@ -22,9 +22,13 @@ const DragDropEventHandlers = (() => {
       const sourceCell = this.closest('td') || this.closest('th');
       state.sourceDateInfo = window.DateUtils ? window.DateUtils.extractFullDateInfo(sourceCell) : null;
 
+      // Store source row for availability view restriction
+      state.sourceRow = sourceCell ? sourceCell.parentElement : null;
+
       console.log('EventHandlers: ==========================================');
       console.log('EventHandlers: *** DRAG START ***');
       console.log('EventHandlers: Source cell type:', sourceCell ? sourceCell.tagName : 'null');
+      console.log('EventHandlers: Source row:', state.sourceRow ? 'stored' : 'null');
       console.log('EventHandlers: Source date:', JSON.stringify(state.sourceDateInfo));
       console.log('EventHandlers: Shift key:', state.shiftKeyAtDragStart);
       console.log('EventHandlers: Alt key:', state.altKeyAtDragStart, '(changes END date)');
@@ -44,6 +48,9 @@ const DragDropEventHandlers = (() => {
       console.log('EventHandlers: *** DRAG END ***');
       this.style.opacity = '1';
       this.style.cursor = 'grab';
+
+      // Reset source row state
+      state.sourceRow = null;
 
       document.querySelectorAll('.jt-drop-zone').forEach(cell => {
         cell.classList.remove('jt-drop-zone');
@@ -109,6 +116,24 @@ const DragDropEventHandlers = (() => {
           if (targetCell === originalCell) {
             console.log('EventHandlers: Drop on same cell, ignoring');
             return false;
+          }
+
+          // In availability view, prevent dropping on different rows (different users)
+          const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+          if (isAvailabilityView) {
+            const targetRow = targetCell.parentElement;
+            console.log('EventHandlers: Availability view - checking row restriction');
+            console.log('EventHandlers: Source row:', state.sourceRow);
+            console.log('EventHandlers: Target row:', targetRow);
+
+            if (state.sourceRow && targetRow && state.sourceRow !== targetRow) {
+              console.log('EventHandlers: ❌ Cannot drop on different row (different user) in availability view');
+              if (window.UIUtils) {
+                window.UIUtils.showNotification('Cannot change assignee - drop on same row only');
+              }
+              return false;
+            }
+            console.log('EventHandlers: ✓ Same row confirmed, drop allowed');
           }
 
           console.log('EventHandlers: Different cells confirmed, proceeding with date extraction');
