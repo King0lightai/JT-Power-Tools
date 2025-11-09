@@ -524,6 +524,11 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor} !important;
       }
 
+      /* === Selected Box Border (Orange -> Primary) === */
+      .border-jtOrange {
+        border-color: ${primary} !important;
+      }
+
       /* === Cyan Link Overrides === */
       .text-cyan-500,
       .text-cyan-600,
