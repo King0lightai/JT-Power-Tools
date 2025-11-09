@@ -62,21 +62,32 @@ const SidebarManager = (() => {
 
   /**
    * Open the sidebar by clicking on an element
-   * Uses a synthetic click event that doesn't bubble to prevent closing popups
+   * Uses conditional click behavior based on view type:
+   * - Availability view: non-bubbling click to prevent popup closure
+   * - Normal view: regular click to allow proper sidebar opening
    * @param {HTMLElement} element - The element to click
    */
   function openSidebar(element) {
     console.log('SidebarManager: Clicking element to open sidebar');
 
-    // Create a synthetic click event that doesn't bubble
-    // This prevents the click from propagating up and closing any parent popups
-    const clickEvent = new MouseEvent('click', {
-      bubbles: false,  // Don't bubble up to parent elements
-      cancelable: true,
-      view: window
-    });
+    // Check if we're in availability view
+    const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
 
-    element.dispatchEvent(clickEvent);
+    if (isAvailabilityView) {
+      console.log('SidebarManager: Using non-bubbling click for availability view');
+      // Create a synthetic click event that doesn't bubble
+      // This prevents the click from propagating up and closing any parent popups
+      const clickEvent = new MouseEvent('click', {
+        bubbles: false,  // Don't bubble up to parent elements
+        cancelable: true,
+        view: window
+      });
+      element.dispatchEvent(clickEvent);
+    } else {
+      console.log('SidebarManager: Using regular click for normal view');
+      // Use regular click for normal views to ensure proper sidebar opening
+      element.click();
+    }
   }
 
   /**
