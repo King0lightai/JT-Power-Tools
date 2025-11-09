@@ -169,6 +169,13 @@ const CustomThemeFeature = (() => {
       /* === JT Power Tools - Custom Color Theme === */
       /* Using user's chosen Primary, Background, and Text colors */
 
+      /* === Logo Colors === */
+      /* Make both the JT icon and JOBTREAD text use primary color */
+      .text-jtOrange,
+      .text-gray-800 {
+        color: ${primary} !important;
+      }
+
       /* === Task Cards === */
       /* Use theme background for cards, keep task type color in thick border */
       td div.cursor-pointer[style*="border-left"] {
