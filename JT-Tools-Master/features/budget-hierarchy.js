@@ -401,21 +401,21 @@ const BudgetHierarchyFeature = (() => {
 
   // Check if we're on a budget page or in a budget context
   function isInBudgetContext() {
-    // Check if URL contains /budgets
-    if (window.location.pathname.includes('/budgets')) {
-      return true;
-    }
+    const path = window.location.pathname.toLowerCase();
 
-    // Explicitly exclude these pages even if they have similar structure
-    const excludedPaths = ['/tasks', '/schedule', '/todos', '/to-dos', '/assignments'];
-    for (const path of excludedPaths) {
-      if (window.location.pathname.includes(path)) {
+    // Explicitly exclude these pages first
+    const excludedPaths = ['/tasks', '/task', '/schedule', '/todos', '/to-dos', '/assignments'];
+    for (const excludePath of excludedPaths) {
+      if (path.includes(excludePath)) {
         return false;
       }
     }
 
-    // If we get here, we're not on an explicitly excluded page
-    // and not on a /budgets page, so don't apply shading
+    // Check if URL contains budget (singular or plural)
+    if (path.includes('/budget')) {
+      return true;
+    }
+
     return false;
   }
 
