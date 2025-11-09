@@ -56,13 +56,6 @@ const DateUtils = (() => {
     // Find the column index of this cell
     const row = cell.parentElement;
     const cellIndex = Array.from(row.children).indexOf(cell);
-
-    // Skip column 0 (user info column in availability view)
-    if (cellIndex === 0) {
-      console.log('DateUtils: extractDateFromColumnHeader - skipping column 0 (user info column)');
-      return null;
-    }
-
     console.log(`DateUtils: extractDateFromColumnHeader - cell is in column ${cellIndex}`);
 
     // Find the thead element
@@ -193,11 +186,7 @@ const DateUtils = (() => {
         if (match) {
           const foundMonth = match[1];
           const foundYear = parseInt(match[2]);
-          // Check both full month names and abbreviations
-          let monthIndex = MONTH_NAMES.indexOf(foundMonth);
-          if (monthIndex < 0) {
-            monthIndex = MONTH_ABBREV.indexOf(foundMonth);
-          }
+          const monthIndex = MONTH_NAMES.indexOf(foundMonth);
 
           if (monthIndex >= 0) {
             if (!month) {
@@ -224,11 +213,7 @@ const DateUtils = (() => {
         if (match) {
           const foundMonth = match[1];
           const foundYear = parseInt(match[2]);
-          // Check both full month names and abbreviations
-          let monthIndex = MONTH_NAMES.indexOf(foundMonth);
-          if (monthIndex < 0) {
-            monthIndex = MONTH_ABBREV.indexOf(foundMonth);
-          }
+          const monthIndex = MONTH_NAMES.indexOf(foundMonth);
 
           if (monthIndex >= 0) {
             if (!month) {
@@ -261,11 +246,8 @@ const DateUtils = (() => {
             const foundMonth = parts[1];
             const foundYear = parseInt(parts[2]);
 
-            // Check both full month names and abbreviations
-            let monthIndex = MONTH_NAMES.indexOf(foundMonth);
-            if (monthIndex < 0) {
-              monthIndex = MONTH_ABBREV.indexOf(foundMonth);
-            }
+            // Check if it's a valid month name
+            const monthIndex = MONTH_NAMES.indexOf(foundMonth);
             if (monthIndex >= 0) {
               if (!month) {
                 month = MONTH_ABBREV[monthIndex];
