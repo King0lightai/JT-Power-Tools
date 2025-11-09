@@ -32,13 +32,6 @@ header {
   gap: 10px;
 }
 
-.jt-logo {
-  height: 2rem;
-  width: 2rem;
-  color: #ff5600;
-  flex-shrink: 0;
-}
-
 header h1 {
   font-size: 16px;
   font-weight: 600;

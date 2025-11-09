@@ -1,8 +1,10 @@
 /* === JT Power Tools - Dark Mode Theme === */
 /* Custom dark theme for JobTread interface */
 
-/* === Logo Color === */
-.jt-logo {
+/* === Logo Colors === */
+/* Make both the JT icon and JOBTREAD text white in dark mode */
+.text-jtOrange,
+.text-gray-800 {
     color: #ffffff !important;
 }
 
