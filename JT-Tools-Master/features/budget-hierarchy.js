@@ -406,15 +406,16 @@ const BudgetHierarchyFeature = (() => {
       return true;
     }
 
-    // Check if we're in a budget view by looking for budget-specific elements
-    // Budget pages have the main table structure with budget groups
-    const hasBudgetGroups = document.querySelectorAll('div.font-bold.flex[style*="width: 300px"]').length > 0;
-
-    // Only return true if we have budget groups AND we're not clearly on a task/schedule page
-    if (hasBudgetGroups && !window.location.pathname.includes('/tasks') && !window.location.pathname.includes('/schedule')) {
-      return true;
+    // Explicitly exclude these pages even if they have similar structure
+    const excludedPaths = ['/tasks', '/schedule', '/todos', '/to-dos', '/assignments'];
+    for (const path of excludedPaths) {
+      if (window.location.pathname.includes(path)) {
+        return false;
+      }
     }
 
+    // If we get here, we're not on an explicitly excluded page
+    // and not on a /budgets page, so don't apply shading
     return false;
   }
 
