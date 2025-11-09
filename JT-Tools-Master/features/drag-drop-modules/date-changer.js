@@ -202,6 +202,69 @@ const DateChanger = (() => {
   }
 
   /**
+   * Click Save button if in availability view
+   * In availability view, date changes must be saved explicitly
+   * @returns {Promise} Resolves when save is complete (or immediately if not needed)
+   */
+  function clickSaveButtonIfNeeded() {
+    return new Promise((resolve) => {
+      // Check if we're in availability view
+      const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+
+      if (!isAvailabilityView) {
+        console.log('DateChanger: Not in availability view, skipping Save button');
+        resolve();
+        return;
+      }
+
+      console.log('DateChanger: In availability view, looking for Save button...');
+
+      // Find the sidebar where the Save button should be
+      const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+
+      if (!sidebar) {
+        console.warn('DateChanger: Could not find sidebar to locate Save button');
+        resolve();
+        return;
+      }
+
+      // Look for the Save button - it's a blue button with checkmark icon
+      // <div role="button" ... class="... bg-blue-500 border-blue-600 ...">
+      //   <svg>...</svg> Save
+      // </div>
+      const buttons = sidebar.querySelectorAll('div[role="button"]');
+      let saveButton = null;
+
+      for (const button of buttons) {
+        const text = button.textContent.trim();
+        const classes = button.className || '';
+
+        // Check if this is the blue Save button
+        if (text.includes('Save') &&
+            (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
+          saveButton = button;
+          console.log('DateChanger: Found Save button:', text);
+          break;
+        }
+      }
+
+      if (saveButton) {
+        console.log('DateChanger: Clicking Save button...');
+        saveButton.click();
+
+        // Wait a bit for the save to complete
+        setTimeout(() => {
+          console.log('DateChanger: Save button clicked, date should be saved');
+          resolve();
+        }, 300);
+      } else {
+        console.warn('DateChanger: Save button not found in sidebar');
+        resolve();
+      }
+    });
+  }
+
+  /**
    * Type the date into an input field (most reliable method)
    */
   function typeIntoDateField(inputField, formattedDate, dateInfo, failsafeTimeout, onDateChangeComplete) {
@@ -250,7 +313,11 @@ const DateChanger = (() => {
 
     console.log('DateChanger: Date typed and Enter key simulated - COMPLETE');
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      // Click Save button if in availability view
+      await clickSaveButtonIfNeeded();
+
+      // Now close the sidebar
       if (window.SidebarManager) {
         window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
       }
@@ -494,7 +561,11 @@ const DateChanger = (() => {
 
           console.log('DateChanger: Date picker selection COMPLETE');
 
-          setTimeout(() => {
+          setTimeout(async () => {
+            // Click Save button if in availability view
+            await clickSaveButtonIfNeeded();
+
+            // Now close the sidebar
             if (window.SidebarManager) {
               window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
             }
