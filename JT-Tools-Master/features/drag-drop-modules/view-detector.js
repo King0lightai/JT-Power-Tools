@@ -7,49 +7,82 @@ const ViewDetector = (() => {
    * @returns {boolean} True if availability view is active
    */
   function isAvailabilityView() {
-    // Method 1: Check for "Availability" text in a selected/active state button
-    // Look for the availability dropdown button and check if it's in an active state
-    const availabilityButtons = Array.from(document.querySelectorAll('div[role="button"]'));
-    const availabilityButton = availabilityButtons.find(btn => {
-      const textDiv = btn.querySelector('div.grow');
-      return textDiv && textDiv.textContent.trim() === 'Availability';
-    });
+    // ONLY method: Check if table has user rows with avatars in first column
+    // This is unique to availability view - normal views don't have user avatars in cells
 
-    // Method 2: Check for unique availability view DOM structure
-    // Availability view typically has a different table structure with user rows
-    // Look for table headers that might contain day names (Mon, Tue, etc.) for a week view
-    const weekDayHeaders = document.querySelectorAll('th');
-    let hasWeekDayPattern = false;
-    const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-    if (weekDayHeaders.length > 0) {
-      let consecutiveWeekDays = 0;
-      weekDayHeaders.forEach(header => {
-        const text = header.textContent.trim();
-        if (weekDays.some(day => text.includes(day))) {
-          consecutiveWeekDays++;
-        }
-      });
-      // If we find multiple weekday headers, likely in availability view
-      hasWeekDayPattern = consecutiveWeekDays >= 5;
-    }
-
-    // Method 3: Check for user list on the left (availability view specific)
-    // Look for a table with user names in the first column
+    // Look for tbody rows that have user info cells
     const tables = document.querySelectorAll('table');
-    let hasUserColumn = false;
+    let hasUserRows = false;
 
-    if (tables.length > 0) {
-      // In availability view, we'd typically see user names in leftmost cells
-      // This is harder to detect without knowing the exact structure
-      // For now, we'll rely on other methods
+    for (const table of tables) {
+      const tbody = table.querySelector('tbody');
+      if (!tbody) continue;
+
+      const rows = tbody.querySelectorAll('tr');
+      if (rows.length === 0) continue;
+
+      // Check first few rows for user info pattern
+      let userRowCount = 0;
+      for (let i = 0; i < Math.min(3, rows.length); i++) {
+        const row = rows[i];
+        const firstCell = row.querySelector('td');
+        if (!firstCell) continue;
+
+        // Availability view has user avatars (bg-cover bg-center) and names in first column
+        const hasAvatar = firstCell.querySelector('div.relative.bg-cover.bg-center');
+        const hasUserName = firstCell.querySelector('div.font-bold.truncate');
+
+        if (hasAvatar || hasUserName) {
+          userRowCount++;
+        }
+      }
+
+      // If we found user info in multiple rows, this is availability view
+      if (userRowCount >= 2) {
+        hasUserRows = true;
+        break;
+      }
     }
 
-    const isAvailability = hasWeekDayPattern;
+    // Additionally check for thead with 2 rows (weekday + date number rows)
+    // This confirms availability view structure
+    let hasAvailabilityHeader = false;
+    for (const table of tables) {
+      const thead = table.querySelector('thead');
+      if (!thead) continue;
+
+      const headerRows = thead.querySelectorAll('tr');
+      if (headerRows.length >= 2) {
+        // Check if second row has date numbers in <th> elements
+        const secondRow = headerRows[1];
+        const cells = secondRow.querySelectorAll('th');
+        let hasDateNumbers = false;
+
+        for (const cell of cells) {
+          const div = cell.querySelector('div.font-bold');
+          if (div) {
+            const text = div.textContent.trim();
+            // Check if it's a number between 1-31 (date)
+            const num = parseInt(text);
+            if (!isNaN(num) && num >= 1 && num <= 31) {
+              hasDateNumbers = true;
+              break;
+            }
+          }
+        }
+
+        if (hasDateNumbers) {
+          hasAvailabilityHeader = true;
+          break;
+        }
+      }
+    }
+
+    const isAvailability = hasUserRows && hasAvailabilityHeader;
 
     console.log('ViewDetector: isAvailabilityView check:');
-    console.log('  - Availability button found:', !!availabilityButton);
-    console.log('  - Week day header pattern:', hasWeekDayPattern);
+    console.log('  - Has user rows (avatars/names):', hasUserRows);
+    console.log('  - Has availability header (2 rows, date numbers in TH):', hasAvailabilityHeader);
     console.log('  - Final result:', isAvailability);
 
     return isAvailability;
