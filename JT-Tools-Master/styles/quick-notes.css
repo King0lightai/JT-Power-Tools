@@ -3,61 +3,14 @@
  * Seamless integration with Jobtread's UI
  */
 
-/* Floating Button */
-.jt-quick-notes-button {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: none;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  cursor: pointer;
-  z-index: 999998;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: white;
+/* Quick Notes Button - Active State */
+.jt-quick-notes-btn.jt-notes-button-active {
+  background: #3b82f6 !important;
+  color: white !important;
 }
 
-.jt-quick-notes-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-}
-
-.jt-quick-notes-button.active {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: scale(0.95);
-}
-
-.jt-quick-notes-button svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* Tooltip */
-.jt-quick-notes-tooltip {
-  position: absolute;
-  right: calc(100% + 12px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-.jt-quick-notes-button:hover .jt-quick-notes-tooltip {
-  opacity: 1;
+.jt-quick-notes-btn.jt-notes-button-active:hover {
+  background: #2563eb !important;
 }
 
 /* Notes Panel */
@@ -380,17 +333,6 @@
 
   .jt-notes-sidebar.show-mobile {
     transform: translateX(0);
-  }
-
-  .jt-quick-notes-button {
-    bottom: 16px;
-    right: 16px;
-    width: 48px;
-    height: 48px;
-  }
-
-  .jt-quick-notes-tooltip {
-    display: none;
   }
 }
 

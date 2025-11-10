@@ -6,7 +6,8 @@
 const QuickNotesFeature = (() => {
   let isActive = false;
   let notesPanel = null;
-  let floatingButton = null;
+  let notesButton = null;
+  let buttonObserver = null;
   let notes = [];
   let currentNoteId = null;
   let searchTerm = '';
@@ -239,10 +240,14 @@ const QuickNotesFeature = (() => {
     const isVisible = notesPanel.classList.contains('visible');
     if (isVisible) {
       notesPanel.classList.remove('visible');
-      floatingButton.classList.remove('active');
+      if (notesButton) {
+        notesButton.classList.remove('jt-notes-button-active');
+      }
     } else {
       notesPanel.classList.add('visible');
-      floatingButton.classList.add('active');
+      if (notesButton) {
+        notesButton.classList.add('jt-notes-button-active');
+      }
       // Focus search if panel is opening
       const searchInput = notesPanel.querySelector('.jt-notes-search-input');
       if (searchInput && !currentNoteId) {
@@ -251,19 +256,69 @@ const QuickNotesFeature = (() => {
     }
   }
 
-  // Create floating button
-  function createFloatingButton() {
-    floatingButton = document.createElement('button');
-    floatingButton.className = 'jt-quick-notes-button';
-    floatingButton.innerHTML = `
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  // Create Quick Notes button that integrates with Jobtread action buttons
+  function createQuickNotesButton(container) {
+    // Remove existing button if present
+    if (notesButton && notesButton.parentNode) {
+      notesButton.remove();
+    }
+
+    notesButton = document.createElement('div');
+    notesButton.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0 jt-quick-notes-btn';
+    notesButton.setAttribute('role', 'button');
+    notesButton.setAttribute('tabindex', '0');
+    notesButton.setAttribute('title', 'Quick Notes (Ctrl+Shift+N)');
+
+    notesButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-      </svg>
-      <span class="jt-quick-notes-tooltip">Quick Notes (Ctrl+Shift+N)</span>
+      </svg> Quick Notes
     `;
-    floatingButton.addEventListener('click', togglePanel);
-    document.body.appendChild(floatingButton);
+
+    // Add click handler
+    notesButton.addEventListener('click', togglePanel);
+
+    // Add keyboard handler for accessibility
+    notesButton.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        togglePanel();
+      }
+    });
+
+    // Insert at the beginning of the container (to the left of existing buttons)
+    if (container.firstChild) {
+      container.insertBefore(notesButton, container.firstChild);
+    } else {
+      container.appendChild(notesButton);
+    }
+  }
+
+  // Find and inject button into action buttons container
+  function injectQuickNotesButton() {
+    // Look for the action buttons container
+    const container = document.querySelector('div.absolute.inset-0.flex.justify-end');
+
+    if (container && !container.querySelector('.jt-quick-notes-btn')) {
+      createQuickNotesButton(container);
+    }
+  }
+
+  // Set up observer to watch for action buttons container
+  function setupButtonObserver() {
+    // Initial injection attempt
+    injectQuickNotesButton();
+
+    // Watch for DOM changes to re-inject button if needed
+    buttonObserver = new MutationObserver(() => {
+      injectQuickNotesButton();
+    });
+
+    buttonObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
   }
 
   // Create notes panel
@@ -335,7 +390,7 @@ const QuickNotesFeature = (() => {
     await loadNotes();
 
     // Create UI elements
-    createFloatingButton();
+    setupButtonObserver();
     createNotesPanel();
 
     // Render initial state
@@ -353,10 +408,16 @@ const QuickNotesFeature = (() => {
   function cleanup() {
     if (!isActive) return;
 
+    // Disconnect observer
+    if (buttonObserver) {
+      buttonObserver.disconnect();
+      buttonObserver = null;
+    }
+
     // Remove UI elements
-    if (floatingButton) {
-      floatingButton.remove();
-      floatingButton = null;
+    if (notesButton) {
+      notesButton.remove();
+      notesButton = null;
     }
     if (notesPanel) {
       notesPanel.remove();
