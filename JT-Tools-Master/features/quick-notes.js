@@ -781,11 +781,9 @@ const QuickNotesFeature = (() => {
       .join('');
   }
 
-  // Close editor (keeps sidebar open)
+  // Close editor - closes entire Quick Notes panel
   function closeEditor() {
-    notesPanel.classList.remove('editor-open');
-    currentNoteId = null;
-    renderNotesList();
+    togglePanel();
   }
 
   // Toggle panel visibility
