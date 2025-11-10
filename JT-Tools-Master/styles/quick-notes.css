@@ -411,6 +411,41 @@
   color: #d1d5db;
 }
 
+/* Rendered Markdown Elements */
+.jt-note-item-preview strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.jt-note-item-preview em {
+  font-style: italic;
+  color: #374151;
+}
+
+.jt-note-checkbox,
+.jt-note-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.jt-note-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+.jt-note-checkbox.checked span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.jt-note-bullet {
+  padding-left: 4px;
+}
+
 /* Editor Footer */
 .jt-notes-editor-footer {
   padding: 12px 16px;
@@ -546,6 +581,14 @@
 
 .jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
   color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview strong {
+  color: #f1f5f9;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview em {
+  color: #cbd5e1;
 }
 
 /* Theme Compatibility - Custom RGB Theme */
