@@ -693,7 +693,7 @@ const QuickNotesFeature = (() => {
 
         const span = document.createElement('span');
         span.setAttribute('contenteditable', 'true');
-        span.textContent = 'Todo item';
+        span.innerHTML = '<br>';
 
         checkboxDiv.appendChild(checkbox);
         checkboxDiv.appendChild(span);
