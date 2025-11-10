@@ -200,9 +200,40 @@ const QuickNotesFeature = (() => {
         />
         <button class="jt-notes-close-button" title="Close (Esc)"></button>
       </div>
+      <div class="jt-notes-toolbar">
+        <button class="jt-notes-format-btn" data-format="bold" title="Bold (Ctrl+B)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6zM6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path>
+          </svg>
+        </button>
+        <button class="jt-notes-format-btn" data-format="italic" title="Italic (Ctrl+I)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <line x1="19" x2="10" y1="4" y2="4"></line>
+            <line x1="14" x2="5" y1="20" y2="20"></line>
+            <line x1="15" x2="9" y1="4" y2="20"></line>
+          </svg>
+        </button>
+        <span class="jt-notes-toolbar-divider"></span>
+        <button class="jt-notes-format-btn" data-format="bullet" title="Bullet list">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <line x1="8" x2="21" y1="6" y2="6"></line>
+            <line x1="8" x2="21" y1="12" y2="12"></line>
+            <line x1="8" x2="21" y1="18" y2="18"></line>
+            <line x1="3" x2="3.01" y1="6" y2="6"></line>
+            <line x1="3" x2="3.01" y1="12" y2="12"></line>
+            <line x1="3" x2="3.01" y1="18" y2="18"></line>
+          </svg>
+        </button>
+        <button class="jt-notes-format-btn" data-format="checkbox" title="Checkbox list">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </button>
+      </div>
       <textarea
         class="jt-notes-content-input"
-        placeholder="Start typing your note..."
+        placeholder="Start typing your note...&#10;&#10;Formatting:&#10;**bold** or *bold*&#10;_italic_&#10;- bullet item&#10;- [ ] unchecked&#10;- [x] checked"
       >${escapeHtml(currentNote.content)}</textarea>
       <div class="jt-notes-editor-footer">
         <span class="jt-notes-word-count">${countWords(currentNote.content)} words</span>
@@ -241,6 +272,29 @@ const QuickNotesFeature = (() => {
     expandButton.addEventListener('click', toggleSidebar);
     closeButton.addEventListener('click', togglePanel);
 
+    // Add formatting button handlers
+    const formatButtons = editorContainer.querySelectorAll('.jt-notes-format-btn');
+    formatButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const formatType = btn.dataset.format;
+        formatText(contentInput, formatType);
+      });
+    });
+
+    // Add keyboard shortcuts for formatting
+    contentInput.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + B for bold
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        formatText(contentInput, 'bold');
+      }
+      // Ctrl/Cmd + I for italic
+      if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault();
+        formatText(contentInput, 'italic');
+      }
+    });
+
     // Focus on content if title is already set
     if (currentNote.title !== 'Untitled Note') {
       contentInput.focus();
@@ -260,6 +314,118 @@ const QuickNotesFeature = (() => {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  // Format text based on selection
+  function formatText(textarea, formatType) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+
+    let newText = '';
+    let cursorOffset = 0;
+
+    switch (formatType) {
+      case 'bold':
+        if (selectedText) {
+          newText = `${beforeText}**${selectedText}**${afterText}`;
+          cursorOffset = start + 2 + selectedText.length + 2;
+        } else {
+          newText = `${beforeText}****${afterText}`;
+          cursorOffset = start + 2;
+        }
+        break;
+
+      case 'italic':
+        if (selectedText) {
+          newText = `${beforeText}_${selectedText}_${afterText}`;
+          cursorOffset = start + 1 + selectedText.length + 1;
+        } else {
+          newText = `${beforeText}__${afterText}`;
+          cursorOffset = start + 1;
+        }
+        break;
+
+      case 'bullet':
+        const bulletLine = selectedText || 'List item';
+        newText = `${beforeText}- ${bulletLine}${afterText}`;
+        cursorOffset = start + 2 + bulletLine.length;
+        break;
+
+      case 'checkbox':
+        const checkboxLine = selectedText || 'Todo item';
+        newText = `${beforeText}- [ ] ${checkboxLine}${afterText}`;
+        cursorOffset = start + 6 + checkboxLine.length;
+        break;
+    }
+
+    textarea.value = newText;
+    textarea.setSelectionRange(cursorOffset, cursorOffset);
+    textarea.focus();
+
+    // Trigger input event to save changes
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // Detect and apply theme
+  function detectAndApplyTheme() {
+    if (!notesPanel) return;
+
+    // Get current settings
+    chrome.storage.sync.get(['jtToolsSettings'], (result) => {
+      const settings = result.jtToolsSettings || {};
+
+      // Remove existing theme classes
+      notesPanel.classList.remove('dark-theme', 'custom-theme');
+
+      // Check if dark mode is enabled
+      if (settings.darkMode) {
+        notesPanel.classList.add('dark-theme');
+        return;
+      }
+
+      // Check if custom RGB theme is enabled
+      if (settings.rgbTheme && settings.themeColors) {
+        notesPanel.classList.add('custom-theme');
+        const { primary, background, text } = settings.themeColors;
+
+        // Calculate lighter background for inputs
+        const lighterBg = adjustColorBrightness(background, 10);
+        const borderColor = adjustColorBrightness(background, -20);
+
+        // Set CSS variables
+        notesPanel.style.setProperty('--jt-notes-bg', background);
+        notesPanel.style.setProperty('--jt-notes-text', text);
+        notesPanel.style.setProperty('--jt-notes-primary', primary);
+        notesPanel.style.setProperty('--jt-notes-input-bg', lighterBg);
+        notesPanel.style.setProperty('--jt-notes-border', borderColor);
+      }
+    });
+  }
+
+  // Adjust color brightness (simple HSL adjustment)
+  function adjustColorBrightness(hex, percent) {
+    // Convert hex to RGB
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Adjust brightness
+    const adjust = (color) => {
+      const adjusted = color + (color * percent / 100);
+      return Math.min(255, Math.max(0, Math.round(adjusted)));
+    };
+
+    const newR = adjust(r);
+    const newG = adjust(g);
+    const newB = adjust(b);
+
+    // Convert back to hex
+    return '#' + [newR, newG, newB]
+      .map(x => x.toString(16).padStart(2, '0'))
+      .join('');
   }
 
   // Load sidebar collapsed state from localStorage
@@ -441,6 +607,14 @@ const QuickNotesFeature = (() => {
     }
   }
 
+  // Handle settings changes from other tabs
+  function handleSettingsChange(message) {
+    if (message.type === 'SETTINGS_CHANGED') {
+      // Re-detect and apply theme when settings change
+      detectAndApplyTheme();
+    }
+  }
+
   // Initialize feature
   async function init() {
     if (isActive) return;
@@ -460,12 +634,18 @@ const QuickNotesFeature = (() => {
     setupButtonObserver();
     createNotesPanel();
 
+    // Apply theme
+    detectAndApplyTheme();
+
     // Render initial state
     renderNotesList();
     renderNoteEditor();
 
     // Add keyboard listener
     document.addEventListener('keydown', handleKeyboard);
+
+    // Listen for settings changes
+    chrome.runtime.onMessage.addListener(handleSettingsChange);
 
     isActive = true;
     console.log('Quick Notes feature activated');
@@ -497,6 +677,9 @@ const QuickNotesFeature = (() => {
 
     // Remove keyboard listener
     document.removeEventListener('keydown', handleKeyboard);
+
+    // Remove settings change listener
+    chrome.runtime.onMessage.removeListener(handleSettingsChange);
 
     // Reset state
     notes = [];
