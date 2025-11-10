@@ -229,10 +229,11 @@ const QuickNotesFeature = (() => {
           </svg>
         </button>
       </div>
-      <textarea
+      <div
         class="jt-notes-content-input"
-        placeholder="Start typing your note...&#10;&#10;Formatting:&#10;**bold** or *bold*&#10;_italic_&#10;- bullet item&#10;- [ ] unchecked&#10;- [x] checked"
-      >${escapeHtml(currentNote.content)}</textarea>
+        contenteditable="true"
+        data-placeholder="Start typing your note... Use Ctrl+B for bold, Ctrl+I for italic"
+      >${parseMarkdownForEditor(currentNote.content)}</div>
       <div class="jt-notes-editor-footer">
         <span class="jt-notes-word-count">${countWords(currentNote.content)} words</span>
         <span class="jt-notes-updated">Updated ${formatDate(currentNote.updatedAt)}</span>
@@ -263,7 +264,17 @@ const QuickNotesFeature = (() => {
     });
 
     contentInput.addEventListener('input', (e) => {
-      debouncedSave('content', e.target.value);
+      const markdown = htmlToMarkdown(contentInput);
+      debouncedSave('content', markdown);
+    });
+
+    // Handle checkbox toggle
+    contentInput.addEventListener('click', (e) => {
+      if (e.target.type === 'checkbox') {
+        e.target.closest('.jt-note-checkbox').classList.toggle('checked', e.target.checked);
+        const markdown = htmlToMarkdown(contentInput);
+        debouncedSave('content', markdown);
+      }
     });
 
     closeButton.addEventListener('click', closeEditor);
@@ -273,7 +284,7 @@ const QuickNotesFeature = (() => {
     formatButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const formatType = btn.dataset.format;
-        formatText(contentInput, formatType);
+        applyFormatting(contentInput, formatType);
       });
     });
 
@@ -282,12 +293,12 @@ const QuickNotesFeature = (() => {
       // Ctrl/Cmd + B for bold
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        formatText(contentInput, 'bold');
+        applyFormatting(contentInput, 'bold');
       }
       // Ctrl/Cmd + I for italic
       if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
-        formatText(contentInput, 'italic');
+        applyFormatting(contentInput, 'italic');
       }
     });
 
@@ -305,7 +316,108 @@ const QuickNotesFeature = (() => {
     return text.trim().split(/\s+/).filter(w => w.length > 0).length;
   }
 
-  // Parse markdown to HTML
+  // Parse markdown to HTML for contenteditable editor (WYSIWYG)
+  function parseMarkdownForEditor(text) {
+    if (!text) return '<div><br></div>';
+
+    const lines = text.split('\n');
+    const htmlLines = lines.map(line => {
+      // Checkbox lists
+      if (line.match(/^- \[x\]/i)) {
+        const content = line.replace(/^- \[x\]\s*/i, '');
+        return `<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${escapeHtml(content)}</span></div>`;
+      }
+      if (line.match(/^- \[ \]/)) {
+        const content = line.replace(/^- \[ \]\s*/, '');
+        return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${escapeHtml(content)}</span></div>`;
+      }
+      // Bullet lists
+      if (line.match(/^- /)) {
+        const content = line.replace(/^- /, '');
+        return `<div class="jt-note-bullet">• ${processInlineFormatting(content)}</div>`;
+      }
+      // Regular text with inline formatting
+      return `<div>${processInlineFormatting(line) || '<br>'}</div>`;
+    });
+
+    return htmlLines.join('');
+  }
+
+  // Process inline formatting (bold, italic)
+  function processInlineFormatting(text) {
+    if (!text) return '';
+
+    let html = escapeHtml(text);
+
+    // Parse bold **text** or *text*
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
+
+    // Parse italic _text_
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    return html;
+  }
+
+  // Convert contenteditable HTML back to markdown
+  function htmlToMarkdown(element) {
+    let markdown = '';
+    const children = element.childNodes;
+
+    for (let node of children) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+
+        if (node.classList.contains('jt-note-checkbox')) {
+          const checkbox = node.querySelector('input[type="checkbox"]');
+          const span = node.querySelector('span');
+          const checked = checkbox && checkbox.checked;
+          const text = span ? span.textContent : '';
+          markdown += `- [${checked ? 'x' : ' '}] ${text}\n`;
+        } else if (node.classList.contains('jt-note-bullet')) {
+          const text = node.textContent.replace(/^•\s*/, '');
+          markdown += `- ${extractInlineMarkdown(node)}\n`;
+        } else if (tag === 'div') {
+          const content = extractInlineMarkdown(node);
+          if (content) markdown += content + '\n';
+        }
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        if (text.trim()) markdown += text;
+      }
+    }
+
+    return markdown.trim();
+  }
+
+  // Extract inline markdown from formatted HTML
+  function extractInlineMarkdown(element) {
+    let text = '';
+    const children = element.childNodes;
+
+    for (let node of children) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        text += node.textContent;
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const tag = node.tagName.toLowerCase();
+        const content = node.textContent;
+
+        if (tag === 'strong' || tag === 'b') {
+          text += `**${content}**`;
+        } else if (tag === 'em' || tag === 'i') {
+          text += `_${content}_`;
+        } else if (tag === 'br') {
+          // Skip br tags
+        } else {
+          text += extractInlineMarkdown(node);
+        }
+      }
+    }
+
+    return text.replace(/^•\s*/, '');
+  }
+
+  // Parse markdown to HTML (for preview in sidebar)
   function parseMarkdown(text) {
     if (!text) return '';
 
@@ -346,57 +458,74 @@ const QuickNotesFeature = (() => {
     return div.innerHTML;
   }
 
-  // Format text based on selection
-  function formatText(textarea, formatType) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    const beforeText = textarea.value.substring(0, start);
-    const afterText = textarea.value.substring(end);
-
-    let newText = '';
-    let cursorOffset = 0;
+  // Apply formatting to contenteditable (WYSIWYG)
+  function applyFormatting(element, formatType) {
+    element.focus();
 
     switch (formatType) {
       case 'bold':
-        if (selectedText) {
-          newText = `${beforeText}**${selectedText}**${afterText}`;
-          cursorOffset = start + 2 + selectedText.length + 2;
-        } else {
-          newText = `${beforeText}****${afterText}`;
-          cursorOffset = start + 2;
-        }
+        document.execCommand('bold', false, null);
         break;
 
       case 'italic':
-        if (selectedText) {
-          newText = `${beforeText}_${selectedText}_${afterText}`;
-          cursorOffset = start + 1 + selectedText.length + 1;
-        } else {
-          newText = `${beforeText}__${afterText}`;
-          cursorOffset = start + 1;
-        }
+        document.execCommand('italic', false, null);
         break;
 
       case 'bullet':
-        const bulletLine = selectedText || 'List item';
-        newText = `${beforeText}- ${bulletLine}${afterText}`;
-        cursorOffset = start + 2 + bulletLine.length;
+        // Insert a bullet list item
+        const bulletDiv = document.createElement('div');
+        bulletDiv.className = 'jt-note-bullet';
+        bulletDiv.innerHTML = '• <br>';
+
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(bulletDiv);
+
+          // Place cursor inside the bullet
+          const newRange = document.createRange();
+          newRange.selectNodeContents(bulletDiv);
+          newRange.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
         break;
 
       case 'checkbox':
-        const checkboxLine = selectedText || 'Todo item';
-        newText = `${beforeText}- [ ] ${checkboxLine}${afterText}`;
-        cursorOffset = start + 6 + checkboxLine.length;
+        // Insert a checkbox item
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'jt-note-checkbox';
+        checkboxDiv.setAttribute('contenteditable', 'false');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+
+        const span = document.createElement('span');
+        span.setAttribute('contenteditable', 'true');
+        span.textContent = 'Todo item';
+
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(span);
+
+        const selection2 = window.getSelection();
+        if (selection2.rangeCount > 0) {
+          const range = selection2.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(checkboxDiv);
+
+          // Place cursor inside the span
+          const newRange = document.createRange();
+          newRange.selectNodeContents(span);
+          newRange.collapse(false);
+          selection2.removeAllRanges();
+          selection2.addRange(newRange);
+        }
         break;
     }
 
-    textarea.value = newText;
-    textarea.setSelectionRange(cursorOffset, cursorOffset);
-    textarea.focus();
-
     // Trigger input event to save changes
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   // Detect and apply theme
