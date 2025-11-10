@@ -13,15 +13,16 @@
   background: #2563eb !important;
 }
 
-/* Notes Panel */
+/* Notes Panel - Jobtread Sidebar Style */
 .jt-quick-notes-panel {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   width: 800px;
+  max-width: 100%;
   background: white;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  box-shadow: -1px 0 0 0 rgba(0, 0, 0, 0.1);
   z-index: 999999;
   display: flex;
   transform: translateX(100%);
@@ -33,72 +34,61 @@
   transform: translateX(0);
 }
 
-/* Close Button */
-.jt-notes-close-button {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: transparent;
-  border: none;
-  font-size: 24px;
-  color: #6b7280;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  z-index: 10;
-}
-
-.jt-notes-close-button:hover {
-  background: #f3f4f6;
-  color: #374151;
-}
-
 /* Sidebar */
 .jt-notes-sidebar {
   width: 280px;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  background: #f9fafb;
-}
-
-.jt-notes-sidebar-header {
-  padding: 20px 16px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   background: white;
 }
 
+/* Sidebar Header - Jobtread Style */
+.jt-notes-sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
 .jt-notes-sidebar-title {
-  font-size: 18px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
   margin: 0;
 }
 
 .jt-notes-new-button {
-  background: #3b82f6;
-  color: white;
+  flex-shrink: 0;
+  background: transparent;
+  color: #0891b2;
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .jt-notes-new-button:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+  background: #f3f4f6;
+  color: #0e7490;
+}
+
+.jt-notes-new-button:active {
+  background: #e5e7eb;
 }
 
 /* Search */
@@ -112,15 +102,22 @@
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 14px;
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  background: white;
+}
+
+.jt-notes-search-input:hover:not(:focus) {
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .jt-notes-search-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
 }
 
 /* Notes List */
@@ -128,6 +125,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 8px;
+  background: white;
 }
 
 .jt-notes-list::-webkit-scrollbar {
@@ -157,24 +155,23 @@
 /* Note Item */
 .jt-note-item {
   background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
   padding: 12px;
   margin-bottom: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .jt-note-item:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-  transform: translateX(2px);
+  background: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .jt-note-item.active {
-  border-color: #3b82f6;
-  background: #eff6ff;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+  background: #ecfeff;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
 }
 
 .jt-note-item-header {
@@ -201,7 +198,7 @@
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
   color: #9ca3af;
   cursor: pointer;
@@ -209,11 +206,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
 .jt-note-delete:hover {
-  background: #fee2e2;
+  background: #fef2f2;
   color: #ef4444;
 }
 
@@ -224,6 +221,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-bottom: 6px;
+  line-height: 1.4;
 }
 
 .jt-note-item-date {
@@ -237,6 +235,7 @@
   display: flex;
   flex-direction: column;
   background: white;
+  overflow: hidden;
 }
 
 .jt-notes-editor-empty {
@@ -246,6 +245,7 @@
   align-items: center;
   justify-content: center;
   color: #9ca3af;
+  padding: 32px;
 }
 
 .jt-notes-editor-empty-icon {
@@ -256,57 +256,113 @@
 
 .jt-notes-editor-empty-text {
   font-size: 16px;
+  text-align: center;
 }
 
+/* Editor Header - Jobtread Style */
 .jt-notes-editor-header {
-  padding: 24px 24px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-height: 57px;
 }
 
 .jt-notes-title-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   border: none;
   outline: none;
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 700;
-  color: #111827;
-  padding: 8px 0;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0;
   background: transparent;
 }
 
 .jt-notes-title-input::placeholder {
-  color: #d1d5db;
+  color: #fca5a5;
+  text-transform: uppercase;
 }
 
+/* Close Button - Jobtread Style */
+.jt-notes-close-button {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.jt-notes-close-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-notes-close-button:active {
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.jt-notes-close-button::before {
+  content: '✕';
+  font-size: 14px;
+}
+
+.jt-notes-close-button::after {
+  content: 'Close';
+  font-size: 13px;
+}
+
+/* Content Input */
 .jt-notes-content-input {
   flex: 1;
-  padding: 24px;
+  padding: 16px;
   border: none;
   outline: none;
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.6;
   color: #374151;
   resize: none;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-y: auto;
 }
 
 .jt-notes-content-input::placeholder {
   color: #d1d5db;
 }
 
+/* Editor Footer */
 .jt-notes-editor-footer {
-  padding: 12px 24px;
+  padding: 12px 16px;
   border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
   color: #9ca3af;
-  background: #f9fafb;
+  background: white;
+  min-height: 45px;
 }
 
 .jt-notes-word-count {
   font-weight: 500;
+  color: #6b7280;
 }
 
 .jt-notes-updated {
@@ -320,40 +376,43 @@
   }
 }
 
-@media (max-width: 640px) {
-  .jt-notes-sidebar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 10;
-    transform: translateX(-100%);
-    transition: transform 0.3s;
+@media (max-width: 768px) {
+  .jt-quick-notes-panel {
+    width: 100%;
   }
 
-  .jt-notes-sidebar.show-mobile {
-    transform: translateX(0);
+  .jt-notes-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    max-height: 40%;
+  }
+
+  .jt-notes-editor {
+    min-height: 60%;
   }
 }
 
-/* Dark mode support (if needed in future) */
+@media (max-width: 640px) {
+  .jt-notes-close-button::after {
+    display: none;
+  }
+}
+
+/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .jt-quick-notes-panel {
     background: #1f2937;
   }
 
   .jt-notes-sidebar {
-    background: #111827;
+    background: #1f2937;
     border-right-color: #374151;
   }
 
   .jt-notes-sidebar-header {
     background: #1f2937;
-    border-bottom-color: #374151;
-  }
-
-  .jt-notes-sidebar-title {
-    color: #f9fafb;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1);
   }
 
   .jt-notes-search-container {
@@ -367,14 +426,26 @@
     color: #f9fafb;
   }
 
-  .jt-note-item {
+  .jt-notes-search-input:hover:not(:focus) {
+    background: #4b5563;
+  }
+
+  .jt-notes-list {
     background: #1f2937;
-    border-color: #374151;
+  }
+
+  .jt-note-item {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .jt-note-item:hover {
+    background: #4b5563;
   }
 
   .jt-note-item.active {
-    background: #1e3a5f;
-    border-color: #3b82f6;
+    background: #164e63;
+    border-color: #06b6d4;
   }
 
   .jt-note-item-title {
@@ -382,7 +453,7 @@
   }
 
   .jt-note-item-preview {
-    color: #9ca3af;
+    color: #d1d5db;
   }
 
   .jt-notes-editor {
@@ -390,12 +461,12 @@
   }
 
   .jt-notes-editor-header {
-    border-bottom-color: #374151;
+    background: #1f2937;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1);
   }
 
   .jt-notes-title-input {
-    color: #f9fafb;
-    background: transparent;
+    color: #fbbf24;
   }
 
   .jt-notes-content-input {
@@ -404,16 +475,17 @@
   }
 
   .jt-notes-editor-footer {
-    background: #111827;
+    background: #1f2937;
     border-top-color: #374151;
   }
 
   .jt-notes-close-button {
-    color: #9ca3af;
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
   }
 
   .jt-notes-close-button:hover {
-    background: #374151;
-    color: #f9fafb;
+    background: #4b5563;
   }
 }
