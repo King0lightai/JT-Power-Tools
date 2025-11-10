@@ -288,7 +288,7 @@ const QuickNotesFeature = (() => {
       });
     });
 
-    // Add keyboard shortcuts for formatting
+    // Add keyboard shortcuts for formatting and list management
     contentInput.addEventListener('keydown', (e) => {
       // Ctrl/Cmd + B for bold
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
@@ -299,6 +299,164 @@ const QuickNotesFeature = (() => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
         applyFormatting(contentInput, 'italic');
+      }
+
+      // Enter key: create new bullet/checkbox
+      if (e.key === 'Enter') {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          let currentElement = range.startContainer;
+
+          // Find parent element
+          while (currentElement && currentElement.nodeType !== Node.ELEMENT_NODE) {
+            currentElement = currentElement.parentNode;
+          }
+
+          // Check if we're in a checkbox
+          if (currentElement && currentElement.closest('.jt-note-checkbox')) {
+            e.preventDefault();
+            const checkboxParent = currentElement.closest('.jt-note-checkbox');
+
+            // Create new checkbox
+            const newCheckbox = document.createElement('div');
+            newCheckbox.className = 'jt-note-checkbox';
+            newCheckbox.setAttribute('contenteditable', 'false');
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+
+            const span = document.createElement('span');
+            span.setAttribute('contenteditable', 'true');
+            span.innerHTML = '<br>';
+
+            newCheckbox.appendChild(checkbox);
+            newCheckbox.appendChild(span);
+
+            // Insert after current checkbox
+            checkboxParent.parentNode.insertBefore(newCheckbox, checkboxParent.nextSibling);
+
+            // Focus the new checkbox's span
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
+          // Check if we're in a bullet
+          else if (currentElement && currentElement.closest('.jt-note-bullet')) {
+            e.preventDefault();
+            const bulletParent = currentElement.closest('.jt-note-bullet');
+
+            // Create new bullet
+            const newBullet = document.createElement('div');
+            newBullet.className = 'jt-note-bullet';
+            newBullet.innerHTML = '• <br>';
+
+            // Insert after current bullet
+            bulletParent.parentNode.insertBefore(newBullet, bulletParent.nextSibling);
+
+            // Focus the new bullet
+            const newRange = document.createRange();
+            newRange.selectNodeContents(newBullet);
+            newRange.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
+        }
+      }
+
+      // Backspace: delete empty checkboxes/bullets
+      if (e.key === 'Backspace') {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          let currentElement = range.startContainer;
+
+          // Find parent element
+          while (currentElement && currentElement.nodeType !== Node.ELEMENT_NODE) {
+            currentElement = currentElement.parentNode;
+          }
+
+          // Check if we're in a checkbox span
+          if (currentElement && currentElement.closest('.jt-note-checkbox')) {
+            const checkboxParent = currentElement.closest('.jt-note-checkbox');
+            const span = checkboxParent.querySelector('span');
+
+            // If span is empty or only has <br>, delete the entire checkbox
+            if (span && (span.textContent.trim() === '' || span.innerHTML === '<br>')) {
+              // Check if cursor is at start
+              if (range.startOffset === 0) {
+                e.preventDefault();
+
+                // Focus previous element or create a new div
+                const prevElement = checkboxParent.previousSibling;
+                checkboxParent.remove();
+
+                if (prevElement) {
+                  const newRange = document.createRange();
+                  newRange.selectNodeContents(prevElement);
+                  newRange.collapse(false);
+                  selection.removeAllRanges();
+                  selection.addRange(newRange);
+                } else {
+                  // Create a new empty div if no previous element
+                  const newDiv = document.createElement('div');
+                  newDiv.innerHTML = '<br>';
+                  contentInput.insertBefore(newDiv, contentInput.firstChild);
+
+                  const newRange = document.createRange();
+                  newRange.selectNodeContents(newDiv);
+                  newRange.collapse(true);
+                  selection.removeAllRanges();
+                  selection.addRange(newRange);
+                }
+
+                // Trigger input event to save
+                contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            }
+          }
+          // Check if we're in a bullet
+          else if (currentElement && currentElement.closest('.jt-note-bullet')) {
+            const bulletParent = currentElement.closest('.jt-note-bullet');
+            const text = bulletParent.textContent.replace(/^•\s*/, '').trim();
+
+            // If bullet is empty, delete it
+            if (text === '') {
+              // Check if cursor is at start (after the bullet)
+              if (range.startOffset === 0 || bulletParent.textContent.trim() === '•') {
+                e.preventDefault();
+
+                // Focus previous element or create a new div
+                const prevElement = bulletParent.previousSibling;
+                bulletParent.remove();
+
+                if (prevElement) {
+                  const newRange = document.createRange();
+                  newRange.selectNodeContents(prevElement);
+                  newRange.collapse(false);
+                  selection.removeAllRanges();
+                  selection.addRange(newRange);
+                } else {
+                  // Create a new empty div if no previous element
+                  const newDiv = document.createElement('div');
+                  newDiv.innerHTML = '<br>';
+                  contentInput.insertBefore(newDiv, contentInput.firstChild);
+
+                  const newRange = document.createRange();
+                  newRange.selectNodeContents(newDiv);
+                  newRange.collapse(true);
+                  selection.removeAllRanges();
+                  selection.addRange(newRange);
+                }
+
+                // Trigger input event to save
+                contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            }
+          }
+        }
       }
     });
 
