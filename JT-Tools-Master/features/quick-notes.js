@@ -11,7 +11,9 @@ const QuickNotesFeature = (() => {
   let notes = [];
   let currentNoteId = null;
   let searchTerm = '';
+  let sidebarCollapsed = false;
   const STORAGE_KEY = 'jtToolsQuickNotes';
+  const COLLAPSED_STATE_KEY = 'jtToolsQuickNotesSidebarCollapsed';
 
   // Generate unique ID
   function generateId() {
@@ -160,6 +162,11 @@ const QuickNotesFeature = (() => {
     if (!currentNote) {
       editorContainer.innerHTML = `
         <div class="jt-notes-editor-header">
+          <button class="jt-notes-expand-button" title="Expand sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+          </button>
           <div class="jt-notes-sidebar-title">Quick Notes</div>
           <button class="jt-notes-close-button" title="Close (Esc)"></button>
         </div>
@@ -169,7 +176,10 @@ const QuickNotesFeature = (() => {
         </div>
       `;
 
-      // Add close button handler
+      // Add button handlers
+      const expandButton = editorContainer.querySelector('.jt-notes-expand-button');
+      expandButton.addEventListener('click', toggleSidebar);
+
       const closeButton = editorContainer.querySelector('.jt-notes-close-button');
       closeButton.addEventListener('click', togglePanel);
       return;
@@ -177,6 +187,11 @@ const QuickNotesFeature = (() => {
 
     editorContainer.innerHTML = `
       <div class="jt-notes-editor-header">
+        <button class="jt-notes-expand-button" title="Expand sidebar">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6"></path>
+          </svg>
+        </button>
         <input
           type="text"
           class="jt-notes-title-input"
@@ -198,6 +213,7 @@ const QuickNotesFeature = (() => {
     // Add input handlers with debouncing
     const titleInput = editorContainer.querySelector('.jt-notes-title-input');
     const contentInput = editorContainer.querySelector('.jt-notes-content-input');
+    const expandButton = editorContainer.querySelector('.jt-notes-expand-button');
     const closeButton = editorContainer.querySelector('.jt-notes-close-button');
     let saveTimeout;
 
@@ -222,6 +238,7 @@ const QuickNotesFeature = (() => {
       debouncedSave('content', e.target.value);
     });
 
+    expandButton.addEventListener('click', toggleSidebar);
     closeButton.addEventListener('click', togglePanel);
 
     // Focus on content if title is already set
@@ -245,6 +262,29 @@ const QuickNotesFeature = (() => {
     return div.innerHTML;
   }
 
+  // Load sidebar collapsed state from localStorage
+  function loadSidebarState() {
+    const saved = localStorage.getItem(COLLAPSED_STATE_KEY);
+    sidebarCollapsed = saved === 'true';
+  }
+
+  // Save sidebar collapsed state to localStorage
+  function saveSidebarState() {
+    localStorage.setItem(COLLAPSED_STATE_KEY, sidebarCollapsed.toString());
+  }
+
+  // Toggle sidebar collapse
+  function toggleSidebar() {
+    sidebarCollapsed = !sidebarCollapsed;
+    saveSidebarState();
+
+    if (sidebarCollapsed) {
+      notesPanel.classList.add('sidebar-collapsed');
+    } else {
+      notesPanel.classList.remove('sidebar-collapsed');
+    }
+  }
+
   // Toggle panel visibility
   function togglePanel() {
     if (!notesPanel) return;
@@ -257,13 +297,19 @@ const QuickNotesFeature = (() => {
       }
     } else {
       notesPanel.classList.add('visible');
+      // Apply collapsed state
+      if (sidebarCollapsed) {
+        notesPanel.classList.add('sidebar-collapsed');
+      }
       if (notesButton) {
         notesButton.classList.add('jt-notes-button-active');
       }
-      // Focus search if panel is opening
-      const searchInput = notesPanel.querySelector('.jt-notes-search-input');
-      if (searchInput && !currentNoteId) {
-        setTimeout(() => searchInput.focus(), 100);
+      // Focus search if panel is opening and sidebar is visible
+      if (!sidebarCollapsed) {
+        const searchInput = notesPanel.querySelector('.jt-notes-search-input');
+        if (searchInput && !currentNoteId) {
+          setTimeout(() => searchInput.focus(), 100);
+        }
       }
     }
   }
@@ -346,6 +392,11 @@ const QuickNotesFeature = (() => {
               <path d="M5 12h14M12 5v14"></path>
             </svg> New
           </button>
+          <button class="jt-notes-collapse-toggle" title="Collapse sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+          </button>
         </div>
         <div class="jt-notes-search-container">
           <input
@@ -362,6 +413,9 @@ const QuickNotesFeature = (() => {
     // Add event handlers
     const newButton = notesPanel.querySelector('.jt-notes-new-button');
     newButton.addEventListener('click', createNote);
+
+    const collapseButton = notesPanel.querySelector('.jt-notes-collapse-toggle');
+    collapseButton.addEventListener('click', toggleSidebar);
 
     const searchInput = notesPanel.querySelector('.jt-notes-search-input');
     searchInput.addEventListener('input', (e) => {
@@ -398,8 +452,9 @@ const QuickNotesFeature = (() => {
     link.id = 'jt-quick-notes-styles';
     document.head.appendChild(link);
 
-    // Load notes from storage
+    // Load notes and state from storage
     await loadNotes();
+    loadSidebarState();
 
     // Create UI elements
     setupButtonObserver();
@@ -447,6 +502,7 @@ const QuickNotesFeature = (() => {
     notes = [];
     currentNoteId = null;
     searchTerm = '';
+    sidebarCollapsed = false;
     isActive = false;
 
     console.log('Quick Notes feature deactivated');

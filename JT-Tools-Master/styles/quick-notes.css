@@ -19,19 +19,27 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 800px;
+  width: 600px;
   max-width: 100%;
   background: white;
   box-shadow: -1px 0 0 0 rgba(0, 0, 0, 0.1);
   z-index: 999999;
   display: flex;
   transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .jt-quick-notes-panel.visible {
   transform: translateX(0);
+}
+
+.jt-quick-notes-panel.sidebar-collapsed {
+  width: 320px;
+}
+
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar {
+  display: none;
 }
 
 /* Sidebar */
@@ -89,6 +97,40 @@
 
 .jt-notes-new-button:active {
   background: #e5e7eb;
+}
+
+/* Sidebar Collapse Toggle Button */
+.jt-notes-collapse-toggle {
+  flex-shrink: 0;
+  margin-left: 8px;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.jt-notes-collapse-toggle:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-collapse-toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+
+.sidebar-collapsed .jt-notes-collapse-toggle svg {
+  transform: rotate(180deg);
 }
 
 /* Search */
@@ -270,6 +312,38 @@
   box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
   padding: 16px;
   min-height: 57px;
+}
+
+/* Expand button (shown when sidebar is collapsed) */
+.jt-notes-expand-button {
+  flex-shrink: 0;
+  margin-right: 8px;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-collapsed .jt-notes-expand-button {
+  display: flex;
+}
+
+.jt-notes-expand-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-expand-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .jt-notes-title-input {
