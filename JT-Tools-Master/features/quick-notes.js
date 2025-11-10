@@ -12,6 +12,10 @@ const QuickNotesFeature = (() => {
   let currentNoteId = null;
   let searchTerm = '';
   const STORAGE_KEY = 'jtToolsQuickNotes';
+  const WIDTH_STORAGE_KEY = 'jtToolsQuickNotesWidth';
+  const MIN_WIDTH = 320;
+  const MAX_WIDTH = 1200;
+  let isResizing = false;
 
   // Generate unique ID
   function generateId() {
@@ -880,6 +884,7 @@ const QuickNotesFeature = (() => {
     notesPanel = document.createElement('div');
     notesPanel.className = 'jt-quick-notes-panel';
     notesPanel.innerHTML = `
+      <div class="jt-notes-resize-handle" title="Drag to resize"></div>
       <div class="jt-notes-sidebar">
         <div class="jt-notes-sidebar-header">
           <h3 class="jt-notes-sidebar-title">Quick Notes</h3>
@@ -921,7 +926,82 @@ const QuickNotesFeature = (() => {
       renderNotesList();
     });
 
+    // Add resize functionality
+    setupResizeHandle();
+
+    // Load saved width
+    loadSavedWidth();
+
     document.body.appendChild(notesPanel);
+  }
+
+  // Setup resize handle functionality
+  function setupResizeHandle() {
+    const resizeHandle = notesPanel.querySelector('.jt-notes-resize-handle');
+    if (!resizeHandle) return;
+
+    let startX = 0;
+    let startWidth = 0;
+
+    const handleMouseDown = (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = notesPanel.offsetWidth;
+
+      // Add resizing class for cursor
+      document.body.style.cursor = 'ew-resize';
+      notesPanel.classList.add('resizing');
+
+      e.preventDefault();
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+
+      // Calculate new width (subtract because we're dragging from the left)
+      const deltaX = startX - e.clientX;
+      let newWidth = startWidth + deltaX;
+
+      // Apply constraints
+      newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+      // Also constrain to viewport width
+      const maxViewportWidth = window.innerWidth * 0.9;
+      newWidth = Math.min(newWidth, maxViewportWidth);
+
+      notesPanel.style.width = `${newWidth}px`;
+    };
+
+    const handleMouseUp = () => {
+      if (!isResizing) return;
+
+      isResizing = false;
+      document.body.style.cursor = '';
+      notesPanel.classList.remove('resizing');
+
+      // Save the new width
+      saveWidth(notesPanel.offsetWidth);
+    };
+
+    resizeHandle.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }
+
+  // Save panel width to localStorage
+  function saveWidth(width) {
+    localStorage.setItem(WIDTH_STORAGE_KEY, width.toString());
+  }
+
+  // Load saved width from localStorage
+  function loadSavedWidth() {
+    const savedWidth = localStorage.getItem(WIDTH_STORAGE_KEY);
+    if (savedWidth) {
+      const width = parseInt(savedWidth, 10);
+      if (!isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
+        notesPanel.style.width = `${width}px`;
+      }
+    }
   }
 
   // Keyboard shortcuts

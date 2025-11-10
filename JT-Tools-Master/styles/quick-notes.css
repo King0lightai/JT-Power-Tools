@@ -43,6 +43,55 @@
   display: none;
 }
 
+/* Resize Handle */
+.jt-notes-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.jt-notes-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.jt-notes-resize-handle:hover::before {
+  opacity: 1;
+}
+
+.jt-quick-notes-panel.resizing {
+  transition: none;
+  user-select: none;
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle::before {
+  opacity: 1;
+  background: #06b6d4;
+}
+
 /* Sidebar */
 .jt-notes-sidebar {
   width: 280px;
@@ -672,6 +721,22 @@
   color: #cbd5e1;
 }
 
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle::before {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover::before {
+  background: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme.resizing .jt-notes-resize-handle::before {
+  background: #06b6d4;
+}
+
 /* Theme Compatibility - Custom RGB Theme */
 .jt-quick-notes-panel.custom-theme {
   /* Use CSS variables that will be set dynamically */
@@ -708,6 +773,18 @@
 
 .jt-quick-notes-panel.custom-theme .jt-note-item.active {
   border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle:hover {
+  background: rgba(var(--jt-notes-primary-rgb, 6, 182, 212), 0.2);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle::before {
+  background: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme.resizing .jt-notes-resize-handle::before {
+  background: var(--jt-notes-primary, #06b6d4);
 }
 
 /* Responsive adjustments */
