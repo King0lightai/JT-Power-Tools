@@ -403,6 +403,59 @@
   font-size: 13px;
 }
 
+/* Formatting Toolbar */
+.jt-notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.jt-notes-format-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #6b7280;
+}
+
+.jt-notes-format-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.jt-notes-format-btn:active {
+  background: #e5e7eb;
+}
+
+.jt-notes-format-btn.active {
+  background: #ecfeff;
+  color: #0891b2;
+  border-color: #06b6d4;
+}
+
+.jt-notes-format-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
 /* Content Input */
 .jt-notes-content-input {
   flex: 1;
@@ -441,6 +494,159 @@
 
 .jt-notes-updated {
   font-style: italic;
+}
+
+/* Theme Compatibility - Dark Mode */
+.jt-quick-notes-panel.dark-theme {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor,
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-list,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  background: #1e293b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
+  border-right-color: #334155;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  border-color: #334155;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input::placeholder {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input:focus {
+  background: #334155;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item.active {
+  background: #164e63;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-title {
+  color: #f1f5f9;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-date {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:hover {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-empty {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
+  color: #64748b;
+}
+
+/* Theme Compatibility - Custom RGB Theme */
+.jt-quick-notes-panel.custom-theme {
+  /* Use CSS variables that will be set dynamically */
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor,
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-search-container,
+.jt-quick-notes-panel.custom-theme .jt-notes-list,
+.jt-quick-notes-panel.custom-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-footer {
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-title-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input,
+.jt-quick-notes-panel.custom-theme .jt-note-item-title {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-search-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item.active {
+  border-color: var(--jt-notes-primary, #06b6d4);
 }
 
 /* Responsive adjustments */
