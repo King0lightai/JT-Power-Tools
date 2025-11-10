@@ -21,10 +21,72 @@ const DateUtils = (() => {
    */
   function extractDateFromCell(cell) {
     if (!cell) return null;
-    const dateDiv = cell.querySelector('div.font-bold');
-    if (dateDiv) {
-      return dateDiv.textContent.trim();
+
+    // Check if we're in availability view
+    const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+
+    if (isAvailabilityView) {
+      // In availability view, dates are in column headers
+      return extractDateFromColumnHeader(cell);
+    } else {
+      // In normal view, dates are in the cell itself
+      const dateDiv = cell.querySelector('div.font-bold');
+      if (dateDiv) {
+        return dateDiv.textContent.trim();
+      }
     }
+    return null;
+  }
+
+  /**
+   * Extract date from column header in availability view
+   * @param {HTMLElement} cell - The table cell (td) to get column index from
+   * @returns {string|null} The day number as a string, or null if not found
+   */
+  function extractDateFromColumnHeader(cell) {
+    if (!cell) return null;
+
+    // Get the table
+    const table = cell.closest('table');
+    if (!table) {
+      console.error('DateUtils: extractDateFromColumnHeader - no table found');
+      return null;
+    }
+
+    // Find the column index of this cell
+    const row = cell.parentElement;
+    const cellIndex = Array.from(row.children).indexOf(cell);
+    console.log(`DateUtils: extractDateFromColumnHeader - cell is in column ${cellIndex}`);
+
+    // Find the thead element
+    const thead = table.querySelector('thead');
+    if (!thead) {
+      console.error('DateUtils: extractDateFromColumnHeader - no thead found');
+      return null;
+    }
+
+    // Get the second row of the header (which contains the date numbers)
+    const headerRows = thead.querySelectorAll('tr');
+    if (headerRows.length < 2) {
+      console.error('DateUtils: extractDateFromColumnHeader - thead has less than 2 rows');
+      return null;
+    }
+
+    const dateRow = headerRows[1]; // Second row contains dates
+    const headerCells = dateRow.querySelectorAll('th');
+
+    // Get the header cell at the same column index
+    if (cellIndex < headerCells.length) {
+      const headerCell = headerCells[cellIndex];
+      const dateDiv = headerCell.querySelector('div.font-bold');
+      if (dateDiv) {
+        const dateNumber = dateDiv.textContent.trim();
+        console.log(`DateUtils: extractDateFromColumnHeader - found date ${dateNumber} in column ${cellIndex}`);
+        return dateNumber;
+      }
+    }
+
+    console.error(`DateUtils: extractDateFromColumnHeader - could not find header for column ${cellIndex}`);
     return null;
   }
 
@@ -41,13 +103,28 @@ const DateUtils = (() => {
       return null;
     }
 
-    const dateDiv = cell.querySelector('div.font-bold');
-    if (!dateDiv) {
-      console.error('DateUtils: extractFullDateInfo - no font-bold div found in cell');
-      return null;
+    // Check if we're in availability view
+    const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+    console.log(`DateUtils: extractFullDateInfo - isAvailabilityView: ${isAvailabilityView}`);
+
+    let dateNumber;
+    if (isAvailabilityView) {
+      // In availability view, dates are in column headers
+      dateNumber = extractDateFromColumnHeader(cell);
+      if (!dateNumber) {
+        console.error('DateUtils: extractFullDateInfo - failed to extract date from column header');
+        return null;
+      }
+    } else {
+      // In normal view, dates are in the cell itself
+      const dateDiv = cell.querySelector('div.font-bold');
+      if (!dateDiv) {
+        console.error('DateUtils: extractFullDateInfo - no font-bold div found in cell');
+        return null;
+      }
+      dateNumber = dateDiv.textContent.trim();
     }
 
-    const dateNumber = dateDiv.textContent.trim();
     console.log(`DateUtils: extractFullDateInfo - extracted day number: "${dateNumber}"`);
 
     let month = null;

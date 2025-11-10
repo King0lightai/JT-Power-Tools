@@ -7,6 +7,7 @@ const DragDropFeature = (() => {
     draggedElement: null,
     draggedItemData: null,
     sourceDateInfo: null,
+    sourceRow: null, // Track source row for availability view restriction
     shiftKeyAtDragStart: false,
     altKeyAtDragStart: false,
     isDateChangeInProgress: false
