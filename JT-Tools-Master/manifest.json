@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.2.3",
-  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode, and Custom Theme with toggle controls",
+  "version": "3.3.0",
+  "description": "All-in-one toolkit for JobTread: Schedule Drag & Drop, Contrast Fix, Text Formatter, Premium WYSIWYG Formatter, Dark Mode, and Custom Theme with toggle controls",
   "permissions": [
     "storage",
     "activeTab"
@@ -32,6 +32,7 @@
         "features/drag-drop.js",
         "features/contrast-fix.js",
         "features/formatter.js",
+        "features/premium-formatter.js",
         "features/dark-mode.js",
         "features/rgb-theme.js",
         "features/job-switcher.js",
@@ -45,6 +46,7 @@
     {
       "resources": [
         "styles/formatter-toolbar.css",
+        "styles/premium-formatter.css",
         "styles/dark-mode.css"
       ],
       "matches": ["https://*.jobtread.com/*"]
