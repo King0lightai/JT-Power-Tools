@@ -122,16 +122,25 @@ const QuickNotesFeature = (() => {
       return;
     }
 
-    notesList.innerHTML = filteredNotes.map(note => `
-      <div class="jt-note-item ${currentNoteId === note.id ? 'active' : ''}" data-note-id="${note.id}">
-        <div class="jt-note-item-header">
-          <div class="jt-note-item-title">${escapeHtml(note.title)}</div>
-          <button class="jt-note-delete" data-note-id="${note.id}" title="Delete note">×</button>
+    notesList.innerHTML = filteredNotes.map(note => {
+      const previewContent = note.content.slice(0, 150);
+      const parsedPreview = parseMarkdown(previewContent)
+        .replace(/<div[^>]*>/g, ' ')
+        .replace(/<\/div>/g, ' ')
+        .replace(/\n/g, ' ')
+        .trim();
+
+      return `
+        <div class="jt-note-item ${currentNoteId === note.id ? 'active' : ''}" data-note-id="${note.id}">
+          <div class="jt-note-item-header">
+            <div class="jt-note-item-title">${escapeHtml(note.title)}</div>
+            <button class="jt-note-delete" data-note-id="${note.id}" title="Delete note">×</button>
+          </div>
+          <div class="jt-note-item-preview">${parsedPreview}</div>
+          <div class="jt-note-item-date">${formatDate(note.updatedAt)}</div>
         </div>
-        <div class="jt-note-item-preview">${escapeHtml(note.content.slice(0, 100))}</div>
-        <div class="jt-note-item-date">${formatDate(note.updatedAt)}</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Add click handlers
     notesList.querySelectorAll('.jt-note-item').forEach(item => {
@@ -294,6 +303,40 @@ const QuickNotesFeature = (() => {
   // Count words
   function countWords(text) {
     return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  // Parse markdown to HTML
+  function parseMarkdown(text) {
+    if (!text) return '';
+
+    // Escape HTML first
+    let html = escapeHtml(text);
+
+    // Parse bold **text** or *text*
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
+
+    // Parse italic _text_
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    // Parse line by line for lists and checkboxes
+    const lines = html.split('\n');
+    const parsedLines = lines.map(line => {
+      // Checkbox lists
+      if (line.match(/^- \[x\]/i)) {
+        return line.replace(/^- \[x\]\s*/i, '<div class="jt-note-checkbox checked"><input type="checkbox" checked disabled><span>') + '</span></div>';
+      }
+      if (line.match(/^- \[ \]/)) {
+        return line.replace(/^- \[ \]\s*/, '<div class="jt-note-checkbox"><input type="checkbox" disabled><span>') + '</span></div>';
+      }
+      // Bullet lists
+      if (line.match(/^- /)) {
+        return line.replace(/^- /, '<div class="jt-note-bullet">• ') + '</div>';
+      }
+      return line;
+    });
+
+    return parsedLines.join('\n');
   }
 
   // Escape HTML
