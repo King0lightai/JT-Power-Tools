@@ -351,17 +351,20 @@ const QuickNotesFeature = (() => {
             // Create new bullet
             const newBullet = document.createElement('div');
             newBullet.className = 'jt-note-bullet';
-            newBullet.innerHTML = '• <br>';
+            newBullet.textContent = '• ';
 
             // Insert after current bullet
             bulletParent.parentNode.insertBefore(newBullet, bulletParent.nextSibling);
 
-            // Focus the new bullet
+            // Focus at the end of the bullet text (after "• ")
             const newRange = document.createRange();
-            newRange.selectNodeContents(newBullet);
-            newRange.collapse(false);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
+            const textNode = newBullet.firstChild;
+            if (textNode) {
+              newRange.setStart(textNode, textNode.length);
+              newRange.setEnd(textNode, textNode.length);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
           }
         }
       }
@@ -395,8 +398,21 @@ const QuickNotesFeature = (() => {
 
                 if (prevElement) {
                   const newRange = document.createRange();
-                  newRange.selectNodeContents(prevElement);
-                  newRange.collapse(false);
+
+                  // If previous element is a checkbox, focus its span
+                  if (prevElement.classList && prevElement.classList.contains('jt-note-checkbox')) {
+                    const prevSpan = prevElement.querySelector('span');
+                    if (prevSpan) {
+                      newRange.selectNodeContents(prevSpan);
+                      newRange.collapse(false);
+                    }
+                  }
+                  // If previous element is a bullet or regular div, focus at end
+                  else {
+                    newRange.selectNodeContents(prevElement);
+                    newRange.collapse(false);
+                  }
+
                   selection.removeAllRanges();
                   selection.addRange(newRange);
                 } else {
@@ -434,8 +450,21 @@ const QuickNotesFeature = (() => {
 
                 if (prevElement) {
                   const newRange = document.createRange();
-                  newRange.selectNodeContents(prevElement);
-                  newRange.collapse(false);
+
+                  // If previous element is a checkbox, focus its span
+                  if (prevElement.classList && prevElement.classList.contains('jt-note-checkbox')) {
+                    const prevSpan = prevElement.querySelector('span');
+                    if (prevSpan) {
+                      newRange.selectNodeContents(prevSpan);
+                      newRange.collapse(false);
+                    }
+                  }
+                  // If previous element is a bullet or regular div, focus at end
+                  else {
+                    newRange.selectNodeContents(prevElement);
+                    newRange.collapse(false);
+                  }
+
                   selection.removeAllRanges();
                   selection.addRange(newRange);
                 } else {
@@ -633,7 +662,7 @@ const QuickNotesFeature = (() => {
         // Insert a bullet list item
         const bulletDiv = document.createElement('div');
         bulletDiv.className = 'jt-note-bullet';
-        bulletDiv.innerHTML = '• <br>';
+        bulletDiv.textContent = '• ';
 
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
@@ -641,12 +670,15 @@ const QuickNotesFeature = (() => {
           range.deleteContents();
           range.insertNode(bulletDiv);
 
-          // Place cursor inside the bullet
+          // Place cursor at the end of the bullet text (after "• ")
           const newRange = document.createRange();
-          newRange.selectNodeContents(bulletDiv);
-          newRange.collapse(false);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
+          const textNode = bulletDiv.firstChild;
+          if (textNode) {
+            newRange.setStart(textNode, textNode.length);
+            newRange.setEnd(textNode, textNode.length);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
         }
         break;
 
