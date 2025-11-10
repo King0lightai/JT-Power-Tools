@@ -106,6 +106,7 @@ async function loadSettings() {
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
+    document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -201,6 +202,7 @@ async function getCurrentSettings() {
     rgbTheme: document.getElementById('rgbTheme').checked,
     quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
+    quickNotes: document.getElementById('quickNotes').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
