@@ -76,12 +76,38 @@
   margin: 0;
 }
 
-.jt-notes-new-button {
+.jt-notes-sidebar-close-button {
   flex-shrink: 0;
   background: transparent;
-  color: #0891b2;
+  color: #6b7280;
   border: none;
-  padding: 4px 8px;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.jt-notes-sidebar-close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-sidebar-close-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-new-button {
+  width: 100%;
+  background: #0891b2;
+  color: white;
+  border: none;
+  padding: 8px 12px;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 500;
@@ -89,16 +115,17 @@
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .jt-notes-new-button:hover {
-  background: #f3f4f6;
-  color: #0e7490;
+  background: #0e7490;
 }
 
 .jt-notes-new-button:active {
-  background: #e5e7eb;
+  background: #155e75;
 }
 
 
@@ -596,6 +623,27 @@
 
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
   background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button {
+  background: #0891b2;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:hover {
+  background: #0e7490;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:active {
+  background: #155e75;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-empty {

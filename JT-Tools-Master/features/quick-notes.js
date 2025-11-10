@@ -693,10 +693,11 @@ const QuickNotesFeature = (() => {
       <div class="jt-notes-sidebar">
         <div class="jt-notes-sidebar-header">
           <h3 class="jt-notes-sidebar-title">Quick Notes</h3>
-          <button class="jt-notes-new-button" title="New note">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5v14"></path>
-            </svg> New
+          <button class="jt-notes-sidebar-close-button" title="Close (Esc)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </button>
         </div>
         <div class="jt-notes-search-container">
@@ -705,6 +706,12 @@ const QuickNotesFeature = (() => {
             class="jt-notes-search-input"
             placeholder="Search notes..."
           />
+          <button class="jt-notes-new-button" title="New note (Ctrl+Shift+N)">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+              <path d="M5 12h14M12 5v14"></path>
+            </svg>
+            New Note
+          </button>
         </div>
         <div class="jt-notes-list"></div>
       </div>
@@ -712,6 +719,9 @@ const QuickNotesFeature = (() => {
     `;
 
     // Add event handlers
+    const sidebarCloseButton = notesPanel.querySelector('.jt-notes-sidebar-close-button');
+    sidebarCloseButton.addEventListener('click', togglePanel);
+
     const newButton = notesPanel.querySelector('.jt-notes-new-button');
     newButton.addEventListener('click', createNote);
 
