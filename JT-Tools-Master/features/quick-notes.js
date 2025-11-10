@@ -159,11 +159,19 @@ const QuickNotesFeature = (() => {
 
     if (!currentNote) {
       editorContainer.innerHTML = `
+        <div class="jt-notes-editor-header">
+          <div class="jt-notes-sidebar-title">Quick Notes</div>
+          <button class="jt-notes-close-button" title="Close (Esc)"></button>
+        </div>
         <div class="jt-notes-editor-empty">
           <div class="jt-notes-editor-empty-icon">📝</div>
           <div class="jt-notes-editor-empty-text">Select a note to view or create a new one</div>
         </div>
       `;
+
+      // Add close button handler
+      const closeButton = editorContainer.querySelector('.jt-notes-close-button');
+      closeButton.addEventListener('click', togglePanel);
       return;
     }
 
@@ -175,6 +183,7 @@ const QuickNotesFeature = (() => {
           value="${escapeHtml(currentNote.title)}"
           placeholder="Note title..."
         />
+        <button class="jt-notes-close-button" title="Close (Esc)"></button>
       </div>
       <textarea
         class="jt-notes-content-input"
@@ -189,6 +198,7 @@ const QuickNotesFeature = (() => {
     // Add input handlers with debouncing
     const titleInput = editorContainer.querySelector('.jt-notes-title-input');
     const contentInput = editorContainer.querySelector('.jt-notes-content-input');
+    const closeButton = editorContainer.querySelector('.jt-notes-close-button');
     let saveTimeout;
 
     const debouncedSave = (field, value) => {
@@ -211,6 +221,8 @@ const QuickNotesFeature = (() => {
     contentInput.addEventListener('input', (e) => {
       debouncedSave('content', e.target.value);
     });
+
+    closeButton.addEventListener('click', togglePanel);
 
     // Focus on content if title is already set
     if (currentNote.title !== 'Untitled Note') {
@@ -329,7 +341,11 @@ const QuickNotesFeature = (() => {
       <div class="jt-notes-sidebar">
         <div class="jt-notes-sidebar-header">
           <h3 class="jt-notes-sidebar-title">Quick Notes</h3>
-          <button class="jt-notes-new-button" title="New note">+ New</button>
+          <button class="jt-notes-new-button" title="New note">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5v14"></path>
+            </svg> New
+          </button>
         </div>
         <div class="jt-notes-search-container">
           <input
@@ -341,15 +357,11 @@ const QuickNotesFeature = (() => {
         <div class="jt-notes-list"></div>
       </div>
       <div class="jt-notes-editor"></div>
-      <button class="jt-notes-close-button" title="Close (Esc)">×</button>
     `;
 
     // Add event handlers
     const newButton = notesPanel.querySelector('.jt-notes-new-button');
     newButton.addEventListener('click', createNote);
-
-    const closeButton = notesPanel.querySelector('.jt-notes-close-button');
-    closeButton.addEventListener('click', togglePanel);
 
     const searchInput = notesPanel.querySelector('.jt-notes-search-input');
     searchInput.addEventListener('input', (e) => {
