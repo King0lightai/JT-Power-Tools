@@ -1,38 +1,109 @@
-/* Premium WYSIWYG Formatter Styles */
+/* Premium Formatter - Preview Mode Styles */
 
-.jt-wysiwyg-editor {
-  position: relative;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
+/* Preview Button */
+.jt-preview-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
   border-radius: 6px;
-  padding: 12px;
-  min-height: 100px;
-  max-height: 400px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.jt-preview-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.jt-preview-btn:active {
+  transform: translateY(0);
+}
+
+.jt-preview-btn.active {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 2px 8px rgba(118, 75, 162, 0.5);
+}
+
+.jt-preview-btn svg {
+  flex-shrink: 0;
+}
+
+/* Preview Panel */
+.jt-preview-panel {
+  position: absolute;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  z-index: 999999;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: all 0.2s ease;
+}
+
+.jt-preview-panel.show {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Preview Header */
+.jt-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.jt-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.jt-premium-badge-small {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(8px);
+}
+
+/* Preview Content */
+.jt-preview-content {
+  padding: 16px;
+  max-height: 280px;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   color: #374151;
-  cursor: text;
-  transition: all 0.2s ease;
-  outline: none;
 }
 
-.jt-wysiwyg-editor:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Empty state placeholder */
-.jt-wysiwyg-editor:empty::before {
-  content: attr(data-placeholder);
+.jt-preview-empty {
   color: #9ca3af;
-  pointer-events: none;
-  position: absolute;
+  font-style: italic;
+  text-align: center;
+  margin: 20px 0;
 }
 
-/* Headings */
-.jt-wysiwyg-editor h1 {
+/* Formatted Content Styles */
+.jt-preview-content h1 {
   font-size: 24px;
   font-weight: 700;
   margin: 8px 0;
@@ -40,7 +111,7 @@
   line-height: 1.3;
 }
 
-.jt-wysiwyg-editor h2 {
+.jt-preview-content h2 {
   font-size: 20px;
   font-weight: 700;
   margin: 6px 0;
@@ -48,7 +119,7 @@
   line-height: 1.3;
 }
 
-.jt-wysiwyg-editor h3 {
+.jt-preview-content h3 {
   font-size: 16px;
   font-weight: 700;
   margin: 4px 0;
@@ -56,63 +127,46 @@
   line-height: 1.3;
 }
 
-/* Text formatting */
-.jt-wysiwyg-editor strong,
-.jt-wysiwyg-editor b {
+.jt-preview-content strong,
+.jt-preview-content b {
   font-weight: 700;
   color: #1f2937;
-  animation: formatPulse 0.3s ease-out;
 }
 
-.jt-wysiwyg-editor em,
-.jt-wysiwyg-editor i {
+.jt-preview-content em,
+.jt-preview-content i {
   font-style: italic;
-  animation: formatPulse 0.3s ease-out;
 }
 
-.jt-wysiwyg-editor u {
+.jt-preview-content u {
   text-decoration: underline;
-  animation: formatPulse 0.3s ease-out;
 }
 
-.jt-wysiwyg-editor s,
-.jt-wysiwyg-editor strike {
+.jt-preview-content s,
+.jt-preview-content strike {
   text-decoration: line-through;
   opacity: 0.7;
-  animation: formatPulse 0.3s ease-out;
 }
 
-/* Subtle pulse animation for newly formatted text */
-@keyframes formatPulse {
-  0% {
-    background-color: rgba(59, 130, 246, 0.15);
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-
-/* Lists */
-.jt-wysiwyg-editor ul,
-.jt-wysiwyg-editor ol {
+.jt-preview-content ul,
+.jt-preview-content ol {
   margin: 8px 0;
   padding-left: 24px;
 }
 
-.jt-wysiwyg-editor li {
+.jt-preview-content li {
   margin: 4px 0;
 }
 
-.jt-wysiwyg-editor ul li {
+.jt-preview-content ul li {
   list-style-type: disc;
 }
 
-.jt-wysiwyg-editor ol li {
+.jt-preview-content ol li {
   list-style-type: decimal;
 }
 
-/* Blockquotes */
-.jt-wysiwyg-editor blockquote {
+.jt-preview-content blockquote {
   border-left: 4px solid #e5e7eb;
   padding-left: 12px;
   margin: 8px 0;
@@ -120,225 +174,137 @@
   font-style: italic;
 }
 
-/* Links */
-.jt-wysiwyg-editor a {
+.jt-preview-content a {
   color: #3b82f6;
   text-decoration: underline;
-  cursor: pointer;
 }
 
-.jt-wysiwyg-editor a:hover {
+.jt-preview-content a:hover {
   color: #2563eb;
 }
 
 /* Text colors */
-.jt-wysiwyg-editor .jt-color-red {
+.jt-preview-content .jt-color-red {
   color: #ef4444;
   font-weight: 500;
 }
 
-.jt-wysiwyg-editor .jt-color-green {
+.jt-preview-content .jt-color-green {
   color: #10b981;
   font-weight: 500;
 }
 
-.jt-wysiwyg-editor .jt-color-blue {
+.jt-preview-content .jt-color-blue {
   color: #3b82f6;
   font-weight: 500;
 }
 
-.jt-wysiwyg-editor .jt-color-yellow {
+.jt-preview-content .jt-color-yellow {
   color: #f59e0b;
   font-weight: 500;
 }
 
-.jt-wysiwyg-editor .jt-color-orange {
+.jt-preview-content .jt-color-orange {
   color: #f97316;
   font-weight: 500;
 }
 
-.jt-wysiwyg-editor .jt-color-purple {
+.jt-preview-content .jt-color-purple {
   color: #8b5cf6;
   font-weight: 500;
 }
 
 /* Text alignment */
-.jt-wysiwyg-editor .jt-align-center {
+.jt-preview-content .jt-align-center {
   text-align: center;
 }
 
-.jt-wysiwyg-editor .jt-align-right {
+.jt-preview-content .jt-align-right {
   text-align: right;
 }
 
 /* Icons */
-.jt-wysiwyg-editor .jt-icon {
+.jt-preview-content .jt-icon {
   display: inline-block;
   margin-right: 4px;
 }
 
-/* Premium toolbar badge */
-.jt-premium-toolbar .jt-premium-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-  animation: premiumGlow 3s ease-in-out infinite;
-}
-
-@keyframes premiumGlow {
-  0%, 100% {
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-  }
-  50% {
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.5), 0 0 12px rgba(118, 75, 162, 0.3);
-  }
-}
-
-/* Selection styling */
-.jt-wysiwyg-editor::selection {
-  background: #bfdbfe;
-}
-
-.jt-wysiwyg-editor *::selection {
-  background: #bfdbfe;
-}
-
 /* Scrollbar styling */
-.jt-wysiwyg-editor::-webkit-scrollbar {
+.jt-preview-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.jt-wysiwyg-editor::-webkit-scrollbar-track {
+.jt-preview-content::-webkit-scrollbar-track {
   background: #f3f4f6;
   border-radius: 4px;
 }
 
-.jt-wysiwyg-editor::-webkit-scrollbar-thumb {
+.jt-preview-content::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 4px;
 }
 
-.jt-wysiwyg-editor::-webkit-scrollbar-thumb:hover {
+.jt-preview-content::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
 
-/* Ensure proper spacing between elements */
-.jt-wysiwyg-editor > *:first-child {
+/* Ensure proper spacing */
+.jt-preview-content > *:first-child {
   margin-top: 0;
 }
 
-.jt-wysiwyg-editor > *:last-child {
+.jt-preview-content > *:last-child {
   margin-bottom: 0;
-}
-
-/* Alert boxes (styled blockquotes with color) */
-.jt-wysiwyg-editor blockquote.jt-alert {
-  border-left-width: 6px;
-  padding: 12px;
-  border-radius: 4px;
-  font-style: normal;
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.jt-wysiwyg-editor blockquote.jt-alert-red {
-  border-left-color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
-}
-
-.jt-wysiwyg-editor blockquote.jt-alert-green {
-  border-left-color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
-}
-
-.jt-wysiwyg-editor blockquote.jt-alert-yellow {
-  border-left-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.05);
-}
-
-.jt-wysiwyg-editor blockquote.jt-alert-blue {
-  border-left-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.05);
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .jt-wysiwyg-editor {
+  .jt-preview-panel {
     background: #1f2937;
     border-color: #4b5563;
+  }
+
+  .jt-preview-content {
     color: #e5e7eb;
   }
 
-  .jt-wysiwyg-editor:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-  }
-
-  .jt-wysiwyg-editor h1,
-  .jt-wysiwyg-editor h2,
-  .jt-wysiwyg-editor h3 {
+  .jt-preview-content h1,
+  .jt-preview-content h2,
+  .jt-preview-content h3 {
     color: #f9fafb;
   }
 
-  .jt-wysiwyg-editor strong,
-  .jt-wysiwyg-editor b {
+  .jt-preview-content strong,
+  .jt-preview-content b {
     color: #f9fafb;
   }
 
-  .jt-wysiwyg-editor blockquote {
+  .jt-preview-content blockquote {
     border-left-color: #4b5563;
     color: #9ca3af;
   }
 
-  .jt-wysiwyg-editor::-webkit-scrollbar-track {
+  .jt-preview-content::-webkit-scrollbar-track {
     background: #374151;
   }
 
-  .jt-wysiwyg-editor::-webkit-scrollbar-thumb {
+  .jt-preview-content::-webkit-scrollbar-thumb {
     background: #4b5563;
   }
 
-  .jt-wysiwyg-editor::-webkit-scrollbar-thumb:hover {
+  .jt-preview-content::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
   }
 }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .jt-wysiwyg-editor {
-    font-size: 16px;
-    padding: 10px;
+  .jt-preview-panel {
+    width: calc(100vw - 40px) !important;
+    max-width: 400px !important;
   }
 
-  .jt-wysiwyg-editor h1 {
-    font-size: 20px;
-  }
-
-  .jt-wysiwyg-editor h2 {
-    font-size: 18px;
-  }
-
-  .jt-wysiwyg-editor h3 {
-    font-size: 16px;
-  }
-}
-
-/* Animation for editor appearance */
-.jt-wysiwyg-editor {
-  animation: fadeInEditor 0.3s ease-in-out;
-}
-
-@keyframes fadeInEditor {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .jt-preview-content {
+    font-size: 13px;
   }
 }
