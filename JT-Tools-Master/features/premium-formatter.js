@@ -198,7 +198,7 @@ const PremiumFormatterFeature = (() => {
     // Add event listeners
     editor.addEventListener('focus', () => handleEditorFocus(editor, textarea));
     editor.addEventListener('blur', () => handleEditorBlur(editor, textarea));
-    editor.addEventListener('input', () => handleEditorInput(editor, textarea));
+    editor.addEventListener('input', (e) => handleEditorInput(editor, textarea, e));
     editor.addEventListener('keydown', (e) => handleEditorKeydown(editor, textarea, e));
     editor.addEventListener('mouseup', () => handleEditorSelection(editor, textarea));
     editor.addEventListener('keyup', () => handleEditorSelection(editor, textarea));
@@ -421,10 +421,13 @@ const PremiumFormatterFeature = (() => {
     }, 200);
   }
 
-  function handleEditorInput(editor, textarea) {
+  function handleEditorInput(editor, textarea, e) {
     if (isSyncing) return;
 
     isSyncing = true;
+
+    // Auto-convert markdown patterns as user types
+    autoConvertMarkdown(editor);
 
     // Convert HTML to markdown and update textarea
     const markdown = htmlToMarkdown(editor.innerHTML, editor);
@@ -444,6 +447,195 @@ const PremiumFormatterFeature = (() => {
     }
 
     isSyncing = false;
+  }
+
+  // Auto-convert markdown patterns to HTML as user types
+  function autoConvertMarkdown(editor) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const currentNode = range.startContainer;
+
+    // Only process text nodes
+    if (currentNode.nodeType !== Node.TEXT_NODE) return;
+
+    const text = currentNode.textContent;
+    const cursorPos = range.startOffset;
+
+    // Store cursor position relative to editor
+    const saveCursorPosition = () => {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editor);
+      range.setEnd(sel.focusNode, sel.focusOffset);
+      return range.toString().length;
+    };
+
+    const restoreCursorPosition = (pos) => {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      let charCount = 0;
+      let nodeStack = [editor];
+      let node;
+      let foundStart = false;
+
+      while (node = nodeStack.pop()) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const nextCharCount = charCount + node.length;
+          if (!foundStart && pos >= charCount && pos <= nextCharCount) {
+            range.setStart(node, pos - charCount);
+            range.setEnd(node, pos - charCount);
+            foundStart = true;
+            break;
+          }
+          charCount = nextCharCount;
+        } else {
+          for (let i = node.childNodes.length - 1; i >= 0; i--) {
+            nodeStack.push(node.childNodes[i]);
+          }
+        }
+      }
+
+      if (foundStart) {
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    };
+
+    let converted = false;
+    let newCursorPos = cursorPos;
+
+    // Check for bold: *text* (with space or punctuation after)
+    const boldPattern = /\*([^\*\n]+)\*(\s|$|[.,!?;:])/g;
+    if (boldPattern.test(text)) {
+      const savedPos = saveCursorPosition();
+      const beforeCursor = text.substring(0, cursorPos);
+      const match = beforeCursor.match(/\*([^\*\n]+)\*$/);
+
+      if (match && (cursorPos === text.length || /[\s.,!?;:]/.test(text[cursorPos]))) {
+        const matchText = match[1];
+        const matchStart = cursorPos - match[0].length;
+
+        // Create bold element
+        const bold = document.createElement('strong');
+        bold.textContent = matchText;
+
+        // Replace text with bold element
+        const before = text.substring(0, matchStart);
+        const after = text.substring(cursorPos);
+
+        currentNode.textContent = before;
+        if (currentNode.nextSibling) {
+          currentNode.parentNode.insertBefore(bold, currentNode.nextSibling);
+          const afterNode = document.createTextNode(after);
+          currentNode.parentNode.insertBefore(afterNode, bold.nextSibling);
+        } else {
+          currentNode.parentNode.appendChild(bold);
+          const afterNode = document.createTextNode(after);
+          currentNode.parentNode.appendChild(afterNode);
+        }
+
+        // Position cursor after bold element
+        const newRange = document.createRange();
+        const sel = window.getSelection();
+        newRange.setStartAfter(bold);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+
+        converted = true;
+      }
+    }
+
+    // Check for italic: ^text^ (with space or punctuation after)
+    if (!converted) {
+      const italicPattern = /\^([^\^\n]+)\^(\s|$|[.,!?;:])/g;
+      if (italicPattern.test(text)) {
+        const beforeCursor = text.substring(0, cursorPos);
+        const match = beforeCursor.match(/\^([^\^\n]+)\^$/);
+
+        if (match && (cursorPos === text.length || /[\s.,!?;:]/.test(text[cursorPos]))) {
+          const matchText = match[1];
+          const matchStart = cursorPos - match[0].length;
+
+          // Create italic element
+          const italic = document.createElement('em');
+          italic.textContent = matchText;
+
+          // Replace text with italic element
+          const before = text.substring(0, matchStart);
+          const after = text.substring(cursorPos);
+
+          currentNode.textContent = before;
+          if (currentNode.nextSibling) {
+            currentNode.parentNode.insertBefore(italic, currentNode.nextSibling);
+            const afterNode = document.createTextNode(after);
+            currentNode.parentNode.insertBefore(afterNode, italic.nextSibling);
+          } else {
+            currentNode.parentNode.appendChild(italic);
+            const afterNode = document.createTextNode(after);
+            currentNode.parentNode.appendChild(afterNode);
+          }
+
+          // Position cursor after italic element
+          const newRange = document.createRange();
+          const sel = window.getSelection();
+          newRange.setStartAfter(italic);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+
+          converted = true;
+        }
+      }
+    }
+
+    // Check for underline: _text_ (with space or punctuation after)
+    if (!converted) {
+      const underlinePattern = /_([^_\n]+)_(\s|$|[.,!?;:])/g;
+      if (underlinePattern.test(text)) {
+        const beforeCursor = text.substring(0, cursorPos);
+        const match = beforeCursor.match(/_([^_\n]+)_$/);
+
+        if (match && (cursorPos === text.length || /[\s.,!?;:]/.test(text[cursorPos]))) {
+          const matchText = match[1];
+          const matchStart = cursorPos - match[0].length;
+
+          // Create underline element
+          const underline = document.createElement('u');
+          underline.textContent = matchText;
+
+          // Replace text with underline element
+          const before = text.substring(0, matchStart);
+          const after = text.substring(cursorPos);
+
+          currentNode.textContent = before;
+          if (currentNode.nextSibling) {
+            currentNode.parentNode.insertBefore(underline, currentNode.nextSibling);
+            const afterNode = document.createTextNode(after);
+            currentNode.parentNode.insertBefore(afterNode, underline.nextSibling);
+          } else {
+            currentNode.parentNode.appendChild(underline);
+            const afterNode = document.createTextNode(after);
+            currentNode.parentNode.appendChild(afterNode);
+          }
+
+          // Position cursor after underline element
+          const newRange = document.createRange();
+          const sel = window.getSelection();
+          newRange.setStartAfter(underline);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+
+          converted = true;
+        }
+      }
+    }
+
+    return converted;
   }
 
   function handleEditorKeydown(editor, textarea, e) {
