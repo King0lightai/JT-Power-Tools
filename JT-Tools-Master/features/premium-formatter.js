@@ -89,6 +89,17 @@ const PremiumFormatterFeature = (() => {
       const textarea = textareaMap.get(editor);
       if (textarea) {
         textarea.style.display = '';
+
+        // Restore JobTread's overlay div if we hid it
+        const parentDiv = textarea.parentNode;
+        if (parentDiv) {
+          const overlayDiv = parentDiv.querySelector('[data-jt-hidden-by-premium="true"]');
+          if (overlayDiv) {
+            overlayDiv.style.display = '';
+            overlayDiv.removeAttribute('data-jt-hidden-by-premium');
+          }
+        }
+
         editor.remove();
       }
     });
@@ -190,6 +201,17 @@ const PremiumFormatterFeature = (() => {
     // Insert editor after textarea and hide textarea
     textarea.parentNode.insertBefore(editor, textarea.nextSibling);
     textarea.style.display = 'none';
+
+    // Hide JobTread's existing overlay div (if it exists)
+    const parentDiv = textarea.parentNode;
+    if (parentDiv) {
+      // Look for the overlay div - it's typically a sibling with pointer-events-none
+      const overlayDiv = parentDiv.querySelector('.pointer-events-none');
+      if (overlayDiv && overlayDiv !== editor) {
+        overlayDiv.style.display = 'none';
+        overlayDiv.setAttribute('data-jt-hidden-by-premium', 'true');
+      }
+    }
 
     // Store references
     editorMap.set(textarea, editor);
