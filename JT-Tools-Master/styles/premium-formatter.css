@@ -61,21 +61,35 @@
 .jt-wysiwyg-editor b {
   font-weight: 700;
   color: #1f2937;
+  animation: formatPulse 0.3s ease-out;
 }
 
 .jt-wysiwyg-editor em,
 .jt-wysiwyg-editor i {
   font-style: italic;
+  animation: formatPulse 0.3s ease-out;
 }
 
 .jt-wysiwyg-editor u {
   text-decoration: underline;
+  animation: formatPulse 0.3s ease-out;
 }
 
 .jt-wysiwyg-editor s,
 .jt-wysiwyg-editor strike {
   text-decoration: line-through;
   opacity: 0.7;
+  animation: formatPulse 0.3s ease-out;
+}
+
+/* Subtle pulse animation for newly formatted text */
+@keyframes formatPulse {
+  0% {
+    background-color: rgba(59, 130, 246, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 
 /* Lists */
