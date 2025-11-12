@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.2.3-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
 
@@ -40,6 +40,15 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - MS Word-style active button states
 - Works on budget descriptions and other text areas
 
+### 👁️ Preview Mode (Premium)
+- Live preview of formatted text with floating preview panel
+- Click the preview button (eye icon) on textareas to see rendered formatting
+- Converts markdown to beautifully styled HTML
+- Works on budget descriptions and daily log fields
+- Real-time updates as you type
+- Intelligent positioning to avoid viewport edges
+- Click outside preview to close
+
 ### ⚡ Quick Job Switcher
 - Keyboard shortcuts (J+S or Alt+J) to instantly open job switcher
 - Type to search and filter jobs in real-time
@@ -47,6 +56,18 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Press Escape to cancel and close
 - Fully keyboard-driven workflow for power users
 - No mouse needed for job switching
+
+### 📒 Quick Notes
+- Persistent notepad accessible from any JobTread page
+- Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
+- Create, edit, search, and organize multiple notes
+- Rich markdown formatting support (bold, italic, lists, checkboxes)
+- WYSIWYG editor with formatting toolbar
+- Resizable sidebar panel for comfortable note-taking
+- Notes sync across devices via Chrome storage
+- Word count and last updated timestamps
+- Click Quick Notes button in header or use keyboard shortcut
+- Press Escape to close editor or panel
 
 ### 🌙 Dark Mode
 - Beautiful dark theme for JobTread interface
@@ -109,7 +130,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT Power Tools control panel with seven feature toggle switches
+3. You'll see the JT Power Tools control panel with feature toggle switches organized by category
 
 ### Toggling Features
 
@@ -137,12 +158,29 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 3. Formatting toolbar appears above the field
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
+#### Preview Mode (Premium)
+1. Enable the feature and navigate to a budget or daily log page
+2. Look for the eye icon button on textareas
+3. Click the preview button to see a live preview of your formatted text
+4. Preview updates in real-time as you type
+5. Click outside the preview panel to close it
+
 #### Quick Job Switcher
 1. Press J+S or Alt+J from anywhere on JobTread (app.jobtread.com)
 2. Job switcher sidebar opens with search focused
 3. Type to filter jobs in real-time
 4. Press Enter to select top result and navigate
 5. Press Escape to close without selecting
+
+#### Quick Notes
+1. Click the "Quick Notes" button in the header or press Ctrl+Shift+N
+2. Click "New Note" to create a note
+3. Type a title and content with markdown formatting
+4. Use the formatting toolbar for bold, italic, lists, and checkboxes
+5. Search notes using the search bar
+6. Click a note to view/edit it
+7. Drag the left edge to resize the panel
+8. Press Escape to close the editor or panel
 
 #### Budget Hierarchy Shading
 - Automatically active on budget pages when enabled
@@ -156,6 +194,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 Some features require a premium license to unlock:
 - **Schedule Drag & Drop** - Drag schedule items between dates
+- **Preview Mode** - Live preview of formatted text with floating panel
 - **Custom Theme** - Personalize JobTread with your own colors
 
 ### Premium License Activation
@@ -198,12 +237,16 @@ JT-Tools-Master/
 │   ├── drag-drop-modules/   # Drag & Drop sub-modules
 │   ├── contrast-fix.js       # Contrast Fix module
 │   ├── formatter.js          # Text Formatter module
+│   ├── preview-mode.js       # Preview Mode module (Premium)
 │   ├── job-switcher.js       # Quick Job Switcher module
+│   ├── quick-notes.js        # Quick Notes module
 │   ├── dark-mode.js          # Dark Mode module
 │   ├── rgb-theme.js          # Custom Theme module (Premium)
 │   └── budget-hierarchy.js   # Budget Hierarchy Shading module
 ├── styles/
 │   ├── formatter-toolbar.css # Formatter toolbar styles
+│   ├── preview-mode.css      # Preview Mode styles
+│   ├── quick-notes.css       # Quick Notes styles
 │   └── dark-mode.css         # Dark mode styles
 └── icons/
     ├── icon16.png
@@ -304,7 +347,27 @@ const featureModules = {
 
 ## 📝 Version History
 
-### v3.2.3 (Current)
+### v3.3.0 (Current)
+- **New Feature: Quick Notes**
+  - Persistent notepad accessible from any JobTread page
+  - Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
+  - Create, edit, search, and organize multiple notes
+  - Rich markdown formatting support (bold, italic, lists, checkboxes)
+  - WYSIWYG editor with formatting toolbar
+  - Resizable sidebar panel for comfortable note-taking
+  - Notes sync across devices via Chrome storage
+  - Word count and last updated timestamps
+  - Integrates seamlessly with JobTread header buttons
+- **New Premium Feature: Preview Mode**
+  - Live preview of formatted text with floating preview panel
+  - Click preview button (eye icon) on textareas to see rendered formatting
+  - Converts markdown to beautifully styled HTML
+  - Works on budget descriptions and daily log fields
+  - Real-time updates as you type
+  - Intelligent positioning to avoid viewport edges
+  - Click outside preview to close
+
+### v3.2.3
 - **New Feature: Budget Hierarchy Shading**
   - Progressive visual shading for nested budget groups (up to 5 levels)
   - Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
