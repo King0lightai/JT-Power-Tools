@@ -164,6 +164,12 @@ const CustomThemeFeature = (() => {
     // Generate border color that's slightly lighter/darker than background
     const borderColor = getBorderColor(background);
 
+    // Generate lightened primary colors for selection states
+    const primaryLight30 = adjustBrightness(primary, 70);  // 30% lighter -> brightness +70
+    const primaryLight35 = adjustBrightness(primary, 65);  // 35% lighter -> brightness +65
+    const primaryLight40 = adjustBrightness(primary, 60);  // 40% lighter -> brightness +60
+    const primaryLight45 = adjustBrightness(primary, 55);  // 45% lighter -> brightness +55
+
     // Create CSS using user's chosen colors
     const css = `
       /* === JT Power Tools - Custom Color Theme === */
@@ -573,21 +579,21 @@ const CustomThemeFeature = (() => {
       /* When an element has both border-jtOrange and bg-gray-100, it's selected */
       /* Give it a light version of the primary color for the background */
       .border-jtOrange.bg-gray-100 {
-        background-color: ${lightenColor(primary, 40)} !important;
+        background-color: ${primaryLight40} !important;
       }
 
       /* === Hover state for sidebar buttons === */
       .hover\\:bg-gray-100:hover {
-        background-color: ${lightenColor(primary, 45)} !important;
+        background-color: ${primaryLight45} !important;
       }
 
       .hover\\:border-gray-100:hover {
-        border-color: ${lightenColor(primary, 45)} !important;
+        border-color: ${primaryLight45} !important;
       }
 
       /* Hover state when already selected */
       .hover\\:bg-gray-100:hover.border-jtOrange {
-        background-color: ${lightenColor(primary, 35)} !important;
+        background-color: ${primaryLight35} !important;
       }
 
       .hover\\:border-gray-100:hover.border-jtOrange {
@@ -596,11 +602,11 @@ const CustomThemeFeature = (() => {
 
       /* Active state for sidebar buttons */
       .active\\:bg-gray-200:active {
-        background-color: ${lightenColor(primary, 30)} !important;
+        background-color: ${primaryLight30} !important;
       }
 
       .active\\:border-gray-200:active {
-        border-color: ${lightenColor(primary, 30)} !important;
+        border-color: ${primaryLight30} !important;
       }
 
       /* === Selection Boxes and Checkboxes === */
@@ -614,7 +620,7 @@ const CustomThemeFeature = (() => {
       tr.selected,
       div.selected,
       [aria-selected="true"] {
-        background-color: ${lightenColor(primary, 45)} !important;
+        background-color: ${primaryLight45} !important;
         border-color: ${primary} !important;
       }
 
