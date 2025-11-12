@@ -624,6 +624,27 @@ const CustomThemeFeature = (() => {
         border-color: ${primary} !important;
       }
 
+      /* === Per-job Tab Navigation Selected States === */
+      /* Selected tab with gray-50 background */
+      .border-t-2.border-jtOrange.bg-gray-50,
+      .border-b-2.border-jtOrange.bg-gray-50 {
+        background-color: ${primaryLight40} !important;
+      }
+
+      /* Hover states for tabs */
+      .hover\\:bg-gray-50:hover {
+        background-color: ${primaryLight45} !important;
+      }
+
+      .hover\\:border-gray-50:hover {
+        border-color: ${primaryLight45} !important;
+      }
+
+      /* Hover state when tab is already selected */
+      .hover\\:bg-gray-50:hover.border-jtOrange {
+        background-color: ${primaryLight35} !important;
+      }
+
       /* === Cyan Link Overrides === */
       .text-cyan-500,
       .text-cyan-600,
