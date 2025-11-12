@@ -3,6 +3,7 @@ const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
+  premiumFormatter: false,
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
