@@ -53,9 +53,8 @@
       "resources": [
         "styles/formatter-toolbar.css",
         "styles/dark-mode.css",
-        "styles/quick-notes.css"
-        "styles/premium-formatter.css",
-        "styles/dark-mode.css"
+        "styles/quick-notes.css",
+        "styles/premium-formatter.css"
       ],
       "matches": ["https://*.jobtread.com/*"]
     }
