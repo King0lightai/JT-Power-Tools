@@ -143,6 +143,12 @@ const PreviewModeFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
+    // Skip if on /files path
+    if (window.location.pathname.includes('/files')) {
+      console.log('Preview Mode: Skipping /files path');
+      return;
+    }
+
     // Find all textareas that should have the formatter
     const fields = [];
 

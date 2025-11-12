@@ -133,6 +133,12 @@ const FormatterFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
+    // Skip if on /files path
+    if (window.location.pathname.includes('/files')) {
+      console.log('Formatter: Skipping /files path');
+      return;
+    }
+
     // Don't re-initialize while we're inserting text - prevents interference
     if (isInsertingText) {
       console.log('Formatter: Skipping initializeFields - text insertion in progress');
