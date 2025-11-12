@@ -570,6 +570,17 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor} !important;
       }
 
+      /* === Budget Table Border Normalization === */
+      /* Ensure all table cells have thin borders, not thick ones */
+      table input.border-blue-500,
+      table textarea.border-blue-500,
+      table input[class*="border-blue"],
+      table textarea[class*="border-blue"],
+      table input[class*="border-\\[calc"],
+      table textarea[class*="border-\\[calc"] {
+        border-width: 1px !important;
+      }
+
       /* === Selected Box Border (Orange -> Primary) === */
       .border-jtOrange {
         border-color: ${primary} !important;
