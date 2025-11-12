@@ -176,8 +176,7 @@ const CustomThemeFeature = (() => {
       /* Using user's chosen Primary, Background, and Text colors */
 
       /* === Logo Colors === */
-      /* Make both the JT icon and JOBTREAD text use primary color */
-      .text-jtOrange,
+      /* Make JOBTREAD text use primary color (keep orange text as-is) */
       .text-gray-800 {
         color: ${primary} !important;
       }
