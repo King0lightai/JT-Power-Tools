@@ -255,6 +255,11 @@ const PreviewModeFeature = (() => {
     container.style.position = 'relative';
     container.appendChild(button);
 
+    // If textarea is already focused, show button immediately
+    if (document.activeElement === textarea) {
+      showButton();
+    }
+
     console.log('Premium Formatter: Preview button added');
   }
 
