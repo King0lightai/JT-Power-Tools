@@ -56,7 +56,7 @@ const QuickNotesFeature = (() => {
     renderNotesList();
     renderNoteEditor();
     // Open editor when creating new note
-    notesPanel.classList.add('editor-open');
+    openEditor();
   }
 
   // Delete a note
@@ -154,7 +154,7 @@ const QuickNotesFeature = (() => {
           renderNotesList();
           renderNoteEditor();
           // Open editor when clicking a note
-          notesPanel.classList.add('editor-open');
+          openEditor();
         }
       });
     });
@@ -789,6 +789,13 @@ const QuickNotesFeature = (() => {
       .join('');
   }
 
+  // Open editor - expands panel to show editor
+  function openEditor() {
+    notesPanel.classList.add('editor-open');
+    // Load and apply saved width when opening editor
+    loadSavedWidth();
+  }
+
   // Close editor - closes entire Quick Notes panel
   function closeEditor() {
     togglePanel();
@@ -804,6 +811,8 @@ const QuickNotesFeature = (() => {
       notesPanel.classList.remove('visible');
       notesPanel.classList.remove('editor-open');
       notesPanel.classList.remove('resizing');
+      // Reset width to default (280px from CSS)
+      notesPanel.style.width = '';
       currentNoteId = null;
       if (notesButton) {
         notesButton.classList.remove('jt-notes-button-active');
@@ -815,8 +824,10 @@ const QuickNotesFeature = (() => {
         }
       }, 10);
     } else {
-      // Open just the sidebar initially
+      // Open just the sidebar initially (280px default width)
       notesPanel.classList.add('visible');
+      // Ensure width is reset to 280px when opening sidebar only
+      notesPanel.style.width = '';
       if (notesButton) {
         notesButton.classList.add('jt-notes-button-active');
       }
@@ -948,9 +959,6 @@ const QuickNotesFeature = (() => {
 
     // Add resize functionality
     setupResizeHandle();
-
-    // Load saved width
-    loadSavedWidth();
 
     document.body.appendChild(notesPanel);
   }
