@@ -569,6 +569,55 @@ const CustomThemeFeature = (() => {
         border-color: ${primary} !important;
       }
 
+      /* === Selected State Background (Primary Color) === */
+      /* When an element has both border-jtOrange and bg-gray-100, it's selected */
+      /* Give it a light version of the primary color for the background */
+      .border-jtOrange.bg-gray-100 {
+        background-color: ${lightenColor(primary, 40)} !important;
+      }
+
+      /* === Hover state for sidebar buttons === */
+      .hover\\:bg-gray-100:hover {
+        background-color: ${lightenColor(primary, 45)} !important;
+      }
+
+      .hover\\:border-gray-100:hover {
+        border-color: ${lightenColor(primary, 45)} !important;
+      }
+
+      /* Hover state when already selected */
+      .hover\\:bg-gray-100:hover.border-jtOrange {
+        background-color: ${lightenColor(primary, 35)} !important;
+      }
+
+      .hover\\:border-gray-100:hover.border-jtOrange {
+        border-color: ${primary} !important;
+      }
+
+      /* Active state for sidebar buttons */
+      .active\\:bg-gray-200:active {
+        background-color: ${lightenColor(primary, 30)} !important;
+      }
+
+      .active\\:border-gray-200:active {
+        border-color: ${lightenColor(primary, 30)} !important;
+      }
+
+      /* === Selection Boxes and Checkboxes === */
+      /* Checkbox and radio button accent colors */
+      input[type="checkbox"]:checked,
+      input[type="radio"]:checked {
+        accent-color: ${primary} !important;
+      }
+
+      /* Selected rows in tables/lists */
+      tr.selected,
+      div.selected,
+      [aria-selected="true"] {
+        background-color: ${lightenColor(primary, 45)} !important;
+        border-color: ${primary} !important;
+      }
+
       /* === Cyan Link Overrides === */
       .text-cyan-500,
       .text-cyan-600,
