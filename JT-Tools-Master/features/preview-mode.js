@@ -1,7 +1,7 @@
-// JobTread Premium Text Formatter - Preview Mode
+// JobTread Preview Mode (Premium Feature)
 // Shows a live preview of formatted text with a floating preview panel
 
-const PremiumFormatterFeature = (() => {
+const PreviewModeFeature = (() => {
   let observer = null;
   let isActive = false;
   let styleElement = null;
@@ -15,11 +15,11 @@ const PremiumFormatterFeature = (() => {
   // Initialize the feature
   function init() {
     if (isActive) {
-      console.log('Premium Formatter: Already initialized');
+      console.log('Preview Mode: Already initialized');
       return;
     }
 
-    console.log('Premium Formatter: Initializing Preview Mode...');
+    console.log('Preview Mode: Initializing...');
     isActive = true;
 
     // Inject CSS
@@ -41,17 +41,17 @@ const PremiumFormatterFeature = (() => {
     // Handle clicks outside preview to close it
     document.addEventListener('click', handleGlobalClick, true);
 
-    console.log('Premium Formatter: Preview Mode loaded');
+    console.log('Preview Mode: Feature loaded');
   }
 
   // Cleanup the feature
   function cleanup() {
     if (!isActive) {
-      console.log('Premium Formatter: Not active, nothing to cleanup');
+      console.log('Preview Mode: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('Premium Formatter: Cleaning up...');
+    console.log('Preview Mode: Cleaning up...');
     isActive = false;
 
     // Close any open preview
@@ -80,7 +80,7 @@ const PremiumFormatterFeature = (() => {
     const previews = document.querySelectorAll('.jt-preview-panel');
     previews.forEach(panel => panel.remove());
 
-    console.log('Premium Formatter: Cleanup complete');
+    console.log('Preview Mode: Cleanup complete');
   }
 
   // Inject CSS
@@ -94,7 +94,7 @@ const PremiumFormatterFeature = (() => {
 
     styleElement = document.createElement('link');
     styleElement.rel = 'stylesheet';
-    styleElement.href = chrome.runtime.getURL('styles/premium-formatter.css');
+    styleElement.href = chrome.runtime.getURL('styles/preview-mode.css');
     document.head.appendChild(styleElement);
   }
 
@@ -144,11 +144,11 @@ const PremiumFormatterFeature = (() => {
       }
     });
 
-    console.log('Premium Formatter: Found', fields.length, 'fields');
+    console.log('Preview Mode: Found', fields.length, 'fields');
 
     fields.forEach((field) => {
-      if (!field.dataset.premiumFormatterReady && document.body.contains(field)) {
-        field.dataset.premiumFormatterReady = 'true';
+      if (!field.dataset.previewModeReady && document.body.contains(field)) {
+        field.dataset.previewModeReady = 'true';
         addPreviewButton(field);
       }
     });
@@ -449,5 +449,5 @@ const PremiumFormatterFeature = (() => {
 
 // Export for use in main content script
 if (typeof window !== 'undefined') {
-  window.PremiumFormatterFeature = PremiumFormatterFeature;
+  window.PreviewModeFeature = PreviewModeFeature;
 }
