@@ -7,6 +7,14 @@
 
 **JT Power Tools** - Professional productivity enhancement suite for JobTread construction management software.
 
+✨ **LATEST IMPROVEMENTS (v3.3.0)**
+• Text Formatter and Preview Mode now work together seamlessly
+• Enhanced preview button visibility - appears on hover like the formatter toolbar
+• Improved custom theme with better color preservation for key UI elements
+• Better budget table styling with consistent thin borders
+• Added feedback button in popup for easy communication
+• Preview panel now has proper padding for comfortable reading
+
 🚀 **FEATURES**
 
 **📅 Schedule Drag & Drop (Premium)**
@@ -33,15 +41,19 @@
 • Links, blockquotes, alerts with icons
 • Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 • MS Word-style active button states
-• Works on budget descriptions and other text areas
+• Works on budget descriptions and daily log fields
+• Can be used together with Preview Mode
 
 **👁️ Preview Mode (Premium)**
 • Live preview of formatted text with floating panel
 • Click preview button (eye icon) to see rendered formatting
+• Appears on hover and focus for seamless workflow
 • Converts markdown to beautifully styled HTML
 • Real-time updates as you type
 • Works on budget descriptions and daily log fields
 • Intelligent positioning to avoid viewport edges
+• Can be used together with Text Formatter
+• Smart visibility - stays visible when needed, hides when not
 
 **📒 Quick Notes (Free)**
 • Persistent notepad accessible from any JobTread page
@@ -108,8 +120,8 @@ Unlock Schedule Drag & Drop, Preview Mode, and Custom Theme with a one-time lice
 3. Toggle features on/off from the popup
 4. Start saving time immediately!
 
-💡 **SUPPORT**
-Questions or issues? Contact us through our GitHub repository or Gumroad product page.
+💡 **SUPPORT & FEEDBACK**
+Questions or issues? Click "Send Feedback" at the bottom of the extension popup, or contact us through our GitHub repository or Gumroad product page. We're actively improving based on user feedback!
 
 ---
 
