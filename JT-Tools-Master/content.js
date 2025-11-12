@@ -20,6 +20,11 @@ const featureModules = {
     feature: () => window.FormatterFeature,
     instance: null
   },
+  premiumFormatter: {
+    name: 'Premium Formatter (WYSIWYG)',
+    feature: () => window.PremiumFormatterFeature,
+    instance: null
+  },
   darkMode: {
     name: 'Dark Mode',
     feature: () => window.DarkModeFeature,
@@ -52,6 +57,7 @@ let currentSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
+  premiumFormatter: false,
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
@@ -141,6 +147,23 @@ function initializeAllFeatures() {
 // Handle settings changes
 function handleSettingsChange(newSettings) {
   console.log('JT-Tools: Settings changed:', newSettings);
+
+  // Special handling for formatter/premiumFormatter mutual exclusivity
+  if (newSettings.premiumFormatter && newSettings.formatter) {
+    // If premium formatter is being enabled, disable regular formatter
+    if (!currentSettings.premiumFormatter) {
+      console.log('JT-Tools: Premium Formatter enabled, disabling regular Formatter');
+      cleanupFeature('formatter');
+      newSettings.formatter = false;
+    }
+  } else if (newSettings.formatter && newSettings.premiumFormatter) {
+    // If regular formatter is being enabled, disable premium formatter
+    if (!currentSettings.formatter) {
+      console.log('JT-Tools: Regular Formatter enabled, disabling Premium Formatter');
+      cleanupFeature('premiumFormatter');
+      newSettings.premiumFormatter = false;
+    }
+  }
 
   // Compare old and new settings
   for (const [key, enabled] of Object.entries(newSettings)) {

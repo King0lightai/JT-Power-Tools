@@ -92,7 +92,15 @@ const UIUtils = (() => {
    * @param {Object} handlers - Event handlers {onDragStart, onDragEnd}
    */
   function makeScheduleItemsDraggable(handlers) {
-    const scheduleItems = document.querySelectorAll('div.cursor-pointer[style*="background-color"]');
+    // Get selectors based on current view (normal or availability)
+    const selectors = window.ViewDetector ? window.ViewDetector.getSelectorsForCurrentView() : {
+      scheduleItems: 'div.cursor-pointer[style*="background-color"]',
+      viewType: 'normal'
+    };
+
+    console.log(`UIUtils: makeScheduleItemsDraggable - Using ${selectors.viewType} view selectors`);
+    const scheduleItems = document.querySelectorAll(selectors.scheduleItems);
+    console.log(`UIUtils: makeScheduleItemsDraggable - Found ${scheduleItems.length} items`);
 
     scheduleItems.forEach(item => {
       // Always ensure draggable attribute and cursor are set
@@ -119,11 +127,29 @@ const UIUtils = (() => {
    * @param {Object} handlers - Event handlers {onDragOver, onDrop, onDragLeave, onDragEnter}
    */
   function makeDateCellsDroppable(handlers) {
-    const dateCells = document.querySelectorAll('td.group.text-xs');
+    // Get selectors based on current view (normal or availability)
+    const selectors = window.ViewDetector ? window.ViewDetector.getSelectorsForCurrentView() : {
+      dateCells: 'td.group.text-xs',
+      viewType: 'normal'
+    };
+
+    console.log(`UIUtils: makeDateCellsDroppable - Using ${selectors.viewType} view selectors`);
+    const dateCells = document.querySelectorAll(selectors.dateCells);
     console.log(`UIUtils: makeDateCellsDroppable - Found ${dateCells.length} cells to make droppable`);
 
     let newCells = 0;
     dateCells.forEach((cell, index) => {
+      // Skip user name cells in availability view (first column)
+      if (selectors.viewType === 'availability') {
+        // Check if this cell contains user info (avatar and name)
+        const hasUserInfo = cell.querySelector('div.relative.bg-cover.bg-center') ||
+                           cell.querySelector('div.font-bold.truncate');
+        if (hasUserInfo) {
+          console.log(`UIUtils: Skipping user info cell at index ${index}`);
+          return; // Skip this cell
+        }
+      }
+
       if (!cell.classList.contains('jt-drop-enabled')) {
         cell.classList.add('jt-drop-enabled');
         newCells++;

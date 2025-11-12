@@ -62,11 +62,33 @@ const SidebarManager = (() => {
 
   /**
    * Open the sidebar by clicking on an element
+   * Uses conditional click behavior based on view type and popup status:
+   * - Availability view in popup: non-bubbling click to prevent popup closure
+   * - All other cases: regular click to allow proper sidebar opening
    * @param {HTMLElement} element - The element to click
    */
   function openSidebar(element) {
     console.log('SidebarManager: Clicking element to open sidebar');
-    element.click();
+
+    // Only use non-bubbling click if we're in availability view AND in a popup
+    const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+    const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
+
+    if (isAvailabilityView && isInPopup) {
+      console.log('SidebarManager: Using non-bubbling click for availability view in popup');
+      // Create a synthetic click event that doesn't bubble
+      // This prevents the click from propagating up and closing the popup
+      const clickEvent = new MouseEvent('click', {
+        bubbles: false,  // Don't bubble up to parent elements
+        cancelable: true,
+        view: window
+      });
+      element.dispatchEvent(clickEvent);
+    } else {
+      console.log('SidebarManager: Using regular click');
+      // Use regular click for main schedule page (both normal and availability views)
+      element.click();
+    }
   }
 
   /**
@@ -86,7 +108,26 @@ const SidebarManager = (() => {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
           console.log('SidebarManager: Clicking Close button on existing sidebar');
-          button.click();
+
+          // Only use non-bubbling click if we're in availability view AND in a popup
+          const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+          const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
+
+          if (isAvailabilityView && isInPopup) {
+            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
+            // Use synthetic click that doesn't bubble to prevent closing popups
+            const clickEvent = new MouseEvent('click', {
+              bubbles: false,
+              cancelable: true,
+              view: window
+            });
+            button.dispatchEvent(clickEvent);
+          } else {
+            console.log('SidebarManager: Using regular click');
+            // Use regular click for main schedule page
+            button.click();
+          }
+
           return true;
         }
       }
@@ -102,15 +143,10 @@ const SidebarManager = (() => {
   /**
    * Close the sidebar and cleanup hiding CSS
    * @param {number} failsafeTimeout - The timeout ID to clear
-   * @param {Function} onDateChangeComplete - Callback when date change is complete
+   * @param {Function} onDateChangeComplete - Callback when date change is complete (called AFTER sidebar closes)
    */
   function closeSidebar(failsafeTimeout, onDateChangeComplete) {
     console.log('SidebarManager: Attempting to close sidebar...');
-
-    // Notify that date change is complete
-    if (onDateChangeComplete) {
-      onDateChangeComplete();
-    }
 
     // Clear the failsafe timeout since we're handling cleanup now
     if (failsafeTimeout) {
@@ -128,11 +164,35 @@ const SidebarManager = (() => {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
           console.log('SidebarManager: Found and clicking Close button');
-          button.click();
 
-          // Wait for sidebar to close BEFORE removing hiding CSS
+          // Only use non-bubbling click if we're in availability view AND in a popup
+          const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+          const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
+
+          if (isAvailabilityView && isInPopup) {
+            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
+            // Use synthetic click that doesn't bubble to prevent closing popups
+            const clickEvent = new MouseEvent('click', {
+              bubbles: false,
+              cancelable: true,
+              view: window
+            });
+            button.dispatchEvent(clickEvent);
+          } else {
+            console.log('SidebarManager: Using regular click');
+            // Use regular click for main schedule page
+            button.click();
+          }
+
+          // Wait for sidebar to close BEFORE removing hiding CSS and calling callback
           setTimeout(() => {
             removeSidebarCSS();
+
+            // Notify that date change is complete (AFTER sidebar closes)
+            if (onDateChangeComplete) {
+              console.log('SidebarManager: Calling onDateChangeComplete callback');
+              onDateChangeComplete();
+            }
           }, 800);
 
           return;
@@ -143,11 +203,21 @@ const SidebarManager = (() => {
       // Still remove CSS even if close failed
       setTimeout(() => {
         removeSidebarCSS();
+
+        // Call callback even if close failed
+        if (onDateChangeComplete) {
+          onDateChangeComplete();
+        }
       }, 800);
     } else {
       console.log('SidebarManager: Sidebar not found during close');
       // Remove CSS anyway
       removeSidebarCSS();
+
+      // Call callback even if sidebar not found
+      if (onDateChangeComplete) {
+        onDateChangeComplete();
+      }
     }
   }
 

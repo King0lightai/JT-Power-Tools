@@ -202,6 +202,62 @@ const DateChanger = (() => {
   }
 
   /**
+   * Click Save button if in availability view
+   * In availability view, date changes must be saved explicitly
+   * The Save button is on the main page, not in the sidebar
+   * This should be called AFTER the sidebar closes
+   * @returns {Promise} Resolves when save is complete (or immediately if not needed)
+   */
+  function clickSaveButtonIfNeeded() {
+    return new Promise((resolve) => {
+      // Check if we're in availability view
+      const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
+
+      if (!isAvailabilityView) {
+        console.log('DateChanger: Not in availability view, skipping Save button');
+        resolve();
+        return;
+      }
+
+      console.log('DateChanger: In availability view, looking for Save button on main page...');
+
+      // Look for the Save button on the main page (not in sidebar)
+      // <div role="button" ... class="... bg-blue-500 border-blue-600 ...">
+      //   <svg>...</svg> Save
+      // </div>
+      const buttons = document.querySelectorAll('div[role="button"]');
+      let saveButton = null;
+
+      for (const button of buttons) {
+        const text = button.textContent.trim();
+        const classes = button.className || '';
+
+        // Check if this is the blue Save button
+        if (text.includes('Save') &&
+            (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
+          saveButton = button;
+          console.log('DateChanger: Found Save button on main page:', text);
+          break;
+        }
+      }
+
+      if (saveButton) {
+        console.log('DateChanger: Clicking Save button...');
+        saveButton.click();
+
+        // Wait a bit for the save to complete
+        setTimeout(() => {
+          console.log('DateChanger: Save button clicked, date should be saved');
+          resolve();
+        }, 300);
+      } else {
+        console.warn('DateChanger: Save button not found on main page');
+        resolve();
+      }
+    });
+  }
+
+  /**
    * Type the date into an input field (most reliable method)
    */
   function typeIntoDateField(inputField, formattedDate, dateInfo, failsafeTimeout, onDateChangeComplete) {
@@ -251,8 +307,17 @@ const DateChanger = (() => {
     console.log('DateChanger: Date typed and Enter key simulated - COMPLETE');
 
     setTimeout(() => {
+      // Close the sidebar first
       if (window.SidebarManager) {
-        window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
+        window.SidebarManager.closeSidebar(failsafeTimeout, async () => {
+          // After sidebar closes, click Save button if in availability view
+          await clickSaveButtonIfNeeded();
+
+          // Then notify completion
+          if (onDateChangeComplete) {
+            onDateChangeComplete();
+          }
+        });
       }
     }, 500);
   }
@@ -495,8 +560,17 @@ const DateChanger = (() => {
           console.log('DateChanger: Date picker selection COMPLETE');
 
           setTimeout(() => {
+            // Close the sidebar first
             if (window.SidebarManager) {
-              window.SidebarManager.closeSidebar(failsafeTimeout, onDateChangeComplete);
+              window.SidebarManager.closeSidebar(failsafeTimeout, async () => {
+                // After sidebar closes, click Save button if in availability view
+                await clickSaveButtonIfNeeded();
+
+                // Then notify completion
+                if (onDateChangeComplete) {
+                  onDateChangeComplete();
+                }
+              });
             }
           }, 500);
         } else {
