@@ -161,19 +161,6 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Handle mutual exclusivity between formatter and previewMode
-    if (settings.previewMode && settings.formatter) {
-      // Preview mode is being enabled, disable regular formatter
-      showStatus('Enabling Preview Mode (regular formatter disabled)', 'success');
-      document.getElementById('formatter').checked = false;
-      settings.formatter = false;
-    } else if (settings.formatter && settings.previewMode) {
-      // Regular formatter is being enabled, disable preview mode
-      showStatus('Enabling regular Formatter (preview mode disabled)', 'success');
-      document.getElementById('previewMode').checked = false;
-      settings.previewMode = false;
-    }
-
     // Check if user is trying to enable RGB theme without license
     if (settings.rgbTheme && !hasLicense) {
       showStatus('RGB Custom Theme requires a premium license', 'error');
