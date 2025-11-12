@@ -143,6 +143,12 @@ const PreviewModeFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
+    // Skip if on /files path
+    if (window.location.pathname.includes('/files')) {
+      console.log('Preview Mode: Skipping /files path');
+      return;
+    }
+
     // Find all textareas that should have the formatter
     const fields = [];
 
@@ -196,6 +202,9 @@ const PreviewModeFeature = (() => {
     button.style.top = '4px';
     button.style.right = '4px';
     button.style.zIndex = '100';
+    button.style.opacity = '0';
+    button.style.pointerEvents = 'none';
+    button.style.transition = 'opacity 0.15s ease';
 
     // Apply theme to button
     detectAndApplyTheme(button);
@@ -207,8 +216,27 @@ const PreviewModeFeature = (() => {
       togglePreview(textarea, button);
     });
 
+    // Show button on focus
+    textarea.addEventListener('focus', () => {
+      button.style.opacity = '1';
+      button.style.pointerEvents = 'auto';
+    });
+
+    // Hide button on blur (unless preview is open)
+    textarea.addEventListener('blur', () => {
+      // Use setTimeout to allow click on button before hiding
+      setTimeout(() => {
+        const preview = previewMap.get(textarea);
+        if (!preview || !document.body.contains(preview)) {
+          button.style.opacity = '0';
+          button.style.pointerEvents = 'none';
+        }
+      }, 150);
+    });
+
     // Store reference
     buttonMap.set(textarea, button);
+    button._textarea = textarea; // Store textarea reference on button for closePreview
 
     // Insert button into the container
     container.style.position = 'relative';
@@ -427,6 +455,13 @@ const PreviewModeFeature = (() => {
 
     if (activeButton) {
       activeButton.classList.remove('active');
+
+      // Hide button if textarea is not focused
+      const textarea = activeButton._textarea;
+      if (textarea && document.activeElement !== textarea) {
+        activeButton.style.opacity = '0';
+        activeButton.style.pointerEvents = 'none';
+      }
     }
 
     activePreview = null;

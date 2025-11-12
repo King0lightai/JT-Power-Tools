@@ -614,3 +614,24 @@ input:checked + .slider:before {
 .license-link a:hover {
   text-decoration: underline;
 }
+
+/* Feedback Section */
+.feedback-section {
+  text-align: center;
+  padding: 12px 0 16px;
+  border-top: 1px solid #e5e5e5;
+  margin-top: 8px;
+}
+
+.feedback-link {
+  font-size: 12px;
+  color: #666;
+  text-decoration: none;
+  font-weight: 400;
+  transition: color 0.2s ease;
+}
+
+.feedback-link:hover {
+  color: #1a1a1a;
+  text-decoration: underline;
+}
