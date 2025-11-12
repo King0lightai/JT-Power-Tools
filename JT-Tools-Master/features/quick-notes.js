@@ -796,9 +796,15 @@ const QuickNotesFeature = (() => {
     loadSavedWidth();
   }
 
-  // Close editor - closes entire Quick Notes panel
+  // Close editor - collapses back to sidebar only
   function closeEditor() {
-    togglePanel();
+    notesPanel.classList.remove('editor-open');
+    notesPanel.classList.remove('resizing');
+    // Reset width to sidebar width (280px)
+    notesPanel.style.width = '';
+    currentNoteId = null;
+    renderNotesList();
+    renderNoteEditor();
   }
 
   // Toggle panel visibility
@@ -1040,10 +1046,16 @@ const QuickNotesFeature = (() => {
       togglePanel();
     }
 
-    // Escape to close panel
+    // Escape to close editor or panel
     if (e.key === 'Escape' && notesPanel && notesPanel.classList.contains('visible')) {
       e.preventDefault();
-      togglePanel();
+      // If editor is open, close it (return to sidebar)
+      if (notesPanel.classList.contains('editor-open')) {
+        closeEditor();
+      } else {
+        // If only sidebar is open, close entire panel
+        togglePanel();
+      }
     }
   }
 
