@@ -42,6 +42,7 @@
         "features/rgb-theme.js",
         "features/job-switcher.js",
         "features/budget-hierarchy.js",
+        "features/quick-notes.js",
         "content.js"
       ],
       "run_at": "document_end"
@@ -51,6 +52,8 @@
     {
       "resources": [
         "styles/formatter-toolbar.css",
+        "styles/dark-mode.css",
+        "styles/quick-notes.css"
         "styles/premium-formatter.css",
         "styles/dark-mode.css"
       ],

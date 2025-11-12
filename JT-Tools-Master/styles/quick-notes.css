@@ -1,0 +1,820 @@
+/**
+ * Quick Notes Feature Styles
+ * Seamless integration with Jobtread's UI
+ */
+
+/* Quick Notes Button - Active State */
+.jt-quick-notes-btn.jt-notes-button-active {
+  background: #3b82f6 !important;
+  color: white !important;
+}
+
+.jt-quick-notes-btn.jt-notes-button-active:hover {
+  background: #2563eb !important;
+}
+
+/* Notes Panel - Jobtread Sidebar Style */
+.jt-quick-notes-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 100%;
+  background: white;
+  box-shadow: -1px 0 0 0 rgba(0, 0, 0, 0.1);
+  z-index: 999999;
+  display: flex;
+  flex-direction: row-reverse;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  pointer-events: none;
+}
+
+.jt-quick-notes-panel.visible {
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.jt-quick-notes-panel.editor-open {
+  width: 600px;
+}
+
+.jt-quick-notes-panel:not(.editor-open) .jt-notes-editor {
+  display: none;
+}
+
+/* Resize Handle */
+.jt-notes-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.2s;
+}
+
+.jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.jt-notes-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.jt-notes-resize-handle:hover::before {
+  opacity: 1;
+}
+
+.jt-quick-notes-panel.resizing {
+  transition: none;
+  user-select: none;
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.resizing .jt-notes-resize-handle::before {
+  opacity: 1;
+  background: #06b6d4;
+}
+
+/* Sidebar */
+.jt-notes-sidebar {
+  width: 280px;
+  border-left: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  flex-shrink: 0;
+}
+
+/* Sidebar Header - Jobtread Style */
+.jt-notes-sidebar-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+}
+
+.jt-notes-sidebar-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ea580c;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  margin: 0;
+}
+
+.jt-notes-sidebar-close-button {
+  flex-shrink: 0;
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.jt-notes-sidebar-close-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.jt-notes-sidebar-close-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-new-button {
+  width: 100%;
+  background: #0891b2;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.jt-notes-new-button:hover {
+  background: #0e7490;
+}
+
+.jt-notes-new-button:active {
+  background: #155e75;
+}
+
+
+/* Search */
+.jt-notes-search-container {
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.jt-notes-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.15s;
+  background: white;
+}
+
+.jt-notes-search-input:hover:not(:focus) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-notes-search-input:focus {
+  background: white;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+/* Notes List */
+.jt-notes-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  background: white;
+}
+
+.jt-notes-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.jt-notes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.jt-notes-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.jt-notes-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.jt-notes-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Note Item */
+.jt-note-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.jt-note-item:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-note-item.active {
+  background: #ecfeff;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+.jt-note-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.jt-note-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-note-delete {
+  background: transparent;
+  border: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 16px;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.jt-note-delete:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.jt-note-item-preview {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  line-height: 1.3;
+}
+
+.jt-note-item-date {
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+/* Editor */
+.jt-notes-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  overflow: hidden;
+}
+
+.jt-notes-editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  padding: 32px;
+}
+
+.jt-notes-editor-empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.jt-notes-editor-empty-text {
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Editor Header - Jobtread Style */
+.jt-notes-editor-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: white;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  min-height: 57px;
+}
+
+.jt-notes-title-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  padding: 0;
+  background: transparent;
+}
+
+.jt-notes-title-input::placeholder {
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+/* Close Button - Jobtread Style */
+.jt-notes-close-button {
+  flex-shrink: 0;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.jt-notes-close-button:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.jt-notes-close-button:active {
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.jt-notes-close-button::before {
+  content: '✕';
+  font-size: 14px;
+}
+
+.jt-notes-close-button::after {
+  content: 'Close';
+  font-size: 13px;
+}
+
+/* Formatting Toolbar */
+.jt-notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.jt-notes-format-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #6b7280;
+}
+
+.jt-notes-format-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.jt-notes-format-btn:active {
+  background: #e5e7eb;
+}
+
+.jt-notes-format-btn.active {
+  background: #ecfeff;
+  color: #0891b2;
+  border-color: #06b6d4;
+}
+
+.jt-notes-format-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-notes-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+/* Content Input - Contenteditable WYSIWYG */
+.jt-notes-content-input {
+  flex: 1;
+  padding: 16px;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #374151;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.jt-notes-content-input:empty:before {
+  content: attr(data-placeholder);
+  color: #d1d5db;
+  pointer-events: none;
+}
+
+.jt-notes-content-input strong,
+.jt-notes-content-input b {
+  font-weight: 600;
+}
+
+.jt-notes-content-input em,
+.jt-notes-content-input i {
+  font-style: italic;
+}
+
+.jt-notes-content-input div {
+  min-height: 1.6em;
+}
+
+/* Rendered Markdown Elements */
+.jt-note-item-preview strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.jt-note-item-preview em {
+  font-style: italic;
+  color: #374151;
+}
+
+.jt-note-checkbox,
+.jt-note-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.jt-notes-content-input .jt-note-checkbox,
+.jt-notes-content-input .jt-note-bullet {
+  min-height: 1.6em;
+  margin: 2px 0;
+}
+
+.jt-note-checkbox input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.jt-note-checkbox.checked span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.jt-note-bullet {
+  padding-left: 0;
+}
+
+/* Editor Footer */
+.jt-notes-editor-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #9ca3af;
+  background: white;
+  min-height: 45px;
+}
+
+.jt-notes-word-count {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.jt-notes-updated {
+  font-style: italic;
+}
+
+/* Theme Compatibility - Dark Mode */
+.jt-quick-notes-panel.dark-theme {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor,
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-list,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  background: #1e293b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
+  border-left-color: #334155;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-header {
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-container,
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
+  border-color: #334155;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-title-input::placeholder,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input::placeholder {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-search-input:focus {
+  background: #334155;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item {
+  background: #334155;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item.active {
+  background: #164e63;
+  border-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-title {
+  color: #f1f5f9;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-date {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-close-button:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:hover {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button {
+  color: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button {
+  background: #0891b2;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:hover {
+  background: #0e7490;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-new-button:active {
+  background: #155e75;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-empty {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
+  color: #64748b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview strong {
+  color: #f1f5f9;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview em {
+  color: #cbd5e1;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input strong,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input b {
+  color: #f1f5f9;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input em,
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input i {
+  color: #cbd5e1;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover {
+  background: rgba(6, 182, 212, 0.3);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle::before {
+  background: #475569;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover::before {
+  background: #94a3b8;
+}
+
+.jt-quick-notes-panel.dark-theme.resizing .jt-notes-resize-handle::before {
+  background: #06b6d4;
+}
+
+/* Theme Compatibility - Custom RGB Theme */
+.jt-quick-notes-panel.custom-theme {
+  /* Use CSS variables that will be set dynamically */
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor,
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-search-container,
+.jt-quick-notes-panel.custom-theme .jt-notes-list,
+.jt-quick-notes-panel.custom-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-footer {
+  background: var(--jt-notes-bg, white);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-title-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input,
+.jt-quick-notes-panel.custom-theme .jt-note-item-title {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-search-input,
+.jt-quick-notes-panel.custom-theme .jt-notes-content-input {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-note-item.active {
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle:hover {
+  background: rgba(var(--jt-notes-primary-rgb, 6, 182, 212), 0.2);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-resize-handle::before {
+  background: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme.resizing .jt-notes-resize-handle::before {
+  background: var(--jt-notes-primary, #06b6d4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .jt-quick-notes-panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .jt-quick-notes-panel {
+    width: 100%;
+  }
+
+  .jt-notes-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    max-height: 40%;
+  }
+
+  .jt-notes-editor {
+    min-height: 60%;
+  }
+}
+
+@media (max-width: 640px) {
+  .jt-notes-close-button::after {
+    display: none;
+  }
+}
