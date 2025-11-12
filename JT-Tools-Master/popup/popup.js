@@ -3,7 +3,7 @@ const defaultSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
-  premiumFormatter: false,
+  previewMode: false,
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
@@ -30,8 +30,8 @@ async function checkLicenseStatus() {
   const dragDropCheckbox = document.getElementById('dragDrop');
   const rgbThemeFeature = document.getElementById('rgbThemeFeature');
   const rgbThemeCheckbox = document.getElementById('rgbTheme');
-  const premiumFormatterFeature = document.getElementById('premiumFormatterFeature');
-  const premiumFormatterCheckbox = document.getElementById('premiumFormatter');
+  const previewModeFeature = document.getElementById('previewModeFeature');
+  const previewModeCheckbox = document.getElementById('previewMode');
 
   if (licenseData && licenseData.valid) {
     // Valid license
@@ -41,8 +41,8 @@ async function checkLicenseStatus() {
     dragDropCheckbox.disabled = false;
     rgbThemeFeature.classList.remove('locked');
     rgbThemeCheckbox.disabled = false;
-    premiumFormatterFeature.classList.remove('locked');
-    premiumFormatterCheckbox.disabled = false;
+    previewModeFeature.classList.remove('locked');
+    previewModeCheckbox.disabled = false;
     return true; // Has license
   } else {
     // No license or invalid
@@ -52,8 +52,8 @@ async function checkLicenseStatus() {
     dragDropCheckbox.disabled = true;
     rgbThemeFeature.classList.add('locked');
     rgbThemeCheckbox.disabled = true;
-    premiumFormatterFeature.classList.add('locked');
-    premiumFormatterCheckbox.disabled = true;
+    previewModeFeature.classList.add('locked');
+    previewModeCheckbox.disabled = true;
     // Don't change checked state here - let loadSettings handle it
     return false; // No license
   }
@@ -109,7 +109,7 @@ async function loadSettings() {
     document.getElementById('dragDrop').checked = hasLicense && settings.dragDrop;
     document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('formatter').checked = settings.formatter;
-    document.getElementById('premiumFormatter').checked = hasLicense && settings.premiumFormatter;
+    document.getElementById('previewMode').checked = hasLicense && settings.previewMode;
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
@@ -153,25 +153,25 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Check if user is trying to enable Premium Formatter without license
-    if (settings.premiumFormatter && !hasLicense) {
-      showStatus('Premium WYSIWYG Formatter requires a premium license', 'error');
-      document.getElementById('premiumFormatter').checked = false;
-      settings.premiumFormatter = false;
+    // Check if user is trying to enable Preview Mode without license
+    if (settings.previewMode && !hasLicense) {
+      showStatus('Preview Mode requires a premium license', 'error');
+      document.getElementById('previewMode').checked = false;
+      settings.previewMode = false;
       return;
     }
 
-    // Handle mutual exclusivity between formatter and premiumFormatter
-    if (settings.premiumFormatter && settings.formatter) {
-      // Premium formatter is being enabled, disable regular formatter
-      showStatus('Enabling Premium Formatter (regular formatter disabled)', 'success');
+    // Handle mutual exclusivity between formatter and previewMode
+    if (settings.previewMode && settings.formatter) {
+      // Preview mode is being enabled, disable regular formatter
+      showStatus('Enabling Preview Mode (regular formatter disabled)', 'success');
       document.getElementById('formatter').checked = false;
       settings.formatter = false;
-    } else if (settings.formatter && settings.premiumFormatter) {
-      // Regular formatter is being enabled, disable premium formatter
-      showStatus('Enabling regular Formatter (premium formatter disabled)', 'success');
-      document.getElementById('premiumFormatter').checked = false;
-      settings.premiumFormatter = false;
+    } else if (settings.formatter && settings.previewMode) {
+      // Regular formatter is being enabled, disable preview mode
+      showStatus('Enabling regular Formatter (preview mode disabled)', 'success');
+      document.getElementById('previewMode').checked = false;
+      settings.previewMode = false;
     }
 
     // Check if user is trying to enable RGB theme without license
@@ -227,7 +227,7 @@ async function getCurrentSettings() {
     dragDrop: document.getElementById('dragDrop').checked,
     contrastFix: document.getElementById('contrastFix').checked,
     formatter: document.getElementById('formatter').checked,
-    premiumFormatter: document.getElementById('premiumFormatter').checked,
+    previewMode: document.getElementById('previewMode').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
     quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
@@ -506,12 +506,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // If no license, ensure premium features stay disabled
   if (!hasLicense) {
     const settings = await chrome.storage.sync.get(['jtToolsSettings']);
-    if (settings.jtToolsSettings && (settings.jtToolsSettings.dragDrop || settings.jtToolsSettings.rgbTheme)) {
+    if (settings.jtToolsSettings && (settings.jtToolsSettings.dragDrop || settings.jtToolsSettings.rgbTheme || settings.jtToolsSettings.previewMode)) {
       // User had premium features enabled but license expired/removed
       const updatedSettings = {
         ...settings.jtToolsSettings,
         dragDrop: false,
-        rgbTheme: false
+        rgbTheme: false,
+        previewMode: false
       };
       await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
     }

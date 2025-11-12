@@ -20,9 +20,9 @@ const featureModules = {
     feature: () => window.FormatterFeature,
     instance: null
   },
-  premiumFormatter: {
-    name: 'Premium Formatter (WYSIWYG)',
-    feature: () => window.PremiumFormatterFeature,
+  previewMode: {
+    name: 'Preview Mode',
+    feature: () => window.PreviewModeFeature,
     instance: null
   },
   darkMode: {
@@ -57,7 +57,7 @@ let currentSettings = {
   dragDrop: true,
   contrastFix: true,
   formatter: true,
-  premiumFormatter: false,
+  previewMode: false,
   darkMode: false,
   rgbTheme: false,
   quickJobSwitcher: true,
@@ -148,20 +148,20 @@ function initializeAllFeatures() {
 function handleSettingsChange(newSettings) {
   console.log('JT-Tools: Settings changed:', newSettings);
 
-  // Special handling for formatter/premiumFormatter mutual exclusivity
-  if (newSettings.premiumFormatter && newSettings.formatter) {
-    // If premium formatter is being enabled, disable regular formatter
-    if (!currentSettings.premiumFormatter) {
-      console.log('JT-Tools: Premium Formatter enabled, disabling regular Formatter');
+  // Special handling for formatter/previewMode mutual exclusivity
+  if (newSettings.previewMode && newSettings.formatter) {
+    // If preview mode is being enabled, disable regular formatter
+    if (!currentSettings.previewMode) {
+      console.log('JT-Tools: Preview Mode enabled, disabling regular Formatter');
       cleanupFeature('formatter');
       newSettings.formatter = false;
     }
-  } else if (newSettings.formatter && newSettings.premiumFormatter) {
-    // If regular formatter is being enabled, disable premium formatter
+  } else if (newSettings.formatter && newSettings.previewMode) {
+    // If regular formatter is being enabled, disable preview mode
     if (!currentSettings.formatter) {
-      console.log('JT-Tools: Regular Formatter enabled, disabling Premium Formatter');
-      cleanupFeature('premiumFormatter');
-      newSettings.premiumFormatter = false;
+      console.log('JT-Tools: Regular Formatter enabled, disabling Preview Mode');
+      cleanupFeature('previewMode');
+      newSettings.previewMode = false;
     }
   }
 
