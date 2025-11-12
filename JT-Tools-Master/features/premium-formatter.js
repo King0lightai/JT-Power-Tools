@@ -224,7 +224,6 @@ const PremiumFormatterFeature = (() => {
         </svg>
         Format Preview
       </span>
-      <span class="jt-premium-badge-small">PREMIUM</span>
     `;
     preview.appendChild(header);
 
