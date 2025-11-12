@@ -569,10 +569,10 @@
   font-style: italic;
 }
 
-/* Theme Compatibility - Dark Mode */
+/* Theme Compatibility - Dark Mode - Matches JT Power Tools Dark Mode */
 .jt-quick-notes-panel.dark-theme {
-  background: #1e293b;
-  color: #e2e8f0;
+  background: #2c2c2c;
+  color: #d1d5db;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar,
@@ -583,11 +583,11 @@
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
 .jt-quick-notes-panel.dark-theme .jt-notes-editor-header,
 .jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
-  background: #1e293b;
+  background: #2c2c2c;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar {
-  border-left-color: #334155;
+  border-left-color: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-header,
@@ -598,36 +598,36 @@
 .jt-quick-notes-panel.dark-theme .jt-notes-search-container,
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar,
 .jt-quick-notes-panel.dark-theme .jt-notes-editor-footer {
-  border-color: #334155;
+  border-color: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-search-input,
 .jt-quick-notes-panel.dark-theme .jt-notes-title-input,
 .jt-quick-notes-panel.dark-theme .jt-notes-content-input {
-  background: #334155;
-  color: #e2e8f0;
-  border-color: #475569;
+  background: #353535;
+  color: #d1d5db;
+  border-color: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-search-input::placeholder,
 .jt-quick-notes-panel.dark-theme .jt-notes-title-input::placeholder,
 .jt-quick-notes-panel.dark-theme .jt-notes-content-input::placeholder {
-  color: #64748b;
+  color: #6b7280;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-search-input:focus {
-  background: #334155;
+  background: #353535;
   border-color: #06b6d4;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item {
-  background: #334155;
-  border-color: #475569;
+  background: #353535;
+  border-color: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item:hover {
-  background: #475569;
-  border-color: #64748b;
+  background: #404040;
+  border-color: #525252;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item.active {
@@ -636,53 +636,53 @@
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item-title {
-  color: #f1f5f9;
+  color: #f5f5f5;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item-preview {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item-date {
-  color: #64748b;
+  color: #6b7280;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-close-button {
-  background: #334155;
-  border-color: #475569;
-  color: #e2e8f0;
+  background: #353535;
+  border-color: #464646;
+  color: #d1d5db;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-close-button:hover {
-  background: #475569;
-  border-color: #64748b;
+  background: #404040;
+  border-color: #525252;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-format-btn {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-format-btn:hover {
-  background: #334155;
-  color: #e2e8f0;
-  border-color: #475569;
+  background: #353535;
+  color: #d1d5db;
+  border-color: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active {
-  background: #475569;
+  background: #404040;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
-  background: #475569;
+  background: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button {
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button:hover {
-  background: #334155;
-  color: #e2e8f0;
+  background: #353535;
+  color: #d1d5db;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-new-button {
@@ -698,15 +698,15 @@
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-empty {
-  color: #64748b;
+  color: #6b7280;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-editor-empty {
-  color: #64748b;
+  color: #6b7280;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item-preview strong {
-  color: #f1f5f9;
+  color: #f5f5f5;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-note-item-preview em {
@@ -715,7 +715,7 @@
 
 .jt-quick-notes-panel.dark-theme .jt-notes-content-input strong,
 .jt-quick-notes-panel.dark-theme .jt-notes-content-input b {
-  color: #f1f5f9;
+  color: #f5f5f5;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-content-input em,
@@ -728,15 +728,23 @@
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-resize-handle::before {
-  background: #475569;
+  background: #464646;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-resize-handle:hover::before {
-  background: #94a3b8;
+  background: #9ca3af;
 }
 
 .jt-quick-notes-panel.dark-theme.resizing .jt-notes-resize-handle::before {
   background: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb {
+  background: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-list::-webkit-scrollbar-thumb:hover {
+  background: #525252;
 }
 
 /* Theme Compatibility - Custom RGB Theme */

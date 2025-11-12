@@ -323,6 +323,192 @@
   }
 }
 
+/* Dark Mode Theme - Matches JT Power Tools Dark Mode */
+.jt-preview-panel.dark-theme,
+.jt-preview-btn.dark-theme {
+  /* Button styles */
+}
+
+.jt-preview-btn.dark-theme {
+  background: #353535;
+  color: #9ca3af;
+  border-color: #464646;
+}
+
+.jt-preview-btn.dark-theme:hover {
+  background: #404040;
+  color: #d1d5db;
+  border-color: #525252;
+}
+
+.jt-preview-btn.dark-theme.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.jt-preview-panel.dark-theme {
+  background: #2c2c2c;
+  border-color: #464646;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-header {
+  background: #2c2c2c;
+  border-bottom-color: #464646;
+  color: #d1d5db;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-title {
+  color: #f5f5f5;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-title svg {
+  color: #9ca3af;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content {
+  background: #2c2c2c;
+  color: #d1d5db !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content * {
+  color: #d1d5db;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-empty {
+  color: #6b7280 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content h1,
+.jt-preview-panel.dark-theme .jt-preview-content h2,
+.jt-preview-panel.dark-theme .jt-preview-content h3 {
+  color: #f5f5f5 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content strong,
+.jt-preview-panel.dark-theme .jt-preview-content b {
+  color: #f5f5f5 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content em,
+.jt-preview-panel.dark-theme .jt-preview-content i,
+.jt-preview-panel.dark-theme .jt-preview-content u,
+.jt-preview-panel.dark-theme .jt-preview-content s,
+.jt-preview-panel.dark-theme .jt-preview-content strike {
+  color: #d1d5db !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content ul,
+.jt-preview-panel.dark-theme .jt-preview-content ol,
+.jt-preview-panel.dark-theme .jt-preview-content li {
+  color: #d1d5db !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content blockquote {
+  border-left-color: #464646;
+  color: #9ca3af !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content a {
+  color: #60a5fa !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content a:hover {
+  color: #93c5fd !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content::-webkit-scrollbar-track {
+  background: #353535;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content::-webkit-scrollbar-thumb {
+  background: #464646;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content::-webkit-scrollbar-thumb:hover {
+  background: #525252;
+}
+
+/* Custom Theme Support */
+.jt-preview-btn.custom-theme {
+  background: var(--jt-preview-btn-bg, white);
+  color: var(--jt-preview-btn-text, #6b7280);
+  border-color: var(--jt-preview-btn-border, #e5e7eb);
+}
+
+.jt-preview-btn.custom-theme:hover {
+  background: var(--jt-preview-btn-hover-bg, #f9fafb);
+  color: var(--jt-preview-btn-hover-text, #374151);
+  border-color: var(--jt-preview-btn-hover-border, #d1d5db);
+}
+
+.jt-preview-btn.custom-theme.active {
+  background: var(--jt-preview-primary, #3b82f6);
+  color: white;
+  border-color: var(--jt-preview-primary, #3b82f6);
+}
+
+.jt-preview-panel.custom-theme {
+  background: var(--jt-preview-bg, white);
+  border-color: var(--jt-preview-border, #e5e7eb);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-header {
+  background: var(--jt-preview-bg, white);
+  border-bottom-color: var(--jt-preview-border, #e5e7eb);
+  color: var(--jt-preview-text, #374151);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-title {
+  color: var(--jt-preview-text, #1f2937);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-title svg {
+  color: var(--jt-preview-text-muted, #6b7280);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content {
+  background: var(--jt-preview-bg, white);
+  color: var(--jt-preview-text, #1f2937) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content * {
+  color: var(--jt-preview-text, #1f2937);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-empty {
+  color: var(--jt-preview-text-muted, #9ca3af) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content h1,
+.jt-preview-panel.custom-theme .jt-preview-content h2,
+.jt-preview-panel.custom-theme .jt-preview-content h3,
+.jt-preview-panel.custom-theme .jt-preview-content strong,
+.jt-preview-panel.custom-theme .jt-preview-content b {
+  color: var(--jt-preview-text, #1f2937) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content blockquote {
+  border-left-color: var(--jt-preview-border, #e5e7eb);
+  color: var(--jt-preview-text-muted, #6b7280) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content a {
+  color: var(--jt-preview-primary, #3b82f6) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-track {
+  background: var(--jt-preview-scrollbar-track, #f3f4f6);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-thumb {
+  background: var(--jt-preview-scrollbar-thumb, #d1d5db);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-thumb:hover {
+  background: var(--jt-preview-scrollbar-thumb-hover, #9ca3af);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .jt-preview-panel {
