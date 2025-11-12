@@ -216,22 +216,35 @@ const PreviewModeFeature = (() => {
       togglePreview(textarea, button);
     });
 
-    // Show button on focus
-    textarea.addEventListener('focus', () => {
+    // Show button on focus or hover
+    const showButton = () => {
       button.style.opacity = '1';
       button.style.pointerEvents = 'auto';
-    });
+    };
 
-    // Hide button on blur (unless preview is open)
+    const hideButton = () => {
+      // Don't hide if preview is open
+      const preview = previewMap.get(textarea);
+      if (!preview || !document.body.contains(preview)) {
+        button.style.opacity = '0';
+        button.style.pointerEvents = 'none';
+      }
+    };
+
+    textarea.addEventListener('focus', showButton);
+    container.addEventListener('mouseenter', showButton);
+
+    // Hide button on blur
     textarea.addEventListener('blur', () => {
       // Use setTimeout to allow click on button before hiding
-      setTimeout(() => {
-        const preview = previewMap.get(textarea);
-        if (!preview || !document.body.contains(preview)) {
-          button.style.opacity = '0';
-          button.style.pointerEvents = 'none';
-        }
-      }, 150);
+      setTimeout(hideButton, 150);
+    });
+
+    // Hide button on mouse leave (unless preview is open or textarea is focused)
+    container.addEventListener('mouseleave', () => {
+      if (document.activeElement !== textarea) {
+        setTimeout(hideButton, 150);
+      }
     });
 
     // Store reference
