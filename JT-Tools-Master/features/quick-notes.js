@@ -795,6 +795,7 @@ const QuickNotesFeature = (() => {
       // Close everything
       notesPanel.classList.remove('visible');
       notesPanel.classList.remove('editor-open');
+      currentNoteId = null;
       if (notesButton) {
         notesButton.classList.remove('jt-notes-button-active');
       }
@@ -804,6 +805,8 @@ const QuickNotesFeature = (() => {
       if (notesButton) {
         notesButton.classList.add('jt-notes-button-active');
       }
+      renderNotesList();
+      renderNoteEditor();
       // Focus search when opening
       const searchInput = notesPanel.querySelector('.jt-notes-search-input');
       if (searchInput) {
