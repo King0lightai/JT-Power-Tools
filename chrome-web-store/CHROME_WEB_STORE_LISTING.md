@@ -1,7 +1,7 @@
 # Chrome Web Store Listing - JT Power Tools
 
 ## Short Description (132 characters max)
-7 powerful tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Job Switcher, Custom Theme & Budget Hierarchy.
+9 powerful tools for JobTread: Drag & Drop, Notes, Preview, Formatter, Job Switcher, Dark Mode, Custom Theme & more!
 
 ## Detailed Description
 
@@ -34,6 +34,24 @@
 • Keyboard shortcuts (Ctrl/Cmd + B/I/U)
 • MS Word-style active button states
 • Works on budget descriptions and other text areas
+
+**👁️ Preview Mode (Premium)**
+• Live preview of formatted text with floating panel
+• Click preview button (eye icon) to see rendered formatting
+• Converts markdown to beautifully styled HTML
+• Real-time updates as you type
+• Works on budget descriptions and daily log fields
+• Intelligent positioning to avoid viewport edges
+
+**📒 Quick Notes (Free)**
+• Persistent notepad accessible from any JobTread page
+• Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
+• Create, edit, search, and organize multiple notes
+• Rich markdown formatting (bold, italic, lists, checkboxes)
+• WYSIWYG editor with formatting toolbar
+• Resizable sidebar panel for comfortable note-taking
+• Notes sync across devices via Chrome storage
+• Word count and last updated timestamps
 
 **⚡ Quick Job Switcher (Free)**
 • Keyboard shortcut (J+S) to instantly open job switcher
@@ -76,7 +94,7 @@ Clean, minimalistic interface that matches JobTread's aesthetic. Simple controls
 • Premium features use Gumroad's secure licensing (optional)
 
 ⭐ **PREMIUM FEATURES**
-Unlock Schedule Drag & Drop and Custom Theme with a one-time license purchase. All other features are completely free!
+Unlock Schedule Drag & Drop, Preview Mode, and Custom Theme with a one-time license purchase. All other features are completely free!
 
 🛠️ **PERFECT FOR**
 • Construction project managers

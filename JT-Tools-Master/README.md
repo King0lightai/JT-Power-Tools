@@ -29,11 +29,24 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - MS Word-style active button states
 - Works on budget descriptions and other text areas
 
+### 👁️ Preview Mode (Premium)
+- Live preview of formatted text with floating panel
+- Click preview button to see rendered formatting
+- Real-time updates as you type
+- Works on budget descriptions and daily logs
+
 ### ⚡ Quick Job Switcher
-- Keyboard shortcut (J+S) to instantly open job switcher
+- Keyboard shortcut (J+S or Alt+J) to instantly open job switcher
 - Type to search and filter jobs in real-time
 - Press Enter to select top result and navigate
 - Fully keyboard-driven workflow for power users
+
+### 📒 Quick Notes
+- Persistent notepad accessible from any page (Ctrl+Shift+N)
+- Create, edit, search, and organize notes
+- Rich markdown formatting support
+- Resizable sidebar panel
+- Notes sync across devices
 
 ### 🌙 Dark Mode
 - Beautiful dark theme for JobTread interface
@@ -57,7 +70,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 3. Confirm the installation
 4. The extension icon will appear in your Chrome toolbar
 
-**Important:** Premium features (Schedule Drag & Drop, Custom Theme) ONLY work with the Chrome Web Store version due to additional security features. GitHub/unpacked versions cannot activate premium licenses.
+**Important:** Premium features (Schedule Drag & Drop, Preview Mode, Custom Theme) ONLY work with the Chrome Web Store version due to additional security features. GitHub/unpacked versions cannot activate premium licenses.
 
 ### For Developers: Load Unpacked
 
@@ -76,7 +89,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 1. After installation, navigate to JobTread (`app.jobtread.com`)
 2. Click the extension icon in your Chrome toolbar
-3. You'll see the JT Power Tools control panel with six toggle switches
+3. You'll see the JT Power Tools control panel with feature toggle switches organized by category
 
 ### Toggling Features
 
@@ -104,16 +117,28 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 3. Formatting toolbar appears above the field
 4. Use buttons to format text or keyboard shortcuts (Ctrl/Cmd + B/I/U)
 
+#### Preview Mode (Premium)
+1. Enable the feature and navigate to a budget or daily log page
+2. Look for the eye icon button on textareas
+3. Click to see a live preview of your formatted text
+
 #### Quick Job Switcher
-1. Press J+S from any JobTread page
+1. Press J+S or Alt+J from any JobTread page
 2. Type to search and filter jobs
 3. Press Enter to select top result
 4. Press Escape to cancel
+
+#### Quick Notes
+1. Click "Quick Notes" button in header or press Ctrl+Shift+N
+2. Click "New Note" to create a note
+3. Type with markdown formatting support
+4. Search and organize your notes
 
 ## 🔑 Premium Features
 
 Some features require a premium license to unlock:
 - **Schedule Drag & Drop** - Drag schedule items between dates
+- **Preview Mode** - Live preview of formatted text
 - **Custom Theme** - Personalize JobTread with your own colors
 
 ### Premium License Activation
@@ -153,11 +178,17 @@ JT-Tools-Master/
 │   ├── drag-drop-modules/   # Drag & Drop sub-modules
 │   ├── contrast-fix.js       # Contrast Fix module
 │   ├── formatter.js          # Text Formatter module
+│   ├── preview-mode.js       # Preview Mode module (Premium)
 │   ├── job-switcher.js       # Quick Job Switcher module
+│   ├── quick-notes.js        # Quick Notes module
 │   ├── dark-mode.js          # Dark Mode module
-│   └── rgb-theme.js          # Custom Theme module (Premium)
+│   ├── rgb-theme.js          # Custom Theme module (Premium)
+│   └── budget-hierarchy.js   # Budget Hierarchy Shading module
 ├── styles/
-│   └── formatter-toolbar.css # Formatter toolbar styles
+│   ├── formatter-toolbar.css # Formatter toolbar styles
+│   ├── preview-mode.css      # Preview Mode styles
+│   ├── quick-notes.css       # Quick Notes styles
+│   └── dark-mode.css         # Dark mode styles
 └── icons/
     ├── icon16.png
     ├── icon48.png
@@ -257,7 +288,12 @@ const featureModules = {
 
 ## 📝 Version History
 
-### v1.0.0 (Current)
+### v3.3.0 (Current)
+- New Feature: Quick Notes - Persistent notepad with markdown support
+- New Premium Feature: Preview Mode - Live preview of formatted text
+- Includes all features: Drag & Drop, Contrast Fix, Text Formatter, Preview Mode, Quick Job Switcher, Quick Notes, Dark Mode, Custom Theme, and Budget Hierarchy Shading
+
+### v1.0.0
 - Initial release
 - Three core features: Drag & Drop, Contrast Fix, Formatter
 - Toggle controls via popup UI
