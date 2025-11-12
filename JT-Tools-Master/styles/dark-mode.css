@@ -2,8 +2,7 @@
 /* Custom dark theme for JobTread interface */
 
 /* === Logo Colors === */
-/* Make both the JT icon and JOBTREAD text white in dark mode */
-.text-jtOrange,
+/* Make the JOBTREAD text white in dark mode, but keep orange elements orange */
 .text-gray-800 {
     color: #ffffff !important;
 }
