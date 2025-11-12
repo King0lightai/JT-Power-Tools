@@ -12,6 +12,20 @@ const PreviewModeFeature = (() => {
   const buttonMap = new WeakMap();
   const previewMap = new WeakMap();
 
+  // Handle settings changes from other tabs
+  function handleSettingsChange(message) {
+    if (message.type === 'SETTINGS_CHANGED') {
+      // Re-apply theme to all buttons
+      const buttons = document.querySelectorAll('.jt-preview-btn');
+      buttons.forEach(btn => detectAndApplyTheme(btn));
+
+      // Re-apply theme to active preview if exists
+      if (activePreview) {
+        detectAndApplyTheme(activePreview);
+      }
+    }
+  }
+
   // Initialize the feature
   function init() {
     if (isActive) {
@@ -41,6 +55,9 @@ const PreviewModeFeature = (() => {
     // Handle clicks outside preview to close it
     document.addEventListener('click', handleGlobalClick, true);
 
+    // Listen for settings changes
+    chrome.runtime.onMessage.addListener(handleSettingsChange);
+
     console.log('Preview Mode: Feature loaded');
   }
 
@@ -65,6 +82,9 @@ const PreviewModeFeature = (() => {
 
     // Remove event listeners
     document.removeEventListener('click', handleGlobalClick, true);
+
+    // Remove settings change listener
+    chrome.runtime.onMessage.removeListener(handleSettingsChange);
 
     // Remove injected CSS
     if (styleElement) {
@@ -177,6 +197,9 @@ const PreviewModeFeature = (() => {
     button.style.right = '4px';
     button.style.zIndex = '100';
 
+    // Apply theme to button
+    detectAndApplyTheme(button);
+
     // Add click handler
     button.addEventListener('click', (e) => {
       e.preventDefault();
@@ -209,10 +232,82 @@ const PreviewModeFeature = (() => {
     showPreview(textarea, button);
   }
 
+  // Detect and apply theme
+  function detectAndApplyTheme(element) {
+    if (!element) return;
+
+    // Get current settings
+    chrome.storage.sync.get(['jtToolsSettings'], (result) => {
+      const settings = result.jtToolsSettings || {};
+
+      // Remove existing theme classes
+      element.classList.remove('dark-theme', 'custom-theme');
+
+      // Check if dark mode is enabled
+      if (settings.darkMode) {
+        element.classList.add('dark-theme');
+        return;
+      }
+
+      // Check if custom RGB theme is enabled
+      if (settings.rgbTheme && settings.themeColors) {
+        element.classList.add('custom-theme');
+        const { primary, background, text } = settings.themeColors;
+
+        // Calculate lighter background for inputs
+        const lighterBg = adjustColorBrightness(background, 10);
+        const borderColor = adjustColorBrightness(background, -20);
+
+        // Set CSS variables for custom theme
+        element.style.setProperty('--jt-preview-bg', background);
+        element.style.setProperty('--jt-preview-text', text);
+        element.style.setProperty('--jt-preview-primary', primary);
+        element.style.setProperty('--jt-preview-text-muted', adjustColorBrightness(text, 30));
+        element.style.setProperty('--jt-preview-border', borderColor);
+        element.style.setProperty('--jt-preview-btn-bg', lighterBg);
+        element.style.setProperty('--jt-preview-btn-text', text);
+        element.style.setProperty('--jt-preview-btn-border', borderColor);
+        element.style.setProperty('--jt-preview-btn-hover-bg', adjustColorBrightness(lighterBg, 5));
+        element.style.setProperty('--jt-preview-btn-hover-text', text);
+        element.style.setProperty('--jt-preview-btn-hover-border', adjustColorBrightness(borderColor, -10));
+        element.style.setProperty('--jt-preview-scrollbar-track', adjustColorBrightness(background, 5));
+        element.style.setProperty('--jt-preview-scrollbar-thumb', borderColor);
+        element.style.setProperty('--jt-preview-scrollbar-thumb-hover', adjustColorBrightness(borderColor, -10));
+      }
+    });
+  }
+
+  // Adjust color brightness (simple HSL adjustment)
+  function adjustColorBrightness(hex, percent) {
+    // Convert hex to RGB
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Adjust brightness
+    const adjust = (color) => {
+      const adjusted = color + (color * percent / 100);
+      return Math.min(255, Math.max(0, Math.round(adjusted)));
+    };
+
+    const newR = adjust(r);
+    const newG = adjust(g);
+    const newB = adjust(b);
+
+    // Convert back to hex
+    return '#' + [newR, newG, newB]
+      .map(x => x.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
   // Show preview panel
   function showPreview(textarea, button) {
     const preview = document.createElement('div');
     preview.className = 'jt-preview-panel';
+
+    // Apply theme
+    detectAndApplyTheme(preview);
+    detectAndApplyTheme(button);
 
     // Add header
     const header = document.createElement('div');
