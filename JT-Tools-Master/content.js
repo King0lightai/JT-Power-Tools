@@ -148,23 +148,6 @@ function initializeAllFeatures() {
 function handleSettingsChange(newSettings) {
   console.log('JT-Tools: Settings changed:', newSettings);
 
-  // Special handling for formatter/previewMode mutual exclusivity
-  if (newSettings.previewMode && newSettings.formatter) {
-    // If preview mode is being enabled, disable regular formatter
-    if (!currentSettings.previewMode) {
-      console.log('JT-Tools: Preview Mode enabled, disabling regular Formatter');
-      cleanupFeature('formatter');
-      newSettings.formatter = false;
-    }
-  } else if (newSettings.formatter && newSettings.previewMode) {
-    // If regular formatter is being enabled, disable preview mode
-    if (!currentSettings.formatter) {
-      console.log('JT-Tools: Regular Formatter enabled, disabling Preview Mode');
-      cleanupFeature('previewMode');
-      newSettings.previewMode = false;
-    }
-  }
-
   // Compare old and new settings
   for (const [key, enabled] of Object.entries(newSettings)) {
     // Skip non-feature settings like rgbColors
