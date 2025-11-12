@@ -188,7 +188,11 @@ const QuickNotesFeature = (() => {
 
       // Add button handlers
       const closeButton = editorContainer.querySelector('.jt-notes-close-button');
-      closeButton.addEventListener('click', closeEditor);
+      closeButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeEditor();
+      });
       return;
     }
 
@@ -281,7 +285,11 @@ const QuickNotesFeature = (() => {
       }
     });
 
-    closeButton.addEventListener('click', closeEditor);
+    closeButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeEditor();
+    });
 
     // Add formatting button handlers
     const formatButtons = editorContainer.querySelectorAll('.jt-notes-format-btn');
@@ -792,13 +800,20 @@ const QuickNotesFeature = (() => {
 
     const isVisible = notesPanel.classList.contains('visible');
     if (isVisible) {
-      // Close everything
+      // Close everything - remove all classes that make it visible
       notesPanel.classList.remove('visible');
       notesPanel.classList.remove('editor-open');
+      notesPanel.classList.remove('resizing');
       currentNoteId = null;
       if (notesButton) {
         notesButton.classList.remove('jt-notes-button-active');
       }
+      // Force hide with explicit check
+      setTimeout(() => {
+        if (notesPanel && notesPanel.classList.contains('visible')) {
+          notesPanel.classList.remove('visible');
+        }
+      }, 10);
     } else {
       // Open just the sidebar initially
       notesPanel.classList.add('visible');
@@ -916,7 +931,11 @@ const QuickNotesFeature = (() => {
 
     // Add event handlers
     const sidebarCloseButton = notesPanel.querySelector('.jt-notes-sidebar-close-button');
-    sidebarCloseButton.addEventListener('click', togglePanel);
+    sidebarCloseButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePanel();
+    });
 
     const newButton = notesPanel.querySelector('.jt-notes-new-button');
     newButton.addEventListener('click', createNote);
