@@ -570,6 +570,17 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor} !important;
       }
 
+      /* === Budget Table Border Normalization === */
+      /* Ensure all table cells have thin borders, not thick ones */
+      table input.border-blue-500,
+      table textarea.border-blue-500,
+      table input[class*="border-blue"],
+      table textarea[class*="border-blue"],
+      table input[class*="border-\\[calc"],
+      table textarea[class*="border-\\[calc"] {
+        border-width: 1px !important;
+      }
+
       /* === Selected Box Border (Orange -> Primary) === */
       .border-jtOrange {
         border-color: ${primary} !important;
@@ -622,6 +633,27 @@ const CustomThemeFeature = (() => {
       [aria-selected="true"] {
         background-color: ${primaryLight45} !important;
         border-color: ${primary} !important;
+      }
+
+      /* === Per-job Tab Navigation Selected States === */
+      /* Selected tab with gray-50 background */
+      .border-t-2.border-jtOrange.bg-gray-50,
+      .border-b-2.border-jtOrange.bg-gray-50 {
+        background-color: ${primaryLight40} !important;
+      }
+
+      /* Hover states for tabs */
+      .hover\\:bg-gray-50:hover {
+        background-color: ${primaryLight45} !important;
+      }
+
+      .hover\\:border-gray-50:hover {
+        border-color: ${primaryLight45} !important;
+      }
+
+      /* Hover state when tab is already selected */
+      .hover\\:bg-gray-50:hover.border-jtOrange {
+        background-color: ${primaryLight35} !important;
       }
 
       /* === Cyan Link Overrides === */
