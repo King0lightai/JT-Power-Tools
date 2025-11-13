@@ -143,9 +143,10 @@ const PreviewModeFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
-    // Skip if on /files path
-    if (window.location.pathname.includes('/files')) {
-      console.log('Preview Mode: Skipping /files path');
+    // Skip if on excluded paths
+    const path = window.location.pathname;
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers')) {
+      console.log('Preview Mode: Skipping excluded path:', path);
       return;
     }
 
@@ -170,9 +171,15 @@ const PreviewModeFeature = (() => {
       }
     });
 
-    console.log('Preview Mode: Found', fields.length, 'fields');
+    // Filter out time entry notes fields
+    const filteredFields = fields.filter(field => {
+      const placeholder = field.getAttribute('placeholder');
+      return placeholder !== 'Set notes'; // Exclude time entry notes
+    });
 
-    fields.forEach((field) => {
+    console.log('Preview Mode: Found', filteredFields.length, 'fields');
+
+    filteredFields.forEach((field) => {
       if (!field.dataset.previewModeReady && document.body.contains(field)) {
         field.dataset.previewModeReady = 'true';
         addPreviewButton(field);
