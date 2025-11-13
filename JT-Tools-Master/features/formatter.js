@@ -133,9 +133,10 @@ const FormatterFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
-    // Skip if on /files path
-    if (window.location.pathname.includes('/files')) {
-      console.log('Formatter: Skipping /files path');
+    // Skip if on excluded paths
+    const path = window.location.pathname;
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers')) {
+      console.log('Formatter: Skipping excluded path:', path);
       return;
     }
 
@@ -176,9 +177,15 @@ const FormatterFeature = (() => {
       }
     });
 
-    console.log('Formatter: Found', fields.length, 'fields (Description + Daily Log)');
+    // Filter out time entry notes fields
+    const filteredFields = fields.filter(field => {
+      const placeholder = field.getAttribute('placeholder');
+      return placeholder !== 'Set notes'; // Exclude time entry notes
+    });
 
-    fields.forEach((field) => {
+    console.log('Formatter: Found', filteredFields.length, 'fields (Description + Daily Log)');
+
+    filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
         field.dataset.formatterReady = 'true';
 
