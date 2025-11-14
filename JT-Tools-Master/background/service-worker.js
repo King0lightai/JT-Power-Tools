@@ -27,13 +27,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     console.log('Default settings initialized:', defaultSettings);
   }
 
-  // On update, merge with existing settings
+  // On update, merge with existing settings and show release notes
   if (details.reason === 'update') {
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     const existingSettings = result.jtToolsSettings || {};
     const mergedSettings = { ...defaultSettings, ...existingSettings };
     await chrome.storage.sync.set({ jtToolsSettings: mergedSettings });
     console.log('Settings updated after extension update:', mergedSettings);
+
+    // Open changelog to show what's new
+    chrome.tabs.create({
+      url: 'https://github.com/King0lightai/JT-Power-Tools/blob/main/CHANGELOG.md',
+      active: true
+    });
+    console.log('Opened changelog to show release notes');
   }
 });
 
