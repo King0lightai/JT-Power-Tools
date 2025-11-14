@@ -608,6 +608,25 @@ const PreviewModeFeature = (() => {
     return div.innerHTML;
   }
 
+  // Process inline formatting (can be nested inside block elements)
+  function processInlineFormatting(text) {
+    let result = text;
+
+    // Icons [!icon:name] - process before inline formatting
+    result = result.replace(/\[!icon:(\w+)\]/g, '<span class="jt-icon jt-icon-$1">⚠</span>');
+
+    // Links [text](url)
+    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+    // Inline formatting (bold, italic, underline, strikethrough)
+    result = result.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
+    result = result.replace(/\^([^^]+)\^/g, '<em>$1</em>');
+    result = result.replace(/_([^_]+)_/g, '<u>$1</u>');
+    result = result.replace(/~([^~]+)~/g, '<s>$1</s>');
+
+    return result;
+  }
+
   // Convert markdown to HTML for preview
   function markdownToHTML(markdown) {
     if (!markdown) return '';
@@ -620,64 +639,99 @@ const PreviewModeFeature = (() => {
     // Process line by line to handle block-level formatting
     const lines = html.split('\n');
     const processedLines = lines.map(line => {
-      let processedLine = line;
+      let processedLine = line.trim();
+      let isBlockQuote = false;
+      let isColored = false;
+      let colorClass = '';
 
-      // Headings (must be at start of line)
-      if (processedLine.startsWith('### ')) {
-        processedLine = `<h3>${processedLine.substring(4)}</h3>`;
-        return processedLine;
-      } else if (processedLine.startsWith('## ')) {
-        processedLine = `<h2>${processedLine.substring(3)}</h2>`;
-        return processedLine;
-      } else if (processedLine.startsWith('# ')) {
-        processedLine = `<h1>${processedLine.substring(2)}</h1>`;
-        return processedLine;
-      }
-
-      // Quotes
+      // Check for blockquote
       if (processedLine.startsWith('> ')) {
-        processedLine = `<blockquote>${processedLine.substring(2)}</blockquote>`;
+        processedLine = processedLine.substring(2);
+        isBlockQuote = true;
       }
 
-      // Color tags [!color:red]
-      processedLine = processedLine.replace(/\[!color:(\w+)\]\s*/g, '<span class="jt-color-$1">');
-      if (processedLine.includes('jt-color-')) {
-        processedLine += '</span>';
+      // Check for color tags [!color:red]
+      const colorMatch = processedLine.match(/^\[!color:(\w+)\]\s*/);
+      if (colorMatch) {
+        colorClass = `jt-color-${colorMatch[1]}`;
+        processedLine = processedLine.substring(colorMatch[0].length);
+        isColored = true;
       }
 
-      // Text alignment
+      // Check for headings (now that blockquote/color are stripped)
+      let headingLevel = 0;
+      if (processedLine.startsWith('### ')) {
+        headingLevel = 3;
+        processedLine = processedLine.substring(4);
+      } else if (processedLine.startsWith('## ')) {
+        headingLevel = 2;
+        processedLine = processedLine.substring(3);
+      } else if (processedLine.startsWith('# ')) {
+        headingLevel = 1;
+        processedLine = processedLine.substring(2);
+      }
+
+      // Check for text alignment
+      let alignment = '';
       if (processedLine.startsWith('---: ')) {
-        processedLine = `<div class="jt-align-right">${processedLine.substring(5)}</div>`;
-        return processedLine;
+        alignment = 'right';
+        processedLine = processedLine.substring(5);
       } else if (processedLine.startsWith('--: ')) {
-        processedLine = `<div class="jt-align-center">${processedLine.substring(4)}</div>`;
-        return processedLine;
+        alignment = 'center';
+        processedLine = processedLine.substring(4);
       }
 
-      // Bullet lists
+      // Check for lists
+      let isBulletList = false;
+      let isNumberedList = false;
+      let listValue = '';
+
       if (processedLine.startsWith('- ')) {
-        processedLine = `<li>${processedLine.substring(2)}</li>`;
+        processedLine = processedLine.substring(2);
+        isBulletList = true;
+      } else {
+        const numberedMatch = processedLine.match(/^(\d+)\.\s+(.*)$/);
+        if (numberedMatch) {
+          listValue = numberedMatch[1];
+          processedLine = numberedMatch[2];
+          isNumberedList = true;
+        }
       }
 
-      // Numbered lists
-      const numberedMatch = processedLine.match(/^(\d+)\.\s+(.*)$/);
-      if (numberedMatch) {
-        processedLine = `<li value="${numberedMatch[1]}">${numberedMatch[2]}</li>`;
+      // Process inline formatting
+      processedLine = processInlineFormatting(processedLine);
+
+      // Build the HTML from inside out
+      let result = processedLine;
+
+      // Wrap in heading if needed
+      if (headingLevel > 0) {
+        result = `<h${headingLevel}>${result}</h${headingLevel}>`;
       }
 
-      // Inline formatting (bold, italic, underline, strikethrough)
-      processedLine = processedLine.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
-      processedLine = processedLine.replace(/\^([^^]+)\^/g, '<em>$1</em>');
-      processedLine = processedLine.replace(/_([^_]+)_/g, '<u>$1</u>');
-      processedLine = processedLine.replace(/~([^~]+)~/g, '<s>$1</s>');
+      // Wrap in color if needed
+      if (isColored) {
+        result = `<span class="${colorClass}">${result}</span>`;
+      }
 
-      // Links [text](url)
-      processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+      // Wrap in alignment if needed
+      if (alignment) {
+        result = `<div class="jt-align-${alignment}">${result}</div>`;
+      }
 
-      // Icons [!icon:name]
-      processedLine = processedLine.replace(/\[!icon:(\w+)\]/g, '<span class="jt-icon jt-icon-$1">⚠</span>');
+      // Wrap in list item if needed
+      if (isBulletList) {
+        result = `<li>${result}</li>`;
+      } else if (isNumberedList) {
+        result = `<li value="${listValue}">${result}</li>`;
+      }
 
-      return processedLine;
+      // Wrap in blockquote if needed
+      if (isBlockQuote) {
+        result = `<blockquote>${result}</blockquote>`;
+      }
+
+      return result;
     });
 
     // Wrap consecutive list items
