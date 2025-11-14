@@ -29,7 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Intelligent positioning to avoid viewport edges
 - Click outside preview to close
 
-#### Improvements
+#### Text Formatter Improvements
+- Added table formatting support with interactive table builder
+  - Create tables with custom rows and columns
+  - Visual table preview in formatting toolbar
+  - Generates markdown-formatted tables
+  - Works seamlessly with existing formatting options
+
+#### Other Improvements
 - Added feedback link to popup for easier user support
 - Removed mutual exclusivity between formatter and preview mode - they now work together seamlessly
 - Added custom theme support for per-job tab navigation
@@ -38,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 #### Text Formatter & Preview Mode Fixes
+- Fixed text formatter not appearing in daily log edit fields with transparent textarea structure
 - Fixed preview button not showing on first focus
 - Improved preview button visibility and content readability
 - Skip text formatter and preview mode on /files path for better compatibility
