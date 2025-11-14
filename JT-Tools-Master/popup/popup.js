@@ -464,16 +464,18 @@ function initializeCategories() {
       });
     });
 
-    // Restore state from storage
+    // Restore state from storage - expand if previously expanded
     const category = header.dataset.category;
     chrome.storage.local.get(`category_${category}_collapsed`, (result) => {
-      if (result[`category_${category}_collapsed`]) {
-        header.classList.add('collapsed');
+      // If user previously expanded it (collapsed = false), expand it
+      if (result[`category_${category}_collapsed`] === false) {
+        header.classList.remove('collapsed');
         const content = document.querySelector(`[data-category-content="${category}"]`);
         if (content) {
-          content.classList.add('collapsed');
+          content.classList.remove('collapsed');
         }
       }
+      // Otherwise, keep default collapsed state (no action needed)
     });
   });
 }
