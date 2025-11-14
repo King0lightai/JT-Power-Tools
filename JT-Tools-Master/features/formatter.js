@@ -1204,10 +1204,7 @@ const FormatterFeature = (() => {
         const headers = Array(numCols).fill('Header').map((h, i) => i === 0 ? h : h + (i + 1));
         table.push('| ' + headers.join(' | ') + ' |');
 
-        // Separator row
-        table.push('| ' + Array(numCols).fill('---').join(' | ') + ' |');
-
-        // Data rows
+        // Data rows (no separator row for JobTread compatibility)
         for (let i = 1; i < numRows; i++) {
           const cells = Array(numCols).fill('Data');
           table.push('| ' + cells.join(' | ') + ' |');
