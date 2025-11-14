@@ -738,6 +738,27 @@
   background: #155e75;
 }
 
+.jt-quick-notes-panel.dark-theme .jt-notes-actions-container {
+  background: #2c2c2c;
+  border-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button {
+  background: #353535;
+  border-color: #464646;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button:hover {
+  background: #404040;
+  border-color: #525252;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-action-button:active {
+  background: #353535;
+}
+
 .jt-quick-notes-panel.dark-theme .jt-notes-empty {
   color: #6b7280;
 }
@@ -836,6 +857,21 @@
 
 .jt-quick-notes-panel.custom-theme.resizing .jt-notes-resize-handle::before {
   background: var(--jt-notes-primary, #06b6d4);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-actions-container {
+  background: var(--jt-notes-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-action-button {
+  background: var(--jt-notes-input-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+  color: var(--jt-notes-text, #4b5563);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-action-button:hover {
+  border-color: var(--jt-notes-primary, #06b6d4);
 }
 
 /* Responsive adjustments */

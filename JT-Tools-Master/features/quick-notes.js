@@ -141,6 +141,9 @@ const QuickNotesFeature = (() => {
           notes = [...notes, ...newNotes];
           await saveNotes();
 
+          // Reload notes from storage to ensure consistency
+          await loadNotes();
+
           alert(`Successfully imported ${newNotes.length} new note(s)!\n${notes.length} total notes.`);
         } else {
           // Replace: Replace all notes with imported ones
@@ -148,7 +151,13 @@ const QuickNotesFeature = (() => {
             notes = importData.notes;
             await saveNotes();
 
+            // Reload notes from storage to ensure consistency
+            await loadNotes();
+
             alert(`Successfully replaced notes!\n${notes.length} note(s) imported.`);
+          } else {
+            // User cancelled the replace operation
+            return;
           }
         }
 
