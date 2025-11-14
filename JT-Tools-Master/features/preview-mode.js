@@ -506,11 +506,116 @@ const PreviewModeFeature = (() => {
     closePreview();
   }
 
+  // Parse markdown tables and convert to HTML
+  function parseMarkdownTables(text) {
+    // Split text into lines
+    const lines = text.split('\n');
+    const result = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Check if this line starts a table (contains pipes)
+      if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+        // Collect all table rows
+        const tableRows = [];
+        let j = i;
+
+        while (j < lines.length) {
+          const tableLine = lines[j].trim();
+          if (tableLine.startsWith('|') && tableLine.endsWith('|')) {
+            tableRows.push(tableLine);
+            j++;
+          } else {
+            break;
+          }
+        }
+
+        // Parse table if we have at least one row
+        if (tableRows.length > 0) {
+          const tableHTML = convertTableToHTML(tableRows);
+          result.push(tableHTML);
+          i = j;
+          continue;
+        }
+      }
+
+      result.push(line);
+      i++;
+    }
+
+    return result.join('\n');
+  }
+
+  // Convert markdown table rows to HTML table
+  function convertTableToHTML(rows) {
+    if (rows.length === 0) return '';
+
+    let html = '<table class="jt-markdown-table">\n';
+
+    // Check if second row is separator (contains only |, -, :, and spaces)
+    const hasSeparator = rows.length > 1 && /^[\|\-\s:]+$/.test(rows[1]);
+
+    // Determine header row index
+    const headerIndex = 0;
+    const dataStartIndex = hasSeparator ? 2 : 1;
+
+    // Parse header row
+    if (rows[headerIndex]) {
+      const headerCells = rows[headerIndex]
+        .split('|')
+        .map(cell => cell.trim())
+        .filter(cell => cell.length > 0);
+
+      if (headerCells.length > 0) {
+        html += '  <thead>\n    <tr>\n';
+        headerCells.forEach(cell => {
+          html += `      <th>${escapeHTML(cell)}</th>\n`;
+        });
+        html += '    </tr>\n  </thead>\n';
+      }
+    }
+
+    // Parse data rows
+    if (dataStartIndex < rows.length) {
+      html += '  <tbody>\n';
+      for (let i = dataStartIndex; i < rows.length; i++) {
+        const cells = rows[i]
+          .split('|')
+          .map(cell => cell.trim())
+          .filter(cell => cell.length > 0);
+
+        if (cells.length > 0) {
+          html += '    <tr>\n';
+          cells.forEach(cell => {
+            html += `      <td>${escapeHTML(cell)}</td>\n`;
+          });
+          html += '    </tr>\n';
+        }
+      }
+      html += '  </tbody>\n';
+    }
+
+    html += '</table>';
+    return html;
+  }
+
+  // Escape HTML characters
+  function escapeHTML(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Convert markdown to HTML for preview
   function markdownToHTML(markdown) {
     if (!markdown) return '';
 
     let html = markdown;
+
+    // Parse tables first (before line-by-line processing)
+    html = parseMarkdownTables(html);
 
     // Process line by line to handle block-level formatting
     const lines = html.split('\n');
