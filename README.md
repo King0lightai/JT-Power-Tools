@@ -2,7 +2,7 @@
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Changelog](https://img.shields.io/badge/changelog-view-orange)](CHANGELOG.md)
+[![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
 
@@ -348,7 +348,7 @@ const featureModules = {
 
 ## 📝 Version History
 
-**For detailed release notes and complete changelog, see [CHANGELOG.md](CHANGELOG.md)**
+**For detailed release notes and complete changelog, see the [Changelog](https://king0lightai.github.io/JT-Power-Tools/changelog.html)**
 
 ### v3.3.0 (Current)
 - **New Feature: Quick Notes**

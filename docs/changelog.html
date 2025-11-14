@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - JT Power Tools</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .changelog-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .version-section {
+            margin-bottom: 50px;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .version-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .version-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .version-date {
+            font-size: 14px;
+            color: #666;
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .version-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .change-category {
+            margin-bottom: 25px;
+        }
+
+        .category-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-icon {
+            font-size: 20px;
+        }
+
+        .change-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .change-item {
+            padding: 8px 0 8px 30px;
+            position: relative;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .change-item::before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            color: #3b82f6;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .sub-list {
+            list-style: none;
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .sub-item {
+            padding: 4px 0 4px 20px;
+            position: relative;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .sub-item::before {
+            content: "◦";
+            position: absolute;
+            left: 5px;
+            color: #9ca3af;
+        }
+
+        .feature-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1>⚡ JT Power Tools</h1>
+                <p>Documentation & Guides</p>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="guides/installation.html">Installation</a>
+                <a href="guides/premium.html">Premium</a>
+                <a href="changelog.html" class="active">Changelog</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="changelog-container">
+        <header class="hero">
+            <h1>📋 Changelog</h1>
+            <p class="subtitle">Track all changes, improvements, and new features</p>
+        </header>
+
+        <!-- Version 3.3.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.3.0</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">November 13, 2024</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Persistent notepad accessible from any JobTread page</li>
+                            <li class="sub-item">Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel</li>
+                            <li class="sub-item">Create, edit, search, and organize multiple notes</li>
+                            <li class="sub-item">Rich markdown formatting support (bold, italic, lists, checkboxes)</li>
+                            <li class="sub-item">WYSIWYG editor with formatting toolbar</li>
+                            <li class="sub-item">Resizable sidebar panel for comfortable note-taking</li>
+                            <li class="sub-item">Notes sync across devices via Chrome storage</li>
+                            <li class="sub-item">Word count and last updated timestamps</li>
+                            <li class="sub-item">Export/Import functionality for backup and transfer</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode (Premium)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Live preview of formatted text with floating preview panel</li>
+                            <li class="sub-item">Click preview button (eye icon) on textareas to see rendered formatting</li>
+                            <li class="sub-item">Converts markdown to beautifully styled HTML</li>
+                            <li class="sub-item">Works on budget descriptions and daily log fields</li>
+                            <li class="sub-item">Real-time updates as you type</li>
+                            <li class="sub-item">Intelligent positioning to avoid viewport edges</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Added feedback link to popup for easier user support</li>
+                    <li class="change-item">Removed mutual exclusivity between formatter and preview mode</li>
+                    <li class="change-item">Added custom theme support for per-job tab navigation</li>
+                    <li class="change-item">Improved custom theme to use primary color for selected states</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed preview button not showing on first focus</li>
+                    <li class="change-item">Improved preview button visibility and content readability</li>
+                    <li class="change-item">Skip text formatter and preview mode on /files path</li>
+                    <li class="change-item">Exclude formatter and preview mode from vendors, customers, and time entries pages</li>
+                    <li class="change-item">Fixed custom theme to preserve orange text color</li>
+                    <li class="change-item">Fixed budget table borders and preview button visibility</li>
+                    <li class="change-item">Fixed theming for Preview Mode and Quick Notes</li>
+                    <li class="change-item">Reverted orange text color override in dark mode</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.2.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.2.3</span>
+                <span class="version-date">October 2024</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget Hierarchy Shading</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Progressive visual shading for nested budget groups (up to 5 levels)</li>
+                            <li class="sub-item">Level 1 (top) = Lightest, Level 5 (deepest) = Darkest</li>
+                            <li class="sub-item">Line items automatically inherit parent group shading</li>
+                            <li class="sub-item">Adapts intelligently to Dark Mode and Custom Theme</li>
+                            <li class="sub-item">Preserves yellow highlighting for unsaved changes</li>
+                            <li class="sub-item">Real-time updates when expanding/collapsing groups</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">Improved budget hierarchy shading using HSL color space</li>
+                    <li class="change-item">Added primary color tooltips for text formatter buttons</li>
+                    <li class="change-item">Custom theme now applies to selected box borders</li>
+                    <li class="change-item">Theme-aware styling for JobTread header logo</li>
+                    <li class="change-item">Collapsible customize button for cleaner interface</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed budget hierarchy URL detection for all budget page variations</li>
+                    <li class="change-item">Added dark mode support for text formatter toolbar</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Quick Job Switcher now supports both J+S and Alt+J keyboard shortcuts</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.1.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.1.0</span>
+                <span class="version-date">September 2024</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Quick Job Switcher</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">J+S keyboard shortcut to instantly open job switcher</li>
+                            <li class="sub-item">Type to search and filter jobs in real-time</li>
+                            <li class="sub-item">Enter to select top result and navigate</li>
+                            <li class="sub-item">Escape to cancel and close</li>
+                            <li class="sub-item">Fully keyboard-driven workflow for power users</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Drag & Drop Modularization</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Refactored from 1,475 lines to modular architecture</li>
+                            <li class="sub-item">Split into 6 focused modules</li>
+                            <li class="sub-item">Main file reduced to 149 lines (90% reduction)</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">Renamed "Budget Formatter" to "Text Formatter" for clarity</li>
+                    <li class="change-item">Redesigned theme customization with inline color previews</li>
+                    <li class="change-item">Added Premium badge to Schedule Drag & Drop feature</li>
+                    <li class="change-item">Simplified popup to minimal white aesthetic</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed December→January year transitions (2025→2026)</li>
+                    <li class="change-item">Fixed date moves in future years</li>
+                    <li class="change-item">Always includes year in date format for accuracy</li>
+                    <li class="change-item">Color switching: Change colors by clicking different color buttons</li>
+                    <li class="change-item">Active color detection and button highlighting</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.0.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.0.0</span>
+                <span class="version-date">August 2024</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">Added Custom Theme feature (Premium)</li>
+                    <li class="change-item">RGB color sliders for personalized themes</li>
+                    <li class="change-item">Mutual exclusivity between appearance modes</li>
+                    <li class="change-item">Integrated contrast fix into custom theme</li>
+                    <li class="change-item">Enhanced popup UI with collapsible sections</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 1.0.0 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v1.0.0</span>
+                <span class="version-date">July 2024</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🎉</span> Initial Release</h3>
+                <ul class="change-list">
+                    <li class="change-item">Four core features: Schedule Drag & Drop, Contrast Fix, Text Formatter, Dark Mode</li>
+                    <li class="change-item">Premium licensing system via Gumroad</li>
+                    <li class="change-item">Clean, professional popup interface</li>
+                    <li class="change-item">Cross-year drag & drop support</li>
+                    <li class="change-item">Smart weekend detection with override</li>
+                    <li class="change-item">React-compatible formatting events</li>
+                    <li class="change-item">Toggle controls via popup UI</li>
+                    <li class="change-item">Modular architecture for easy expansion</li>
+                </ul>
+            </div>
+        </div>
+
+        <footer style="text-align: center; padding: 40px 20px; color: #666;">
+            <p>Made with ❤️ for JobTread users</p>
+            <p style="margin-top: 10px;">
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank" style="color: #3b82f6; text-decoration: none;">View on GitHub</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
