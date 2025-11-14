@@ -37,7 +37,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 
     // Open changelog to show what's new
     chrome.tabs.create({
-      url: 'https://github.com/King0lightai/JT-Power-Tools/blob/main/CHANGELOG.md',
+      url: 'https://king0lightai.github.io/JT-Power-Tools/changelog.html',
       active: true
     });
     console.log('Opened changelog to show release notes');
