@@ -572,6 +572,7 @@ const FormatterFeature = (() => {
         <button data-format="numbered" title="Numbered List">1. List</button>
         <button data-format="link" title="Insert Link">🔗 Link</button>
         <button data-format="quote" title="Quote">❝ Quote</button>
+        <button data-format="table" title="Insert Table">⊞ Table</button>
       </div>
     </div>
 
@@ -1177,6 +1178,43 @@ const FormatterFeature = (() => {
         replacement = `> ${afterQuote}`;
         cursorPos = quoteLineStart + 2;
         after = '';
+        break;
+
+      case 'table':
+        isPromptingUser = true;
+        const cols = prompt('Number of columns:', '3');
+        if (!cols || isNaN(cols) || cols < 1) {
+          isPromptingUser = false;
+          return;
+        }
+        const rows = prompt('Number of rows (including header):', '3');
+        isPromptingUser = false;
+
+        if (!rows || isNaN(rows) || rows < 2) {
+          return;
+        }
+
+        const numCols = parseInt(cols);
+        const numRows = parseInt(rows);
+
+        // Create table
+        let table = [];
+
+        // Header row
+        const headers = Array(numCols).fill('Header').map((h, i) => i === 0 ? h : h + (i + 1));
+        table.push('| ' + headers.join(' | ') + ' |');
+
+        // Separator row
+        table.push('| ' + Array(numCols).fill('---').join(' | ') + ' |');
+
+        // Data rows
+        for (let i = 1; i < numRows; i++) {
+          const cells = Array(numCols).fill('Data');
+          table.push('| ' + cells.join(' | ') + ' |');
+        }
+
+        replacement = '\n' + table.join('\n') + '\n';
+        cursorPos = start + 3; // Position cursor in first header cell
         break;
 
       case 'justify-left':
