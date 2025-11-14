@@ -126,6 +126,23 @@ const FormatterFeature = (() => {
       }
     }
 
+    // Check if it's a Daily Log EDIT field (textarea with transparent color and formatting overlay)
+    // These fields have: style="color: transparent;" and a sibling div with pointer-events-none
+    const hasTransparentColor = textarea.style.color === 'transparent';
+    if (hasTransparentColor) {
+      const parent = textarea.parentElement;
+      if (parent) {
+        // Look for a sibling div with pointer-events-none (the formatting overlay)
+        const siblings = parent.querySelectorAll('div');
+        for (const sibling of siblings) {
+          const styles = window.getComputedStyle(sibling);
+          if (styles.pointerEvents === 'none' && sibling !== textarea) {
+            return true;
+          }
+        }
+      }
+    }
+
     return false;
   }
 
@@ -177,13 +194,35 @@ const FormatterFeature = (() => {
       }
     });
 
+    // 3. Daily Log EDIT fields (textareas with transparent color and formatting overlay)
+    const allTextareas = document.querySelectorAll('textarea');
+    allTextareas.forEach(textarea => {
+      if (!fields.includes(textarea)) {
+        const hasTransparentColor = textarea.style.color === 'transparent';
+        if (hasTransparentColor) {
+          const parent = textarea.parentElement;
+          if (parent) {
+            // Look for a sibling div with pointer-events-none (the formatting overlay)
+            const siblings = parent.querySelectorAll('div');
+            for (const sibling of siblings) {
+              const styles = window.getComputedStyle(sibling);
+              if (styles.pointerEvents === 'none' && sibling !== textarea) {
+                fields.push(textarea);
+                break;
+              }
+            }
+          }
+        }
+      }
+    });
+
     // Filter out time entry notes fields
     const filteredFields = fields.filter(field => {
       const placeholder = field.getAttribute('placeholder');
       return placeholder !== 'Set notes'; // Exclude time entry notes
     });
 
-    console.log('Formatter: Found', filteredFields.length, 'fields (Description + Daily Log)');
+    console.log('Formatter: Found', filteredFields.length, 'fields (Description + Daily Log + Edit)');
 
     filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
