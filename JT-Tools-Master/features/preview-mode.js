@@ -693,8 +693,8 @@ const PreviewModeFeature = (() => {
     // Preserve line breaks
     result = result.replace(/\n/g, '<br>');
     // But remove breaks inside block elements
-    result = result.replace(/<\/(h[123]|blockquote|div|li)><br>/g, '</$1>');
-    result = result.replace(/<br><(h[123]|blockquote|div|li|ul|ol)/g, '<$1');
+    result = result.replace(/<\/(h[123]|blockquote|div|li|table|thead|tbody|tr|th|td)><br>/g, '</$1>');
+    result = result.replace(/<br><(h[123]|blockquote|div|li|ul|ol|table|thead|tbody|tr|th|td)/g, '<$1');
 
     return result;
   }
