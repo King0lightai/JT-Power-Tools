@@ -72,6 +72,101 @@ const QuickNotesFeature = (() => {
     }
   }
 
+  // Export notes as JSON file
+  function exportNotes() {
+    if (notes.length === 0) {
+      alert('No notes to export. Create some notes first!');
+      return;
+    }
+
+    const exportData = {
+      version: '1.0',
+      exportedAt: Date.now(),
+      exportedAtFormatted: new Date().toLocaleString(),
+      notesCount: notes.length,
+      notes: notes
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Create filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 10);
+    link.download = `jt-power-tools-notes-${timestamp}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    console.log(`Exported ${notes.length} notes`);
+  }
+
+  // Import notes from JSON file
+  function importNotes() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json,.json';
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const importData = JSON.parse(text);
+
+        // Validate import data
+        if (!importData.notes || !Array.isArray(importData.notes)) {
+          alert('Invalid notes file. Please select a valid JT Power Tools notes export.');
+          return;
+        }
+
+        // Ask user if they want to merge or replace
+        const action = confirm(
+          `Found ${importData.notes.length} note(s) in file.\n\n` +
+          `Click OK to MERGE with existing notes (${notes.length})\n` +
+          `Click Cancel to REPLACE all existing notes`
+        );
+
+        if (action) {
+          // Merge: Add imported notes that don't already exist
+          const existingIds = new Set(notes.map(n => n.id));
+          const newNotes = importData.notes.filter(n => !existingIds.has(n.id));
+
+          notes = [...notes, ...newNotes];
+          await saveNotes();
+
+          alert(`Successfully imported ${newNotes.length} new note(s)!\n${notes.length} total notes.`);
+        } else {
+          // Replace: Replace all notes with imported ones
+          if (confirm('Are you sure? This will DELETE all existing notes and replace them with imported notes.')) {
+            notes = importData.notes;
+            await saveNotes();
+
+            alert(`Successfully replaced notes!\n${notes.length} note(s) imported.`);
+          }
+        }
+
+        // Reset current note and re-render
+        currentNoteId = notes.length > 0 ? notes[0].id : null;
+        renderNotesList();
+        renderNoteEditor();
+
+        console.log(`Imported notes: ${importData.notes.length} from file, ${notes.length} total`);
+      } catch (error) {
+        console.error('Import error:', error);
+        alert('Failed to import notes. Please make sure the file is a valid JT Power Tools notes export.');
+      }
+    };
+
+    input.click();
+  }
+
   // Update note content
   function updateNote(noteId, updates) {
     const note = notes.find(n => n.id === noteId);
@@ -941,6 +1036,24 @@ const QuickNotesFeature = (() => {
             New Note
           </button>
         </div>
+        <div class="jt-notes-actions-container">
+          <button class="jt-notes-action-button" id="exportNotesBtn" title="Export notes as JSON file for backup">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export
+          </button>
+          <button class="jt-notes-action-button" id="importNotesBtn" title="Import notes from a JSON file">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="14" height="14">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            Import
+          </button>
+        </div>
         <div class="jt-notes-list"></div>
       </div>
       <div class="jt-notes-editor"></div>
@@ -956,6 +1069,12 @@ const QuickNotesFeature = (() => {
 
     const newButton = notesPanel.querySelector('.jt-notes-new-button');
     newButton.addEventListener('click', createNote);
+
+    const exportButton = notesPanel.querySelector('#exportNotesBtn');
+    exportButton.addEventListener('click', exportNotes);
+
+    const importButton = notesPanel.querySelector('#importNotesBtn');
+    importButton.addEventListener('click', importNotes);
 
     const searchInput = notesPanel.querySelector('.jt-notes-search-input');
     searchInput.addEventListener('input', (e) => {
