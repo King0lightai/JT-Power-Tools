@@ -15,6 +15,10 @@ const LicenseService = (() => {
   // Simple encryption key derived from extension ID
   const ENCRYPTION_KEY = 'jt-power-tools-v1';
 
+  // Revalidation lock to prevent concurrent revalidation attempts (fix race condition)
+  let revalidationInProgress = false;
+  let revalidationPromise = null;
+
   // Verify license key via secure proxy
   async function verifyLicense(licenseKey) {
     try {
@@ -210,34 +214,65 @@ const LicenseService = (() => {
 
   // Check if user has valid premium license (with re-validation)
   async function hasValidLicense() {
-    const licenseData = await getLicenseData();
+    try {
+      const licenseData = await getLicenseData();
 
-    if (!licenseData || !licenseData.valid) {
-      return false;
-    }
-
-    // Check if re-validation is needed (24 hours since last check)
-    const lastRevalidated = licenseData.lastRevalidated || licenseData.verifiedAt;
-    const timeSinceRevalidation = Date.now() - lastRevalidated;
-
-    if (timeSinceRevalidation > REVALIDATION_INTERVAL) {
-      console.log('License: Re-validation required (24 hours elapsed)');
-
-      // Re-validate in background
-      const result = await revalidateLicense();
-
-      if (!result.success) {
-        // If re-validation failed due to network, allow temporary access
-        if (result.silent) {
-          console.warn('License: Re-validation failed (network), allowing temporary access');
-          return true;
-        }
-        // If license was actually revoked, deny access
+      if (!licenseData || !licenseData.valid) {
         return false;
       }
-    }
 
-    return true;
+      // Check if re-validation is needed (24 hours since last check)
+      const lastRevalidated = licenseData.lastRevalidated || licenseData.verifiedAt;
+      const timeSinceRevalidation = Date.now() - lastRevalidated;
+
+      if (timeSinceRevalidation > REVALIDATION_INTERVAL) {
+        console.log('License: Re-validation required (24 hours elapsed)');
+
+        // If revalidation is already in progress, wait for it
+        if (revalidationInProgress && revalidationPromise) {
+          console.log('License: Revalidation already in progress, waiting...');
+          const result = await revalidationPromise;
+
+          if (!result.success) {
+            // If re-validation failed due to network, allow temporary access
+            if (result.silent) {
+              console.warn('License: Re-validation failed (network), allowing temporary access');
+              return true;
+            }
+            // If license was actually revoked, deny access
+            return false;
+          }
+        } else {
+          // Start new revalidation with lock
+          revalidationInProgress = true;
+          revalidationPromise = revalidateLicense();
+
+          try {
+            const result = await revalidationPromise;
+
+            if (!result.success) {
+              // If re-validation failed due to network, allow temporary access
+              if (result.silent) {
+                console.warn('License: Re-validation failed (network), allowing temporary access');
+                return true;
+              }
+              // If license was actually revoked, deny access
+              return false;
+            }
+          } finally {
+            // Release lock
+            revalidationInProgress = false;
+            revalidationPromise = null;
+          }
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('License: Error in hasValidLicense:', error);
+      // On error, deny access to be safe
+      return false;
+    }
   }
 
   // Check if re-validation is needed on startup

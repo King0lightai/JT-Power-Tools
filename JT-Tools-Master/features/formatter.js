@@ -31,9 +31,13 @@ const FormatterFeature = (() => {
     // Initialize fields
     initializeFields();
 
-    // Watch for budget textareas
+    // Watch for budget textareas (with error handling)
     observer = new MutationObserver(() => {
-      initializeFields();
+      try {
+        initializeFields();
+      } catch (error) {
+        console.error('Formatter: Error in MutationObserver callback:', error);
+      }
     });
 
     observer.observe(document.body, {

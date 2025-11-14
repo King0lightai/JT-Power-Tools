@@ -26,6 +26,10 @@
     {
       "matches": ["https://*.jobtread.com/*"],
       "js": [
+        "utils/error-handler.js",
+        "utils/storage-wrapper.js",
+        "utils/dom-helpers.js",
+        "utils/sanitizer.js",
         "features/drag-drop-modules/view-detector.js",
         "features/drag-drop-modules/date-utils.js",
         "features/drag-drop-modules/weekend-utils.js",
