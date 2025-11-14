@@ -1,0 +1,999 @@
+# Claude AI Assistant Guide for JT Power Tools
+
+This document provides comprehensive guidance for AI assistants (Claude) working on the JT Power Tools Chrome extension project.
+
+## Project Overview
+
+**JT Power Tools** is a Chrome extension (Manifest V3) that enhances the JobTread construction management platform (app.jobtread.com) with productivity features and UI improvements.
+
+### Key Information
+- **Version**: 3.3.0
+- **Platform**: Chrome Extension (Manifest V3)
+- **Target**: JobTread web application (app.jobtread.com)
+- **License Model**: Free + Premium features via Gumroad
+- **Repository**: https://github.com/King0lightai/JT-Power-Tools
+
+### Core Features
+1. **Schedule Drag & Drop** (Premium) - Drag schedule items between dates with multi-year support
+2. **Contrast Fix** - Automatic text color adjustment for better readability
+3. **Text Formatter** - Rich text formatting toolbar for text fields
+4. **Preview Mode** (Premium) - Live markdown preview with floating panel
+5. **Quick Job Switcher** - Keyboard-driven job search and navigation
+6. **Quick Notes** - Persistent notepad with markdown support
+7. **Dark Mode** - Dark theme for JobTread interface
+8. **Custom Theme** (Premium) - Personalized color palettes
+9. **Budget Hierarchy Shading** - Progressive visual shading for nested budget groups
+
+## Project Architecture
+
+### Directory Structure
+
+```
+JT-Power-Tools/
+├── JT-Tools-Master/              # Main extension directory
+│   ├── manifest.json             # Chrome extension manifest (V3)
+│   ├── content.js                # Main orchestrator script
+│   ├── background/
+│   │   └── service-worker.js     # Background service worker
+│   ├── popup/
+│   │   ├── popup.html            # Settings UI
+│   │   ├── popup.js              # Settings logic
+│   │   └── popup.css             # Settings styling
+│   ├── features/                 # Feature modules
+│   │   ├── drag-drop.js
+│   │   ├── contrast-fix.js
+│   │   ├── formatter.js
+│   │   ├── preview-mode.js
+│   │   ├── job-switcher.js
+│   │   ├── quick-notes.js
+│   │   ├── dark-mode.js
+│   │   ├── rgb-theme.js
+│   │   ├── budget-hierarchy.js
+│   │   └── drag-drop-modules/   # Drag & Drop sub-modules
+│   │       ├── view-detector.js
+│   │       ├── date-utils.js
+│   │       ├── weekend-utils.js
+│   │       ├── ui-utils.js
+│   │       ├── sidebar-manager.js
+│   │       ├── date-changer.js
+│   │       ├── event-handlers.js
+│   │       └── infinite-scroll.js
+│   ├── styles/                   # CSS files
+│   │   ├── formatter-toolbar.css
+│   │   ├── preview-mode.css
+│   │   ├── quick-notes.css
+│   │   └── dark-mode.css
+│   ├── services/                 # Shared services
+│   └── icons/                    # Extension icons
+├── chrome-web-store/             # Chrome Web Store documentation
+├── docs/                         # Project documentation
+├── server/                       # License server (if applicable)
+├── README.md                     # User-facing documentation
+└── CHANGELOG.md                  # Version history and changes
+```
+
+### Key Design Patterns
+
+#### 1. Modular Feature System
+Each feature is a self-contained module with:
+- `init()` - Initialize the feature
+- `cleanup()` - Clean up event listeners and DOM modifications
+- `isActive()` - Check if feature is currently active
+
+Example structure:
+```javascript
+const FeatureName = (() => {
+  let isActive = false;
+
+  function init() {
+    isActive = true;
+    // Setup code here
+  }
+
+  function cleanup() {
+    isActive = false;
+    // Cleanup code here
+  }
+
+  return {
+    init,
+    cleanup,
+    isActive: () => isActive
+  };
+})();
+
+window.FeatureName = FeatureName;
+```
+
+#### 2. Settings Management
+- Settings stored in Chrome Storage API (`chrome.storage.sync`)
+- Centralized in `background/service-worker.js`
+- Feature states persisted across sessions and devices
+- Hot-toggle support where possible (no page reload needed)
+
+#### 3. Content Script Orchestration
+- `content.js` serves as the main orchestrator
+- Dynamically loads/unloads features based on settings
+- Listens for settings changes via Chrome messaging
+- Manages feature lifecycle (init/cleanup)
+
+#### 4. Premium Feature Handling
+- Premium features require license validation
+- License validation done via Gumroad API
+- Features check license status before initialization
+- Premium features: Drag & Drop, Preview Mode, Custom Theme
+
+## Development Guidelines
+
+### Adding a New Feature
+
+Follow these steps to add a new feature:
+
+#### Step 1: Create Feature Module
+
+Create `JT-Tools-Master/features/new-feature.js`:
+
+```javascript
+/**
+ * New Feature
+ * Description of what this feature does
+ */
+const NewFeature = (() => {
+  let isActive = false;
+  let observers = [];
+  let eventListeners = [];
+
+  function init() {
+    if (isActive) return;
+    isActive = true;
+    console.log('NewFeature: Initializing...');
+
+    // Your feature implementation here
+    setupFeature();
+
+    console.log('NewFeature: Initialized');
+  }
+
+  function setupFeature() {
+    // Setup DOM observers, event listeners, etc.
+  }
+
+  function cleanup() {
+    if (!isActive) return;
+    console.log('NewFeature: Cleaning up...');
+
+    // Remove event listeners
+    eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    eventListeners = [];
+
+    // Disconnect observers
+    observers.forEach(observer => observer.disconnect());
+    observers = [];
+
+    // Remove injected styles/elements
+
+    isActive = false;
+    console.log('NewFeature: Cleaned up');
+  }
+
+  return {
+    init,
+    cleanup,
+    isActive: () => isActive
+  };
+})();
+
+window.NewFeature = NewFeature;
+```
+
+#### Step 2: Register in content.js
+
+Add to `featureModules` object:
+
+```javascript
+const featureModules = {
+  // ... existing features
+  newFeature: {
+    name: 'New Feature',
+    scriptPath: 'features/new-feature.js',
+    instance: null,
+    loaded: false
+  }
+};
+```
+
+#### Step 3: Add to manifest.json
+
+Add script to content_scripts if needed:
+
+```json
+{
+  "content_scripts": [
+    {
+      "js": [
+        // ... existing scripts
+        "features/new-feature.js",
+        "content.js"
+      ]
+    }
+  ]
+}
+```
+
+#### Step 4: Add to popup UI
+
+Add toggle in `popup/popup.html`:
+
+```html
+<div class="feature-item">
+  <div class="feature-info">
+    <div class="feature-icon">🆕</div>
+    <div class="feature-details">
+      <h3>New Feature</h3>
+      <p>Description of your feature</p>
+    </div>
+  </div>
+  <label class="toggle">
+    <input type="checkbox" id="newFeature" data-feature="newFeature">
+    <span class="slider"></span>
+  </label>
+</div>
+```
+
+For premium features, add a badge:
+
+```html
+<h3>New Feature <span class="premium-badge">Premium</span></h3>
+```
+
+#### Step 5: Update Default Settings
+
+Add default setting in `background/service-worker.js`:
+
+```javascript
+const defaultSettings = {
+  // ... existing settings
+  newFeature: false
+};
+```
+
+### Feature-Specific CSS
+
+If your feature needs CSS:
+
+1. Create `JT-Tools-Master/styles/new-feature.css`
+2. Add to `web_accessible_resources` in manifest.json
+3. Inject in your feature module:
+
+```javascript
+function injectStyles() {
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = chrome.runtime.getURL('styles/new-feature.css');
+  link.id = 'new-feature-styles';
+  document.head.appendChild(link);
+}
+
+function removeStyles() {
+  const link = document.getElementById('new-feature-styles');
+  if (link) link.remove();
+}
+```
+
+### Best Practices
+
+#### 1. Console Logging
+Use prefixed console logs for debugging:
+```javascript
+console.log('FeatureName: Message here');
+console.error('FeatureName: Error message');
+```
+
+#### 2. Event Listeners
+Always track and clean up event listeners:
+```javascript
+const eventListeners = [];
+
+function addListener(element, event, handler) {
+  element.addEventListener(event, handler);
+  eventListeners.push({ element, event, handler });
+}
+
+function cleanup() {
+  eventListeners.forEach(({ element, event, handler }) => {
+    element.removeEventListener(event, handler);
+  });
+  eventListeners = [];
+}
+```
+
+#### 3. MutationObservers
+Always disconnect observers in cleanup:
+```javascript
+const observers = [];
+
+function setupObserver() {
+  const observer = new MutationObserver(callback);
+  observer.observe(target, config);
+  observers.push(observer);
+}
+
+function cleanup() {
+  observers.forEach(observer => observer.disconnect());
+  observers = [];
+}
+```
+
+#### 4. DOM Manipulation
+- Use `waitForElement()` helper for async element detection
+- Check for element existence before manipulation
+- Clean up injected elements in cleanup()
+
+#### 5. React Compatibility
+JobTread uses React, so:
+- Use `dispatchEvent()` with React synthetic events
+- Trigger both 'input' and 'change' events
+- Set `event.simulated = true` for custom events
+
+Example:
+```javascript
+function triggerReactChange(element, value) {
+  element.value = value;
+
+  const inputEvent = new Event('input', { bubbles: true });
+  inputEvent.simulated = true;
+  element.dispatchEvent(inputEvent);
+
+  const changeEvent = new Event('change', { bubbles: true });
+  changeEvent.simulated = true;
+  element.dispatchEvent(changeEvent);
+}
+```
+
+#### 6. Feature Independence
+- Features should work independently
+- Avoid tight coupling between features
+- Use message passing if inter-feature communication needed
+
+#### 7. Performance
+- Use event delegation where possible
+- Throttle/debounce expensive operations
+- Lazy load resources when needed
+- Minimize DOM queries
+
+### Security Considerations
+
+#### 1. Content Security Policy
+- Follow Chrome extension CSP guidelines
+- No inline scripts or eval()
+- Use chrome.runtime.getURL() for resources
+
+#### 2. Data Storage
+- Use chrome.storage.sync for user settings
+- Sanitize user input before storage
+- Validate data before use
+
+#### 3. External Communications
+- Only communicate with trusted domains
+- Validate responses from external APIs
+- Use HTTPS for all external requests
+
+#### 4. Premium License Validation
+- Never expose license validation logic in content scripts
+- Use background service worker for sensitive operations
+- Validate licenses server-side when possible
+
+### Testing
+
+#### Manual Testing Process
+
+1. **Load Extension**
+   ```bash
+   # Open Chrome
+   chrome://extensions
+   # Enable Developer mode
+   # Click "Load unpacked"
+   # Select JT-Tools-Master folder
+   ```
+
+2. **Test Feature Toggle**
+   - Open extension popup
+   - Toggle feature on/off
+   - Verify feature activates/deactivates
+   - Check console for logs
+
+3. **Test on JobTread**
+   - Navigate to app.jobtread.com
+   - Test feature functionality
+   - Check for console errors
+   - Test edge cases
+
+4. **Test Cleanup**
+   - Enable feature
+   - Disable feature
+   - Verify complete cleanup (no memory leaks, no orphaned listeners)
+
+#### Testing Checklist
+
+- [ ] Feature initializes correctly
+- [ ] Feature cleanup is complete
+- [ ] No console errors
+- [ ] Works across page navigation
+- [ ] Persists settings across browser restart
+- [ ] Compatible with other features
+- [ ] No memory leaks
+- [ ] Works in incognito mode (if applicable)
+- [ ] Handles edge cases gracefully
+
+### Debugging
+
+#### Chrome DevTools
+```javascript
+// Check feature status
+window.FeatureName.isActive()
+
+// Check loaded features
+console.log(Object.keys(window).filter(k => k.includes('Feature')))
+
+// Check settings
+chrome.storage.sync.get(null, (data) => console.log(data))
+```
+
+#### Common Issues
+
+1. **Feature not loading**
+   - Check manifest.json includes script
+   - Check console for errors
+   - Verify feature registered in content.js
+
+2. **Settings not saving**
+   - Check Chrome storage permissions
+   - Verify service worker is running
+   - Check for storage quota issues
+
+3. **Feature conflicts**
+   - Check for CSS specificity issues
+   - Verify event listener cleanup
+   - Check for global variable collisions
+
+## CHANGELOG Update Requirements
+
+**CRITICAL**: Every code change, feature addition, bug fix, or improvement MUST be documented in the CHANGELOG.md file.
+
+### CHANGELOG Format
+
+The CHANGELOG follows [Keep a Changelog](https://keepachangelog.com/) format with these sections:
+
+- **Added**: New features or functionality
+- **Changed**: Changes to existing functionality
+- **Deprecated**: Features that will be removed in upcoming releases
+- **Removed**: Features that have been removed
+- **Fixed**: Bug fixes
+- **Security**: Security vulnerability fixes
+- **Improved**: Enhancements to existing features
+
+### CHANGELOG Update Process
+
+#### When to Update CHANGELOG
+
+Update CHANGELOG for:
+- ✅ New features (even small ones)
+- ✅ Bug fixes
+- ✅ Performance improvements
+- ✅ UI/UX changes
+- ✅ Code refactoring that affects behavior
+- ✅ Security fixes
+- ✅ Dependency updates that affect functionality
+- ✅ Breaking changes
+- ✅ Deprecations
+
+Do NOT update for:
+- ❌ Code comments only
+- ❌ README/documentation updates (unless they reflect new functionality)
+- ❌ Internal refactoring with no user impact
+- ❌ Test additions (unless they reveal bugs)
+- ❌ Minor typo fixes in comments
+
+#### How to Update CHANGELOG
+
+1. **Find the Unreleased Section**
+   - Add changes under `## [Unreleased]` at the top
+   - If no Unreleased section exists, create it:
+     ```markdown
+     ## [Unreleased]
+
+     ### Added
+
+     ### Changed
+
+     ### Fixed
+     ```
+
+2. **Choose the Correct Section**
+   - Use **Added** for new features
+   - Use **Fixed** for bug fixes
+   - Use **Improved** for enhancements
+   - Use **Changed** for breaking changes or significant modifications
+   - Use **Security** for security fixes
+
+3. **Write Clear Descriptions**
+   - Start with a verb (Added, Fixed, Improved, etc.)
+   - Be specific and concise
+   - Include the feature/module name
+   - Explain user impact, not implementation details
+
+   **Good Examples:**
+   ```markdown
+   ### Fixed
+   - Fixed text formatter not appearing in daily log edit fields
+   - Fixed preview button not showing on first focus
+   - Fixed custom theme breaking budget table borders
+   ```
+
+   **Bad Examples:**
+   ```markdown
+   ### Fixed
+   - Fixed bug (too vague)
+   - Updated the querySelector in formatter.js line 245 (implementation detail)
+   - Various improvements (not specific)
+   ```
+
+4. **Group Related Changes**
+   - Group multiple related fixes under a single bullet with sub-items:
+     ```markdown
+     ### Fixed
+     #### Text Formatter & Preview Mode Fixes
+     - Fixed text formatter not appearing in daily log edit fields
+     - Fixed preview button not showing on first focus
+     - Improved preview button visibility and content readability
+     ```
+
+5. **Include Context for Breaking Changes**
+   ```markdown
+   ### Changed
+   - Renamed "Premium Formatter" to "Preview Mode" for better clarity
+     **Breaking**: Update any references to `premiumFormatter` to `previewMode`
+   ```
+
+#### CHANGELOG Example Entry
+
+```markdown
+## [Unreleased]
+
+### Added
+- Added keyboard shortcut (Ctrl+Shift+N) to Quick Notes for faster access
+- Added table formatting support to Text Formatter
+  - Interactive table builder with row/column controls
+  - Visual table preview in formatting toolbar
+  - Generates markdown-formatted tables
+
+### Fixed
+- Fixed Quick Notes panel not closing with Escape key
+- Fixed Custom Theme not applying to newly created elements
+
+### Improved
+- Improved Quick Notes search to highlight matching text
+- Enhanced performance of Budget Hierarchy Shading on large budgets
+```
+
+#### Releasing a New Version
+
+When creating a release:
+
+1. **Move Unreleased to Version**
+   ```markdown
+   ## [3.4.0] - 2025-01-15
+
+   ### Added
+   - [Move items from Unreleased]
+
+   ### Fixed
+   - [Move items from Unreleased]
+   ```
+
+2. **Create New Unreleased Section**
+   ```markdown
+   ## [Unreleased]
+
+   (Empty - ready for next changes)
+   ```
+
+3. **Add Version Link at Bottom**
+   ```markdown
+   [3.4.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.4.0
+   ```
+
+4. **Update Version References**
+   - Update manifest.json version
+   - Update README.md version badge
+   - Update package.json if exists
+
+### CHANGELOG Enforcement
+
+**Before any commit:**
+1. Review your changes
+2. Update CHANGELOG.md appropriately
+3. Commit CHANGELOG.md with your changes
+
+**Commit message format:**
+```
+<type>: <description>
+
+- Change 1
+- Change 2
+
+Updated CHANGELOG.md
+```
+
+**Example commit:**
+```
+feat: Add export functionality to Quick Notes
+
+- Add export to Markdown button
+- Add export to PDF button
+- Add export modal with format selection
+
+Updated CHANGELOG.md under [Unreleased] -> Added
+```
+
+## Common Tasks
+
+### Task: Fix a Bug
+
+1. **Identify the Issue**
+   - Read error messages/stack traces
+   - Identify affected feature module
+   - Reproduce the bug
+
+2. **Locate Code**
+   - Find the relevant feature file in `features/`
+   - Check related modules if needed
+
+3. **Fix the Bug**
+   - Make minimal changes to fix issue
+   - Maintain code style consistency
+   - Add defensive checks if needed
+
+4. **Test the Fix**
+   - Reload extension in Chrome
+   - Reproduce original issue
+   - Verify fix works
+   - Test edge cases
+
+5. **Update CHANGELOG**
+   ```markdown
+   ### Fixed
+   - Fixed [specific bug description] in [feature name]
+   ```
+
+6. **Commit Changes**
+   ```bash
+   git add .
+   git commit -m "fix: [bug description]
+
+   - Fixed [details]
+   - Added [defensive checks/improvements]
+
+   Updated CHANGELOG.md"
+   ```
+
+### Task: Add Enhancement to Existing Feature
+
+1. **Understand Current Implementation**
+   - Read existing feature code
+   - Understand initialization and cleanup
+   - Note any dependencies
+
+2. **Implement Enhancement**
+   - Maintain existing code patterns
+   - Preserve backward compatibility
+   - Update cleanup if adding new listeners/observers
+
+3. **Test Thoroughly**
+   - Test new functionality
+   - Test existing functionality still works
+   - Test feature toggle on/off
+
+4. **Update CHANGELOG**
+   ```markdown
+   ### Improved
+   - Enhanced [feature name] to [description of improvement]
+     - [Sub-item 1]
+     - [Sub-item 2]
+   ```
+
+5. **Update Documentation**
+   - Update README.md if user-facing change
+   - Update comments in code
+   - Update this claude.md if needed
+
+### Task: Refactor Code
+
+1. **Plan Refactoring**
+   - Identify what needs refactoring
+   - Plan new structure
+   - Ensure no behavior changes
+
+2. **Refactor in Steps**
+   - Make incremental changes
+   - Test after each step
+   - Keep commits focused
+
+3. **Verify No Regressions**
+   - Test all affected features
+   - Check for console errors
+   - Test feature toggles
+
+4. **Update CHANGELOG** (only if behavior changes)
+   ```markdown
+   ### Changed
+   - Refactored [module name] for better maintainability
+     - [If any user-facing impact, note it here]
+   ```
+
+### Task: Update Dependencies
+
+1. **Check Current Versions**
+   - Review package.json (if exists)
+   - Check manifest.json for API versions
+
+2. **Update Dependencies**
+   - Update version numbers
+   - Check for breaking changes
+   - Update code if needed
+
+3. **Test Thoroughly**
+   - Test all features
+   - Check for deprecation warnings
+   - Verify no breaking changes
+
+4. **Update CHANGELOG**
+   ```markdown
+   ### Changed
+   - Updated [dependency name] to version [X.X.X]
+     - [Note any relevant changes or improvements]
+   ```
+
+## Code Style Guidelines
+
+### JavaScript Style
+
+- Use ES6+ features (const/let, arrow functions, destructuring)
+- Use semicolons
+- Use single quotes for strings
+- Use camelCase for variables and functions
+- Use PascalCase for module names
+- Use UPPER_CASE for constants
+- 2-space indentation
+
+Example:
+```javascript
+const FEATURE_NAME = 'ExampleFeature';
+const defaultSettings = {
+  enabled: false,
+  color: '#ff0000'
+};
+
+function handleClick(event) {
+  const { target } = event;
+  if (!target.classList.contains('active')) {
+    updateElement(target);
+  }
+}
+```
+
+### CSS Style
+
+- Use kebab-case for class names
+- Prefix feature-specific classes
+- Use CSS variables for colors
+- Group related properties
+- Comment complex rules
+
+Example:
+```css
+/* Feature Name - Main Container */
+.feature-name-container {
+  /* Layout */
+  display: flex;
+  position: relative;
+
+  /* Spacing */
+  padding: 10px;
+  margin: 0 auto;
+
+  /* Colors */
+  background: var(--bg-color);
+  color: var(--text-color);
+
+  /* Typography */
+  font-size: 14px;
+  font-weight: 500;
+}
+```
+
+### HTML Style
+
+- Use semantic HTML elements
+- Use data attributes for JS hooks
+- Keep structure flat when possible
+- Add ARIA attributes for accessibility
+
+Example:
+```html
+<div class="feature-container" data-feature="example">
+  <button class="feature-btn" aria-label="Activate feature">
+    Activate
+  </button>
+</div>
+```
+
+## Premium Features
+
+### License Validation
+
+Premium features require license validation:
+
+```javascript
+async function checkLicense() {
+  try {
+    const { licenseKey } = await chrome.storage.sync.get('licenseKey');
+    if (!licenseKey) return false;
+
+    // Validate with background service worker
+    const response = await chrome.runtime.sendMessage({
+      action: 'validateLicense',
+      licenseKey
+    });
+
+    return response.valid;
+  } catch (error) {
+    console.error('License check failed:', error);
+    return false;
+  }
+}
+```
+
+### Premium Feature Pattern
+
+```javascript
+const PremiumFeature = (() => {
+  let isActive = false;
+  let isLicensed = false;
+
+  async function init() {
+    // Check license first
+    isLicensed = await checkLicense();
+    if (!isLicensed) {
+      console.log('PremiumFeature: No valid license');
+      showUpgradePrompt();
+      return;
+    }
+
+    isActive = true;
+    // Continue with initialization
+  }
+
+  function showUpgradePrompt() {
+    // Show UI prompting user to upgrade
+  }
+
+  return { init, cleanup, isActive: () => isActive };
+})();
+```
+
+## Git Workflow
+
+### Branch Strategy
+
+- `main` - Stable production code
+- `claude/*` - Feature branches created by Claude AI
+- Feature branches should be named descriptively
+
+### Commit Message Format
+
+```
+<type>: <short description>
+
+<detailed description>
+- Change 1
+- Change 2
+- Change 3
+
+Updated CHANGELOG.md
+```
+
+Types:
+- `feat` - New feature
+- `fix` - Bug fix
+- `refactor` - Code refactoring
+- `style` - Code style changes (formatting)
+- `docs` - Documentation only
+- `test` - Test additions or changes
+- `chore` - Maintenance tasks
+
+### Before Pushing
+
+1. ✅ Test all changes locally
+2. ✅ Update CHANGELOG.md
+3. ✅ Update README.md if needed
+4. ✅ Check for console errors
+5. ✅ Verify no breaking changes
+6. ✅ Update version if releasing
+
+## Resources
+
+### Documentation Files
+- `/README.md` - User documentation and feature list
+- `/CHANGELOG.md` - Version history and changes
+- `/chrome-web-store/PRIVACY_POLICY.md` - Privacy policy
+- `/chrome-web-store/CHROME_WEB_STORE_LISTING.md` - Store listing details
+- `/docs/guides/` - Additional guides
+
+### External Resources
+- [Chrome Extension Docs](https://developer.chrome.com/docs/extensions/)
+- [Manifest V3 Migration](https://developer.chrome.com/docs/extensions/mv3/intro/)
+- [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/storage/)
+- [Keep a Changelog](https://keepachangelog.com/)
+- [Semantic Versioning](https://semver.org/)
+
+### JobTread Platform
+- Target URL: `https://app.jobtread.com/*`
+- Uses React framework
+- Dynamic content loading
+- Single-page application (SPA)
+
+## Troubleshooting
+
+### Extension Not Loading
+1. Check manifest.json syntax
+2. Verify all file paths are correct
+3. Check Chrome console for errors
+4. Try removing and re-adding extension
+
+### Feature Not Working
+1. Check if feature is enabled in settings
+2. Check console for error messages
+3. Verify script loaded: `window.FeatureName`
+4. Check if premium license is required and valid
+5. Verify correct page URL/path
+
+### Settings Not Persisting
+1. Check storage permissions in manifest
+2. Verify service worker is active
+3. Clear extension storage and retry
+4. Check for storage quota issues
+
+### Style Not Applying
+1. Verify CSS file in web_accessible_resources
+2. Check if style element injected
+3. Check CSS specificity
+4. Verify no CSP violations
+
+## Contact & Support
+
+- **Repository**: https://github.com/King0lightai/JT-Power-Tools
+- **Issues**: https://github.com/King0lightai/JT-Power-Tools/issues
+- **Chrome Web Store**: https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn
+- **Premium Support**: https://lightking7.gumroad.com/l/jtpowertools
+
+---
+
+## Summary for Claude AI
+
+When working on this project:
+
+1. **ALWAYS update CHANGELOG.md** for any functional changes
+2. Follow the modular feature pattern for consistency
+3. Test thoroughly before committing
+4. Maintain backward compatibility
+5. Handle cleanup properly (no memory leaks)
+6. Use prefixed console logs for debugging
+7. Respect React event handling in JobTread
+8. Check for premium license when needed
+9. Keep code style consistent with existing patterns
+10. Document complex logic with comments
+
+**Remember**: Every change should make the user's experience better while maintaining stability and performance.
