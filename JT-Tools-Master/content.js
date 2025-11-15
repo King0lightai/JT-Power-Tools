@@ -49,6 +49,11 @@ const featureModules = {
     name: 'Quick Notes',
     feature: () => window.QuickNotesFeature,
     instance: null
+  },
+  helpSidebarSupport: {
+    name: 'Help Sidebar Support',
+    feature: () => window.HelpSidebarSupportFeature,
+    instance: null
   }
 };
 
@@ -63,6 +68,7 @@ let currentSettings = {
   quickJobSwitcher: true,
   budgetHierarchy: false,
   quickNotes: true,
+  helpSidebarSupport: true,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
