@@ -394,3 +394,14 @@ td div.cursor-pointer[style*="border-left"] {
 .jt-formatter-toolbar button.jt-color-purple:hover {
     background: #4c1d95 !important;
 }
+
+/* === Budget Table Frozen Column Z-Index Fix === */
+/* Ensure sticky/frozen columns stay above resize handles */
+.sticky {
+    z-index: 20 !important;
+}
+
+/* Reduce z-index of column resize handles */
+.absolute.z-10.cursor-col-resize {
+    z-index: 5 !important;
+}
