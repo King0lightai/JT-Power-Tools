@@ -728,6 +728,17 @@ const CustomThemeFeature = (() => {
         color: ${text} !important;
         opacity: 0.5;
       }
+
+      /* === Budget Table Frozen Column Z-Index Fix === */
+      /* Ensure sticky/frozen columns stay above resize handles */
+      .sticky {
+        z-index: 20 !important;
+      }
+
+      /* Reduce z-index of column resize handles */
+      .absolute.z-10.cursor-col-resize {
+        z-index: 5 !important;
+      }
     `;
 
     styleElement = document.createElement('style');
