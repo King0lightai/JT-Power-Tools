@@ -129,6 +129,11 @@ const DragDropFeature = (() => {
       window.UIUtils.cleanupDragDrop();
     }
 
+    // Cleanup task completion checkboxes
+    if (window.TaskCompletion) {
+      window.TaskCompletion.cleanup();
+    }
+
     // Remove weekend CSS
     if (window.WeekendUtils) {
       window.WeekendUtils.removeWeekendCSS();
@@ -147,6 +152,11 @@ const DragDropFeature = (() => {
     }
 
     window.UIUtils.initDragAndDrop(eventHandlers);
+
+    // Add completion checkboxes to task cards
+    if (window.TaskCompletion) {
+      window.TaskCompletion.addCompletionCheckboxes();
+    }
   }
 
   // Public API

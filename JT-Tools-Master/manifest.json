@@ -38,6 +38,7 @@
         "features/drag-drop-modules/date-changer.js",
         "features/drag-drop-modules/event-handlers.js",
         "features/drag-drop-modules/infinite-scroll.js",
+        "features/drag-drop-modules/task-completion.js",
         "features/drag-drop.js",
         "features/contrast-fix.js",
         "features/formatter.js",
