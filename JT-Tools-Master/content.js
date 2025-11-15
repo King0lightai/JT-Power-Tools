@@ -71,11 +71,22 @@ let currentSettings = {
   savedThemes: [null, null, null]
 };
 
-// Load settings from storage
+/**
+ * Load settings from storage with error handling
+ * @returns {Promise<Object>} Current settings
+ */
 async function loadSettings() {
   try {
-    const result = await chrome.storage.sync.get(['jtToolsSettings']);
-    currentSettings = result.jtToolsSettings || currentSettings;
+    // Use StorageWrapper if available for safer storage access
+    if (window.StorageWrapper) {
+      const result = await window.StorageWrapper.get(['jtToolsSettings'], { jtToolsSettings: currentSettings });
+      currentSettings = result.jtToolsSettings || currentSettings;
+    } else {
+      // Fallback to direct chrome storage
+      const result = await chrome.storage.sync.get(['jtToolsSettings']);
+      currentSettings = result.jtToolsSettings || currentSettings;
+    }
+
     console.log('JT-Tools: Settings loaded:', currentSettings);
     return currentSettings;
   } catch (error) {
@@ -84,9 +95,17 @@ async function loadSettings() {
   }
 }
 
-// Initialize a feature
+/**
+ * Initialize a feature module safely
+ * @param {string} featureKey - Feature key from featureModules
+ */
 function initializeFeature(featureKey) {
   const module = featureModules[featureKey];
+
+  if (!module) {
+    console.error(`JT-Tools: Unknown feature key: ${featureKey}`);
+    return;
+  }
 
   try {
     // Get the feature from window
@@ -94,6 +113,12 @@ function initializeFeature(featureKey) {
 
     if (!FeatureClass) {
       console.error(`JT-Tools: ${module.name} not found on window`);
+      return;
+    }
+
+    // Check if feature has required interface
+    if (typeof FeatureClass.init !== 'function' || typeof FeatureClass.isActive !== 'function') {
+      console.error(`JT-Tools: ${module.name} missing required methods (init/isActive)`);
       return;
     }
 
@@ -115,16 +140,36 @@ function initializeFeature(featureKey) {
   }
 }
 
-// Cleanup a feature
+/**
+ * Cleanup a feature module safely
+ * @param {string} featureKey - Feature key from featureModules
+ */
 function cleanupFeature(featureKey) {
   const module = featureModules[featureKey];
+
+  if (!module) {
+    console.error(`JT-Tools: Unknown feature key: ${featureKey}`);
+    return;
+  }
 
   try {
     const FeatureClass = module.feature();
 
-    if (FeatureClass && FeatureClass.isActive()) {
+    if (!FeatureClass) {
+      console.warn(`JT-Tools: ${module.name} not found during cleanup`);
+      return;
+    }
+
+    if (typeof FeatureClass.cleanup !== 'function') {
+      console.warn(`JT-Tools: ${module.name} missing cleanup method`);
+      return;
+    }
+
+    if (typeof FeatureClass.isActive === 'function' && FeatureClass.isActive()) {
       FeatureClass.cleanup();
       console.log(`JT-Tools: ${module.name} cleaned up`);
+    } else {
+      console.log(`JT-Tools: ${module.name} not active, skipping cleanup`);
     }
   } catch (error) {
     console.error(`JT-Tools: Error cleaning up ${module.name}:`, error);
@@ -144,73 +189,113 @@ function initializeAllFeatures() {
   console.log('JT-Tools: All enabled features initialized');
 }
 
-// Handle settings changes
+/**
+ * Handle settings changes from popup or background
+ * @param {Object} newSettings - New settings object
+ */
 function handleSettingsChange(newSettings) {
-  console.log('JT-Tools: Settings changed:', newSettings);
-
-  // Compare old and new settings
-  for (const [key, enabled] of Object.entries(newSettings)) {
-    // Skip non-feature settings like rgbColors
-    if (!featureModules[key]) continue;
-
-    const wasEnabled = currentSettings[key];
-
-    if (enabled && !wasEnabled) {
-      // Feature was enabled
-      console.log(`JT-Tools: Enabling ${featureModules[key].name}`);
-      initializeFeature(key);
-    } else if (!enabled && wasEnabled) {
-      // Feature was disabled
-      console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
-      cleanupFeature(key);
+  try {
+    if (!newSettings || typeof newSettings !== 'object') {
+      console.error('JT-Tools: Invalid settings object received');
+      return;
     }
-  }
 
-  // Special handling for theme colors changes
-  if (newSettings.rgbTheme && newSettings.themeColors) {
-    const RGBThemeFeature = window.RGBThemeFeature;
-    if (RGBThemeFeature && RGBThemeFeature.isActive()) {
-      // Check if colors actually changed
-      const colorsChanged = JSON.stringify(currentSettings.themeColors) !== JSON.stringify(newSettings.themeColors);
-      if (colorsChanged) {
-        console.log('JT-Tools: Theme colors updated, applying new colors');
-        RGBThemeFeature.updateColors(newSettings.themeColors);
+    console.log('JT-Tools: Settings changed:', newSettings);
+
+    // Compare old and new settings
+    for (const [key, enabled] of Object.entries(newSettings)) {
+      // Skip non-feature settings like rgbColors
+      if (!featureModules[key]) continue;
+
+      const wasEnabled = currentSettings[key];
+
+      if (enabled && !wasEnabled) {
+        // Feature was enabled
+        console.log(`JT-Tools: Enabling ${featureModules[key].name}`);
+        initializeFeature(key);
+      } else if (!enabled && wasEnabled) {
+        // Feature was disabled
+        console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
+        cleanupFeature(key);
       }
     }
+
+    // Special handling for theme colors changes
+    if (newSettings.rgbTheme && newSettings.themeColors) {
+      const RGBThemeFeature = window.RGBThemeFeature;
+      if (RGBThemeFeature && typeof RGBThemeFeature.isActive === 'function' && RGBThemeFeature.isActive()) {
+        // Check if colors actually changed
+        const colorsChanged = JSON.stringify(currentSettings.themeColors) !== JSON.stringify(newSettings.themeColors);
+        if (colorsChanged && typeof RGBThemeFeature.updateColors === 'function') {
+          console.log('JT-Tools: Theme colors updated, applying new colors');
+          RGBThemeFeature.updateColors(newSettings.themeColors);
+        }
+      }
+    }
+
+    // Refresh budget hierarchy shading when theme changes
+    const themeChanged =
+      newSettings.darkMode !== currentSettings.darkMode ||
+      newSettings.rgbTheme !== currentSettings.rgbTheme ||
+      (newSettings.rgbTheme && JSON.stringify(newSettings.themeColors) !== JSON.stringify(currentSettings.themeColors));
+
+    if (themeChanged && window.BudgetHierarchyFeature) {
+      if (typeof window.BudgetHierarchyFeature.isActive === 'function' && window.BudgetHierarchyFeature.isActive()) {
+        console.log('JT-Tools: Theme changed, refreshing budget hierarchy shading');
+        // Small delay to ensure theme is applied first
+        setTimeout(() => {
+          try {
+            if (typeof window.BudgetHierarchyFeature.refreshShading === 'function') {
+              window.BudgetHierarchyFeature.refreshShading();
+            }
+          } catch (error) {
+            console.error('JT-Tools: Error refreshing budget hierarchy:', error);
+          }
+        }, 100);
+      }
+    }
+
+    // Update current settings
+    currentSettings = newSettings;
+  } catch (error) {
+    console.error('JT-Tools: Error in handleSettingsChange:', error);
   }
-
-  // Refresh budget hierarchy shading when theme changes
-  const themeChanged =
-    newSettings.darkMode !== currentSettings.darkMode ||
-    newSettings.rgbTheme !== currentSettings.rgbTheme ||
-    (newSettings.rgbTheme && JSON.stringify(newSettings.themeColors) !== JSON.stringify(currentSettings.themeColors));
-
-  if (themeChanged && window.BudgetHierarchyFeature && window.BudgetHierarchyFeature.isActive()) {
-    console.log('JT-Tools: Theme changed, refreshing budget hierarchy shading');
-    // Small delay to ensure theme is applied first
-    setTimeout(() => {
-      window.BudgetHierarchyFeature.refreshShading();
-    }, 100);
-  }
-
-  // Update current settings
-  currentSettings = newSettings;
 }
 
-// Listen for messages from background script
+/**
+ * Listen for messages from background script
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('JT-Tools: Message received:', message);
+  try {
+    console.log('JT-Tools: Message received:', message);
 
-  switch (message.type) {
-    case 'SETTINGS_CHANGED':
-      handleSettingsChange(message.settings);
-      sendResponse({ success: true });
-      break;
+    if (!message || !message.type) {
+      console.warn('JT-Tools: Invalid message format');
+      sendResponse({ success: false, error: 'Invalid message format' });
+      return false;
+    }
 
-    default:
-      console.warn('JT-Tools: Unknown message type:', message.type);
-      sendResponse({ success: false, error: 'Unknown message type' });
+    switch (message.type) {
+      case 'SETTINGS_CHANGED':
+        if (message.settings) {
+          handleSettingsChange(message.settings);
+          sendResponse({ success: true });
+        } else {
+          console.error('JT-Tools: SETTINGS_CHANGED message missing settings');
+          sendResponse({ success: false, error: 'Missing settings' });
+        }
+        break;
+
+      default:
+        console.warn('JT-Tools: Unknown message type:', message.type);
+        sendResponse({ success: false, error: 'Unknown message type' });
+    }
+  } catch (error) {
+    console.error('JT-Tools: Error handling message:', error);
+    sendResponse({ success: false, error: 'Internal error' });
   }
+
+  return false; // Synchronous response
 });
 
 // Wait for all features to be available on window
