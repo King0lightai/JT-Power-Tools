@@ -115,6 +115,15 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: #383b3f;
 }
 
+/* Today's date indicator in calendar - keep solid blue in dark mode */
+.bg-blue-500 {
+    background-color: #3b82f6 !important;
+}
+
+.bg-blue-500.text-white {
+    color: #ffffff !important;
+}
+
 .bg-gray-800\/80 {
     background-color: color-mix(in oklab, oklch(0.2 0 0) 80%, transparent);
 }
