@@ -48,6 +48,7 @@
         "features/job-switcher.js",
         "features/budget-hierarchy.js",
         "features/quick-notes.js",
+        "features/help-sidebar-support.js",
         "content.js"
       ],
       "run_at": "document_end"
