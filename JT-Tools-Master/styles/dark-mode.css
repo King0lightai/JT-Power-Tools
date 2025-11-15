@@ -84,15 +84,15 @@ td div.cursor-pointer[style*="border-left"] {
 
 /* === Background Colors === */
 .bg-white {
-    background-color: #2c2c2c;
+    background-color: #2c2c2c !important;
 }
 
 .bg-gray-50 {
-    background-color: #353535;
+    background-color: #353535 !important;
 }
 
 .bg-gray-100 {
-    background-color: #353535;
+    background-color: #353535 !important;
 }
 
 .bg-gray-700 {
