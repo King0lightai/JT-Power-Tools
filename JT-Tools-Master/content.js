@@ -192,6 +192,11 @@ function initializeAllFeatures() {
     }
   }
 
+  // Always enable Help Sidebar Support (not user-toggleable)
+  if (featureModules.helpSidebarSupport) {
+    initializeFeature('helpSidebarSupport');
+  }
+
   console.log('JT-Tools: All enabled features initialized');
 }
 
@@ -212,6 +217,9 @@ function handleSettingsChange(newSettings) {
     for (const [key, enabled] of Object.entries(newSettings)) {
       // Skip non-feature settings like rgbColors
       if (!featureModules[key]) continue;
+
+      // Skip helpSidebarSupport - it's always enabled and not user-toggleable
+      if (key === 'helpSidebarSupport') continue;
 
       const wasEnabled = currentSettings[key];
 
