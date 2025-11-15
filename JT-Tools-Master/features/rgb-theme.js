@@ -742,7 +742,9 @@ const CustomThemeFeature = (() => {
 
       /* === Budget Table Frozen Column Z-Index Fix === */
       /* Ensure sticky/frozen columns stay above resize handles */
-      .sticky {
+      /* Only target the actual frozen column (left: 0), not internal sticky text elements */
+      .sticky[style*="left: 0px"],
+      .sticky[style*="left:0px"] {
         z-index: 20 !important;
       }
 
