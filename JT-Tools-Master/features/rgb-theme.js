@@ -23,9 +23,13 @@ const CustomThemeFeature = (() => {
     console.log('CustomTheme: Initializing...');
     isActive = true;
 
-    // Update colors if provided
+    // Update colors if provided (with validation)
     if (colors) {
-      currentColors = { ...currentColors, ...colors };
+      currentColors = {
+        primary: window.Sanitizer ? window.Sanitizer.sanitizeHexColor(colors.primary, currentColors.primary) : (colors.primary || currentColors.primary),
+        background: window.Sanitizer ? window.Sanitizer.sanitizeHexColor(colors.background, currentColors.background) : (colors.background || currentColors.background),
+        text: window.Sanitizer ? window.Sanitizer.sanitizeHexColor(colors.text, currentColors.text) : (colors.text || currentColors.text)
+      };
     }
 
     // Inject custom theme CSS
@@ -73,7 +77,17 @@ const CustomThemeFeature = (() => {
 
   // Update colors dynamically
   function updateColors(colors) {
-    currentColors = { ...currentColors, ...colors };
+    // Validate and sanitize colors before applying
+    if (window.Sanitizer) {
+      currentColors = {
+        primary: colors.primary ? window.Sanitizer.sanitizeHexColor(colors.primary, currentColors.primary) : currentColors.primary,
+        background: colors.background ? window.Sanitizer.sanitizeHexColor(colors.background, currentColors.background) : currentColors.background,
+        text: colors.text ? window.Sanitizer.sanitizeHexColor(colors.text, currentColors.text) : currentColors.text
+      };
+    } else {
+      // Fallback if Sanitizer not available
+      currentColors = { ...currentColors, ...colors };
+    }
 
     if (isActive) {
       // Re-inject CSS with new colors
@@ -96,6 +110,13 @@ const CustomThemeFeature = (() => {
 
   // Helper function to convert hex to RGB
   function hexToRgb(hex) {
+    // Strict validation to prevent CSS injection
+    if (!hex || typeof hex !== 'string') {
+      console.warn('CustomTheme: Invalid hex color input:', hex);
+      return null;
+    }
+
+    // Only allow valid hex color format
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
@@ -112,7 +133,11 @@ const CustomThemeFeature = (() => {
   // Calculate luminance to determine if color is light or dark
   function getLuminance(hex) {
     const rgb = hexToRgb(hex);
-    if (!rgb) return 0.5;
+    if (!rgb) {
+      // Fallback to assuming dark color if invalid
+      console.warn('CustomTheme: Invalid color for luminance calculation:', hex);
+      return 0;
+    }
 
     // Normalize RGB values
     const r = rgb.r / 255;

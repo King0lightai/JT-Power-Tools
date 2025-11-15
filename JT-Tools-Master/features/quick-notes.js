@@ -17,6 +17,12 @@ const QuickNotesFeature = (() => {
   const MAX_WIDTH = 1200;
   let isResizing = false;
 
+  // Store resize event handlers for cleanup (fix memory leak)
+  let resizeHandlers = {
+    mouseMove: null,
+    mouseUp: null
+  };
+
   // Generate unique ID
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -25,19 +31,41 @@ const QuickNotesFeature = (() => {
   // Load notes from storage
   async function loadNotes() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get([STORAGE_KEY], (result) => {
-        notes = result[STORAGE_KEY] || [];
-        resolve(notes);
-      });
+      try {
+        chrome.storage.sync.get([STORAGE_KEY], (result) => {
+          if (chrome.runtime.lastError) {
+            console.error('Quick Notes: Error loading notes:', chrome.runtime.lastError.message);
+            notes = [];
+            resolve([]);
+            return;
+          }
+          notes = result[STORAGE_KEY] || [];
+          resolve(notes);
+        });
+      } catch (error) {
+        console.error('Quick Notes: Unexpected error loading notes:', error);
+        notes = [];
+        resolve([]);
+      }
     });
   }
 
   // Save notes to storage
   async function saveNotes() {
     return new Promise((resolve) => {
-      chrome.storage.sync.set({ [STORAGE_KEY]: notes }, () => {
-        resolve();
-      });
+      try {
+        chrome.storage.sync.set({ [STORAGE_KEY]: notes }, () => {
+          if (chrome.runtime.lastError) {
+            console.error('Quick Notes: Error saving notes:', chrome.runtime.lastError.message);
+            resolve(false);
+            return;
+          }
+          resolve(true);
+        });
+      } catch (error) {
+        console.error('Quick Notes: Unexpected error saving notes:', error);
+        resolve(false);
+      }
     });
   }
 
@@ -1145,6 +1173,10 @@ const QuickNotesFeature = (() => {
       saveWidth(notesPanel.offsetWidth);
     };
 
+    // Store handlers for cleanup
+    resizeHandlers.mouseMove = handleMouseMove;
+    resizeHandlers.mouseUp = handleMouseUp;
+
     resizeHandle.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -1256,6 +1288,16 @@ const QuickNotesFeature = (() => {
 
     // Remove keyboard listener
     document.removeEventListener('keydown', handleKeyboard);
+
+    // Remove resize event listeners (fix memory leak)
+    if (resizeHandlers.mouseMove) {
+      document.removeEventListener('mousemove', resizeHandlers.mouseMove);
+      resizeHandlers.mouseMove = null;
+    }
+    if (resizeHandlers.mouseUp) {
+      document.removeEventListener('mouseup', resizeHandlers.mouseUp);
+      resizeHandlers.mouseUp = null;
+    }
 
     // Remove settings change listener
     chrome.runtime.onMessage.removeListener(handleSettingsChange);

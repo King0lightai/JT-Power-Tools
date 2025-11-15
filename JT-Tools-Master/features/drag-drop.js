@@ -73,24 +73,28 @@ const DragDropFeature = (() => {
       console.log('DragDrop: Feature loaded');
     }, 1000);
 
-    // Watch for DOM changes and re-initialize
+    // Watch for DOM changes and re-initialize (with error handling)
     observer = new MutationObserver((mutations) => {
-      // CRITICAL: Don't re-initialize while date change is in progress
-      if (state.isDateChangeInProgress) {
-        console.log('DragDrop: MutationObserver - Skipping re-init, date change in progress');
-        return;
-      }
-
-      let shouldReinit = false;
-
-      mutations.forEach(mutation => {
-        if (mutation.addedNodes.length > 0) {
-          shouldReinit = true;
+      try {
+        // CRITICAL: Don't re-initialize while date change is in progress
+        if (state.isDateChangeInProgress) {
+          console.log('DragDrop: MutationObserver - Skipping re-init, date change in progress');
+          return;
         }
-      });
 
-      if (shouldReinit) {
-        setTimeout(initDragAndDrop, 500);
+        let shouldReinit = false;
+
+        mutations.forEach(mutation => {
+          if (mutation.addedNodes.length > 0) {
+            shouldReinit = true;
+          }
+        });
+
+        if (shouldReinit) {
+          setTimeout(initDragAndDrop, 500);
+        }
+      } catch (error) {
+        console.error('DragDrop: Error in MutationObserver callback:', error);
       }
     });
 
