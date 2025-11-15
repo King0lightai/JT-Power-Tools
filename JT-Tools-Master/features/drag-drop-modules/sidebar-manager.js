@@ -31,10 +31,11 @@ const SidebarManager = (() => {
         div.overflow-y-auto.overscroll-contain.sticky {
             opacity: 0 !important;
         }
-        /* Hide any fixed/absolute overlays and backdrops */
-        body > div.fixed.inset-0:not(.jt-formatter-toolbar),
-        div[style*="position: fixed"][style*="inset"],
-        div[class*="backdrop"] {
+        /* Hide sidebar-related fixed overlays and backdrops (but not help modals) */
+        /* Only hide elements that are part of the sidebar (z-30) or backdrop (not dialogs/modals) */
+        body > div.fixed.inset-0:not(.jt-formatter-toolbar):not([role="dialog"]):not([role="alertdialog"]),
+        div.z-30[style*="position: fixed"][style*="inset"],
+        div[class*="backdrop"]:not([role="dialog"]):not([role="alertdialog"]) {
             opacity: 0 !important;
             position: fixed !important;
             top: -9999px !important;
