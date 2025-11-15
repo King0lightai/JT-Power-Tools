@@ -9,6 +9,7 @@ const defaultSettings = {
   quickJobSwitcher: true,
   budgetHierarchy: false,
   quickNotes: true,
+  helpSidebarSupport: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple

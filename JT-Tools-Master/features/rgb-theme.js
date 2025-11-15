@@ -617,8 +617,19 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryLight40} !important;
       }
 
+      /* === Search Bar Hover State === */
+      /* Search bar should use shaded background, not primary color */
+      input[placeholder*="Search"].bg-transparent:hover,
+      input[placeholder*="Search"].bg-transparent:focus,
+      div:has(> input[placeholder*="Search"]):hover,
+      div:has(> input[placeholder*="Search"]):focus-within {
+        background-color: ${background} !important;
+        filter: brightness(0.95);
+      }
+
       /* === Hover state for sidebar buttons === */
-      .hover\\:bg-gray-100:hover {
+      /* Only apply primary color to sidebar buttons with border-jtOrange or specific navigation elements */
+      .hover\\:bg-gray-100:hover:not(:has(input)):not(div:has(> input[placeholder*="Search"])) {
         background-color: ${primaryLight45} !important;
       }
 
@@ -727,6 +738,17 @@ const CustomThemeFeature = (() => {
       .group-hover\\:placeholder-gray-500:hover::placeholder {
         color: ${text} !important;
         opacity: 0.5;
+      }
+
+      /* === Budget Table Frozen Column Z-Index Fix === */
+      /* Ensure sticky/frozen columns stay above resize handles */
+      .sticky {
+        z-index: 20 !important;
+      }
+
+      /* Reduce z-index of column resize handles */
+      .absolute.z-10.cursor-col-resize {
+        z-index: 5 !important;
       }
     `;
 
