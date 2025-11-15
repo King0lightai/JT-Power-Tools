@@ -36,8 +36,11 @@ const TaskCompletion = (() => {
         return;
       }
 
-      // Create checkbox button
-      const checkbox = createCheckboxButton();
+      // Detect if task is already complete
+      const isComplete = isTaskComplete(taskNameContainer);
+
+      // Create checkbox button with current completion status
+      const checkbox = createCheckboxButton(isComplete);
 
       // Add to the end of the task name container
       taskNameContainer.appendChild(checkbox);
@@ -46,24 +49,37 @@ const TaskCompletion = (() => {
       processedTasks.add(item);
 
       // Add click handler
-      checkbox.addEventListener('click', (e) => handleCheckboxClick(e, item));
+      checkbox.addEventListener('click', (e) => handleCheckboxClick(e, item, checkbox));
     });
 
     console.log(`TaskCompletion: Added checkboxes to task cards`);
   }
 
   /**
+   * Detect if a task is complete by looking for the checkmark icon in the task name
+   * @param {HTMLElement} taskNameContainer - The task name container element
+   * @returns {boolean} True if task is complete
+   */
+  function isTaskComplete(taskNameContainer) {
+    // Look for the checkmark SVG path in the task name
+    // Completed tasks have: <path d="M20 6 9 17l-5-5"></path>
+    const checkmarkPath = taskNameContainer.querySelector('path[d="M20 6 9 17l-5-5"]');
+    return !!checkmarkPath;
+  }
+
+  /**
    * Create the checkbox button element
+   * @param {boolean} isComplete - Whether the task is currently complete
    * @returns {HTMLElement} The checkbox button
    */
-  function createCheckboxButton() {
+  function createCheckboxButton(isComplete = false) {
     const button = document.createElement('div');
     button.className = 'jt-complete-checkbox inline-block align-bottom relative cursor-pointer p-0.5 rounded-sm hover:bg-gray-100';
     button.setAttribute('role', 'button');
     button.setAttribute('tabindex', '0');
     button.style.cssText = 'margin-left: auto; flex-shrink: 0;';
 
-    // Create SVG checkbox icon (unchecked box)
+    // Create SVG checkbox icon
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     svg.setAttribute('fill', 'none');
@@ -81,46 +97,85 @@ const TaskCompletion = (() => {
     rect.setAttribute('x', '3');
     rect.setAttribute('y', '3');
     rect.setAttribute('rx', '2');
-
     svg.appendChild(rect);
+
+    // Add checkmark if task is complete
+    if (isComplete) {
+      const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      checkmark.setAttribute('d', 'M20 6 9 17l-5-5');
+      checkmark.setAttribute('class', 'jt-checkmark');
+      svg.appendChild(checkmark);
+    }
+
     button.appendChild(svg);
 
     // Add title for tooltip
-    button.setAttribute('title', 'Toggle task completion');
+    button.setAttribute('title', isComplete ? 'Mark as incomplete' : 'Mark as complete');
 
     return button;
+  }
+
+  /**
+   * Update checkbox visual state
+   * @param {HTMLElement} checkbox - The checkbox button element
+   * @param {boolean} isComplete - Whether the task is now complete
+   */
+  function updateCheckboxState(checkbox, isComplete) {
+    const svg = checkbox.querySelector('svg');
+    if (!svg) return;
+
+    // Remove existing checkmark if present
+    const existingCheckmark = svg.querySelector('.jt-checkmark');
+    if (existingCheckmark) {
+      existingCheckmark.remove();
+    }
+
+    // Add checkmark if task is complete
+    if (isComplete) {
+      const checkmark = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      checkmark.setAttribute('d', 'M20 6 9 17l-5-5');
+      checkmark.setAttribute('class', 'jt-checkmark');
+      svg.appendChild(checkmark);
+    }
+
+    // Update tooltip
+    checkbox.setAttribute('title', isComplete ? 'Mark as incomplete' : 'Mark as complete');
   }
 
   /**
    * Handle checkbox click
    * @param {Event} e - The click event
    * @param {HTMLElement} taskCard - The task card element
+   * @param {HTMLElement} checkbox - The checkbox button element
    */
-  function handleCheckboxClick(e, taskCard) {
+  function handleCheckboxClick(e, taskCard, checkbox) {
     // Prevent event propagation to avoid triggering drag or opening sidebar
     e.stopPropagation();
     e.preventDefault();
 
     console.log('TaskCompletion: Checkbox clicked, toggling task completion...');
 
+    // Detect current completion state
+    const taskNameContainer = taskCard.querySelector('div.flex.items-center.space-x-1');
+    const wasComplete = isTaskComplete(taskNameContainer);
+
     // Show a loading state
-    const checkbox = e.currentTarget;
-    const originalHTML = checkbox.innerHTML;
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
 
     // Open sidebar to access the progress controls
-    toggleTaskCompletion(taskCard, checkbox, originalHTML);
+    toggleTaskCompletion(taskCard, checkbox, wasComplete);
   }
 
   /**
    * Toggle task completion by opening sidebar and clicking the progress checkbox
    * @param {HTMLElement} taskCard - The task card element
    * @param {HTMLElement} checkbox - The checkbox button that was clicked
-   * @param {string} originalHTML - Original HTML of checkbox for restoration
+   * @param {boolean} wasComplete - Whether the task was complete before clicking
    */
-  function toggleTaskCompletion(taskCard, checkbox, originalHTML) {
+  function toggleTaskCompletion(taskCard, checkbox, wasComplete) {
     console.log('TaskCompletion: Opening sidebar to toggle completion...');
+    console.log('TaskCompletion: Task was complete:', wasComplete);
 
     // Inject CSS to hide sidebar
     const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
@@ -165,19 +220,30 @@ const TaskCompletion = (() => {
             if (window.SidebarManager) {
               window.SidebarManager.closeSidebar(failsafeTimeout, () => {
                 console.log('TaskCompletion: Task completion toggled successfully');
+
+                // Update checkbox visual state (toggle from previous state)
+                const newCompletionState = !wasComplete;
+                updateCheckboxState(checkbox, newCompletionState);
+
                 // Restore checkbox
                 checkbox.style.opacity = '';
                 checkbox.style.pointerEvents = '';
 
                 // Show notification
                 if (window.UIUtils) {
-                  window.UIUtils.showNotification('Task completion toggled');
+                  const statusText = newCompletionState ? 'completed' : 'marked incomplete';
+                  window.UIUtils.showNotification(`Task ${statusText}`);
                 }
               });
             } else {
               // Manual close if SidebarManager not available
               clearTimeout(failsafeTimeout);
               if (hideStyle) hideStyle.remove();
+
+              // Update checkbox visual state
+              const newCompletionState = !wasComplete;
+              updateCheckboxState(checkbox, newCompletionState);
+
               checkbox.style.opacity = '';
               checkbox.style.pointerEvents = '';
             }
