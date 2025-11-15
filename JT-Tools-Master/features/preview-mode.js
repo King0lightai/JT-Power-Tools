@@ -171,10 +171,30 @@ const PreviewModeFeature = (() => {
       }
     });
 
-    // Filter out time entry notes fields
+    // Filter out time entry notes fields and Time Clock notes fields
     const filteredFields = fields.filter(field => {
       const placeholder = field.getAttribute('placeholder');
-      return placeholder !== 'Set notes'; // Exclude time entry notes
+      if (placeholder === 'Set notes') {
+        return false; // Exclude time entry notes
+      }
+
+      // Exclude Notes field in Time Clock sidebar
+      const label = field.closest('label');
+      if (label) {
+        const heading = label.querySelector('div.font-bold');
+        if (heading && heading.textContent.trim() === 'Notes') {
+          // Check if this is within a Time Clock sidebar
+          const sidebar = field.closest('div.overflow-y-auto, form');
+          if (sidebar) {
+            const timeClockHeader = sidebar.querySelector('div.font-bold.text-jtOrange.uppercase');
+            if (timeClockHeader && timeClockHeader.textContent.trim() === 'Time Clock') {
+              return false; // Exclude Time Clock Notes field
+            }
+          }
+        }
+      }
+
+      return true;
     });
 
     console.log('Preview Mode: Found', filteredFields.length, 'fields');
