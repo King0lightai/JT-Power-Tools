@@ -11,9 +11,6 @@ const ActionItemsCompletion = (() => {
   function init() {
     console.log('ActionItemsCompletion: Initializing...');
 
-    // Check if we're returning from a completion operation
-    checkAndCompleteNavigation();
-
     // Add checkboxes to action items
     addCompletionCheckboxes();
 
