@@ -5,9 +5,6 @@ const ActionItemsCompletion = (() => {
   // Track which action items have checkboxes added
   const processedItems = new WeakSet();
 
-  // Store completion state across page navigation
-  const STORAGE_KEY = 'jt-action-items-completion-state';
-
   /**
    * Initialize action items completion feature
    */
@@ -84,11 +81,8 @@ const ActionItemsCompletion = (() => {
         return;
       }
 
-      // Check if this task is marked as complete in storage
-      const isComplete = isTaskMarkedComplete(taskId);
-
-      // Create checkbox button
-      const checkbox = createCheckboxButton(isComplete);
+      // Create checkbox button (always unchecked - if task is complete, it won't be in Action Items)
+      const checkbox = createCheckboxButton(false);
 
       // Find the View button
       const viewButton = findViewButton(item);
@@ -105,11 +99,6 @@ const ActionItemsCompletion = (() => {
 
       // Add click handler
       checkbox.addEventListener('click', (e) => handleCheckboxClick(e, item, checkbox, taskId));
-
-      // Apply strikethrough if marked complete
-      if (isComplete) {
-        applyCompletionStyle(item);
-      }
     });
   }
 
@@ -161,54 +150,6 @@ const ActionItemsCompletion = (() => {
     }
 
     return null;
-  }
-
-  /**
-   * Check if a task is marked as complete in storage
-   * @param {string} taskId - The task ID
-   * @returns {boolean} True if task is marked complete
-   */
-  function isTaskMarkedComplete(taskId) {
-    const storage = getCompletionStorage();
-    return storage.completedTasks.includes(taskId);
-  }
-
-  /**
-   * Mark a task as complete in storage
-   * @param {string} taskId - The task ID
-   */
-  function markTaskComplete(taskId) {
-    const storage = getCompletionStorage();
-    if (!storage.completedTasks.includes(taskId)) {
-      storage.completedTasks.push(taskId);
-      saveCompletionStorage(storage);
-    }
-  }
-
-  /**
-   * Get completion storage from localStorage
-   * @returns {Object} Storage object
-   */
-  function getCompletionStorage() {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      return data ? JSON.parse(data) : { completedTasks: [] };
-    } catch (e) {
-      console.error('ActionItemsCompletion: Error reading storage:', e);
-      return { completedTasks: [] };
-    }
-  }
-
-  /**
-   * Save completion storage to localStorage
-   * @param {Object} storage - Storage object
-   */
-  function saveCompletionStorage(storage) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
-    } catch (e) {
-      console.error('ActionItemsCompletion: Error saving storage:', e);
-    }
   }
 
   /**
@@ -289,19 +230,6 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Apply completion styling to an action item
-   * @param {HTMLElement} item - The action item link element
-   */
-  function applyCompletionStyle(item) {
-    // Add strikethrough to task name
-    const taskNameContainer = item.querySelector('div.font-bold');
-    if (taskNameContainer) {
-      taskNameContainer.style.textDecoration = 'line-through';
-      taskNameContainer.style.opacity = '0.6';
-    }
-  }
-
-  /**
    * Handle checkbox click
    * @param {Event} e - The click event
    * @param {HTMLElement} item - The action item link element
@@ -315,15 +243,6 @@ const ActionItemsCompletion = (() => {
 
     console.log('ActionItemsCompletion: Checkbox clicked for task:', taskId);
 
-    // Check if already marked complete
-    if (isTaskMarkedComplete(taskId)) {
-      console.log('ActionItemsCompletion: Task already marked complete');
-      if (window.UIUtils) {
-        window.UIUtils.showNotification('Task already completed');
-      }
-      return;
-    }
-
     // Show loading state
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
@@ -336,9 +255,6 @@ const ActionItemsCompletion = (() => {
     completeTaskInIframe(targetUrl, taskId, (success) => {
       if (success) {
         console.log('ActionItemsCompletion: Task completed successfully');
-
-        // Mark task as complete in storage
-        markTaskComplete(taskId);
 
         // Fade out and remove the action item from the list
         item.style.transition = 'opacity 0.3s ease-out';
