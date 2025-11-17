@@ -500,9 +500,6 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Complete the task using headless sidebar interaction
-
-  /**
    * Find the progress checkbox in a document (for iframe use)
    * @param {Document} doc - The document to search in
    * @returns {HTMLElement|null} The progress checkbox or null
@@ -570,49 +567,6 @@ const ActionItemsCompletion = (() => {
 
       checkEnabled();
     });
-  }
-
-    }
-
-    console.log('ActionItemsCompletion: Save button not found');
-
-    // Log buttons with "Save" in text for debugging
-    const saveButtons = allButtons.filter(b => b.textContent.includes('Save'));
-    if (saveButtons.length > 0) {
-      console.log('ActionItemsCompletion: Buttons containing "Save":', saveButtons.map(b => ({
-        text: b.textContent.trim(),
-        classes: b.className
-      })));
-    }
-
-    return null;
-  }
-
-  /**
-   * Navigate back to the original page
-   * @param {Object} navigationState - The navigation state object
-   * @param {boolean} success - Whether the completion was successful
-   */
-  function navigateBack(navigationState, success) {
-    console.log('ActionItemsCompletion: Navigating back to:', navigationState.returnUrl);
-
-    if (success) {
-      // Mark task as complete in storage
-      markTaskComplete(navigationState.taskId);
-    }
-
-    // Store success state for notification
-    try {
-      sessionStorage.setItem('jt-action-item-completed', JSON.stringify({
-        taskId: navigationState.taskId,
-        success
-      }));
-    } catch (e) {
-      console.error('ActionItemsCompletion: Error saving completion state:', e);
-    }
-
-    // Navigate back
-    window.location.href = navigationState.returnUrl;
   }
 
   /**
