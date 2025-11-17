@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Smart task ID extraction from both schedule and to-do URLs
 - Real-time Save button detection and state monitoring
 
+#### New Feature: Month Schedule Task Completion
+- Checkboxes added to task cards in month schedule view
+- Quickly mark tasks complete or incomplete directly from calendar
+- Visual completion status indicator shows current task state
+- Instant task status updates without opening task details
+- Works seamlessly with existing drag & drop functionality
+
 #### Help Sidebar Integration
 - JT Power Tools support section added to JobTread help sidebar
 - Help Sidebar Support feature now always enabled by default
@@ -42,7 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed dark mode background colors with !important flag to prevent white flash
 - Added solid blue background for today's date in dark mode calendar
 - Fixed text formatter and preview mode disabled for Time Clock Notes field
-- Added visual completion status indicator to task checkboxes in schedule views
 
 ---
 

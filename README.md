@@ -357,6 +357,11 @@ const featureModules = {
   - Hidden iframe technology ensures seamless background completion
   - Visual feedback with smooth fade-out animation when tasks are completed
   - Automatic task removal from list upon successful completion
+- **New Feature: Month Schedule Task Completion**
+  - Checkboxes added to task cards in month schedule view
+  - Quickly mark tasks complete or incomplete directly from calendar
+  - Visual completion status indicator shows current task state
+  - Instant task status updates without opening task details
 - **Help Sidebar Integration**
   - JT Power Tools support section added to JobTread help sidebar
   - Help Sidebar Support feature now always enabled by default
@@ -367,7 +372,6 @@ const featureModules = {
   - Fixed column resize handles appearing over frozen column headers
   - Fixed dark mode background colors to prevent white flash
   - Fixed text formatter disabled for Time Clock Notes field
-  - Added visual completion status indicator to task checkboxes
 
 ### v3.3.0
 - **New Feature: Quick Notes**
