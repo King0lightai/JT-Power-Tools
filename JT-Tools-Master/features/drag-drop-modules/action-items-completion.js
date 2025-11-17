@@ -457,10 +457,10 @@ const ActionItemsCompletion = (() => {
       progressCheckbox.click();
 
       // Wait for the change to register, then find and click Save button
-      setTimeout(() => {
+      setTimeout(async () => {
         console.log('ActionItemsCompletion: Progress checkbox clicked, finding Save button...');
 
-        // Find the Save button (search globally, not just in sidebar)
+        // Find the Save button in the toolbar
         const saveButton = findSaveButton();
 
         if (!saveButton) {
@@ -471,7 +471,20 @@ const ActionItemsCompletion = (() => {
           return;
         }
 
-        console.log('ActionItemsCompletion: Found Save button, clicking it...');
+        console.log('ActionItemsCompletion: Found Save button, waiting for it to become enabled...');
+
+        // Wait for the Save button to become enabled (loses pointer-events-none class)
+        const isEnabled = await waitForSaveButtonEnabled(saveButton, 2000);
+
+        if (!isEnabled) {
+          console.error('ActionItemsCompletion: Save button did not become enabled in time');
+          clearTimeout(failsafeTimeout);
+          if (hideStyle) hideStyle.remove();
+          navigateBack(navigationState, false);
+          return;
+        }
+
+        console.log('ActionItemsCompletion: Save button enabled, clicking it...');
 
         // Click the Save button
         saveButton.click();
@@ -494,7 +507,7 @@ const ActionItemsCompletion = (() => {
             navigateBack(navigationState, true);
           }
         }, 500);
-      }, 800);
+      }, 300);
     }, 1000);
   }
 
@@ -559,65 +572,84 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Find the Save button (searches entire document)
+   * Find the Save button in the toolbar (searches entire document)
+   * The Save button is in the top toolbar and starts disabled, then becomes enabled after Progress checkbox is clicked
    * @returns {HTMLElement|null} The Save button or null
    */
   function findSaveButton() {
-    // Look for blue button with text "Save"
-    // Button classes: bg-blue-500, border-blue-600
-    // Search the entire document since the Save button might appear outside the sidebar
+    // Look for button with checkmark SVG and "Save" text in the toolbar
+    // The button has class "pointer-events-none opacity-50" when disabled
+    // These classes are removed when it becomes enabled
     const allButtons = Array.from(document.querySelectorAll('div[role="button"]'));
 
-    console.log('ActionItemsCompletion: Checking all buttons for Save button...');
+    console.log('ActionItemsCompletion: Searching for Save button in toolbar...');
     console.log('ActionItemsCompletion: Total buttons found:', allButtons.length);
 
-    // First pass: Look for blue Save button with exact class match
-    for (const button of allButtons) {
-      const text = button.textContent.trim();
-      const classes = button.className;
-
-      // Check if button has "Save" text and blue styling
-      if ((text === 'Save' || text.endsWith('Save')) &&
-          (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
-        console.log('ActionItemsCompletion: Found Save button (blue button with Save text)');
-        console.log('ActionItemsCompletion: Button classes:', classes);
-        return button;
-      }
-    }
-
-    // Second pass: Look for any button with exact "Save" text
-    for (const button of allButtons) {
-      const text = button.textContent.trim();
-      if (text === 'Save') {
-        console.log('ActionItemsCompletion: Found Save button (exact text match)');
-        console.log('ActionItemsCompletion: Button classes:', button.className);
-        return button;
-      }
-    }
-
-    // Third pass: Look for button with checkmark SVG and "Save" text
+    // Look for button with checkmark SVG and "Save" text
     for (const button of allButtons) {
       const text = button.textContent.trim();
       const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
 
-      if (hasCheckmark && (text === 'Save' || text.includes('Save'))) {
-        console.log('ActionItemsCompletion: Found Save button (checkmark + Save text)');
+      if (hasCheckmark && text.includes('Save')) {
+        const classes = button.className;
+        const isDisabled = classes.includes('pointer-events-none');
+
+        console.log('ActionItemsCompletion: Found Save button');
+        console.log('ActionItemsCompletion: Button text:', text);
+        console.log('ActionItemsCompletion: Button classes:', classes);
+        console.log('ActionItemsCompletion: Is disabled:', isDisabled);
+
         return button;
       }
     }
 
     console.log('ActionItemsCompletion: Save button not found');
 
-    // Log buttons with "Save" in text for debugging
+    // Debug: Log all buttons with "Save" text
     const saveButtons = allButtons.filter(b => b.textContent.includes('Save'));
     if (saveButtons.length > 0) {
       console.log('ActionItemsCompletion: Buttons containing "Save":', saveButtons.map(b => ({
         text: b.textContent.trim(),
-        classes: b.className
+        classes: b.className,
+        hasCheckmark: !!b.querySelector('path[d="M20 6 9 17l-5-5"]')
       })));
     }
 
     return null;
+  }
+
+  /**
+   * Wait for the Save button to become enabled
+   * @param {HTMLElement} button - The Save button element
+   * @param {number} maxWaitMs - Maximum time to wait in milliseconds
+   * @returns {Promise<boolean>} True if button became enabled, false if timeout
+   */
+  function waitForSaveButtonEnabled(button, maxWaitMs = 2000) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+
+      const checkEnabled = () => {
+        const classes = button.className;
+        const isDisabled = classes.includes('pointer-events-none');
+
+        if (!isDisabled) {
+          console.log('ActionItemsCompletion: Save button is now enabled');
+          resolve(true);
+          return;
+        }
+
+        if (Date.now() - startTime >= maxWaitMs) {
+          console.log('ActionItemsCompletion: Timeout waiting for Save button to enable');
+          resolve(false);
+          return;
+        }
+
+        // Check again in 100ms
+        setTimeout(checkEnabled, 100);
+      };
+
+      checkEnabled();
+    });
   }
 
   /**
