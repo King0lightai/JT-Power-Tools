@@ -93,15 +93,15 @@ const ActionItemsCompletion = (() => {
       // Create checkbox button
       const checkbox = createCheckboxButton(isComplete);
 
-      // Find the task name container (div.font-bold)
-      const taskNameContainer = item.querySelector('div.font-bold');
-      if (!taskNameContainer) {
-        console.log('ActionItemsCompletion: Could not find task name container');
+      // Find the View button
+      const viewButton = findViewButton(item);
+      if (!viewButton) {
+        console.log('ActionItemsCompletion: Could not find View button');
         return;
       }
 
-      // Insert checkbox before the task name (Option A position)
-      taskNameContainer.parentNode.insertBefore(checkbox, taskNameContainer);
+      // Insert checkbox before the View button
+      viewButton.parentNode.insertBefore(checkbox, viewButton);
 
       // Mark as processed
       processedItems.add(item);
@@ -134,6 +134,33 @@ const ActionItemsCompletion = (() => {
     const todoMatch = href.match(/\/to-dos\/([^/?]+)/);
     if (todoMatch) {
       return todoMatch[1];
+    }
+
+    return null;
+  }
+
+  /**
+   * Find the View button in an action item
+   * @param {HTMLElement} item - The action item link element
+   * @returns {HTMLElement|null} The View button or null
+   */
+  function findViewButton(item) {
+    // Look for a button with text "View"
+    const buttons = item.querySelectorAll('div[role="button"]');
+
+    for (const button of buttons) {
+      const text = button.textContent.trim();
+      if (text === 'View' || text.toLowerCase().includes('view')) {
+        return button;
+      }
+    }
+
+    // Fallback: look for any element with "View" text
+    const allDivs = item.querySelectorAll('div');
+    for (const div of allDivs) {
+      if (div.textContent.trim() === 'View') {
+        return div;
+      }
     }
 
     return null;
