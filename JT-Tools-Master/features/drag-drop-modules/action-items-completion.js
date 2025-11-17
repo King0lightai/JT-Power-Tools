@@ -250,189 +250,172 @@ const ActionItemsCompletion = (() => {
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
 
-    // Store state for navigation completion
-    const navigationState = {
-      taskId,
-      returnUrl: window.location.href,
-      targetUrl: item.getAttribute('href'),
-      timestamp: Date.now()
+    // Get the target URL
+    const targetUrl = item.getAttribute('href');
+    console.log('ActionItemsCompletion: Completing task in hidden iframe:', targetUrl);
+
+    // Complete the task in a hidden iframe (no page navigation)
+    completeTaskInIframe(targetUrl, taskId, item, (success) => {
+      if (success) {
+        console.log('ActionItemsCompletion: Task completed successfully');
+
+        // Fade out and remove the action item from the list
+        item.style.transition = 'opacity 0.3s ease-out';
+        item.style.opacity = '0';
+
+        setTimeout(() => {
+          item.remove();
+          console.log('ActionItemsCompletion: Removed action item from list');
+        }, 300);
+
+        // Show notification
+        if (window.UIUtils) {
+          window.UIUtils.showNotification('Task completed');
+        }
+      } else {
+        console.error('ActionItemsCompletion: Task completion failed');
+
+        // Restore checkbox
+        checkbox.style.opacity = '';
+        checkbox.style.pointerEvents = '';
+
+        // Show error notification
+        if (window.UIUtils) {
+          window.UIUtils.showNotification('Failed to complete task');
+        }
+      }
+    });
+  }
+
+  /**
+   * Complete a task in a hidden iframe (no visible page navigation)
+   * @param {string} targetUrl - The URL of the task page
+   * @param {string} taskId - The task ID
+   * @param {HTMLElement} item - The action item element
+   * @param {Function} callback - Callback function (success: boolean)
+   */
+  function completeTaskInIframe(targetUrl, taskId, item, callback) {
+    console.log('ActionItemsCompletion: Creating hidden iframe for task completion');
+
+    // Create hidden iframe WITHOUT sandbox to allow full functionality
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;';
+
+    // NO sandbox attribute - this allows the toolbar to fully render
+
+    // Failsafe timeout
+    const failsafeTimeout = setTimeout(() => {
+      console.error('ActionItemsCompletion: Failsafe timeout - removing iframe');
+      if (iframe.parentNode) {
+        iframe.remove();
+      }
+      callback(false);
+    }, 15000);
+
+    // When iframe loads, complete the task inside it
+    iframe.onload = () => {
+      console.log('ActionItemsCompletion: Iframe loaded, waiting for page initialization...');
+
+      // Wait for the page to initialize
+      setTimeout(() => {
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+          console.log('ActionItemsCompletion: Starting task completion in iframe...');
+
+          // Wait for sidebar to be present (auto-opened by ?taskId= URL param)
+          setTimeout(() => {
+            const sidebar = iframeDoc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+
+            if (!sidebar) {
+              console.error('ActionItemsCompletion: Sidebar not found in iframe');
+              clearTimeout(failsafeTimeout);
+              iframe.remove();
+              callback(false);
+              return;
+            }
+
+            console.log('ActionItemsCompletion: Sidebar found in iframe, finding progress checkbox...');
+
+            // Find Progress checkbox
+            const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
+            if (!progressCheckbox) {
+              console.error('ActionItemsCompletion: Could not find progress checkbox in iframe');
+              clearTimeout(failsafeTimeout);
+              iframe.remove();
+              callback(false);
+              return;
+            }
+
+            console.log('ActionItemsCompletion: Found progress checkbox, clicking it...');
+            progressCheckbox.click();
+
+            // Wait for Save button to appear and become enabled
+            setTimeout(async () => {
+              console.log('ActionItemsCompletion: Looking for Save button in iframe...');
+
+              const saveButton = findSaveButtonInDoc(iframeDoc);
+              if (!saveButton) {
+                console.error('ActionItemsCompletion: Could not find Save button in iframe');
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(false);
+                return;
+              }
+
+              console.log('ActionItemsCompletion: Found Save button, waiting for it to enable...');
+
+              // Wait for Save button to become enabled
+              const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
+              if (!isEnabled) {
+                console.error('ActionItemsCompletion: Save button did not enable in time');
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(false);
+                return;
+              }
+
+              console.log('ActionItemsCompletion: Save button enabled, clicking it...');
+
+              // Click Save button
+              saveButton.click();
+
+              // Also dispatch mouse event for React compatibility
+              const clickEvent = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: iframe.contentWindow
+              });
+              saveButton.dispatchEvent(clickEvent);
+
+              // Wait for save to complete
+              setTimeout(() => {
+                console.log('ActionItemsCompletion: Task saved successfully in iframe');
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(true);
+              }, 2000);
+            }, 800);
+          }, 1000);
+        } catch (error) {
+          console.error('ActionItemsCompletion: Error completing task in iframe:', error);
+          clearTimeout(failsafeTimeout);
+          iframe.remove();
+          callback(false);
+        }
+      }, 1500);
     };
 
-    try {
-      sessionStorage.setItem('jt-action-item-navigation', JSON.stringify(navigationState));
-      console.log('ActionItemsCompletion: Navigating to task page (hidden):', navigationState.targetUrl);
+    iframe.onerror = () => {
+      console.error('ActionItemsCompletion: Iframe failed to load');
+      clearTimeout(failsafeTimeout);
+      iframe.remove();
+      callback(false);
+    };
 
-      // Navigate to the task page (CSS hiding will be applied on load)
-      window.location.href = navigationState.targetUrl;
-    } catch (e) {
-      console.error('ActionItemsCompletion: Error saving navigation state:', e);
-
-      // Restore checkbox
-      checkbox.style.opacity = '';
-      checkbox.style.pointerEvents = '';
-
-      if (window.UIUtils) {
-        window.UIUtils.showNotification('Failed to complete task');
-      }
-    }
-  }
-
-  /**
-   * Check if we're returning from a completion operation and complete it
-   */
-  function checkAndCompleteNavigation() {
-    let navigationState = null;
-
-    try {
-      const data = sessionStorage.getItem('jt-action-item-navigation');
-      if (data) {
-        navigationState = JSON.parse(data);
-      }
-    } catch (e) {
-      console.error('ActionItemsCompletion: Error reading navigation state:', e);
-      return;
-    }
-
-    if (!navigationState) {
-      return;
-    }
-
-    console.log('ActionItemsCompletion: Found navigation state, completing task:', navigationState.taskId);
-
-    // Clear navigation state
-    sessionStorage.removeItem('jt-action-item-navigation');
-
-    // Check if we're on the task page (not the return page yet)
-    if (window.location.href !== navigationState.returnUrl) {
-      console.log('ActionItemsCompletion: On task page, starting completion process...');
-
-      // Wait for page to fully load
-      setTimeout(() => {
-        completeTaskHeadless(navigationState);
-      }, 1500);
-    }
-  }
-
-  /**
-   * Complete the task using headless sidebar interaction with CSS hiding
-   * @param {Object} navigationState - The navigation state object
-   */
-  function completeTaskHeadless(navigationState) {
-    console.log('ActionItemsCompletion: Starting headless task completion...');
-
-    // Inject CSS to hide sidebar (make page look unchanged to user)
-    const hideStyle = window.SidebarManager ?
-      window.SidebarManager.injectHideSidebarCSS() : null;
-
-    // Failsafe: Clean up after 10 seconds
-    const failsafeTimeout = setTimeout(() => {
-      console.log('ActionItemsCompletion: Failsafe timeout triggered');
-      if (window.SidebarManager) {
-        window.SidebarManager.removeSidebarCSS();
-      }
-      navigateBack(navigationState, false);
-    }, 10000);
-
-    // Wait for sidebar to be present (it should already be open because URL has ?taskId=)
-    setTimeout(() => {
-      const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
-
-      if (!sidebar) {
-        console.error('ActionItemsCompletion: Sidebar not found (should be auto-opened by taskId URL param)');
-        clearTimeout(failsafeTimeout);
-        if (hideStyle) hideStyle.remove();
-        navigateBack(navigationState, false);
-        return;
-      }
-
-      console.log('ActionItemsCompletion: Sidebar found (auto-opened for correct task), finding progress checkbox...');
-
-      // Find the Progress checkbox
-      const progressCheckbox = findProgressCheckbox(sidebar);
-
-      if (!progressCheckbox) {
-        console.error('ActionItemsCompletion: Could not find progress checkbox');
-        clearTimeout(failsafeTimeout);
-        if (hideStyle) hideStyle.remove();
-        navigateBack(navigationState, false);
-        return;
-      }
-
-      console.log('ActionItemsCompletion: Found progress checkbox, clicking it...');
-
-      // Click the checkbox to mark complete
-      progressCheckbox.click();
-
-      // Wait for the change to register, then find and click Save button
-      setTimeout(async () => {
-        console.log('ActionItemsCompletion: Progress checkbox clicked, finding Save button...');
-
-        // Find the Save button in toolbar
-        const saveButton = findSaveButton();
-
-        if (!saveButton) {
-          console.error('ActionItemsCompletion: Could not find Save button');
-          clearTimeout(failsafeTimeout);
-          if (hideStyle) hideStyle.remove();
-          navigateBack(navigationState, false);
-          return;
-        }
-
-        console.log('ActionItemsCompletion: Found Save button, waiting for it to enable...');
-
-        // Wait for Save button to become enabled
-        const isEnabled = await waitForSaveButtonEnabled(saveButton, 2000);
-
-        if (!isEnabled) {
-          console.error('ActionItemsCompletion: Save button did not enable in time');
-          clearTimeout(failsafeTimeout);
-          if (hideStyle) hideStyle.remove();
-          navigateBack(navigationState, false);
-          return;
-        }
-
-        console.log('ActionItemsCompletion: Save button enabled, clicking it...');
-        console.log('ActionItemsCompletion: Save button classes before click:', saveButton.className);
-
-        // Click the Save button (use both click methods for better compatibility)
-        saveButton.click();
-
-        // Also dispatch a mouse event for better React compatibility
-        const clickEvent = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          view: window
-        });
-        saveButton.dispatchEvent(clickEvent);
-
-        console.log('ActionItemsCompletion: Save button clicked');
-
-        // Wait longer for save to complete (give server time to process)
-        setTimeout(() => {
-          console.log('ActionItemsCompletion: Task saved, cleaning up...');
-
-          // Clear failsafe
-          clearTimeout(failsafeTimeout);
-
-          // Close sidebar first, then navigate back
-          if (window.SidebarManager) {
-            window.SidebarManager.closeSidebar(null, () => {
-              // Wait a bit more after sidebar closes before navigating
-              setTimeout(() => {
-                // Navigate back
-                navigateBack(navigationState, true);
-              }, 500);
-            });
-          } else {
-            if (hideStyle) hideStyle.remove();
-            // Wait before navigating to ensure save completes
-            setTimeout(() => {
-              navigateBack(navigationState, true);
-            }, 500);
-          }
-        }, 1500);
-      }, 800);
-    }, 1000);
+    // Add iframe to page and load the task URL
+    document.body.appendChild(iframe);
+    iframe.src = targetUrl;
   }
 
   /**
@@ -477,6 +460,76 @@ const ActionItemsCompletion = (() => {
    * @returns {Promise<boolean>} True if button became enabled, false if timeout
    */
   function waitForSaveButtonEnabled(button, maxWaitMs = 2000) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+
+      const checkEnabled = () => {
+        const classes = button.className;
+        const isDisabled = classes.includes('pointer-events-none');
+
+        if (!isDisabled) {
+          resolve(true);
+          return;
+        }
+
+        if (Date.now() - startTime >= maxWaitMs) {
+          resolve(false);
+          return;
+        }
+
+        setTimeout(checkEnabled, 100);
+      };
+
+      checkEnabled();
+    });
+  }
+
+  /**
+   * Find the progress checkbox in a document (for iframe use)
+   * @param {Document} doc - The document to search in
+   * @returns {HTMLElement|null} The progress checkbox or null
+   */
+  function findProgressCheckboxInDoc(doc) {
+    const sidebar = doc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+    if (!sidebar) return null;
+
+    const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
+    const progressLabel = allLabels.find(span => span.textContent.trim() === 'Progress');
+    if (!progressLabel) return null;
+
+    const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
+    if (!progressContainer) return null;
+
+    return progressContainer.querySelector('div[role="button"]');
+  }
+
+  /**
+   * Find the Save button in a document (for iframe use)
+   * @param {Document} doc - The document to search in
+   * @returns {HTMLElement|null} The Save button or null
+   */
+  function findSaveButtonInDoc(doc) {
+    const allButtons = Array.from(doc.querySelectorAll('div[role="button"]'));
+
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
+
+      if (hasCheckmark && text.includes('Save')) {
+        return button;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Wait for a Save button element to become enabled in a document (for iframe use)
+   * @param {HTMLElement} button - The Save button element
+   * @param {number} maxWaitMs - Maximum time to wait in milliseconds
+   * @returns {Promise<boolean>} True if button became enabled, false if timeout
+   */
+  function waitForSaveButtonEnabledInDoc(button, maxWaitMs = 2000) {
     return new Promise((resolve) => {
       const startTime = Date.now();
 
