@@ -70,6 +70,12 @@ const DragDropFeature = (() => {
     // Initial setup
     setTimeout(() => {
       initDragAndDrop();
+
+      // Initialize Action Items Completion
+      if (window.ActionItemsCompletion) {
+        window.ActionItemsCompletion.init();
+      }
+
       console.log('DragDrop: Feature loaded');
     }, 1000);
 
@@ -132,6 +138,11 @@ const DragDropFeature = (() => {
     // Cleanup task completion checkboxes
     if (window.TaskCompletion) {
       window.TaskCompletion.cleanup();
+    }
+
+    // Cleanup action items completion
+    if (window.ActionItemsCompletion) {
+      window.ActionItemsCompletion.cleanup();
     }
 
     // Remove weekend CSS
