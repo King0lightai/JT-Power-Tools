@@ -236,17 +236,10 @@ const PreviewModeFeature = (() => {
     // Apply theme to button
     detectAndApplyTheme(button);
 
-    // Add click handler
-    button.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      togglePreview(textarea, button);
-    });
-
-    // Track hide timeout
+    // Track hide timeout for this specific button
     let hideTimeout = null;
 
-    // Show button on focus or hover
+    // Show button helper
     const showButton = () => {
       if (hideTimeout) {
         clearTimeout(hideTimeout);
@@ -256,21 +249,53 @@ const PreviewModeFeature = (() => {
       button.style.pointerEvents = 'auto';
     };
 
+    // Hide button helper
     const hideButton = () => {
+      // Don't hide if preview is open
+      const preview = previewMap.get(textarea);
+      if (preview && document.body.contains(preview)) {
+        return;
+      }
       button.style.opacity = '0';
       button.style.pointerEvents = 'none';
     };
 
-    textarea.addEventListener('focus', showButton);
-    container.addEventListener('mouseenter', showButton);
+    // Click handler for button
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePreview(textarea, button);
+    });
 
-    // Hide button on blur - check where focus went (like formatter does)
+    // Focus event - show button (matches formatter pattern)
+    textarea.addEventListener('focus', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      showButton();
+    });
+
+    // Mousedown event - show button (matches formatter pattern)
+    textarea.addEventListener('mousedown', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
+      // Small delay to ensure it appears smoothly
+      setTimeout(() => {
+        if (document.body.contains(textarea)) {
+          showButton();
+        }
+      }, 10);
+    });
+
+    // Blur event - hide button with delay (matches formatter pattern)
     textarea.addEventListener('blur', () => {
       if (hideTimeout) {
         clearTimeout(hideTimeout);
       }
 
-      // Use setTimeout to allow click on button before hiding
       hideTimeout = setTimeout(() => {
         const newFocus = document.activeElement;
         const preview = previewMap.get(textarea);
@@ -282,23 +307,6 @@ const PreviewModeFeature = (() => {
         }
         hideTimeout = null;
       }, 200);
-    });
-
-    // Hide button on mouse leave (unless preview is open or textarea is focused)
-    container.addEventListener('mouseleave', () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-      }
-
-      if (document.activeElement !== textarea) {
-        hideTimeout = setTimeout(() => {
-          const preview = previewMap.get(textarea);
-          if (!preview || !document.body.contains(preview)) {
-            hideButton();
-          }
-          hideTimeout = null;
-        }, 200);
-      }
     });
 
     // Store reference
@@ -530,15 +538,11 @@ const PreviewModeFeature = (() => {
     if (activeButton) {
       activeButton.classList.remove('active');
 
-      // Hide button if textarea is not focused and not hovered
+      // Hide button if textarea is not focused
       const textarea = activeButton._textarea;
       if (textarea && document.activeElement !== textarea) {
-        const container = textarea.closest('div');
-        // Only hide if mouse is also not over the container
-        if (!container || !container.matches(':hover')) {
-          activeButton.style.opacity = '0';
-          activeButton.style.pointerEvents = 'none';
-        }
+        activeButton.style.opacity = '0';
+        activeButton.style.pointerEvents = 'none';
       }
     }
 
@@ -546,17 +550,39 @@ const PreviewModeFeature = (() => {
     activeButton = null;
   }
 
-  // Handle global clicks to close preview
+  // Handle global clicks to close preview and hide buttons
   function handleGlobalClick(e) {
-    if (!activePreview) return;
+    const clickedElement = e.target;
 
-    // Don't close if clicking inside the preview or the button
-    if (e.target.closest('.jt-preview-panel') ||
-        e.target.closest('.jt-preview-btn')) {
-      return;
+    // Handle preview panel closing
+    if (activePreview) {
+      // Don't close if clicking inside the preview or the button
+      if (!clickedElement.closest('.jt-preview-panel') &&
+          !clickedElement.closest('.jt-preview-btn')) {
+        closePreview();
+      }
     }
 
-    closePreview();
+    // Handle button hiding when clicking outside (matches formatter pattern)
+    if (!clickedElement.closest('textarea[data-preview-mode-ready="true"]') &&
+        !clickedElement.closest('.jt-preview-btn') &&
+        !clickedElement.closest('.jt-preview-panel')) {
+
+      // Hide all visible buttons that don't have an active preview
+      const allButtons = document.querySelectorAll('.jt-preview-btn');
+      allButtons.forEach(btn => {
+        const textarea = btn._textarea;
+        if (textarea) {
+          const preview = previewMap.get(textarea);
+          // Only hide if no preview is open and textarea doesn't have focus
+          if ((!preview || !document.body.contains(preview)) &&
+              document.activeElement !== textarea) {
+            btn.style.opacity = '0';
+            btn.style.pointerEvents = 'none';
+          }
+        }
+      });
+    }
   }
 
   // Parse markdown tables and convert to HTML
