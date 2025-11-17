@@ -19,6 +19,8 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Preserves task details and assignments during moves
 - Hold Shift to drag a task to weekends
 - Hold Alt to change the tasks end date
+- Checkboxes added to task cards in month schedule view for instant task completion
+- Checkboxes added to Action Items card for instant task completion
 
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability in schedule views
