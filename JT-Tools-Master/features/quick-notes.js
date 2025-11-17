@@ -1231,6 +1231,13 @@ const QuickNotesFeature = (() => {
   async function init() {
     if (isActive) return;
 
+    // Skip if on settings page
+    const path = window.location.pathname;
+    if (path.includes('/settings')) {
+      console.log('Quick Notes: Skipping - on settings page');
+      return;
+    }
+
     // Load CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
