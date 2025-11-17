@@ -412,28 +412,45 @@ const ActionItemsCompletion = (() => {
         }
 
         console.log('ActionItemsCompletion: Save button enabled, clicking it...');
+        console.log('ActionItemsCompletion: Save button classes before click:', saveButton.className);
 
-        // Click the Save button
+        // Click the Save button (use both click methods for better compatibility)
         saveButton.click();
 
-        // Wait for save to complete
+        // Also dispatch a mouse event for better React compatibility
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        saveButton.dispatchEvent(clickEvent);
+
+        console.log('ActionItemsCompletion: Save button clicked');
+
+        // Wait longer for save to complete (give server time to process)
         setTimeout(() => {
           console.log('ActionItemsCompletion: Task saved, cleaning up...');
 
           // Clear failsafe
           clearTimeout(failsafeTimeout);
 
-          // Close sidebar
+          // Close sidebar first, then navigate back
           if (window.SidebarManager) {
             window.SidebarManager.closeSidebar(null, () => {
-              // Navigate back
-              navigateBack(navigationState, true);
+              // Wait a bit more after sidebar closes before navigating
+              setTimeout(() => {
+                // Navigate back
+                navigateBack(navigationState, true);
+              }, 500);
             });
           } else {
             if (hideStyle) hideStyle.remove();
-            navigateBack(navigationState, true);
+            // Wait before navigating to ensure save completes
+            setTimeout(() => {
+              navigateBack(navigationState, true);
+            }, 500);
           }
-        }, 500);
+        }, 1500);
       }, 800);
     }, 1000);
   }
