@@ -359,11 +359,23 @@ const ActionItemsCompletion = (() => {
             console.log('ActionItemsCompletion: Found progress checkbox, clicking it...');
             progressCheckbox.click();
 
-            // Wait for Save button to appear and become enabled
+            // Wait longer for Save button to appear and become enabled
             setTimeout(async () => {
+              console.log('ActionItemsCompletion: Looking for Save button in iframe...');
+
               const saveButton = findSaveButtonInDocument(iframeDoc);
               if (!saveButton) {
                 console.error('ActionItemsCompletion: Could not find Save button in iframe');
+
+                // Debug: Log all buttons in iframe
+                const allButtons = Array.from(iframeDoc.querySelectorAll('div[role="button"]'));
+                console.log('ActionItemsCompletion: Total buttons in iframe:', allButtons.length);
+                const buttonsWithSave = allButtons.filter(b => b.textContent.includes('Save'));
+                console.log('ActionItemsCompletion: Buttons with "Save":', buttonsWithSave.map(b => ({
+                  text: b.textContent.trim(),
+                  hasCheckmark: !!b.querySelector('path[d="M20 6 9 17l-5-5"]')
+                })));
+
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(false);
@@ -392,7 +404,7 @@ const ActionItemsCompletion = (() => {
                 iframe.remove();
                 callback(true);
               }, 800);
-            }, 300);
+            }, 800);
           }, 1000);
         } catch (error) {
           console.error('ActionItemsCompletion: Error completing task in iframe:', error);
