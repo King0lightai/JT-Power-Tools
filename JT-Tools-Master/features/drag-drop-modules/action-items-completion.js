@@ -333,39 +333,19 @@ const ActionItemsCompletion = (() => {
       navigateBack(navigationState, false);
     }, 10000);
 
-    // Find the task card on the page
-    const taskCard = document.querySelector('div.cursor-pointer[style*="background-color"]');
-
-    if (!taskCard) {
-      console.error('ActionItemsCompletion: Could not find task card on page');
-      clearTimeout(failsafeTimeout);
-      if (hideStyle) hideStyle.remove();
-      navigateBack(navigationState, false);
-      return;
-    }
-
-    console.log('ActionItemsCompletion: Found task card, opening sidebar...');
-
-    // Open the sidebar
-    if (window.SidebarManager) {
-      window.SidebarManager.openSidebar(taskCard);
-    } else {
-      taskCard.click();
-    }
-
-    // Wait for sidebar to open
+    // Wait for sidebar to be present (it should already be open because URL has ?taskId=)
     setTimeout(() => {
       const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
       if (!sidebar) {
-        console.error('ActionItemsCompletion: Sidebar did not open');
+        console.error('ActionItemsCompletion: Sidebar not found (should be auto-opened by taskId URL param)');
         clearTimeout(failsafeTimeout);
         if (hideStyle) hideStyle.remove();
         navigateBack(navigationState, false);
         return;
       }
 
-      console.log('ActionItemsCompletion: Sidebar opened, finding progress checkbox...');
+      console.log('ActionItemsCompletion: Sidebar found (auto-opened for correct task), finding progress checkbox...');
 
       // Find the Progress checkbox
       const progressCheckbox = findProgressCheckbox(sidebar);
