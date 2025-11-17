@@ -243,34 +243,61 @@ const PreviewModeFeature = (() => {
       togglePreview(textarea, button);
     });
 
+    // Track hide timeout
+    let hideTimeout = null;
+
     // Show button on focus or hover
     const showButton = () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+        hideTimeout = null;
+      }
       button.style.opacity = '1';
       button.style.pointerEvents = 'auto';
     };
 
     const hideButton = () => {
-      // Don't hide if preview is open
-      const preview = previewMap.get(textarea);
-      if (!preview || !document.body.contains(preview)) {
-        button.style.opacity = '0';
-        button.style.pointerEvents = 'none';
-      }
+      button.style.opacity = '0';
+      button.style.pointerEvents = 'none';
     };
 
     textarea.addEventListener('focus', showButton);
     container.addEventListener('mouseenter', showButton);
 
-    // Hide button on blur
+    // Hide button on blur - check where focus went (like formatter does)
     textarea.addEventListener('blur', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+
       // Use setTimeout to allow click on button before hiding
-      setTimeout(hideButton, 150);
+      hideTimeout = setTimeout(() => {
+        const newFocus = document.activeElement;
+        const preview = previewMap.get(textarea);
+
+        // Don't hide if focus went to the button or preview is open
+        if (!newFocus?.closest('.jt-preview-btn') &&
+            (!preview || !document.body.contains(preview))) {
+          hideButton();
+        }
+        hideTimeout = null;
+      }, 200);
     });
 
     // Hide button on mouse leave (unless preview is open or textarea is focused)
     container.addEventListener('mouseleave', () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+
       if (document.activeElement !== textarea) {
-        setTimeout(hideButton, 150);
+        hideTimeout = setTimeout(() => {
+          const preview = previewMap.get(textarea);
+          if (!preview || !document.body.contains(preview)) {
+            hideButton();
+          }
+          hideTimeout = null;
+        }, 200);
       }
     });
 
@@ -488,6 +515,8 @@ const PreviewModeFeature = (() => {
       // Remove input listener
       if (activePreview._updateHandler && activePreview._textarea) {
         activePreview._textarea.removeEventListener('input', activePreview._updateHandler);
+        // Clear the preview from the map
+        previewMap.delete(activePreview._textarea);
       }
 
       activePreview.classList.remove('show');
@@ -501,11 +530,15 @@ const PreviewModeFeature = (() => {
     if (activeButton) {
       activeButton.classList.remove('active');
 
-      // Hide button if textarea is not focused
+      // Hide button if textarea is not focused and not hovered
       const textarea = activeButton._textarea;
       if (textarea && document.activeElement !== textarea) {
-        activeButton.style.opacity = '0';
-        activeButton.style.pointerEvents = 'none';
+        const container = textarea.closest('div');
+        // Only hide if mouse is also not over the container
+        if (!container || !container.matches(':hover')) {
+          activeButton.style.opacity = '0';
+          activeButton.style.pointerEvents = 'none';
+        }
       }
     }
 
