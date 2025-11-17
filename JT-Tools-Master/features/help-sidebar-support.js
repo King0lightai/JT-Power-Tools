@@ -164,6 +164,7 @@ const HelpSidebarSupportFeature = (() => {
       </div>
       <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
         <a href="mailto:king0light.ai@gmail.com?subject=JT%20Power%20Tools%20Support"
+           target="_blank"
            class="jt-support-link"
            style="
              display: flex;
@@ -185,6 +186,7 @@ const HelpSidebarSupportFeature = (() => {
           <span style="font-size: 14px;">Contact Support</span>
         </a>
         <a href="mailto:king0light.ai@gmail.com?subject=JT%20Power%20Tools%20-%20Bug%20Report&body=Please%20describe%20the%20bug%20you%20encountered%3A%0A%0A"
+           target="_blank"
            class="jt-support-link"
            style="
              display: flex;
@@ -207,6 +209,7 @@ const HelpSidebarSupportFeature = (() => {
           <span style="font-size: 14px;">Report a Bug</span>
         </a>
         <a href="mailto:king0light.ai@gmail.com?subject=JT%20Power%20Tools%20-%20Feature%20Request&body=Feature%20request%3A%0A%0A"
+           target="_blank"
            class="jt-support-link"
            style="
              display: flex;
