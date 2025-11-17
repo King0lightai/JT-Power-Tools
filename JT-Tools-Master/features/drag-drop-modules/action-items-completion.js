@@ -77,7 +77,6 @@ const ActionItemsCompletion = (() => {
       // Extract task ID from href
       const taskId = extractTaskId(item.getAttribute('href'));
       if (!taskId) {
-        console.log('ActionItemsCompletion: Could not extract task ID from href');
         return;
       }
 
@@ -87,7 +86,6 @@ const ActionItemsCompletion = (() => {
       // Find the View button
       const viewButton = findViewButton(item);
       if (!viewButton) {
-        console.log('ActionItemsCompletion: Could not find View button');
         return;
       }
 
@@ -254,15 +252,12 @@ const ActionItemsCompletion = (() => {
     // Complete the task in a hidden iframe (no page navigation)
     completeTaskInIframe(targetUrl, taskId, item, (success) => {
       if (success) {
-        console.log('ActionItemsCompletion: Task completed successfully');
-
         // Fade out and remove the action item from the list
         item.style.transition = 'opacity 0.3s ease-out';
         item.style.opacity = '0';
 
         setTimeout(() => {
           item.remove();
-          console.log('ActionItemsCompletion: Removed action item from list');
         }, 300);
 
         // Show notification
@@ -270,8 +265,6 @@ const ActionItemsCompletion = (() => {
           window.UIUtils.showNotification('Task completed');
         }
       } else {
-        console.error('ActionItemsCompletion: Task completion failed');
-
         // Restore checkbox
         checkbox.style.opacity = '';
         checkbox.style.pointerEvents = '';
@@ -292,8 +285,6 @@ const ActionItemsCompletion = (() => {
    * @param {Function} callback - Callback function (success: boolean)
    */
   function completeTaskInIframe(targetUrl, taskId, item, callback) {
-    console.log('ActionItemsCompletion: Creating hidden iframe for task completion');
-
     // Create hidden iframe WITHOUT sandbox to allow full functionality
     // Make it full-size so toolbar renders, but position it off-screen
     const iframe = document.createElement('iframe');
@@ -312,14 +303,10 @@ const ActionItemsCompletion = (() => {
 
     // When iframe loads, complete the task inside it
     iframe.onload = () => {
-      console.log('ActionItemsCompletion: Iframe loaded, waiting for page initialization...');
-
       // Wait for the page to initialize
       setTimeout(() => {
         try {
           const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-          console.log('ActionItemsCompletion: Starting task completion in iframe...');
 
           // Wait for sidebar to be present (auto-opened by ?taskId= URL param)
           setTimeout(() => {
@@ -333,8 +320,6 @@ const ActionItemsCompletion = (() => {
               return;
             }
 
-            console.log('ActionItemsCompletion: Sidebar found in iframe, finding progress checkbox...');
-
             // Find Progress checkbox
             const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
             if (!progressCheckbox) {
@@ -344,32 +329,18 @@ const ActionItemsCompletion = (() => {
               callback(false);
               return;
             }
-
-            console.log('ActionItemsCompletion: Found progress checkbox, clicking it...');
             progressCheckbox.click();
 
             // Wait for Save button to appear and become enabled
             setTimeout(async () => {
-              console.log('ActionItemsCompletion: Looking for Save button in iframe...');
-
               const saveButton = findSaveButtonInDoc(iframeDoc);
               if (!saveButton) {
-                // Debug: count buttons found
-                const allButtons = iframeDoc.querySelectorAll('div[role="button"]');
-                console.error(`ActionItemsCompletion: Could not find Save button in iframe. Found ${allButtons.length} total buttons`);
-
-                // Debug: log first few buttons
-                Array.from(allButtons).slice(0, 5).forEach((btn, idx) => {
-                  console.log(`Button ${idx}: "${btn.textContent.trim().substring(0, 50)}"`, btn);
-                });
-
+                console.error('ActionItemsCompletion: Could not find Save button in iframe');
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(false);
                 return;
               }
-
-              console.log('ActionItemsCompletion: Found Save button, waiting for it to enable...');
 
               // Wait for Save button to become enabled
               const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
@@ -380,8 +351,6 @@ const ActionItemsCompletion = (() => {
                 callback(false);
                 return;
               }
-
-              console.log('ActionItemsCompletion: Save button enabled, clicking it...');
 
               // Click Save button
               saveButton.click();
@@ -396,7 +365,6 @@ const ActionItemsCompletion = (() => {
 
               // Wait for save to complete
               setTimeout(() => {
-                console.log('ActionItemsCompletion: Task saved successfully in iframe');
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(true);
@@ -425,74 +393,8 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Find the progress checkbox in the sidebar
-   * @param {HTMLElement} sidebar - The sidebar element
-   * @returns {HTMLElement|null} The progress checkbox or null
-   */
-  function findProgressCheckbox(sidebar) {
-    const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
-    const progressLabel = allLabels.find(span => span.textContent.trim() === 'Progress');
-    if (!progressLabel) return null;
-
-    const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
-    if (!progressContainer) return null;
-
-    return progressContainer.querySelector('div[role="button"]');
-  }
-
-  /**
-   * Find the Save button in the toolbar
-   * @returns {HTMLElement|null} The Save button or null
-   */
-  function findSaveButton() {
-    const allButtons = Array.from(document.querySelectorAll('div[role="button"]'));
-
-    for (const button of allButtons) {
-      const text = button.textContent.trim();
-      const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
-
-      if (hasCheckmark && text.includes('Save')) {
-        return button;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Wait for a Save button element to become enabled
-   * @param {HTMLElement} button - The Save button element
-   * @param {number} maxWaitMs - Maximum time to wait in milliseconds
-   * @returns {Promise<boolean>} True if button became enabled, false if timeout
-   */
-  function waitForSaveButtonEnabled(button, maxWaitMs = 2000) {
-    return new Promise((resolve) => {
-      const startTime = Date.now();
-
-      const checkEnabled = () => {
-        const classes = button.className;
-        const isDisabled = classes.includes('pointer-events-none');
-
-        if (!isDisabled) {
-          resolve(true);
-          return;
-        }
-
-        if (Date.now() - startTime >= maxWaitMs) {
-          resolve(false);
-          return;
-        }
-
-        setTimeout(checkEnabled, 100);
-      };
-
-      checkEnabled();
-    });
-  }
-
-  /**
-   * Find the progress checkbox in a document (for iframe use)
-   * @param {Document} doc - The document to search in
+   * Find the progress checkbox in a document
+   * @param {Document} doc - The iframe document to search in
    * @returns {HTMLElement|null} The progress checkbox or null
    */
   function findProgressCheckboxInDoc(doc) {
@@ -510,8 +412,8 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Find the Save button in a document (for iframe use)
-   * @param {Document} doc - The document to search in
+   * Find the Save button in a document
+   * @param {Document} doc - The iframe document to search in
    * @returns {HTMLElement|null} The Save button or null
    */
   function findSaveButtonInDoc(doc) {
@@ -530,8 +432,8 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Wait for a Save button element to become enabled in a document (for iframe use)
-   * @param {HTMLElement} button - The Save button element
+   * Wait for a Save button element to become enabled
+   * @param {HTMLElement} button - The Save button element from iframe document
    * @param {number} maxWaitMs - Maximum time to wait in milliseconds
    * @returns {Promise<boolean>} True if button became enabled, false if timeout
    */
@@ -558,18 +460,6 @@ const ActionItemsCompletion = (() => {
 
       checkEnabled();
     });
-  }
-
-  /**
-   * Navigate back to the original page
-   * @param {Object} navigationState - The navigation state object
-   * @param {boolean} success - Whether the completion was successful
-   */
-  function navigateBack(navigationState, success) {
-    console.log('ActionItemsCompletion: Navigating back to:', navigationState.returnUrl);
-
-    // Navigate back
-    window.location.href = navigationState.returnUrl;
   }
 
   /**
