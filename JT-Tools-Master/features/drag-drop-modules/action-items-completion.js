@@ -429,24 +429,45 @@ const ActionItemsCompletion = (() => {
       // Click the checkbox to mark complete
       progressCheckbox.click();
 
-      // Wait for the change to register
+      // Wait for the change to register, then find and click Save button
       setTimeout(() => {
-        console.log('ActionItemsCompletion: Task marked complete, cleaning up...');
+        console.log('ActionItemsCompletion: Progress checkbox clicked, finding Save button...');
 
-        // Clear failsafe
-        clearTimeout(failsafeTimeout);
+        // Find the Save button
+        const saveButton = findSaveButton(sidebar);
 
-        // Close sidebar
-        if (window.SidebarManager) {
-          window.SidebarManager.closeSidebar(null, () => {
-            // Navigate back
-            navigateBack(navigationState, true);
-          });
-        } else {
+        if (!saveButton) {
+          console.error('ActionItemsCompletion: Could not find Save button');
+          clearTimeout(failsafeTimeout);
           if (hideStyle) hideStyle.remove();
-          navigateBack(navigationState, true);
+          navigateBack(navigationState, false);
+          return;
         }
-      }, 500);
+
+        console.log('ActionItemsCompletion: Found Save button, clicking it...');
+
+        // Click the Save button
+        saveButton.click();
+
+        // Wait for save to complete
+        setTimeout(() => {
+          console.log('ActionItemsCompletion: Task saved, cleaning up...');
+
+          // Clear failsafe
+          clearTimeout(failsafeTimeout);
+
+          // Close sidebar
+          if (window.SidebarManager) {
+            window.SidebarManager.closeSidebar(null, () => {
+              // Navigate back
+              navigateBack(navigationState, true);
+            });
+          } else {
+            if (hideStyle) hideStyle.remove();
+            navigateBack(navigationState, true);
+          }
+        }, 500);
+      }, 300);
     }, 1000);
   }
 
@@ -508,6 +529,48 @@ const ActionItemsCompletion = (() => {
 
     console.log('ActionItemsCompletion: Found progress checkbox button');
     return checkboxButton;
+  }
+
+  /**
+   * Find the Save button in the sidebar
+   * @param {HTMLElement} sidebar - The sidebar element
+   * @returns {HTMLElement|null} The Save button or null
+   */
+  function findSaveButton(sidebar) {
+    // Look for blue button with text "Save"
+    // Button classes: bg-blue-500, border-blue-600
+    const allButtons = Array.from(sidebar.querySelectorAll('div[role="button"]'));
+
+    console.log('ActionItemsCompletion: Checking buttons for Save button...');
+
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      const classes = button.className;
+
+      // Check if button has "Save" text and blue styling
+      if (text === 'Save' || text.includes('Save')) {
+        // Verify it's the blue save button (not other buttons)
+        if (classes.includes('bg-blue-500') || classes.includes('bg-blue-600')) {
+          console.log('ActionItemsCompletion: Found Save button (blue button with Save text)');
+          return button;
+        }
+      }
+    }
+
+    // Fallback: look for any button with Save text
+    const saveButton = allButtons.find(button => {
+      const text = button.textContent.trim();
+      return text === 'Save' || text.includes('Save');
+    });
+
+    if (saveButton) {
+      console.log('ActionItemsCompletion: Found Save button (fallback search)');
+      return saveButton;
+    }
+
+    console.log('ActionItemsCompletion: Save button not found');
+    console.log('ActionItemsCompletion: Available button texts:', allButtons.map(b => b.textContent.trim()));
+    return null;
   }
 
   /**
