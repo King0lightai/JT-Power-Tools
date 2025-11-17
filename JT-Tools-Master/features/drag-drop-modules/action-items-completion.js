@@ -460,8 +460,8 @@ const ActionItemsCompletion = (() => {
       setTimeout(() => {
         console.log('ActionItemsCompletion: Progress checkbox clicked, finding Save button...');
 
-        // Find the Save button
-        const saveButton = findSaveButton(sidebar);
+        // Find the Save button (search globally, not just in sidebar)
+        const saveButton = findSaveButton();
 
         if (!saveButton) {
           console.error('ActionItemsCompletion: Could not find Save button');
@@ -494,7 +494,7 @@ const ActionItemsCompletion = (() => {
             navigateBack(navigationState, true);
           }
         }, 500);
-      }, 300);
+      }, 800);
     }, 1000);
   }
 
@@ -559,44 +559,64 @@ const ActionItemsCompletion = (() => {
   }
 
   /**
-   * Find the Save button in the sidebar
-   * @param {HTMLElement} sidebar - The sidebar element
+   * Find the Save button (searches entire document)
    * @returns {HTMLElement|null} The Save button or null
    */
-  function findSaveButton(sidebar) {
+  function findSaveButton() {
     // Look for blue button with text "Save"
     // Button classes: bg-blue-500, border-blue-600
-    const allButtons = Array.from(sidebar.querySelectorAll('div[role="button"]'));
+    // Search the entire document since the Save button might appear outside the sidebar
+    const allButtons = Array.from(document.querySelectorAll('div[role="button"]'));
 
-    console.log('ActionItemsCompletion: Checking buttons for Save button...');
+    console.log('ActionItemsCompletion: Checking all buttons for Save button...');
+    console.log('ActionItemsCompletion: Total buttons found:', allButtons.length);
 
+    // First pass: Look for blue Save button with exact class match
     for (const button of allButtons) {
       const text = button.textContent.trim();
       const classes = button.className;
 
       // Check if button has "Save" text and blue styling
-      if (text === 'Save' || text.includes('Save')) {
-        // Verify it's the blue save button (not other buttons)
-        if (classes.includes('bg-blue-500') || classes.includes('bg-blue-600')) {
-          console.log('ActionItemsCompletion: Found Save button (blue button with Save text)');
-          return button;
-        }
+      if ((text === 'Save' || text.endsWith('Save')) &&
+          (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
+        console.log('ActionItemsCompletion: Found Save button (blue button with Save text)');
+        console.log('ActionItemsCompletion: Button classes:', classes);
+        return button;
       }
     }
 
-    // Fallback: look for any button with Save text
-    const saveButton = allButtons.find(button => {
+    // Second pass: Look for any button with exact "Save" text
+    for (const button of allButtons) {
       const text = button.textContent.trim();
-      return text === 'Save' || text.includes('Save');
-    });
+      if (text === 'Save') {
+        console.log('ActionItemsCompletion: Found Save button (exact text match)');
+        console.log('ActionItemsCompletion: Button classes:', button.className);
+        return button;
+      }
+    }
 
-    if (saveButton) {
-      console.log('ActionItemsCompletion: Found Save button (fallback search)');
-      return saveButton;
+    // Third pass: Look for button with checkmark SVG and "Save" text
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
+
+      if (hasCheckmark && (text === 'Save' || text.includes('Save'))) {
+        console.log('ActionItemsCompletion: Found Save button (checkmark + Save text)');
+        return button;
+      }
     }
 
     console.log('ActionItemsCompletion: Save button not found');
-    console.log('ActionItemsCompletion: Available button texts:', allButtons.map(b => b.textContent.trim()));
+
+    // Log buttons with "Save" in text for debugging
+    const saveButtons = allButtons.filter(b => b.textContent.includes('Save'));
+    if (saveButtons.length > 0) {
+      console.log('ActionItemsCompletion: Buttons containing "Save":', saveButtons.map(b => ({
+        text: b.textContent.trim(),
+        classes: b.className
+      })));
+    }
+
     return null;
   }
 
