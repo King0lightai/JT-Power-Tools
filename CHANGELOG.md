@@ -5,6 +5,53 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2025-01-XX
+
+### Added
+
+#### New Feature: Action Items Quick Completion
+- Checkboxes added to Action Items card for instant task completion
+- Complete action items directly from dashboard without navigation
+- Hidden iframe technology ensures seamless background completion
+- Visual feedback with smooth fade-out animation when tasks are completed
+- Automatic task removal from list upon successful completion
+- Smart task ID extraction from both schedule and to-do URLs
+- Real-time Save button detection and state monitoring
+
+#### New Feature: Month Schedule Task Completion
+- Checkboxes added to task cards in month schedule view
+- Quickly mark tasks complete or incomplete directly from calendar
+- Visual completion status indicator shows current task state
+- Instant task status updates without opening task details
+- Works seamlessly with existing drag & drop functionality
+
+#### Help Sidebar Integration
+- JT Power Tools support section added to JobTread help sidebar
+- Help Sidebar Support feature now always enabled by default
+- Better integration with JobTread's native help system
+
+### Fixed
+
+#### Action Items & Task Completion Fixes
+- Fixed task completion to use full-size hidden iframe for proper toolbar rendering
+- Fixed Save button detection and enabled state checking
+- Improved task completion reliability with better timeout handling
+- Cleaned up orphaned code that was causing JavaScript errors
+
+#### UI & Display Fixes
+- Fixed Quick Notes from running on settings pages
+- Fixed sidebar hiding CSS from blocking help modals
+- Fixed sticky header text elements from overlapping when scrolling
+- Fixed column resize handles appearing over frozen column headers
+- Fixed search bar to use shaded background on hover instead of primary color
+
+#### Theme & Appearance Fixes
+- Fixed dark mode background colors with !important flag to prevent white flash
+- Added solid blue background for today's date in dark mode calendar
+- Fixed text formatter and preview mode disabled for Time Clock Notes field
+
+---
+
 ## [3.3.0] - 2024-11-13
 
 ### Added
@@ -181,6 +228,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.3.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.1
 [3.3.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.0
 [3.2.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.2.3
 [3.1.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.1.0
