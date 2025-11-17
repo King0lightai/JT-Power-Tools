@@ -295,8 +295,9 @@ const ActionItemsCompletion = (() => {
     console.log('ActionItemsCompletion: Creating hidden iframe for task completion');
 
     // Create hidden iframe WITHOUT sandbox to allow full functionality
+    // Make it full-size so toolbar renders, but position it off-screen
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;';
+    iframe.style.cssText = 'position: absolute; top: -9999px; left: -9999px; width: 1920px; height: 1080px; opacity: 0; pointer-events: none; border: none;';
 
     // NO sandbox attribute - this allows the toolbar to fully render
 
@@ -353,7 +354,15 @@ const ActionItemsCompletion = (() => {
 
               const saveButton = findSaveButtonInDoc(iframeDoc);
               if (!saveButton) {
-                console.error('ActionItemsCompletion: Could not find Save button in iframe');
+                // Debug: count buttons found
+                const allButtons = iframeDoc.querySelectorAll('div[role="button"]');
+                console.error(`ActionItemsCompletion: Could not find Save button in iframe. Found ${allButtons.length} total buttons`);
+
+                // Debug: log first few buttons
+                Array.from(allButtons).slice(0, 5).forEach((btn, idx) => {
+                  console.log(`Button ${idx}: "${btn.textContent.trim().substring(0, 50)}"`, btn);
+                });
+
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(false);
