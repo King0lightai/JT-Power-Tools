@@ -7,18 +7,21 @@
 
 **JT Power Tools** - Professional productivity enhancement suite for JobTread construction management software.
 
-✨ **LATEST IMPROVEMENTS (v3.3.0)**
-• Text Formatter and Preview Mode now work together seamlessly
-• Enhanced preview button visibility - appears on hover like the formatter toolbar
-• Improved custom theme with better color preservation for key UI elements
-• Better budget table styling with consistent thin borders
-• Added feedback button in popup for easy communication
-• Preview panel now has proper padding for comfortable reading
+✨ **LATEST IMPROVEMENTS (v3.3.1)**
+• NEW: Quick completion checkboxes on Action Items card - complete tasks without navigation
+• NEW: Month schedule task completion - mark tasks complete/incomplete directly from calendar
+• NEW: Help Sidebar Integration - JT Power Tools support in JobTread help sidebar
+• Fixed Quick Notes from running on settings pages
+• Fixed dark mode background flash and improved visual stability
+• Fixed text formatter disabled for Time Clock Notes field
+• Improved task completion reliability with better error handling
 
 🚀 **FEATURES**
 
 **📅 Schedule Drag & Drop (Premium)**
 • Drag schedule items between dates in month view
+• Quick task completion checkboxes on task cards
+• Mark tasks complete or incomplete directly from calendar
 • Automatically updates dates seamlessly
 • Cross-year support (December → January)
 • Smart weekend detection (auto-skip to Monday, or hold Shift to override)
@@ -54,6 +57,14 @@
 • Intelligent positioning to avoid viewport edges
 • Can be used together with Text Formatter
 • Smart visibility - stays visible when needed, hides when not
+
+**✅ Action Items Quick Completion (Free)**
+• Checkboxes on Action Items card for instant task completion
+• Complete action items directly from dashboard without navigation
+• Visual feedback with smooth fade-out animation
+• Automatic task removal from list upon completion
+• Smart task detection for both schedule and to-do items
+• Works seamlessly in the background
 
 **📒 Quick Notes (Free)**
 • Persistent notepad accessible from any JobTread page
