@@ -8,7 +8,7 @@
 JT Power Tools
 
 **Short Description (132 characters max):**
-7 powerful tools for JobTread: Drag & Drop, Dark Mode, Text Formatter, Job Switcher, Custom Theme & Budget Hierarchy.
+9 powerful tools for JobTread: Drag & Drop, Notes, Preview, Formatter, Job Switcher, Dark Mode, Custom Theme & more!
 
 **Category:**
 Productivity
@@ -65,15 +65,17 @@ Host the PRIVACY_POLICY.md file on:
 **Screenshots (Required - at least 1):**
 - Size: 1280x800 or 640x400 pixels
 - Format: PNG or JPEG
-- Recommended: 6-8 screenshots showing:
-  1. Popup interface with all 7 feature toggles
-  2. Drag & Drop in action (month view)
-  3. Text Formatter toolbar
-  4. Quick Job Switcher in action
-  5. Custom Theme customization panel
-  6. Dark mode comparison (before/after)
-  7. Budget Hierarchy Shading with nested groups
-  8. Premium license activation (optional)
+- Recommended: 8-10 screenshots showing:
+  1. Popup interface with all feature toggles
+  2. Action Items Quick Completion with checkboxes
+  3. Month schedule task completion checkboxes
+  4. Drag & Drop in action (month view)
+  5. Text Formatter toolbar and Preview Mode
+  6. Quick Notes panel with markdown formatting
+  7. Quick Job Switcher in action
+  8. Custom Theme customization panel
+  9. Dark mode comparison (before/after)
+  10. Budget Hierarchy Shading with nested groups
 
 **Promotional Images (Optional but Recommended):**
 - Small Promo Tile: 440x280 pixels
