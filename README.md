@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.3.1-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
@@ -350,7 +350,30 @@ const featureModules = {
 
 **For detailed release notes and complete changelog, see the [Changelog](https://king0lightai.github.io/JT-Power-Tools/changelog.html)**
 
-### v3.3.0 (Current)
+### v3.3.1 (Current)
+- **New Feature: Action Items Quick Completion**
+  - Checkboxes added to Action Items card for instant task completion
+  - Complete action items directly from dashboard without navigation
+  - Hidden iframe technology ensures seamless background completion
+  - Visual feedback with smooth fade-out animation when tasks are completed
+  - Automatic task removal from list upon successful completion
+- **New Feature: Month Schedule Task Completion**
+  - Checkboxes added to task cards in month schedule view
+  - Quickly mark tasks complete or incomplete directly from calendar
+  - Visual completion status indicator shows current task state
+  - Instant task status updates without opening task details
+- **Help Sidebar Integration**
+  - JT Power Tools support section added to JobTread help sidebar
+  - Help Sidebar Support feature now always enabled by default
+- **Bug Fixes & Improvements**:
+  - Fixed Quick Notes from running on settings pages
+  - Fixed sidebar hiding CSS from blocking help modals
+  - Fixed sticky header text elements from overlapping when scrolling
+  - Fixed column resize handles appearing over frozen column headers
+  - Fixed dark mode background colors to prevent white flash
+  - Fixed text formatter disabled for Time Clock Notes field
+
+### v3.3.0
 - **New Feature: Quick Notes**
   - Persistent notepad accessible from any JobTread page
   - Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
