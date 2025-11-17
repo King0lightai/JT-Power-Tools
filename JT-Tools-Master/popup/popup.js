@@ -221,6 +221,7 @@ async function getCurrentSettings() {
     quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
     quickNotes: document.getElementById('quickNotes').checked,
+    helpSidebarSupport: true, // Always enabled, not user-toggleable
     themeColors: currentColors,
     savedThemes: savedThemes
   };
