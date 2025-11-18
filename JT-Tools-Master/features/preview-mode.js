@@ -836,7 +836,11 @@ const PreviewModeFeature = (() => {
   return {
     init,
     cleanup,
-    isActive: () => isActive
+    isActive: () => isActive,
+    togglePreview: (textarea, button) => {
+      if (!isActive) return;
+      togglePreview(textarea, button);
+    }
   };
 })();
 
