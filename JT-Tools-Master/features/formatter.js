@@ -646,8 +646,27 @@ const FormatterFeature = (() => {
     const toolbar = document.createElement('div');
     toolbar.className = 'jt-formatter-toolbar jt-formatter-compact';
 
-    // Compact toolbar - optimized for all contexts including sidebars
-    toolbar.innerHTML = `
+    // Check if PreviewModeFeature is available and active
+    const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
+
+    // Build toolbar HTML - add Preview button if preview mode is active
+    let toolbarHTML = '';
+
+    if (hasPreviewMode) {
+      toolbarHTML += `
+      <button class="jt-preview-toggle" data-action="preview" title="Preview">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="jt-icon">
+          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span>Preview</span>
+      </button>
+
+      <div class="jt-toolbar-divider"></div>
+      `;
+    }
+
+    toolbarHTML += `
     <div class="jt-toolbar-group">
       <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
         <strong>B</strong>
@@ -661,7 +680,10 @@ const FormatterFeature = (() => {
       <button data-format="strikethrough" title="Strikethrough (~text~)">
         <s>S</s>
       </button>
-    </div>
+    </div>`;
+
+    // Continue with rest of toolbar (moved outside the conditional part)
+    toolbarHTML += `
 
     <div class="jt-toolbar-divider"></div>
 
@@ -712,11 +734,19 @@ const FormatterFeature = (() => {
     </div>
   `;
 
+    // Set the toolbar HTML
+    toolbar.innerHTML = toolbarHTML;
+
     // Setup dropdown handlers
     setupDropdowns(toolbar);
     setupColorPicker(toolbar);
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
+
+    // Setup Preview button handler if present
+    if (hasPreviewMode) {
+      setupPreviewButton(toolbar, field);
+    }
 
     document.body.appendChild(toolbar);
     return toolbar;
@@ -804,6 +834,30 @@ const FormatterFeature = (() => {
           }, 10);
         }
       });
+    });
+  }
+
+  function setupPreviewButton(toolbar, field) {
+    const previewBtn = toolbar.querySelector('[data-action="preview"]');
+    if (!previewBtn) return;
+
+    previewBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+
+    previewBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Toggle preview mode for this field
+      if (window.PreviewModeFeature && window.PreviewModeFeature.togglePreview) {
+        window.PreviewModeFeature.togglePreview(field, previewBtn);
+      }
+
+      // Keep focus on the field
+      if (field && document.body.contains(field)) {
+        field.focus();
+      }
     });
   }
 
