@@ -486,7 +486,6 @@ The extension is now live on the Chrome Web Store! For documentation related to 
 - **Store Listing**: [CHROME_WEB_STORE_LISTING.md](chrome-web-store/CHROME_WEB_STORE_LISTING.md)
 - **Privacy Policy**: [PRIVACY_POLICY.md](chrome-web-store/PRIVACY_POLICY.md)
 - **Submission Guide**: [CHROME_WEB_STORE_SUBMISSION_GUIDE.md](chrome-web-store/CHROME_WEB_STORE_SUBMISSION_GUIDE.md)
-- **Screenshot Guide**: [SCREENSHOT_CAPTIONS.md](chrome-web-store/SCREENSHOT_CAPTIONS.md)
 - **Single Purpose**: [SINGLE_PURPOSE_STATEMENT.txt](chrome-web-store/SINGLE_PURPOSE_STATEMENT.txt)
 
 ## 🐛 Known Issues
