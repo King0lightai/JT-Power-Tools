@@ -111,9 +111,44 @@ const FormatterFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
+  // Helper function to check if field already has JobTread's native formatter
+  function hasNativeFormatter(textarea) {
+    if (!textarea) return false;
+
+    // Look for JobTread's native formatter toolbar in parent containers
+    // Their toolbar has: sticky z-[1] p-1 flex gap-1 bg-white shadow-line-bottom
+    const container = textarea.closest('div');
+    if (!container) return false;
+
+    // Check parent and grandparent for the sticky toolbar
+    let current = container;
+    for (let i = 0; i < 5; i++) { // Check up to 5 levels up
+      if (!current) break;
+
+      // Look for the sticky toolbar as a child
+      const toolbar = current.querySelector('.sticky.shadow-line-bottom');
+      if (toolbar) {
+        // Verify it's actually a formatter toolbar by checking for button elements
+        const buttons = toolbar.querySelectorAll('div[role="button"]');
+        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
+          return true;
+        }
+      }
+
+      current = current.parentElement;
+    }
+
+    return false;
+  }
+
   // Helper function to check if a textarea should have the formatter
   function isFormatterField(textarea) {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
+
+    // First, check if field already has JobTread's native formatter
+    if (hasNativeFormatter(textarea)) {
+      return false; // Skip fields that already have native formatter
+    }
 
     // Check if it's a Budget Description field
     if (textarea.getAttribute('placeholder') === 'Description') {
