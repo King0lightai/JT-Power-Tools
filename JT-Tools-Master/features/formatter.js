@@ -1008,9 +1008,9 @@ const FormatterFeature = (() => {
     const lineEnd = text.indexOf('\n', start);
     const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
 
-    if (currentLine.trim().startsWith('--:')) {
+    if (currentLine.trim().startsWith('-:-')) {
       activeFormats['justify-center'] = true;
-    } else if (currentLine.trim().startsWith('---:')) {
+    } else if (currentLine.trim().startsWith('--:')) {
       activeFormats['justify-right'] = true;
     }
 
@@ -1162,7 +1162,7 @@ const FormatterFeature = (() => {
         const beforeLine2 = text.substring(0, jLineStart);
         const afterLine = text.substring(jLineStart);
 
-        const cleaned = afterLine.replace(/^(--:|---:)\s*/, '');
+        const cleaned = afterLine.replace(/^(-:-|--:)\s*/, '');
         newText = beforeLine2 + cleaned;
         newCursorPos = jLineStart;
         break;
@@ -1333,7 +1333,7 @@ const FormatterFeature = (() => {
         const leftLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, leftLineStart);
         let afterLeft = text.substring(leftLineStart);
-        afterLeft = afterLeft.replace(/^(--:|---:)\s*/, '');
+        afterLeft = afterLeft.replace(/^(-:-|--:)\s*/, '');
         replacement = afterLeft;
         cursorPos = leftLineStart;
         after = '';
@@ -1343,8 +1343,8 @@ const FormatterFeature = (() => {
         const centerLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, centerLineStart);
         let afterCenter = text.substring(centerLineStart);
-        afterCenter = afterCenter.replace(/^(--:|---:)\s*/, '');
-        replacement = `--: ${afterCenter}`;
+        afterCenter = afterCenter.replace(/^(-:-|--:)\s*/, '');
+        replacement = `-:- ${afterCenter}`;
         cursorPos = centerLineStart + 4;
         after = '';
         break;
@@ -1353,9 +1353,9 @@ const FormatterFeature = (() => {
         const rightLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, rightLineStart);
         let afterRight = text.substring(rightLineStart);
-        afterRight = afterRight.replace(/^(--:|---:)\s*/, '');
-        replacement = `---: ${afterRight}`;
-        cursorPos = rightLineStart + 5;
+        afterRight = afterRight.replace(/^(-:-|--:)\s*/, '');
+        replacement = `--: ${afterRight}`;
+        cursorPos = rightLineStart + 4;
         after = '';
         break;
 
