@@ -117,15 +117,32 @@ const FormatterFeature = (() => {
 
     // Look for JobTread's native formatter toolbar in parent containers
     // Their toolbar has: sticky z-[1] p-1 flex gap-1 bg-white shadow-line-bottom
+    // The toolbar is typically a sibling to the textarea's parent container
+
     const container = textarea.closest('div');
     if (!container) return false;
 
-    // Check parent and grandparent for the sticky toolbar
+    // Strategy 1: Check if the parent container has a sibling with the toolbar
+    if (container.parentElement) {
+      const parentContainer = container.parentElement;
+
+      // Look for sticky toolbar as a sibling to the field container
+      const siblings = parentContainer.querySelectorAll('.sticky.shadow-line-bottom');
+      for (const toolbar of siblings) {
+        // Verify it's actually a formatter toolbar by checking for button elements
+        const buttons = toolbar.querySelectorAll('div[role="button"]');
+        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
+          return true;
+        }
+      }
+    }
+
+    // Strategy 2: Check parent containers (in case structure varies)
     let current = container;
     for (let i = 0; i < 5; i++) { // Check up to 5 levels up
       if (!current) break;
 
-      // Look for the sticky toolbar as a child
+      // Look for the sticky toolbar as a child of ancestor
       const toolbar = current.querySelector('.sticky.shadow-line-bottom');
       if (toolbar) {
         // Verify it's actually a formatter toolbar by checking for button elements
