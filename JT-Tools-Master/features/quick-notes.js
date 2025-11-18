@@ -990,7 +990,7 @@ const QuickNotesFeature = (() => {
     notesButton.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0 jt-quick-notes-btn';
     notesButton.setAttribute('role', 'button');
     notesButton.setAttribute('tabindex', '0');
-    notesButton.setAttribute('title', 'Quick Notes (Ctrl+Shift+N)');
+    notesButton.setAttribute('title', 'Quick Notes (Ctrl+Alt+N)');
 
     notesButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
@@ -1066,7 +1066,7 @@ const QuickNotesFeature = (() => {
             class="jt-notes-search-input"
             placeholder="Search notes..."
           />
-          <button class="jt-notes-new-button" title="New note (Ctrl+Shift+N)">
+          <button class="jt-notes-new-button" title="New note (Ctrl+Alt+N)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
               <path d="M5 12h14M12 5v14"></path>
             </svg>
@@ -1201,7 +1201,7 @@ const QuickNotesFeature = (() => {
   // Keyboard shortcuts
   function handleKeyboard(e) {
     // Ctrl/Cmd + Shift + N to toggle panel
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'N') {
+    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'N') {
       e.preventDefault();
       togglePanel();
     }
