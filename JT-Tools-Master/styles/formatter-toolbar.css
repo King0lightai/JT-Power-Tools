@@ -2,51 +2,67 @@
   position: absolute;
   z-index: 999999;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem; /* rounded-sm */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
+  padding: 0.25rem; /* p-1 */
   display: flex;
-  gap: 6px;
+  gap: 0.25rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  backdrop-filter: blur(8px);
 }
 
 .jt-toolbar-group {
   display: flex;
-  gap: 2px;
+  gap: 0;
   position: relative;
 }
 
 .jt-toolbar-divider {
   width: 1px;
   background: #e5e7eb;
-  margin: 0 4px;
+  margin: 0 0.125rem;
 }
 
 .jt-formatter-toolbar button {
-  background: #ffffff;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 8px 12px;
+  /* Match JobTread's button styling */
+  display: inline-block;
+  position: relative;
   cursor: pointer;
+  user-select: none;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem; /* rounded-sm */
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-size: 14px;
+  text-align: center;
+  color: #4b5563; /* text-gray-600 */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
   transition: all 0.15s ease;
-  color: #374151;
-  min-width: 36px;
-  display: flex;
+  min-width: 32px;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Remove border between adjacent buttons in same group */
+.jt-toolbar-group button:not(:first-child) {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.jt-toolbar-group button:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .jt-formatter-toolbar button:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #f9fafb; /* hover:bg-gray-50 */
+  border-color: #9ca3af;
 }
 
 .jt-formatter-toolbar button:active {
-  background: #f3f4f6;
-  transform: translateY(1px);
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05); /* active:shadow-inner */
 }
 
 /* NEW: Active state styling (like MS Word) */
@@ -113,11 +129,11 @@
   top: calc(100% + 4px);
   left: 0;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 4px;
-  gap: 2px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem; /* rounded-sm */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
+  padding: 0.25rem;
+  gap: 0;
   flex-direction: column;
   z-index: 1000000;
   min-width: 140px;
@@ -132,11 +148,24 @@
   justify-content: flex-start;
   text-align: left;
   width: 100%;
-  padding: 6px 10px;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.jt-dropdown-menu button:first-child {
+  border-top-left-radius: 0.125rem;
+  border-top-right-radius: 0.125rem;
+}
+
+.jt-dropdown-menu button:last-child {
+  border-bottom-left-radius: 0.125rem;
+  border-bottom-right-radius: 0.125rem;
 }
 
 .jt-dropdown-menu button:hover {
-  background: #f9fafb;
+  background: #f9fafb; /* hover:bg-gray-50 */
 }
 
 /* Active state for dropdown items */
@@ -170,11 +199,11 @@
   top: calc(100% + 4px);
   left: 0;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 4px;
-  gap: 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem; /* rounded-sm */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
+  padding: 0.25rem;
+  gap: 0;
   flex-direction: column;
   z-index: 1000000;
 }
@@ -185,8 +214,21 @@
 
 .jt-color-option {
   min-width: 32px;
-  padding: 6px 10px;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-weight: 700;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.jt-color-option:first-child {
+  border-top-left-radius: 0.125rem;
+  border-top-right-radius: 0.125rem;
+}
+
+.jt-color-option:last-child {
+  border-bottom-left-radius: 0.125rem;
+  border-bottom-right-radius: 0.125rem;
 }
 
 .jt-formatter-toolbar button.jt-color-green {
@@ -305,14 +347,14 @@
 
 /* Compact Toolbar for Sidebars */
 .jt-formatter-toolbar.jt-formatter-compact {
-  padding: 4px 6px;
-  gap: 4px;
+  padding: 0.25rem;
+  gap: 0.25rem;
   font-size: 12px;
-  border-radius: 6px;
+  border-radius: 0.125rem; /* rounded-sm */
 }
 
 .jt-formatter-compact button {
-  padding: 6px 8px;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
   min-width: 28px;
   font-size: 12px;
 }
@@ -327,25 +369,61 @@
 .jt-formatter-compact .jt-dropdown-menu {
   min-width: 100px;
   font-size: 12px;
-  padding: 3px;
+  padding: 0.25rem;
 }
 
 .jt-formatter-compact .jt-dropdown-menu button {
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-size: 12px;
 }
 
 .jt-formatter-compact .jt-color-dropdown {
-  padding: 3px;
-  gap: 3px;
+  padding: 0.25rem;
+  gap: 0;
 }
 
 .jt-formatter-compact .jt-color-option {
   min-width: 26px;
-  padding: 4px 8px;
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-size: 12px;
 }
 
 .jt-formatter-compact .jt-toolbar-divider {
-  margin: 0 2px;
+  margin: 0 0.125rem;
+}
+
+/* Custom Tooltip Styles */
+.jt-custom-tooltip {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  z-index: 1000001;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.jt-custom-tooltip.visible {
+  opacity: 1;
+}
+
+/* Tooltip arrow (optional enhancement) */
+.jt-custom-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid rgba(0, 0, 0, 0.9);
 }
