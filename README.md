@@ -215,13 +215,6 @@ Some features require a premium license to unlock:
 7. Premium features will be unlocked immediately
 8. Share the license key with other employees in your company
 
-### Product Configuration
-The extension is configured with:
-- **Product Permalink**: `jtpowertools`
-- **Product ID**: `x2GbSvLBfUSQcwVGDRSj1w==`
-
-For setup instructions, see [PREMIUM_SETUP.md](../PREMIUM_SETUP.md)
-
 ## 🏗️ Architecture
 
 ### File Structure
