@@ -1200,8 +1200,8 @@ const QuickNotesFeature = (() => {
 
   // Keyboard shortcuts
   function handleKeyboard(e) {
-    // Ctrl/Cmd + Shift + N to toggle panel
-    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key === 'N') {
+    // Ctrl/Cmd + Alt + N to toggle panel
+    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
       togglePanel();
     }
