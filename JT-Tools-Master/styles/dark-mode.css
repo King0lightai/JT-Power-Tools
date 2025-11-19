@@ -67,23 +67,12 @@ textarea,
     caret-color: #ffffff !important;
 }
 
-/* Fix cursor visibility in budget tables - override opacity while keeping text invisible */
-.opacity-0.caret-transparent {
+/* Fix opacity-0 inputs/textareas - make cursor visible while keeping text transparent */
+input.opacity-0,
+textarea.opacity-0 {
     opacity: 1 !important;
     color: transparent !important;
     caret-color: #ffffff !important;
-}
-
-/* Ensure cursor is visible in all budget inputs and textareas */
-.shrink-0.border-r.border-b input,
-.shrink-0.border-r.border-b textarea {
-    caret-color: #ffffff !important;
-}
-
-/* Handle inputs with opacity-0 in budget cells */
-.shrink-0 input.opacity-0 {
-    opacity: 1 !important;
-    color: transparent !important;
 }
 
 /* White border for dark mode */
