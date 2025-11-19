@@ -550,23 +550,24 @@ const PreviewModeFeature = (() => {
       }, 200);
     }
 
-    // Always remove active class from button
-    if (activeButton) {
-      activeButton.classList.remove('active');
-
-      // Hide standalone button if textarea is not focused (toolbar buttons don't have _textarea)
-      const textarea = activeButton._textarea;
-      if (textarea && document.activeElement !== textarea) {
-        activeButton.style.opacity = '0';
-        activeButton.style.pointerEvents = 'none';
-      }
-    }
-
-    // Also check for any other buttons that might have the active class (cleanup)
+    // Always remove active class from ALL preview buttons (comprehensive cleanup)
+    // This ensures the button state is reset regardless of reference issues
     const allActiveButtons = document.querySelectorAll('.jt-preview-btn.active, .jt-preview-toggle.active');
     allActiveButtons.forEach(btn => {
       btn.classList.remove('active');
+
+      // Hide standalone button if textarea is not focused (toolbar buttons don't have _textarea)
+      const textarea = btn._textarea;
+      if (textarea && document.activeElement !== textarea) {
+        btn.style.opacity = '0';
+        btn.style.pointerEvents = 'none';
+      }
     });
+
+    // Also explicitly remove from activeButton reference if it exists
+    if (activeButton) {
+      activeButton.classList.remove('active');
+    }
 
     activePreview = null;
     activeButton = null;
