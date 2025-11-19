@@ -1485,8 +1485,19 @@ const QuickNotesFeature = (() => {
       return false;
     }
 
-    // Only show on daily-logs and time pages
-    const allowedPages = ['/daily-logs', '/time'];
+    // Show on these pages with action bars
+    const allowedPages = [
+      '/daily-logs',
+      '/time',
+      '/messages',
+      '/todos',
+      '/to-dos',
+      '/schedule',
+      '/jobs',
+      '/documents',
+      '/vendors',
+      '/customers'
+    ];
     return allowedPages.some(page => path.includes(page));
   }
 
@@ -1918,15 +1929,26 @@ const QuickNotesFeature = (() => {
   async function init() {
     if (isActive) return;
 
-    // Only initialize on allowed pages (daily-logs and time)
+    // Only initialize on allowed pages (pages with action bars)
     // Note: The button injection logic also checks this, but we check here
     // to avoid loading resources unnecessarily on other pages
     const path = window.location.pathname;
-    const allowedPages = ['/daily-logs', '/time'];
+    const allowedPages = [
+      '/daily-logs',
+      '/time',
+      '/messages',
+      '/todos',
+      '/to-dos',
+      '/schedule',
+      '/jobs',
+      '/documents',
+      '/vendors',
+      '/customers'
+    ];
     const isAllowedPage = allowedPages.some(page => path.includes(page));
 
     if (!isAllowedPage) {
-      console.log('Quick Notes: Skipping - not on allowed page (daily-logs or time)');
+      console.log('Quick Notes: Skipping - not on allowed page');
       console.log('Quick Notes: Current path:', path);
       return;
     }
