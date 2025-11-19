@@ -709,6 +709,99 @@ const PreviewModeFeature = (() => {
     return div.innerHTML;
   }
 
+  // Parse and render alerts
+  function parseAlerts(text) {
+    const lines = text.split('\n');
+    const alertBlocks = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i].trim();
+
+      // Check if this line starts an alert: > [!color:xxx] ### [!icon:xxx] Subject
+      const alertMatch = line.match(/^>\s*\[!color:(\w+)\]\s*###\s*\[!icon:\s*(\w+)\]\s*(.+)$/);
+
+      if (alertMatch) {
+        const color = alertMatch[1];
+        const icon = alertMatch[2];
+        const subject = alertMatch[3].trim();
+        const bodyLines = [];
+
+        // Collect subsequent blockquoted lines as body
+        i++;
+        while (i < lines.length && lines[i].trim().startsWith('> ')) {
+          const bodyLine = lines[i].trim().substring(2); // Remove "> "
+          bodyLines.push(bodyLine);
+          i++;
+        }
+
+        const body = bodyLines.join('\n');
+
+        // Render the alert
+        const alertHTML = renderAlert(color, icon, subject, body);
+        const placeholder = `___ALERT_${alertBlocks.length}___`;
+        alertBlocks.push(alertHTML);
+
+        // Replace the alert lines with placeholder
+        const alertLineCount = 1 + bodyLines.length;
+        const startIdx = i - alertLineCount;
+        lines.splice(startIdx, alertLineCount, placeholder);
+
+        // Reset i to account for removed lines
+        i = startIdx + 1;
+      } else {
+        i++;
+      }
+    }
+
+    // Replace placeholders with rendered alerts
+    let result = lines.join('\n');
+    alertBlocks.forEach((html, idx) => {
+      result = result.replace(`___ALERT_${idx}___`, html);
+    });
+
+    return result;
+  }
+
+  // Render a single alert
+  function renderAlert(color, icon, subject, body) {
+    // Color mappings
+    const colorMap = {
+      blue: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-500' },
+      yellow: { border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-500' },
+      red: { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-500' },
+      green: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-500' },
+      orange: { border: 'border-jtOrange', bg: 'bg-orange-50', text: 'text-jtOrange' },
+      purple: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-500' }
+    };
+
+    // Icon SVG paths
+    const iconMap = {
+      lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"></path>',
+      infoCircle: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
+      info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
+      exclamationTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>',
+      checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path>',
+      octogonAlert: '<path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z"></path><path d="M12 8v4M12 16h.01"></path>'
+    };
+
+    const colors = colorMap[color] || colorMap.blue;
+    const iconSVG = iconMap[icon] || iconMap.lightbulb;
+
+    // Process body inline formatting
+    const processedBody = processInlineFormatting(body);
+
+    return `<div class="jt-alert border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
+  <div class="${colors.text}">
+    <div class="font-bold text-base flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block" style="width: 1em; height: 1em;" viewBox="0 0 24 24">${iconSVG}</svg>
+      <div>${escapeHTML(subject)}</div>
+    </div>
+  </div>
+  ${processedBody}
+</div>`;
+  }
+
   // Process inline formatting (can be nested inside block elements)
   function processInlineFormatting(text) {
     let result = text;
@@ -739,6 +832,9 @@ const PreviewModeFeature = (() => {
 
     // Parse tables first (before line-by-line processing)
     html = parseMarkdownTables(html);
+
+    // Parse alerts (before line-by-line processing)
+    html = parseAlerts(html);
 
     // Process line by line to handle block-level formatting
     const lines = html.split('\n');
