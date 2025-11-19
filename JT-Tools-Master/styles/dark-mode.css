@@ -54,6 +54,14 @@ td div.cursor-pointer[style*="border-left"] {
     caret-color: #ffffff;
 }
 
+/* Ensure all input fields and contenteditable elements have visible white cursor */
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable="plaintext-only"] {
+    caret-color: #ffffff !important;
+}
+
 /* White border for dark mode */
 .border-white {
     border-color: #353535;
@@ -108,11 +116,11 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 .bg-blue-100 {
-    background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
 }
 
 .bg-blue-50 {
-    background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
@@ -214,7 +222,7 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 .focus-within\:bg-blue-50:focus-within {
-    background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
 }
 
 .focus\:bg-gray-100 {
@@ -258,12 +266,12 @@ td div.cursor-pointer[style*="border-left"] {
 
 .hover\:bg-blue-50 {
     &:hover {
-        background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+        background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
     }
 }
 
 .hover\:bg-blue-100:hover {
-    background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
 }
 
 /* === Active Styles === */
@@ -279,7 +287,7 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 .group-hover\/row\:bg-blue-100 {
-    background-color: rgba(184, 105, 63, 0.75); /* Filtered burnt orange (75% opacity) for selection in dark mode */
+    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
 }
 
 .group:hover .group-hover\:text-gray-800 {
@@ -425,9 +433,19 @@ td div.cursor-pointer[style*="border-left"] {
 .sticky[style*="left: 0px"],
 .sticky[style*="left:0px"] {
     z-index: 20 !important;
+    position: relative; /* Ensure z-index takes effect */
 }
 
 /* Reduce z-index of column resize handles */
 .absolute.z-10.cursor-col-resize {
     z-index: 5 !important;
+}
+
+/* Ensure selected row backgrounds don't show through frozen columns */
+.sticky[style*="left: 0px"] .bg-blue-100,
+.sticky[style*="left: 0px"] .bg-blue-50,
+.sticky[style*="left:0px"] .bg-blue-100,
+.sticky[style*="left:0px"] .bg-blue-50 {
+    z-index: 20 !important;
+    position: relative;
 }
