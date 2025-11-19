@@ -105,7 +105,7 @@ async function loadSettings() {
  * Initialize a feature module safely
  * @param {string} featureKey - Feature key from featureModules
  */
-function initializeFeature(featureKey) {
+async function initializeFeature(featureKey) {
   const module = featureModules[featureKey];
 
   if (!module) {
@@ -132,9 +132,9 @@ function initializeFeature(featureKey) {
     if (!FeatureClass.isActive()) {
       // Special handling for RGB theme - pass theme colors
       if (featureKey === 'rgbTheme' && currentSettings.themeColors) {
-        FeatureClass.init(currentSettings.themeColors);
+        await FeatureClass.init(currentSettings.themeColors);
       } else {
-        FeatureClass.init();
+        await FeatureClass.init();
       }
       module.instance = FeatureClass;
       console.log(`JT-Tools: ${module.name} initialized`);
@@ -183,18 +183,18 @@ function cleanupFeature(featureKey) {
 }
 
 // Initialize all enabled features
-function initializeAllFeatures() {
+async function initializeAllFeatures() {
   console.log('JT-Tools: Initializing features based on settings...');
 
   for (const [key, enabled] of Object.entries(currentSettings)) {
     if (enabled && featureModules[key]) {
-      initializeFeature(key);
+      await initializeFeature(key);
     }
   }
 
   // Always enable Help Sidebar Support (not user-toggleable)
   if (featureModules.helpSidebarSupport) {
-    initializeFeature('helpSidebarSupport');
+    await initializeFeature('helpSidebarSupport');
   }
 
   console.log('JT-Tools: All enabled features initialized');
@@ -204,7 +204,7 @@ function initializeAllFeatures() {
  * Handle settings changes from popup or background
  * @param {Object} newSettings - New settings object
  */
-function handleSettingsChange(newSettings) {
+async function handleSettingsChange(newSettings) {
   try {
     if (!newSettings || typeof newSettings !== 'object') {
       console.error('JT-Tools: Invalid settings object received');
@@ -226,7 +226,7 @@ function handleSettingsChange(newSettings) {
       if (enabled && !wasEnabled) {
         // Feature was enabled
         console.log(`JT-Tools: Enabling ${featureModules[key].name}`);
-        initializeFeature(key);
+        await initializeFeature(key);
       } else if (!enabled && wasEnabled) {
         // Feature was disabled
         console.log(`JT-Tools: Disabling ${featureModules[key].name}`);
@@ -366,7 +366,7 @@ async function waitForFeatures(maxAttempts = 100, delayMs = 150) {
 
   if (featuresReady) {
     // Initialize all enabled features
-    initializeAllFeatures();
+    await initializeAllFeatures();
     console.log('JT Power Tools: Ready!');
   } else {
     console.error('JT Power Tools: Failed to initialize - features not loaded');
