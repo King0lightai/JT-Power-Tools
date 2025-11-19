@@ -1366,9 +1366,11 @@ const QuickNotesFeature = (() => {
     }
 
     notesButton = document.createElement('div');
+    // Match the exact classes from JobTread's action buttons
     notesButton.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 first:rounded-l-sm last:rounded-r-sm border-y border-l last:border-r text-center shrink-0 jt-quick-notes-btn';
     notesButton.setAttribute('role', 'button');
     notesButton.setAttribute('tabindex', '0');
+    notesButton.setAttribute('index', '99'); // High index to ensure it's treated as an action button
     notesButton.setAttribute('title', 'Quick Notes (Ctrl+Alt+N)');
 
     notesButton.innerHTML = `
@@ -1379,64 +1381,112 @@ const QuickNotesFeature = (() => {
     `;
 
     // Add click handler
-    notesButton.addEventListener('click', togglePanel);
+    notesButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePanel();
+    });
 
     // Add keyboard handler for accessibility
     notesButton.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
+        e.stopPropagation();
         togglePanel();
       }
     });
 
-    // Insert at the beginning of the container (to the left of existing buttons)
+    // Insert at the beginning of the container (leftmost position in action bar)
     if (container.firstChild) {
       container.insertBefore(notesButton, container.firstChild);
+      console.log('Quick Notes: Button inserted at beginning of action bar');
     } else {
       container.appendChild(notesButton);
+      console.log('Quick Notes: Button appended to action bar');
     }
   }
 
   // Find and inject button into action buttons container
   function injectQuickNotesButton() {
+    // Check if button already exists anywhere
+    if (notesButton && document.body.contains(notesButton)) {
+      console.log('Quick Notes: Button already exists in DOM');
+      return true;
+    }
+
     // Try multiple selectors to find the action buttons container
     const selectors = [
-      'div.absolute.inset-0.flex.justify-end',  // Original selector
-      'div[class*="absolute"][class*="inset-0"][class*="flex"][class*="justify-end"]',  // More flexible
-      'div.flex.justify-end',  // Even more generic
-      '.action-buttons',  // Generic class name
-      '[role="toolbar"]',  // ARIA role
+      // Primary target: exact match for the action bar structure
+      'div.absolute.inset-0.flex.justify-end',
+      // Backup selectors with similar patterns
+      'div.flex.justify-end.items-center',
+      'div.flex.items-center.justify-end',
+      // More flexible patterns
+      'div[class*="absolute"][class*="inset-0"][class*="flex"][class*="justify-end"]',
+      'div.flex.justify-end',
     ];
 
     let container = null;
     for (const selector of selectors) {
-      container = document.querySelector(selector);
-      if (container) {
-        console.log('Quick Notes: Found container with selector:', selector);
-        break;
+      const elements = document.querySelectorAll(selector);
+
+      // Find the first visible container with div[role="button"] children
+      for (const el of elements) {
+        const isVisible = el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0;
+        if (!isVisible) continue;
+
+        // Check for div elements with role="button" (matching JobTread's pattern)
+        const divButtons = el.querySelectorAll('div[role="button"]');
+        if (divButtons.length > 0) {
+          // Verify these buttons have the action button styling
+          const hasActionButtons = Array.from(divButtons).some(btn =>
+            btn.className.includes('inline-block') &&
+            btn.className.includes('cursor-pointer') &&
+            btn.className.includes('shrink-0')
+          );
+
+          if (hasActionButtons) {
+            container = el;
+            console.log('Quick Notes: Found action bar with selector:', selector);
+            console.log('Quick Notes: Container classes:', el.className);
+            console.log('Quick Notes: Found', divButtons.length, 'action buttons');
+            break;
+          }
+        }
       }
+      if (container) break;
     }
 
-    // If still no container, try to find any container with action buttons
+    // If still no container, try broader search
     if (!container) {
-      // Look for containers that have button-like children
-      const allContainers = document.querySelectorAll('div[class*="flex"]');
-      for (const c of allContainers) {
-        const hasButtons = c.querySelectorAll('button, [role="button"], .btn, [class*="button"]').length > 0;
-        if (hasButtons && c.offsetParent !== null) { // Check if visible
-          container = c;
-          console.log('Quick Notes: Found container with buttons:', c.className);
+      console.log('Quick Notes: Trying broader search for action bar...');
+      const allFlexContainers = document.querySelectorAll('div.flex.justify-end');
+
+      for (const el of allFlexContainers) {
+        const isVisible = el.offsetParent !== null && el.offsetWidth > 100;
+        const divButtons = el.querySelectorAll('div[role="button"]');
+
+        if (isVisible && divButtons.length >= 2) {
+          container = el;
+          console.log('Quick Notes: Found fallback container:', el.className);
+          console.log('Quick Notes: Has', divButtons.length, 'buttons');
           break;
         }
       }
     }
 
     if (container && !container.querySelector('.jt-quick-notes-btn')) {
-      console.log('Quick Notes: Injecting button into container');
+      console.log('Quick Notes: Injecting button into action bar');
       createQuickNotesButton(container);
+      return true; // Success
     } else if (!container) {
-      console.warn('Quick Notes: Could not find suitable container for button');
+      console.warn('Quick Notes: Could not find action bar container');
+      console.warn('Quick Notes: Checked selectors:', selectors);
+      return false; // Failed
     }
+
+    console.log('Quick Notes: Button already in container');
+    return true; // Already injected
   }
 
   // Create a floating Quick Notes button as fallback
@@ -1475,24 +1525,92 @@ const QuickNotesFeature = (() => {
     console.log('Quick Notes: Setting up button observer');
 
     // Initial injection attempt
-    injectQuickNotesButton();
+    let injected = injectQuickNotesButton();
 
-    // After 2 seconds, if button wasn't injected, create a floating button
-    setTimeout(() => {
-      if (!notesButton || !notesButton.parentNode) {
-        console.warn('Quick Notes: Button not injected after 2s, creating floating button');
-        createFloatingButton();
-      } else {
-        console.log('Quick Notes: Button successfully injected inline');
+    // Retry injection every 500ms for up to 5 seconds if not successful
+    if (!injected) {
+      let attempts = 0;
+      const maxAttempts = 10; // 10 * 500ms = 5 seconds
+      const retryInterval = setInterval(() => {
+        attempts++;
+        console.log(`Quick Notes: Retry injection attempt ${attempts}/${maxAttempts}`);
+
+        injected = injectQuickNotesButton();
+
+        if (injected || attempts >= maxAttempts) {
+          clearInterval(retryInterval);
+          if (injected) {
+            console.log('Quick Notes: Button successfully injected into action bar');
+          } else {
+            console.warn('Quick Notes: Failed to inject button after', attempts, 'attempts');
+            console.warn('Quick Notes: Creating floating button as last resort');
+            createFloatingButton();
+          }
+        }
+      }, 500);
+    } else {
+      console.log('Quick Notes: Button successfully injected on first attempt');
+    }
+
+    // Periodic check to ensure button stays injected across page navigations
+    // Check every 2 seconds if button is still present and action bar exists
+    setInterval(() => {
+      if (isActive) {
+        const actionBars = document.querySelectorAll('div.absolute.inset-0.flex.justify-end');
+        let foundButtonInActionBar = false;
+
+        for (const bar of actionBars) {
+          if (bar.offsetParent !== null) {
+            const hasButton = bar.querySelector('.jt-quick-notes-btn');
+            if (hasButton) {
+              foundButtonInActionBar = true;
+              break;
+            }
+          }
+        }
+
+        // If we found an action bar but no button, try to inject
+        if (!foundButtonInActionBar && actionBars.length > 0) {
+          const visibleActionBar = Array.from(actionBars).find(bar => bar.offsetParent !== null);
+          if (visibleActionBar) {
+            console.log('Quick Notes: Periodic check - button missing, re-injecting');
+            injectQuickNotesButton();
+          }
+        }
       }
-    }, 2000);
+    }, 2000); // Check every 2 seconds
 
     // Watch for DOM changes to re-inject button if needed
-    buttonObserver = new MutationObserver(() => {
+    // Need to watch for:
+    // 1. Button being removed (page navigation)
+    // 2. Action bar content changing (different page = different buttons)
+    // 3. Action bar itself being recreated
+    buttonObserver = new MutationObserver((mutations) => {
       // Check if our button still exists in the DOM
       if (!notesButton || !document.body.contains(notesButton)) {
         console.log('Quick Notes: Button removed from DOM, re-injecting');
         injectQuickNotesButton();
+        return;
+      }
+
+      // Check if action bar was modified (content changed)
+      // This handles when the page changes and action bar gets new buttons
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          // Check if any added/removed nodes are in an action bar
+          const actionBars = document.querySelectorAll('div.absolute.inset-0.flex.justify-end');
+          for (const bar of actionBars) {
+            // If action bar exists but doesn't have our button, inject it
+            if (bar.offsetParent !== null && !bar.querySelector('.jt-quick-notes-btn')) {
+              const hasDivButtons = bar.querySelectorAll('div[role="button"]').length > 0;
+              if (hasDivButtons) {
+                console.log('Quick Notes: Action bar found without button, injecting');
+                injectQuickNotesButton();
+                return;
+              }
+            }
+          }
+        }
       }
     });
 

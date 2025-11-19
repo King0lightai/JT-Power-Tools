@@ -159,19 +159,37 @@ const BudgetHierarchyFeature = (() => {
     }
   }
 
-  // Detect which theme is active
+  // Check if dark mode styles are injected in DOM
+  function isDarkModeActive() {
+    return document.getElementById('jt-dark-mode-styles') !== null;
+  }
+
+  // Check if custom theme styles are injected in DOM
+  function isCustomThemeActive() {
+    return document.getElementById('jt-custom-theme-styles') !== null;
+  }
+
+  // Detect which theme is active by checking DOM, not feature state
   function getActiveTheme() {
-    // Check if custom theme is active
-    if (window.CustomThemeFeature && window.CustomThemeFeature.isActive()) {
-      const colors = window.CustomThemeFeature.getColors();
+    // Check if custom theme CSS is actually injected in DOM
+    if (isCustomThemeActive()) {
+      // Try to get colors from feature if available
+      if (window.CustomThemeFeature && typeof window.CustomThemeFeature.getColors === 'function') {
+        const colors = window.CustomThemeFeature.getColors();
+        return {
+          type: 'custom',
+          baseColor: colors.background
+        };
+      }
+      // Fallback if feature not available but CSS is present
       return {
         type: 'custom',
-        baseColor: colors.background
+        baseColor: '#F3E8FF' // Default custom theme background
       };
     }
 
-    // Check if dark mode is active
-    if (window.DarkModeFeature && window.DarkModeFeature.isActive()) {
+    // Check if dark mode CSS is actually injected in DOM
+    if (isDarkModeActive()) {
       return {
         type: 'dark',
         baseColor: '#424242' // Neutral dark gray (less blue)
@@ -191,14 +209,22 @@ const BudgetHierarchyFeature = (() => {
 
     isActive = true;
 
-    // Inject shading CSS
-    injectShadingCSS();
+    // Delay initialization slightly to ensure dark mode/custom theme CSS is loaded
+    // This prevents white shading when navigating back to budget pages
+    setTimeout(() => {
+      if (!isActive) return; // Check if cleanup was called during delay
 
-    // Apply shading to existing groups
-    applyGroupShading();
+      // Inject shading CSS with current theme
+      injectShadingCSS();
 
-    // Start observing for new groups
-    startObserver();
+      // Apply shading to existing groups
+      applyGroupShading();
+
+      // Start observing for new groups
+      startObserver();
+
+      console.log('BudgetHierarchy: Initialized with theme:', getActiveTheme().type);
+    }, 100); // 100ms delay to let dark mode/theme CSS inject
   }
 
   // Cleanup the feature
@@ -559,18 +585,27 @@ const BudgetHierarchyFeature = (() => {
     if (observer) return;
 
     let reapplyTimeout = null;
+    let themeRefreshTimeout = null;
 
     observer = new MutationObserver((mutations) => {
       if (!isActive) return;
 
       // Check if any changes warrant reapplying shading
       let shouldReapply = false;
+      let shouldRefreshTheme = false;
 
       for (const mutation of mutations) {
         if (mutation.type === 'childList') {
-          // Check if added nodes contain group cells or budget rows
+          // Check if theme styles were added/removed (dark mode or custom theme toggled)
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1) { // Element node
+              // Check if dark mode or custom theme CSS was injected
+              if (node.id === 'jt-dark-mode-styles' || node.id === 'jt-custom-theme-styles') {
+                console.log('BudgetHierarchy: Theme style detected, refreshing shading');
+                shouldRefreshTheme = true;
+              }
+
+              // Check if budget rows were added
               if (node.classList?.contains('font-bold') ||
                   node.classList?.contains('group/row') ||
                   node.querySelector?.('div.font-bold.flex[style*="width: 300px"]') ||
@@ -580,14 +615,21 @@ const BudgetHierarchyFeature = (() => {
             }
           });
 
-          // Also check if rows were removed (collapse scenario)
-          if (mutation.removedNodes.length > 0) {
-            mutation.removedNodes.forEach(node => {
-              if (node.nodeType === 1 && node.classList?.contains('group/row')) {
+          // Check if theme styles were removed
+          mutation.removedNodes.forEach(node => {
+            if (node.nodeType === 1) {
+              // Check if dark mode or custom theme CSS was removed
+              if (node.id === 'jt-dark-mode-styles' || node.id === 'jt-custom-theme-styles') {
+                console.log('BudgetHierarchy: Theme style removed, refreshing shading');
+                shouldRefreshTheme = true;
+              }
+
+              // Check if rows were removed (collapse scenario)
+              if (node.classList?.contains('group/row')) {
                 shouldReapply = true;
               }
-            });
-          }
+            }
+          });
         }
 
         // Watch for attribute changes (like style or class changes on expand/collapse)
@@ -600,7 +642,15 @@ const BudgetHierarchyFeature = (() => {
         }
       }
 
-      if (shouldReapply) {
+      // If theme changed, refresh everything with new colors
+      if (shouldRefreshTheme) {
+        if (themeRefreshTimeout) clearTimeout(themeRefreshTimeout);
+        themeRefreshTimeout = setTimeout(() => {
+          refreshShading();
+        }, 50);
+      }
+      // Otherwise just reapply shading if needed
+      else if (shouldReapply) {
         // Debounce reapply to avoid excessive calls
         if (reapplyTimeout) clearTimeout(reapplyTimeout);
         reapplyTimeout = setTimeout(() => {
@@ -615,6 +665,12 @@ const BudgetHierarchyFeature = (() => {
       subtree: true,
       attributes: true,
       attributeFilter: ['class', 'style']
+    });
+
+    // Also observe head for style injection (dark mode, custom theme)
+    observer.observe(document.head, {
+      childList: true,
+      subtree: false
     });
 
     // Add click listener for expand/collapse buttons to force immediate reapply
