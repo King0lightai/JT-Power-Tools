@@ -45,23 +45,49 @@ const DarkModeFeature = (() => {
     if (styleElement) return Promise.resolve();
 
     return new Promise((resolve) => {
-      styleElement = document.createElement('link');
-      styleElement.rel = 'stylesheet';
-      styleElement.href = chrome.runtime.getURL('styles/dark-mode.css');
-      styleElement.id = 'jt-dark-mode-styles';
+      // Fetch and inject CSS as inline style to ensure it loads AFTER Tailwind
+      // This guarantees our rules override Tailwind's caret-black class
+      fetch(chrome.runtime.getURL('styles/dark-mode.css'))
+        .then(response => response.text())
+        .then(cssText => {
+          styleElement = document.createElement('style');
+          styleElement.id = 'jt-dark-mode-styles';
+          styleElement.textContent = cssText;
 
-      // Wait for CSS to load before resolving
-      styleElement.addEventListener('load', () => {
-        console.log('DarkMode: CSS loaded successfully');
-        resolve();
-      });
+          // Append at the VERY END of head to ensure highest priority
+          document.head.appendChild(styleElement);
 
-      styleElement.addEventListener('error', () => {
-        console.error('DarkMode: Failed to load CSS');
-        resolve(); // Resolve anyway to prevent hanging
-      });
+          console.log('DarkMode: CSS injected successfully (inline style at end of head)');
 
-      document.head.appendChild(styleElement);
+          // Also re-inject after a delay to ensure it stays after any late-loading styles
+          setTimeout(() => {
+            if (styleElement && document.head.contains(styleElement)) {
+              // Move to end of head again
+              document.head.appendChild(styleElement);
+              console.log('DarkMode: CSS re-positioned at end of head for maximum priority');
+            }
+          }, 1000);
+
+          // Monitor for any new stylesheets being added and re-position ours after them
+          const observer = new MutationObserver(() => {
+            if (styleElement && document.head.contains(styleElement)) {
+              // Check if our style is still the last one
+              const lastStyle = document.head.querySelector('style:last-of-type, link[rel="stylesheet"]:last-of-type');
+              if (lastStyle !== styleElement) {
+                document.head.appendChild(styleElement);
+                console.log('DarkMode: CSS re-positioned after new stylesheet detected');
+              }
+            }
+          });
+
+          observer.observe(document.head, { childList: true });
+
+          resolve();
+        })
+        .catch(error => {
+          console.error('DarkMode: Failed to load CSS:', error);
+          resolve(); // Resolve anyway to prevent hanging
+        });
     });
   }
 
