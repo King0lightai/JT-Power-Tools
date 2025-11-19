@@ -49,43 +49,9 @@ td div.cursor-pointer[style*="border-left"] {
     border-color: transparent;
 }
 
-/* CURSOR VISIBILITY FIX - Nuclear option with maximum specificity */
-/* Target ALL inputs and textareas regardless of classes */
-input,
-input[class],
-input[class][style],
-textarea,
-textarea[class],
-textarea[class][style],
-[contenteditable="true"],
-[contenteditable="plaintext-only"] {
-    caret-color: #ffffff !important;
-}
-
-/* Override caret-black class specifically (used by budget textareas) */
-/* ULTRA-SPECIFIC SELECTORS - Multiple approaches to ensure cursor is always white */
-.caret-black,
-input.caret-black,
-textarea.caret-black,
-[class*="caret-black"],
-textarea[class*="caret-black"],
-textarea.caret-black[class],
-textarea.caret-black[style],
-textarea.bg-white.caret-black,
-textarea[placeholder="Description"].caret-black,
-textarea[data-formatter-ready="true"].caret-black,
-textarea[data-preview-mode-ready="true"].caret-black,
-textarea.absolute.caret-black,
-.bg-white.caret-black,
-.absolute.caret-black,
-textarea[class*="absolute"][class*="caret-black"] {
-    caret-color: #ffffff !important;
-}
-
-/* Fix opacity-0 inputs - override opacity but keep text invisible */
-input[class*="opacity-0"],
-textarea[class*="opacity-0"] {
-    opacity: 1 !important;
+/* Dark caret color */
+.caret-black {
+    caret-color: #ffffff;
 }
 
 /* White border for dark mode */
@@ -142,11 +108,11 @@ textarea[class*="opacity-0"] {
 }
 
 .bg-blue-100 {
-    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+    background-color: #334155; /* Tailwind Blue-800 */
 }
 
 .bg-blue-50 {
-    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+    background-color: #383b3f;
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
@@ -248,7 +214,7 @@ textarea[class*="opacity-0"] {
 }
 
 .focus-within\:bg-blue-50:focus-within {
-    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+    background-color: #334155; /* Tailwind Blue-800 for dark mode */
 }
 
 .focus\:bg-gray-100 {
@@ -292,12 +258,12 @@ textarea[class*="opacity-0"] {
 
 .hover\:bg-blue-50 {
     &:hover {
-        background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+        background-color: #383b3f;
     }
 }
 
 .hover\:bg-blue-100:hover {
-    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+    background-color: #353535;
 }
 
 /* === Active Styles === */
@@ -313,7 +279,7 @@ textarea[class*="opacity-0"] {
 }
 
 .group-hover\/row\:bg-blue-100 {
-    background-color: rgba(30, 64, 175, 0.75); /* Blue with 75% opacity for selection in dark mode */
+    background-color: #353535; /* Tailwind Zinc-900 */
 }
 
 .group:hover .group-hover\:text-gray-800 {
@@ -404,49 +370,25 @@ textarea[class*="opacity-0"] {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Color options - preserve actual colors and improve hover backgrounds */
-.jt-formatter-toolbar button.jt-color-green {
-    color: #10b981 !important;
-}
-
+/* Color options - darken hover backgrounds for better contrast */
 .jt-formatter-toolbar button.jt-color-green:hover {
     background: #064e3b !important;
 }
 
-.jt-formatter-toolbar button.jt-color-yellow {
-    color: #fbbf24 !important;
-}
-
 .jt-formatter-toolbar button.jt-color-yellow:hover {
-    background: #92400e !important;
-}
-
-.jt-formatter-toolbar button.jt-color-blue {
-    color: #60a5fa !important;
+    background: #78350f !important;
 }
 
 .jt-formatter-toolbar button.jt-color-blue:hover {
     background: #1e3a8a !important;
 }
 
-.jt-formatter-toolbar button.jt-color-red {
-    color: #f87171 !important;
-}
-
 .jt-formatter-toolbar button.jt-color-red:hover {
     background: #7f1d1d !important;
 }
 
-.jt-formatter-toolbar button.jt-color-orange {
-    color: #fb923c !important;
-}
-
 .jt-formatter-toolbar button.jt-color-orange:hover {
     background: #7c2d12 !important;
-}
-
-.jt-formatter-toolbar button.jt-color-purple {
-    color: #a78bfa !important;
 }
 
 .jt-formatter-toolbar button.jt-color-purple:hover {
@@ -480,11 +422,4 @@ textarea[class*="opacity-0"] {
 .sticky[style*="left:0px"] .bg-blue-50 {
     z-index: 50 !important;
     position: relative;
-}
-
-/* === FINAL CURSOR FIX === */
-/* Placed at end to override ALL other rules including Tailwind utilities */
-/* This is the nuclear option - forces white cursor on everything */
-* {
-    caret-color: #ffffff !important;
 }
