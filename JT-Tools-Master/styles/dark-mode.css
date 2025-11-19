@@ -62,6 +62,14 @@ textarea[class][style],
     caret-color: #ffffff !important;
 }
 
+/* Override caret-black class specifically (used by budget textareas) */
+.caret-black,
+input.caret-black,
+textarea.caret-black,
+[class*="caret-black"] {
+    caret-color: #ffffff !important;
+}
+
 /* Fix opacity-0 inputs - override opacity but keep text invisible */
 input[class*="opacity-0"],
 textarea[class*="opacity-0"] {
