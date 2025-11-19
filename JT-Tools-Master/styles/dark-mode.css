@@ -51,7 +51,21 @@ td div.cursor-pointer[style*="border-left"] {
 
 /* Dark caret color */
 .caret-black {
-    caret-color: #ffffff;
+    caret-color: #ffffff !important;
+}
+
+/* Ensure budget textareas specifically have white cursor */
+textarea.caret-black,
+textarea[placeholder="Description"],
+textarea[data-formatter-ready="true"],
+textarea.bg-white {
+    caret-color: #ffffff !important;
+}
+
+/* Override inline styles and transparent text color affecting caret */
+textarea[style*="color: transparent"],
+textarea[style*="color:transparent"] {
+    caret-color: #ffffff !important;
 }
 
 /* White border for dark mode */
