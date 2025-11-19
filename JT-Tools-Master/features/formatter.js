@@ -764,6 +764,12 @@ const FormatterFeature = (() => {
           }
         });
 
+        // Also close color dropdown when opening regular dropdowns
+        const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
+        if (colorDropdown) {
+          colorDropdown.classList.remove('jt-color-dropdown-visible');
+        }
+
         menu.classList.toggle('jt-dropdown-visible');
       });
     });
