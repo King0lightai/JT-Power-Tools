@@ -545,6 +545,60 @@ const QuickNotesFeature = (() => {
 
     // Add keyboard shortcuts for formatting and list management
     contentInput.addEventListener('keydown', (e) => {
+      // Tab to indent bullet points
+      if (e.key === 'Tab' && !e.shiftKey) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          let currentElement = range.startContainer;
+
+          // Find parent element
+          while (currentElement && currentElement.nodeType !== Node.ELEMENT_NODE) {
+            currentElement = currentElement.parentNode;
+          }
+
+          // Check if we're in a bullet
+          const bulletParent = currentElement?.closest('.jt-note-bullet');
+          if (bulletParent) {
+            e.preventDefault();
+            const currentIndent = parseInt(bulletParent.getAttribute('data-indent') || '0');
+            if (currentIndent < 5) {
+              bulletParent.setAttribute('data-indent', (currentIndent + 1).toString());
+              // Trigger input event to save
+              contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            return;
+          }
+        }
+      }
+
+      // Shift+Tab to unindent bullet points
+      if (e.key === 'Tab' && e.shiftKey) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          let currentElement = range.startContainer;
+
+          // Find parent element
+          while (currentElement && currentElement.nodeType !== Node.ELEMENT_NODE) {
+            currentElement = currentElement.parentNode;
+          }
+
+          // Check if we're in a bullet
+          const bulletParent = currentElement?.closest('.jt-note-bullet');
+          if (bulletParent) {
+            e.preventDefault();
+            const currentIndent = parseInt(bulletParent.getAttribute('data-indent') || '0');
+            if (currentIndent > 0) {
+              bulletParent.setAttribute('data-indent', (currentIndent - 1).toString());
+              // Trigger input event to save
+              contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            return;
+          }
+        }
+      }
+
       // Ctrl/Cmd + B for bold
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
@@ -617,9 +671,10 @@ const QuickNotesFeature = (() => {
             checkboxParent.parentNode.insertBefore(newCheckbox, checkboxParent.nextSibling);
 
             // Focus the new checkbox's span
+            span.focus();
             const newRange = document.createRange();
-            newRange.selectNodeContents(span);
-            newRange.collapse(true);
+            newRange.setStart(span, 0);
+            newRange.setEnd(span, 0);
             selection.removeAllRanges();
             selection.addRange(newRange);
           }
@@ -904,10 +959,13 @@ const QuickNotesFeature = (() => {
         const content = line.replace(/^- \[ \]\s*/, '');
         return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
       }
-      // Bullet lists
-      if (line.match(/^- /)) {
-        const content = line.replace(/^- /, '');
-        return `<div class="jt-note-bullet">• ${processInlineFormatting(content)}</div>`;
+      // Bullet lists with indentation support
+      if (line.match(/^(\s*)- /)) {
+        const match = line.match(/^(\s*)- (.*)$/);
+        const indent = Math.floor(match[1].length / 2); // 2 spaces = 1 indent level
+        const content = match[2];
+        const indentAttr = indent > 0 ? ` data-indent="${indent}"` : '';
+        return `<div class="jt-note-bullet"${indentAttr}>• ${processInlineFormatting(content)}</div>`;
       }
       // Regular text with inline formatting
       return `<div>${processInlineFormatting(line) || '<br>'}</div>`;
@@ -961,7 +1019,9 @@ const QuickNotesFeature = (() => {
           markdown += `- [${checked ? 'x' : ' '}] ${text}\n`;
         } else if (node.classList.contains('jt-note-bullet')) {
           const text = node.textContent.replace(/^•\s*/, '');
-          markdown += `- ${extractInlineMarkdown(node)}\n`;
+          const indent = parseInt(node.getAttribute('data-indent') || '0');
+          const indentSpaces = '  '.repeat(indent); // 2 spaces per indent level
+          markdown += `${indentSpaces}- ${extractInlineMarkdown(node)}\n`;
         } else if (tag === 'div') {
           const content = extractInlineMarkdown(node);
           if (content) markdown += content + '\n';
@@ -1227,12 +1287,25 @@ const QuickNotesFeature = (() => {
           range.deleteContents();
           range.insertNode(checkboxDiv);
 
-          // Place cursor inside the span
+          // Place cursor inside the span and ensure it's visible
+          element.focus();
+          span.focus();
           const newRange = document.createRange();
-          newRange.selectNodeContents(span);
-          newRange.collapse(false);
+          newRange.setStart(span, 0);
+          newRange.setEnd(span, 0);
           selection2.removeAllRanges();
           selection2.addRange(newRange);
+
+          // Force cursor visibility with a small delay
+          setTimeout(() => {
+            span.focus();
+            const range = document.createRange();
+            range.setStart(span, 0);
+            range.setEnd(span, 0);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }, 10);
         }
         break;
     }
@@ -1371,7 +1444,7 @@ const QuickNotesFeature = (() => {
     notesButton.setAttribute('role', 'button');
     notesButton.setAttribute('tabindex', '0');
     notesButton.setAttribute('index', '99'); // High index to ensure it's treated as an action button
-    notesButton.setAttribute('title', 'Quick Notes (Ctrl+Alt+N)');
+    notesButton.setAttribute('title', 'Quick Notes (Alt+N)');
 
     notesButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24">
@@ -1497,7 +1570,7 @@ const QuickNotesFeature = (() => {
 
     notesButton = document.createElement('button');
     notesButton.className = 'jt-quick-notes-floating-btn';
-    notesButton.setAttribute('title', 'Quick Notes (Ctrl+Alt+N)');
+    notesButton.setAttribute('title', 'Quick Notes (Alt+N)');
     notesButton.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="24" height="24">
         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -1642,7 +1715,7 @@ const QuickNotesFeature = (() => {
             class="jt-notes-search-input"
             placeholder="Search notes..."
           />
-          <button class="jt-notes-new-button" title="New note (Ctrl+Alt+N)">
+          <button class="jt-notes-new-button" title="New note (Alt+N)">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
               <path d="M5 12h14M12 5v14"></path>
             </svg>
@@ -1776,8 +1849,8 @@ const QuickNotesFeature = (() => {
 
   // Keyboard shortcuts
   function handleKeyboard(e) {
-    // Ctrl/Cmd + Alt + N to toggle panel
-    if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
+    // Alt + N to toggle panel
+    if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
       togglePanel();
     }
