@@ -175,9 +175,37 @@ const FormatterFeature = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // ONLY apply formatter to Budget Description fields
+    // Check if it's a Budget Description field
     if (textarea.getAttribute('placeholder') === 'Description') {
       return true;
+    }
+
+    // Check if it's ANY Daily Log field, Todo, or Task description
+    // (textarea inside label with bold heading)
+    const label = textarea.closest('label');
+    if (label) {
+      const heading = label.querySelector('div.font-bold');
+      // If there's a bold heading in the label, this is a Daily Log/Todo/Task field
+      if (heading && heading.textContent.trim().length > 0) {
+        return true;
+      }
+    }
+
+    // Check if it's a Daily Log EDIT field (textarea with transparent color and formatting overlay)
+    // These fields have: style="color: transparent;" and a sibling div with pointer-events-none
+    const hasTransparentColor = textarea.style.color === 'transparent';
+    if (hasTransparentColor) {
+      const parent = textarea.parentElement;
+      if (parent) {
+        // Look for a sibling div with pointer-events-none (the formatting overlay)
+        const siblings = parent.querySelectorAll('div');
+        for (const sibling of siblings) {
+          const styles = window.getComputedStyle(sibling);
+          if (styles.pointerEvents === 'none' && sibling !== textarea) {
+            return true;
+          }
+        }
+      }
     }
 
     return false;
@@ -208,15 +236,80 @@ const FormatterFeature = (() => {
       activeToolbar = null;
     }
 
-    // Find all Budget Description textareas (ONLY budget line item description fields)
-    const filteredFields = Array.from(
-      document.querySelectorAll('textarea[placeholder="Description"]')
-    ).filter(field => {
+    // Find all textareas that should have the formatter
+    const fields = [];
+
+    // 1. Budget Description fields
+    const descriptionFields = document.querySelectorAll('textarea[placeholder="Description"]');
+    fields.push(...descriptionFields);
+
+    // 2. ALL Daily Log fields, Todo descriptions, Task descriptions
+    // (any textarea inside label with bold heading)
+    const labels = document.querySelectorAll('label');
+    labels.forEach(label => {
+      // Check if this label has any bold heading
+      const heading = label.querySelector('div.font-bold');
+      if (heading && heading.textContent.trim().length > 0) {
+        // Find ALL textareas in this label (for multi-text custom fields)
+        const textareas = label.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+          if (textarea && !fields.includes(textarea)) {
+            fields.push(textarea);
+          }
+        });
+      }
+    });
+
+    // 3. Daily Log EDIT fields (textareas with transparent color and formatting overlay)
+    const allTextareas = document.querySelectorAll('textarea');
+    allTextareas.forEach(textarea => {
+      if (!fields.includes(textarea)) {
+        const hasTransparentColor = textarea.style.color === 'transparent';
+        if (hasTransparentColor) {
+          const parent = textarea.parentElement;
+          if (parent) {
+            // Look for a sibling div with pointer-events-none (the formatting overlay)
+            const siblings = parent.querySelectorAll('div');
+            for (const sibling of siblings) {
+              const styles = window.getComputedStyle(sibling);
+              if (styles.pointerEvents === 'none' && sibling !== textarea) {
+                fields.push(textarea);
+                break;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Filter out time entry notes fields and Time Clock notes fields
+    const filteredFields = fields.filter(field => {
+      const placeholder = field.getAttribute('placeholder');
+      if (placeholder === 'Set notes') {
+        return false; // Exclude time entry notes
+      }
+
+      // Exclude Notes field in Time Clock sidebar
+      const label = field.closest('label');
+      if (label) {
+        const heading = label.querySelector('div.font-bold');
+        if (heading && heading.textContent.trim() === 'Notes') {
+          // Check if this is within a Time Clock sidebar
+          const sidebar = field.closest('div.overflow-y-auto, form');
+          if (sidebar) {
+            const timeClockHeader = sidebar.querySelector('div.font-bold.text-jtOrange.uppercase');
+            if (timeClockHeader && timeClockHeader.textContent.trim() === 'Time Clock') {
+              return false; // Exclude Time Clock Notes field
+            }
+          }
+        }
+      }
+
       // Extra guard: ensure no native formatter exists
       return !hasNativeFormatter(field);
     });
 
-    console.log('Formatter: Found', filteredFields.length, 'Budget Description fields');
+    console.log('Formatter: Found', filteredFields.length, 'fields (Budget Description + Daily Log + Todo + Task + Edit)');
 
     filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
