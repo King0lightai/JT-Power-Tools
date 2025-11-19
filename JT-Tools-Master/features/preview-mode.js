@@ -202,7 +202,8 @@ const PreviewModeFeature = (() => {
     filteredFields.forEach((field) => {
       if (!field.dataset.previewModeReady && document.body.contains(field)) {
         field.dataset.previewModeReady = 'true';
-        addPreviewButton(field);
+        // Standalone preview button removed - preview is now only accessible via formatter toolbar
+        // addPreviewButton(field);
       }
     });
   }
