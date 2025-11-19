@@ -23,6 +23,12 @@ const QuickNotesFeature = (() => {
     mouseUp: null
   };
 
+  // Undo/redo history management
+  let undoHistory = [];
+  let redoHistory = [];
+  let lastSavedContent = '';
+  let historyTimeout = null;
+
   // Generate unique ID
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -351,6 +357,31 @@ const QuickNotesFeature = (() => {
             <line x1="15" x2="9" y1="4" y2="20"></line>
           </svg>
         </button>
+        <button class="jt-notes-format-btn" data-format="underline" title="Underline (Ctrl+U)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path>
+            <line x1="4" x2="20" y1="21" y2="21"></line>
+          </svg>
+        </button>
+        <button class="jt-notes-format-btn" data-format="strikethrough" title="Strikethrough (Ctrl+Shift+X)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M16 4H9a3 3 0 0 0-2.83 4M14 12a4 4 0 0 1 0 8H6"></path>
+            <line x1="4" x2="20" y1="12" y2="12"></line>
+          </svg>
+        </button>
+        <span class="jt-notes-toolbar-divider"></span>
+        <button class="jt-notes-format-btn" data-format="code" title="Inline code (Ctrl+`)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+        </button>
+        <button class="jt-notes-format-btn" data-format="link" title="Insert link (Ctrl+K)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </button>
         <span class="jt-notes-toolbar-divider"></span>
         <button class="jt-notes-format-btn" data-format="bullet" title="Bullet list">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
@@ -368,11 +399,24 @@ const QuickNotesFeature = (() => {
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
         </button>
+        <span class="jt-notes-toolbar-divider"></span>
+        <button class="jt-notes-format-btn" data-format="undo" title="Undo (Ctrl+Z)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+        <button class="jt-notes-format-btn" data-format="redo" title="Redo (Ctrl+Y)">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
+          </svg>
+        </button>
       </div>
       <div
         class="jt-notes-content-input"
         contenteditable="true"
-        data-placeholder="Start typing your note... Use Ctrl+B for bold, Ctrl+I for italic"
+        data-placeholder="Start typing your note... Rich text formatting supported"
       >${parseMarkdownForEditor(currentNote.content)}</div>
       <div class="jt-notes-editor-footer">
         <span class="jt-notes-word-count">${countWords(currentNote.content)} words</span>
@@ -406,6 +450,92 @@ const QuickNotesFeature = (() => {
     contentInput.addEventListener('input', (e) => {
       const markdown = htmlToMarkdown(contentInput);
       debouncedSave('content', markdown);
+      updateFormattingButtons(contentInput);
+    });
+
+    // Update button states on selection change
+    contentInput.addEventListener('mouseup', () => updateFormattingButtons(contentInput));
+    contentInput.addEventListener('keyup', () => updateFormattingButtons(contentInput));
+
+    // Improved paste handling to preserve basic formatting
+    contentInput.addEventListener('paste', (e) => {
+      e.preventDefault();
+
+      // Get pasted data
+      const clipboardData = e.clipboardData || window.clipboardData;
+      let pastedHTML = clipboardData.getData('text/html');
+      const pastedText = clipboardData.getData('text/plain');
+
+      if (pastedHTML) {
+        // Create a temporary div to parse HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = pastedHTML;
+
+        // Clean up the HTML - keep only allowed tags
+        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del', 'code', 'a', 'br'];
+        const cleanHTML = (element) => {
+          const clone = element.cloneNode(false);
+          for (const child of element.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE) {
+              clone.appendChild(child.cloneNode(true));
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              const tagName = child.tagName.toLowerCase();
+              if (allowedTags.includes(tagName)) {
+                const cleanChild = cleanHTML(child);
+                // Preserve href for links
+                if (tagName === 'a' && child.hasAttribute('href')) {
+                  cleanChild.setAttribute('href', child.getAttribute('href'));
+                  cleanChild.setAttribute('target', '_blank');
+                  cleanChild.setAttribute('rel', 'noopener noreferrer');
+                }
+                clone.appendChild(cleanChild);
+              } else {
+                // Skip the tag but keep its children
+                for (const grandChild of child.childNodes) {
+                  const processedChild = grandChild.nodeType === Node.ELEMENT_NODE
+                    ? cleanHTML(grandChild)
+                    : grandChild.cloneNode(true);
+                  clone.appendChild(processedChild);
+                }
+              }
+            }
+          }
+          return clone;
+        };
+
+        const cleanedContent = cleanHTML(tempDiv);
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+
+          // Insert cleaned content
+          const fragment = document.createDocumentFragment();
+          while (cleanedContent.firstChild) {
+            fragment.appendChild(cleanedContent.firstChild);
+          }
+          range.insertNode(fragment);
+
+          // Move cursor to end of pasted content
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else {
+        // Paste as plain text if no HTML
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(pastedText));
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      // Trigger input event to save
+      contentInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     // Handle checkbox toggle
@@ -443,6 +573,36 @@ const QuickNotesFeature = (() => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
         applyFormatting(contentInput, 'italic');
+      }
+      // Ctrl/Cmd + U for underline
+      if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+        e.preventDefault();
+        applyFormatting(contentInput, 'underline');
+      }
+      // Ctrl/Cmd + Shift + X for strikethrough
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
+        e.preventDefault();
+        applyFormatting(contentInput, 'strikethrough');
+      }
+      // Ctrl/Cmd + ` for inline code
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault();
+        applyFormatting(contentInput, 'code');
+      }
+      // Ctrl/Cmd + K for link
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        applyFormatting(contentInput, 'link');
+      }
+      // Ctrl/Cmd + Z for undo
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        applyFormatting(contentInput, 'undo');
+      }
+      // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z for redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        applyFormatting(contentInput, 'redo');
       }
 
       // Enter key: create new bullet/checkbox
@@ -633,6 +793,14 @@ const QuickNotesFeature = (() => {
       }
     });
 
+    // Initialize undo/redo history for this note
+    undoHistory = [];
+    redoHistory = [];
+    lastSavedContent = currentNote.content;
+
+    // Update formatting buttons on initial load
+    setTimeout(() => updateFormattingButtons(contentInput), 100);
+
     // Focus on content if title is already set
     if (currentNote.title !== 'Untitled Note') {
       contentInput.focus();
@@ -645,6 +813,108 @@ const QuickNotesFeature = (() => {
   // Count words
   function countWords(text) {
     return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+  }
+
+  // Add content to undo history
+  function saveToHistory(content) {
+    if (content !== lastSavedContent) {
+      undoHistory.push(lastSavedContent);
+      // Limit history to 50 entries
+      if (undoHistory.length > 50) {
+        undoHistory.shift();
+      }
+      redoHistory = []; // Clear redo history on new change
+      lastSavedContent = content;
+    }
+  }
+
+  // Undo last change
+  function undo(contentInput) {
+    if (undoHistory.length > 0) {
+      const previousContent = undoHistory.pop();
+      redoHistory.push(lastSavedContent);
+      lastSavedContent = previousContent;
+
+      // Restore content
+      contentInput.innerHTML = parseMarkdownForEditor(previousContent);
+
+      // Update the note
+      const markdown = htmlToMarkdown(contentInput);
+      updateNote(currentNoteId, { content: markdown });
+
+      // Update UI state
+      updateFormattingButtons(contentInput);
+      return true;
+    }
+    return false;
+  }
+
+  // Redo last undone change
+  function redo(contentInput) {
+    if (redoHistory.length > 0) {
+      const nextContent = redoHistory.pop();
+      undoHistory.push(lastSavedContent);
+      lastSavedContent = nextContent;
+
+      // Restore content
+      contentInput.innerHTML = parseMarkdownForEditor(nextContent);
+
+      // Update the note
+      const markdown = htmlToMarkdown(contentInput);
+      updateNote(currentNoteId, { content: markdown });
+
+      // Update UI state
+      updateFormattingButtons(contentInput);
+      return true;
+    }
+    return false;
+  }
+
+  // Update formatting button states based on selection
+  function updateFormattingButtons(contentInput) {
+    if (!contentInput) return;
+
+    const formatButtons = document.querySelectorAll('.jt-notes-format-btn');
+    formatButtons.forEach(btn => btn.classList.remove('active'));
+
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    let node = selection.anchorNode;
+    if (!node) return;
+
+    // Traverse up the DOM tree to check for formatting
+    while (node && node !== contentInput) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const tagName = node.tagName?.toLowerCase();
+
+        if (tagName === 'strong' || tagName === 'b') {
+          const boldBtn = document.querySelector('[data-format="bold"]');
+          if (boldBtn) boldBtn.classList.add('active');
+        }
+        if (tagName === 'em' || tagName === 'i') {
+          const italicBtn = document.querySelector('[data-format="italic"]');
+          if (italicBtn) italicBtn.classList.add('active');
+        }
+        if (tagName === 'u') {
+          const underlineBtn = document.querySelector('[data-format="underline"]');
+          if (underlineBtn) underlineBtn.classList.add('active');
+        }
+        if (tagName === 's' || tagName === 'del' || tagName === 'strike') {
+          const strikeBtn = document.querySelector('[data-format="strikethrough"]');
+          if (strikeBtn) strikeBtn.classList.add('active');
+        }
+        if (tagName === 'code') {
+          const codeBtn = document.querySelector('[data-format="code"]');
+          if (codeBtn) codeBtn.classList.add('active');
+        }
+        if (tagName === 'a') {
+          const linkBtn = document.querySelector('[data-format="link"]');
+          if (linkBtn) linkBtn.classList.add('active');
+        }
+      }
+      node = node.parentNode;
+    }
   }
 
   // Parse markdown to HTML for contenteditable editor (WYSIWYG)
@@ -674,11 +944,17 @@ const QuickNotesFeature = (() => {
     return htmlLines.join('');
   }
 
-  // Process inline formatting (bold, italic)
+  // Process inline formatting (bold, italic, underline, strikethrough, code, links)
   function processInlineFormatting(text) {
     if (!text) return '';
 
     let html = escapeHtml(text);
+
+    // Parse links [text](url)
+    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // Parse inline code `code`
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
 
     // Parse bold **text** or *text*
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -686,6 +962,12 @@ const QuickNotesFeature = (() => {
 
     // Parse italic _text_
     html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    // Parse strikethrough ~~text~~
+    html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
+
+    // Parse underline __text__
+    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
 
     return html;
   }
@@ -737,6 +1019,15 @@ const QuickNotesFeature = (() => {
           text += `**${content}**`;
         } else if (tag === 'em' || tag === 'i') {
           text += `_${content}_`;
+        } else if (tag === 'u') {
+          text += `__${content}__`;
+        } else if (tag === 's' || tag === 'del' || tag === 'strike') {
+          text += `~~${content}~~`;
+        } else if (tag === 'code') {
+          text += `\`${content}\``;
+        } else if (tag === 'a') {
+          const href = node.getAttribute('href') || '#';
+          text += `[${content}](${href})`;
         } else if (tag === 'br') {
           // Skip br tags
         } else {
@@ -755,12 +1046,24 @@ const QuickNotesFeature = (() => {
     // Escape HTML first
     let html = escapeHtml(text);
 
+    // Parse links [text](url)
+    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // Parse inline code `code`
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
     // Parse bold **text** or *text*
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
 
     // Parse italic _text_
     html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+
+    // Parse strikethrough ~~text~~
+    html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
+
+    // Parse underline __text__
+    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
 
     // Parse line by line for lists and checkboxes
     const lines = html.split('\n');
@@ -793,6 +1096,13 @@ const QuickNotesFeature = (() => {
   function applyFormatting(element, formatType) {
     element.focus();
 
+    // Save to history before making changes
+    const currentContent = htmlToMarkdown(element);
+    clearTimeout(historyTimeout);
+    historyTimeout = setTimeout(() => {
+      saveToHistory(currentContent);
+    }, 500);
+
     switch (formatType) {
       case 'bold':
         document.execCommand('bold', false, null);
@@ -801,6 +1111,126 @@ const QuickNotesFeature = (() => {
       case 'italic':
         document.execCommand('italic', false, null);
         break;
+
+      case 'underline':
+        document.execCommand('underline', false, null);
+        break;
+
+      case 'strikethrough':
+        document.execCommand('strikeThrough', false, null);
+        break;
+
+      case 'code': {
+        // Wrap selected text in <code> tags
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const selectedText = range.toString();
+
+          if (selectedText) {
+            const codeElement = document.createElement('code');
+            codeElement.textContent = selectedText;
+            range.deleteContents();
+            range.insertNode(codeElement);
+
+            // Move cursor after the code element
+            range.setStartAfter(codeElement);
+            range.setEndAfter(codeElement);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          }
+        }
+        break;
+      }
+
+      case 'link': {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const selectedText = range.toString();
+
+          // Check if we're already in a link
+          let linkElement = null;
+          let node = selection.anchorNode;
+          while (node && node !== element) {
+            if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+              linkElement = node;
+              break;
+            }
+            node = node.parentNode;
+          }
+
+          if (linkElement) {
+            // Edit existing link
+            const currentUrl = linkElement.getAttribute('href') || '';
+            const newUrl = prompt('Edit link URL:', currentUrl);
+
+            if (newUrl !== null) {
+              if (newUrl.trim() === '') {
+                // Remove link
+                const parent = linkElement.parentNode;
+                while (linkElement.firstChild) {
+                  parent.insertBefore(linkElement.firstChild, linkElement);
+                }
+                parent.removeChild(linkElement);
+              } else {
+                // Update link
+                linkElement.setAttribute('href', newUrl);
+              }
+            }
+          } else if (selectedText) {
+            // Create new link
+            const url = prompt('Enter link URL:', 'https://');
+
+            if (url && url.trim() !== '' && url !== 'https://') {
+              const linkEl = document.createElement('a');
+              linkEl.href = url;
+              linkEl.target = '_blank';
+              linkEl.rel = 'noopener noreferrer';
+              linkEl.textContent = selectedText;
+
+              range.deleteContents();
+              range.insertNode(linkEl);
+
+              // Move cursor after the link
+              range.setStartAfter(linkEl);
+              range.setEndAfter(linkEl);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+          } else {
+            // No selection, prompt for both text and URL
+            const linkText = prompt('Enter link text:');
+            if (linkText && linkText.trim() !== '') {
+              const url = prompt('Enter link URL:', 'https://');
+              if (url && url.trim() !== '' && url !== 'https://') {
+                const linkEl = document.createElement('a');
+                linkEl.href = url;
+                linkEl.target = '_blank';
+                linkEl.rel = 'noopener noreferrer';
+                linkEl.textContent = linkText;
+
+                range.insertNode(linkEl);
+
+                // Move cursor after the link
+                range.setStartAfter(linkEl);
+                range.setEndAfter(linkEl);
+                selection.removeAllRanges();
+                selection.addRange(range);
+              }
+            }
+          }
+        }
+        break;
+      }
+
+      case 'undo':
+        undo(element);
+        return; // Don't trigger input event
+
+      case 'redo':
+        redo(element);
+        return; // Don't trigger input event
 
       case 'bullet':
         // Insert a bullet list item
