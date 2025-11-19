@@ -543,6 +543,39 @@
   font-style: italic;
 }
 
+.jt-notes-content-input u {
+  text-decoration: underline;
+}
+
+.jt-notes-content-input s,
+.jt-notes-content-input del,
+.jt-notes-content-input strike {
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.jt-notes-content-input code {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: #dc2626;
+}
+
+.jt-notes-content-input a {
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.jt-notes-content-input a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
 .jt-notes-content-input div {
   min-height: 1.6em;
 }
@@ -556,6 +589,31 @@
 .jt-note-item-preview em {
   font-style: italic;
   color: #374151;
+}
+
+.jt-note-item-preview u {
+  text-decoration: underline;
+}
+
+.jt-note-item-preview s,
+.jt-note-item-preview del,
+.jt-note-item-preview strike {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.jt-note-item-preview code {
+  background: #f3f4f6;
+  border-radius: 2px;
+  padding: 1px 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85em;
+  color: #dc2626;
+}
+
+.jt-note-item-preview a {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .jt-note-checkbox,
@@ -715,6 +773,30 @@
 
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
   background: #464646;
+}
+
+/* Dark theme - New formatting elements */
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input code {
+  background: #404040;
+  border-color: #525252;
+  color: #fca5a5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input a {
+  color: #60a5fa;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-content-input a:hover {
+  color: #93c5fd;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview code {
+  background: #404040;
+  color: #fca5a5;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item-preview a {
+  color: #60a5fa;
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-sidebar-close-button {
