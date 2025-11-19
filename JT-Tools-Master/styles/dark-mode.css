@@ -63,10 +63,22 @@ textarea[class][style],
 }
 
 /* Override caret-black class specifically (used by budget textareas) */
+/* ULTRA-SPECIFIC SELECTORS - Multiple approaches to ensure cursor is always white */
 .caret-black,
 input.caret-black,
 textarea.caret-black,
-[class*="caret-black"] {
+[class*="caret-black"],
+textarea[class*="caret-black"],
+textarea.caret-black[class],
+textarea.caret-black[style],
+textarea.bg-white.caret-black,
+textarea[placeholder="Description"].caret-black,
+textarea[data-formatter-ready="true"].caret-black,
+textarea[data-preview-mode-ready="true"].caret-black,
+textarea.absolute.caret-black,
+.bg-white.caret-black,
+.absolute.caret-black,
+textarea[class*="absolute"][class*="caret-black"] {
     caret-color: #ffffff !important;
 }
 
@@ -468,4 +480,11 @@ textarea[class*="opacity-0"] {
 .sticky[style*="left:0px"] .bg-blue-50 {
     z-index: 50 !important;
     position: relative;
+}
+
+/* === FINAL CURSOR FIX === */
+/* Placed at end to override ALL other rules including Tailwind utilities */
+/* This is the nuclear option - forces white cursor on everything */
+* {
+    caret-color: #ffffff !important;
 }
