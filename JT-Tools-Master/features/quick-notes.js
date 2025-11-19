@@ -1552,12 +1552,65 @@ const QuickNotesFeature = (() => {
       console.log('Quick Notes: Button successfully injected on first attempt');
     }
 
+    // Periodic check to ensure button stays injected across page navigations
+    // Check every 2 seconds if button is still present and action bar exists
+    setInterval(() => {
+      if (isActive) {
+        const actionBars = document.querySelectorAll('div.absolute.inset-0.flex.justify-end');
+        let foundButtonInActionBar = false;
+
+        for (const bar of actionBars) {
+          if (bar.offsetParent !== null) {
+            const hasButton = bar.querySelector('.jt-quick-notes-btn');
+            if (hasButton) {
+              foundButtonInActionBar = true;
+              break;
+            }
+          }
+        }
+
+        // If we found an action bar but no button, try to inject
+        if (!foundButtonInActionBar && actionBars.length > 0) {
+          const visibleActionBar = Array.from(actionBars).find(bar => bar.offsetParent !== null);
+          if (visibleActionBar) {
+            console.log('Quick Notes: Periodic check - button missing, re-injecting');
+            injectQuickNotesButton();
+          }
+        }
+      }
+    }, 2000); // Check every 2 seconds
+
     // Watch for DOM changes to re-inject button if needed
-    buttonObserver = new MutationObserver(() => {
+    // Need to watch for:
+    // 1. Button being removed (page navigation)
+    // 2. Action bar content changing (different page = different buttons)
+    // 3. Action bar itself being recreated
+    buttonObserver = new MutationObserver((mutations) => {
       // Check if our button still exists in the DOM
       if (!notesButton || !document.body.contains(notesButton)) {
         console.log('Quick Notes: Button removed from DOM, re-injecting');
         injectQuickNotesButton();
+        return;
+      }
+
+      // Check if action bar was modified (content changed)
+      // This handles when the page changes and action bar gets new buttons
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') {
+          // Check if any added/removed nodes are in an action bar
+          const actionBars = document.querySelectorAll('div.absolute.inset-0.flex.justify-end');
+          for (const bar of actionBars) {
+            // If action bar exists but doesn't have our button, inject it
+            if (bar.offsetParent !== null && !bar.querySelector('.jt-quick-notes-btn')) {
+              const hasDivButtons = bar.querySelectorAll('div[role="button"]').length > 0;
+              if (hasDivButtons) {
+                console.log('Quick Notes: Action bar found without button, injecting');
+                injectQuickNotesButton();
+                return;
+              }
+            }
+          }
+        }
       }
     });
 
