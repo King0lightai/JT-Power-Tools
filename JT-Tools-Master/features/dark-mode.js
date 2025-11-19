@@ -6,18 +6,18 @@ const DarkModeFeature = (() => {
   let styleElement = null;
 
   // Initialize the feature
-  async function init() {
+  function init() {
     if (isActive) {
       console.log('DarkMode: Already initialized');
       return;
     }
 
     console.log('DarkMode: Initializing...');
-
-    // Inject dark mode CSS and wait for it to load
-    await injectDarkModeCSS();
-
     isActive = true;
+
+    // Inject dark mode CSS
+    injectDarkModeCSS();
+
     console.log('DarkMode: Dark theme applied');
   }
 
@@ -42,27 +42,13 @@ const DarkModeFeature = (() => {
 
   // Inject dark mode CSS
   function injectDarkModeCSS() {
-    if (styleElement) return Promise.resolve();
+    if (styleElement) return;
 
-    return new Promise((resolve) => {
-      styleElement = document.createElement('link');
-      styleElement.rel = 'stylesheet';
-      styleElement.href = chrome.runtime.getURL('styles/dark-mode.css');
-      styleElement.id = 'jt-dark-mode-styles';
-
-      // Wait for CSS to load before resolving
-      styleElement.addEventListener('load', () => {
-        console.log('DarkMode: CSS loaded successfully');
-        resolve();
-      });
-
-      styleElement.addEventListener('error', () => {
-        console.error('DarkMode: Failed to load CSS');
-        resolve(); // Resolve anyway to prevent hanging
-      });
-
-      document.head.appendChild(styleElement);
-    });
+    styleElement = document.createElement('link');
+    styleElement.rel = 'stylesheet';
+    styleElement.href = chrome.runtime.getURL('styles/dark-mode.css');
+    styleElement.id = 'jt-dark-mode-styles';
+    document.head.appendChild(styleElement);
   }
 
   // Public API
