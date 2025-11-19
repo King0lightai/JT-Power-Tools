@@ -437,3 +437,22 @@ textarea[style*="color:transparent"] {
     z-index: 50 !important;
     position: relative;
 }
+
+/* === CURSOR VISIBILITY FIX - MAXIMUM PRIORITY === */
+/* Placed at END of file to ensure highest cascade priority */
+/* Ultra-specific selector matching exact budget textarea classes */
+textarea.absolute.caret-black.bg-white[style*="color: transparent"],
+textarea.absolute.caret-black.bg-white,
+textarea.absolute.caret-black,
+textarea.caret-black.bg-white,
+textarea.absolute.bg-white[placeholder="Description"],
+textarea.bg-white.caret-black[data-formatter-ready],
+input.caret-black,
+textarea.caret-black,
+.caret-black,
+textarea[style*="color: transparent"],
+textarea[style*="color:transparent"],
+input,
+textarea {
+    caret-color: #ffffff !important;
+}
