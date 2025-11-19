@@ -1476,8 +1476,28 @@ const QuickNotesFeature = (() => {
     }
   }
 
+  // Check if current page should have the quick notes button
+  function shouldShowButton() {
+    const path = window.location.pathname;
+
+    // Never show on settings page
+    if (path.includes('/settings')) {
+      return false;
+    }
+
+    // Only show on daily-logs and time pages
+    const allowedPages = ['/daily-logs', '/time'];
+    return allowedPages.some(page => path.includes(page));
+  }
+
   // Find and inject button into action buttons container
   function injectQuickNotesButton() {
+    // Check if we're on a page that should have the button
+    if (!shouldShowButton()) {
+      console.log('Quick Notes: Current page does not support quick notes button');
+      return false;
+    }
+
     // Check if button already exists anywhere
     if (notesButton && document.body.contains(notesButton)) {
       console.log('Quick Notes: Button already exists in DOM');
@@ -1626,6 +1646,16 @@ const QuickNotesFeature = (() => {
     // Check every 2 seconds if button is still present and action bar exists
     setInterval(() => {
       if (isActive) {
+        // Check if we're on a page that should have the button
+        if (!shouldShowButton()) {
+          // Remove button if it exists but shouldn't be shown on this page
+          if (notesButton && document.body.contains(notesButton)) {
+            console.log('Quick Notes: Removing button - not on allowed page');
+            notesButton.remove();
+          }
+          return;
+        }
+
         const actionBars = document.querySelectorAll('div.absolute.inset-0.flex.justify-end');
         let foundButtonInActionBar = false;
 
@@ -1655,7 +1685,18 @@ const QuickNotesFeature = (() => {
     // 1. Button being removed (page navigation)
     // 2. Action bar content changing (different page = different buttons)
     // 3. Action bar itself being recreated
+    // 4. URL changes (SPA navigation)
     buttonObserver = new MutationObserver((mutations) => {
+      // Check if we're on a page that should have the button
+      if (!shouldShowButton()) {
+        // Remove button if it exists but shouldn't be shown on this page
+        if (notesButton && document.body.contains(notesButton)) {
+          console.log('Quick Notes: Removing button - not on allowed page');
+          notesButton.remove();
+        }
+        return;
+      }
+
       // Check if our button still exists in the DOM
       if (!notesButton || !document.body.contains(notesButton)) {
         console.log('Quick Notes: Button removed from DOM, re-injecting');
@@ -1877,10 +1918,16 @@ const QuickNotesFeature = (() => {
   async function init() {
     if (isActive) return;
 
-    // Skip if on settings page
+    // Only initialize on allowed pages (daily-logs and time)
+    // Note: The button injection logic also checks this, but we check here
+    // to avoid loading resources unnecessarily on other pages
     const path = window.location.pathname;
-    if (path.includes('/settings')) {
-      console.log('Quick Notes: Skipping - on settings page');
+    const allowedPages = ['/daily-logs', '/time'];
+    const isAllowedPage = allowedPages.some(page => path.includes(page));
+
+    if (!isAllowedPage) {
+      console.log('Quick Notes: Skipping - not on allowed page (daily-logs or time)');
+      console.log('Quick Notes: Current path:', path);
       return;
     }
 
