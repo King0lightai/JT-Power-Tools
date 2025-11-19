@@ -662,7 +662,7 @@ const QuickNotesFeature = (() => {
 
             const span = document.createElement('span');
             span.setAttribute('contenteditable', 'true');
-            span.innerHTML = '<br>';
+            span.textContent = ''; // Empty text node instead of BR
 
             newCheckbox.appendChild(checkbox);
             newCheckbox.appendChild(span);
@@ -670,22 +670,29 @@ const QuickNotesFeature = (() => {
             // Insert after current checkbox
             checkboxParent.parentNode.insertBefore(newCheckbox, checkboxParent.nextSibling);
 
-            // Focus the new checkbox's span
-            span.focus();
-            const newRange = document.createRange();
-            newRange.setStart(span, 0);
-            newRange.setEnd(span, 0);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
+            // Focus the new checkbox's span with proper cursor placement
+            setTimeout(() => {
+              span.focus();
+              const newRange = document.createRange();
+              newRange.selectNodeContents(span);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }, 0);
           }
           // Check if we're in a bullet
           else if (currentElement && currentElement.closest('.jt-note-bullet')) {
             e.preventDefault();
             const bulletParent = currentElement.closest('.jt-note-bullet');
 
-            // Create new bullet
+            // Create new bullet with same indentation as parent
             const newBullet = document.createElement('div');
             newBullet.className = 'jt-note-bullet';
+            // Copy indentation from parent bullet
+            const parentIndent = bulletParent.getAttribute('data-indent');
+            if (parentIndent) {
+              newBullet.setAttribute('data-indent', parentIndent);
+            }
             newBullet.textContent = '• ';
 
             // Insert after current bullet
@@ -722,9 +729,9 @@ const QuickNotesFeature = (() => {
             const span = checkboxParent.querySelector('span');
 
             // If span is empty or only has <br>, delete the entire checkbox
-            if (span && (span.textContent.trim() === '' || span.innerHTML === '<br>')) {
-              // Check if cursor is at start
-              if (range.startOffset === 0) {
+            if (span && (span.textContent.trim() === '' || span.innerHTML === '<br>' || span.innerHTML === '')) {
+              // Check if cursor is at start or span is empty
+              if (range.startOffset === 0 || span.textContent.length === 0) {
                 e.preventDefault();
 
                 // Focus previous element or create a new div
@@ -1276,7 +1283,7 @@ const QuickNotesFeature = (() => {
 
         const span = document.createElement('span');
         span.setAttribute('contenteditable', 'true');
-        span.innerHTML = '<br>';
+        span.textContent = ''; // Empty text node for cursor visibility
 
         checkboxDiv.appendChild(checkbox);
         checkboxDiv.appendChild(span);
@@ -1287,25 +1294,15 @@ const QuickNotesFeature = (() => {
           range.deleteContents();
           range.insertNode(checkboxDiv);
 
-          // Place cursor inside the span and ensure it's visible
-          element.focus();
-          span.focus();
-          const newRange = document.createRange();
-          newRange.setStart(span, 0);
-          newRange.setEnd(span, 0);
-          selection2.removeAllRanges();
-          selection2.addRange(newRange);
-
-          // Force cursor visibility with a small delay
+          // Place cursor inside the span with proper focus
           setTimeout(() => {
             span.focus();
-            const range = document.createRange();
-            range.setStart(span, 0);
-            range.setEnd(span, 0);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }, 10);
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            newRange.collapse(true);
+            selection2.removeAllRanges();
+            selection2.addRange(newRange);
+          }, 0);
         }
         break;
     }

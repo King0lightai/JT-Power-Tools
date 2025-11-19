@@ -684,6 +684,16 @@
   cursor: pointer;
 }
 
+.jt-note-checkbox span[contenteditable="true"] {
+  min-width: 1px;
+  display: inline-block;
+}
+
+.jt-note-checkbox span[contenteditable="true"]:empty:before {
+  content: '\200B'; /* Zero-width space for cursor visibility */
+  color: transparent;
+}
+
 .jt-note-checkbox.checked span {
   text-decoration: line-through;
   opacity: 0.6;
