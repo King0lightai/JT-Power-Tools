@@ -968,24 +968,196 @@ const FormatterFeature = (() => {
   function collectAlertData() {
     isPromptingUser = true;
 
-    try {
-      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
-      if (!alertColor) return null;
+    return new Promise((resolve) => {
+      // Create modal overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'jt-alert-modal-overlay';
 
-      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
-      if (!alertIcon) return null;
+      // Color and icon options
+      const colors = [
+        { name: 'Blue', value: 'blue', icon: '●' },
+        { name: 'Yellow', value: 'yellow', icon: '●' },
+        { name: 'Red', value: 'red', icon: '●' },
+        { name: 'Green', value: 'green', icon: '●' },
+        { name: 'Orange', value: 'orange', icon: '●' },
+        { name: 'Purple', value: 'purple', icon: '●' }
+      ];
 
-      const alertSubject = prompt('Alert subject:', 'Important');
-      if (!alertSubject) return null;
+      const icons = [
+        { name: 'Lightbulb', value: 'lightbulb', svg: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"></path>' },
+        { name: 'Info Circle', value: 'infoCircle', svg: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>' },
+        { name: 'Exclamation Triangle', value: 'exclamationTriangle', svg: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>' },
+        { name: 'Check Circle', value: 'checkCircle', svg: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path>' },
+        { name: 'Octagon Alert', value: 'octogonAlert', svg: '<path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z"></path><path d="M12 8v4M12 16h.01"></path>' }
+      ];
 
-      const alertBody = prompt('Alert body text:', 'Your alert message here.');
-      if (!alertBody) return null;
+      let selectedColor = colors[0];
+      let selectedIcon = icons[0];
 
-      return { alertColor, alertIcon, alertSubject, alertBody };
-    } finally {
-      // Always unlock prompting, even if user cancels
-      isPromptingUser = false;
-    }
+      overlay.innerHTML = `
+        <div class="jt-alert-modal">
+          <div class="jt-alert-modal-header">
+            <div class="jt-alert-modal-title">Add Alert</div>
+            <button class="jt-alert-modal-close" data-action="close">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+              Close
+            </button>
+          </div>
+          <div class="jt-alert-modal-body">
+            <div class="jt-alert-options-row">
+              <div class="jt-alert-dropdown-container">
+                <button class="jt-alert-dropdown-button" data-dropdown="color">
+                  <span class="jt-alert-dropdown-label">
+                    <span class="jt-color-${selectedColor.value}">${selectedColor.icon} ${selectedColor.name}</span>
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="jt-alert-dropdown-menu" data-menu="color">
+                  ${colors.map(c => `<button class="jt-alert-dropdown-item ${c.value === selectedColor.value ? 'active' : ''}" data-action="select-color" data-value="${c.value}"><span class="jt-color-${c.value}">${c.icon} ${c.name}</span></button>`).join('')}
+                </div>
+              </div>
+
+              <div class="jt-alert-dropdown-container">
+                <button class="jt-alert-dropdown-button" data-dropdown="icon">
+                  <span class="jt-alert-dropdown-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="jt-alert-icon-preview jt-color-${selectedColor.value}" viewBox="0 0 24 24">${selectedIcon.svg}</svg>
+                  </span>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg>
+                </button>
+                <div class="jt-alert-dropdown-menu" data-menu="icon">
+                  ${icons.map(i => `<button class="jt-alert-dropdown-item ${i.value === selectedIcon.value ? 'active' : ''}" data-action="select-icon" data-value="${i.value}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">${i.svg}</svg> ${i.name}</button>`).join('')}
+                </div>
+              </div>
+
+              <input type="text" class="jt-alert-subject" placeholder="Subject" value="Important">
+            </div>
+
+            <div class="jt-alert-message-container">
+              <textarea class="jt-alert-message" placeholder="Message">Your alert message here.</textarea>
+            </div>
+          </div>
+          <div class="jt-alert-modal-footer">
+            <button class="jt-alert-btn-cancel" data-action="cancel">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M4.929 4.929 19.07 19.071"></path><circle cx="12" cy="12" r="10"></circle></svg>
+              Cancel
+            </button>
+            <button class="jt-alert-btn-add" data-action="add">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"></path></svg>
+              Add
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      // Focus subject input
+      const subjectInput = overlay.querySelector('.jt-alert-subject');
+      setTimeout(() => subjectInput.focus(), 100);
+
+      // Close modal and cleanup
+      const closeModal = (data = null) => {
+        overlay.remove();
+        isPromptingUser = false;
+        resolve(data);
+      };
+
+      // Dropdown toggle handlers
+      overlay.querySelectorAll('[data-dropdown]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const menuType = btn.dataset.dropdown;
+          const menu = overlay.querySelector(`[data-menu="${menuType}"]`);
+          const isOpen = menu.classList.contains('jt-dropdown-open');
+
+          // Close all dropdowns
+          overlay.querySelectorAll('.jt-alert-dropdown-menu').forEach(m => m.classList.remove('jt-dropdown-open'));
+
+          // Toggle this dropdown
+          if (!isOpen) {
+            menu.classList.add('jt-dropdown-open');
+          }
+        });
+      });
+
+      // Color selection
+      overlay.querySelectorAll('[data-action="select-color"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const colorValue = btn.dataset.value;
+          selectedColor = colors.find(c => c.value === colorValue);
+
+          // Update button
+          const colorBtn = overlay.querySelector('[data-dropdown="color"]');
+          colorBtn.querySelector('.jt-alert-dropdown-label').innerHTML = `<span class="jt-color-${selectedColor.value}">${selectedColor.icon} ${selectedColor.name}</span>`;
+
+          // Update active state
+          overlay.querySelectorAll('[data-action="select-color"]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Update icon preview color
+          const iconPreview = overlay.querySelector('.jt-alert-icon-preview');
+          iconPreview.className = `jt-alert-icon-preview jt-color-${selectedColor.value}`;
+
+          // Close dropdown
+          overlay.querySelector('[data-menu="color"]').classList.remove('jt-dropdown-open');
+        });
+      });
+
+      // Icon selection
+      overlay.querySelectorAll('[data-action="select-icon"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const iconValue = btn.dataset.value;
+          selectedIcon = icons.find(i => i.value === iconValue);
+
+          // Update button
+          const iconBtn = overlay.querySelector('[data-dropdown="icon"]');
+          iconBtn.querySelector('.jt-alert-icon-preview').innerHTML = selectedIcon.svg;
+
+          // Update active state
+          overlay.querySelectorAll('[data-action="select-icon"]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          // Close dropdown
+          overlay.querySelector('[data-menu="icon"]').classList.remove('jt-dropdown-open');
+        });
+      });
+
+      // Close dropdowns when clicking outside
+      overlay.addEventListener('click', (e) => {
+        if (!e.target.closest('.jt-alert-dropdown-container')) {
+          overlay.querySelectorAll('.jt-alert-dropdown-menu').forEach(m => m.classList.remove('jt-dropdown-open'));
+        }
+      });
+
+      // Button handlers
+      overlay.querySelector('[data-action="close"]').addEventListener('click', () => closeModal(null));
+      overlay.querySelector('[data-action="cancel"]').addEventListener('click', () => closeModal(null));
+      overlay.querySelector('[data-action="add"]').addEventListener('click', () => {
+        const subject = subjectInput.value.trim();
+        const message = overlay.querySelector('.jt-alert-message').value.trim();
+
+        if (!subject || !message) {
+          alert('Please fill in both subject and message.');
+          return;
+        }
+
+        closeModal({
+          alertColor: selectedColor.value,
+          alertIcon: selectedIcon.value,
+          alertSubject: subject,
+          alertBody: message
+        });
+      });
+
+      // ESC key to close
+      const escHandler = (e) => {
+        if (e.key === 'Escape') {
+          closeModal(null);
+          document.removeEventListener('keydown', escHandler);
+        }
+      };
+      document.addEventListener('keydown', escHandler);
+    });
   }
 
   // Format detection
@@ -1500,22 +1672,46 @@ const FormatterFeature = (() => {
         break;
 
       case 'alert':
-        const alertData = collectAlertData();
-        if (!alertData) {
-          return;
-        }
+        // Handle async alert modal
+        collectAlertData().then(alertData => {
+          if (!alertData) {
+            return;
+          }
 
-        // Restore focus immediately after prompts complete
-        if (field && document.body.contains(field)) {
-          field.focus();
-        } else {
-          console.error('Formatter: Field is not in DOM after alert prompts!');
-          return;
-        }
+          // Restore focus immediately after modal closes
+          if (field && document.body.contains(field)) {
+            field.focus();
+          } else {
+            console.error('Formatter: Field is not in DOM after alert modal!');
+            return;
+          }
 
-        replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
-        cursorPos = start + replacement.length;
-        break;
+          const replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
+          const start = field.selectionStart;
+          const end = field.selectionEnd;
+          const text = field.value;
+          const before = text.substring(0, start);
+          const after = text.substring(end);
+          const cursorPos = start + replacement.length;
+
+          // Update field value using native setter
+          isInsertingText = true;
+          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+          const newValue = before + replacement + after;
+          nativeInputValueSetter.call(field, newValue);
+
+          // Trigger input event for React
+          const inputEvent = new Event('input', { bubbles: true });
+          field.dispatchEvent(inputEvent);
+
+          // Set cursor position
+          field.setSelectionRange(cursorPos, cursorPos);
+          isInsertingText = false;
+
+          // Update preview
+          updatePreview(field);
+        });
+        return; // Exit early since async
 
       case 'hr':
         replacement = '\n---\n';
