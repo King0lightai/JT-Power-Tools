@@ -66,36 +66,9 @@ const FormatterDetection = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // Check if it's a Budget Description field
+    // ONLY apply formatter to Budget Description fields
     if (textarea.getAttribute('placeholder') === 'Description') {
       return true;
-    }
-
-    // Check if it's ANY Daily Log field (textarea inside label with bold heading)
-    const label = textarea.closest('label');
-    if (label) {
-      const heading = label.querySelector('div.font-bold');
-      // If there's a bold heading in the label, this is a Daily Log field
-      if (heading && heading.textContent.trim().length > 0) {
-        return true;
-      }
-    }
-
-    // Check if it's a Daily Log EDIT field (textarea with transparent color and formatting overlay)
-    // These fields have: style="color: transparent;" and a sibling div with pointer-events-none
-    const hasTransparentColor = textarea.style.color === 'transparent';
-    if (hasTransparentColor) {
-      const parent = textarea.parentElement;
-      if (parent) {
-        // Look for a sibling div with pointer-events-none (the formatting overlay)
-        const siblings = parent.querySelectorAll('div');
-        for (const sibling of siblings) {
-          const styles = window.getComputedStyle(sibling);
-          if (styles.pointerEvents === 'none' && sibling !== textarea) {
-            return true;
-          }
-        }
-      }
     }
 
     return false;
