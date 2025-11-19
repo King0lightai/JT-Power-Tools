@@ -1531,26 +1531,31 @@ const QuickNotesFeature = (() => {
     for (const selector of selectors) {
       const elements = document.querySelectorAll(selector);
 
-      // Find the first visible container with div[role="button"] children
+      // Find the first visible container with action button children (div or a tags)
       for (const el of elements) {
         const isVisible = el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0;
         if (!isVisible) continue;
 
-        // Check for div elements with role="button" (matching JobTread's pattern)
+        // Check for div elements with role="button" OR a tags with action button styling
         const divButtons = el.querySelectorAll('div[role="button"]');
-        if (divButtons.length > 0) {
+        const linkButtons = el.querySelectorAll('a.inline-block.cursor-pointer.shrink-0');
+        const totalButtons = divButtons.length + linkButtons.length;
+
+        if (totalButtons > 0) {
           // Verify these buttons have the action button styling
-          const hasActionButtons = Array.from(divButtons).some(btn =>
-            btn.className.includes('inline-block') &&
-            btn.className.includes('cursor-pointer') &&
-            btn.className.includes('shrink-0')
-          );
+          const hasActionButtons =
+            Array.from(divButtons).some(btn =>
+              btn.className.includes('inline-block') &&
+              btn.className.includes('cursor-pointer') &&
+              btn.className.includes('shrink-0')
+            ) ||
+            linkButtons.length > 0;
 
           if (hasActionButtons) {
             container = el;
             console.log('Quick Notes: Found action bar with selector:', selector);
             console.log('Quick Notes: Container classes:', el.className);
-            console.log('Quick Notes: Found', divButtons.length, 'action buttons');
+            console.log('Quick Notes: Found', totalButtons, 'action buttons (', divButtons.length, 'divs,', linkButtons.length, 'links)');
             break;
           }
         }
@@ -1566,11 +1571,13 @@ const QuickNotesFeature = (() => {
       for (const el of allFlexContainers) {
         const isVisible = el.offsetParent !== null && el.offsetWidth > 100;
         const divButtons = el.querySelectorAll('div[role="button"]');
+        const linkButtons = el.querySelectorAll('a.inline-block.cursor-pointer.shrink-0');
+        const totalButtons = divButtons.length + linkButtons.length;
 
-        if (isVisible && divButtons.length >= 2) {
+        if (isVisible && totalButtons >= 1) {
           container = el;
           console.log('Quick Notes: Found fallback container:', el.className);
-          console.log('Quick Notes: Has', divButtons.length, 'buttons');
+          console.log('Quick Notes: Has', totalButtons, 'buttons (', divButtons.length, 'divs,', linkButtons.length, 'links)');
           break;
         }
       }
@@ -1724,8 +1731,11 @@ const QuickNotesFeature = (() => {
           for (const bar of actionBars) {
             // If action bar exists but doesn't have our button, inject it
             if (bar.offsetParent !== null && !bar.querySelector('.jt-quick-notes-btn')) {
-              const hasDivButtons = bar.querySelectorAll('div[role="button"]').length > 0;
-              if (hasDivButtons) {
+              const divButtons = bar.querySelectorAll('div[role="button"]').length;
+              const linkButtons = bar.querySelectorAll('a.inline-block.cursor-pointer.shrink-0').length;
+              const totalButtons = divButtons + linkButtons;
+
+              if (totalButtons > 0) {
                 console.log('Quick Notes: Action bar found without button, injecting');
                 injectQuickNotesButton();
                 return;
