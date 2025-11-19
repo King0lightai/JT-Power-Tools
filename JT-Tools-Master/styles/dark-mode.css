@@ -370,25 +370,49 @@ td div.cursor-pointer[style*="border-left"] {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Color options - darken hover backgrounds for better contrast */
+/* Color options - preserve actual colors and improve hover backgrounds */
+.jt-formatter-toolbar button.jt-color-green {
+    color: #10b981 !important;
+}
+
 .jt-formatter-toolbar button.jt-color-green:hover {
     background: #064e3b !important;
 }
 
+.jt-formatter-toolbar button.jt-color-yellow {
+    color: #fbbf24 !important;
+}
+
 .jt-formatter-toolbar button.jt-color-yellow:hover {
-    background: #78350f !important;
+    background: #92400e !important;
+}
+
+.jt-formatter-toolbar button.jt-color-blue {
+    color: #60a5fa !important;
 }
 
 .jt-formatter-toolbar button.jt-color-blue:hover {
     background: #1e3a8a !important;
 }
 
+.jt-formatter-toolbar button.jt-color-red {
+    color: #f87171 !important;
+}
+
 .jt-formatter-toolbar button.jt-color-red:hover {
     background: #7f1d1d !important;
 }
 
+.jt-formatter-toolbar button.jt-color-orange {
+    color: #fb923c !important;
+}
+
 .jt-formatter-toolbar button.jt-color-orange:hover {
     background: #7c2d12 !important;
+}
+
+.jt-formatter-toolbar button.jt-color-purple {
+    color: #a78bfa !important;
 }
 
 .jt-formatter-toolbar button.jt-color-purple:hover {
