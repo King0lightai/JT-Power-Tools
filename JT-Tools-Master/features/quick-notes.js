@@ -370,12 +370,6 @@ const QuickNotesFeature = (() => {
           </svg>
         </button>
         <span class="jt-notes-toolbar-divider"></span>
-        <button class="jt-notes-format-btn" data-format="code" title="Inline code (Ctrl+backtick)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-          </svg>
-        </button>
         <button class="jt-notes-format-btn" data-format="link" title="Insert link (Ctrl+K)">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
@@ -397,19 +391,6 @@ const QuickNotesFeature = (() => {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
             <path d="M9 11l3 3L22 4"></path>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-          </svg>
-        </button>
-        <span class="jt-notes-toolbar-divider"></span>
-        <button class="jt-notes-format-btn" data-format="undo" title="Undo (Ctrl+Z)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-          </svg>
-        </button>
-        <button class="jt-notes-format-btn" data-format="redo" title="Redo (Ctrl+Y)">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path>
           </svg>
         </button>
       </div>
@@ -583,11 +564,6 @@ const QuickNotesFeature = (() => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
         applyFormatting(contentInput, 'strikethrough');
-      }
-      // Ctrl/Cmd + ` for inline code
-      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
-        e.preventDefault();
-        applyFormatting(contentInput, 'code');
       }
       // Ctrl/Cmd + K for link
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -904,10 +880,6 @@ const QuickNotesFeature = (() => {
           const strikeBtn = document.querySelector('[data-format="strikethrough"]');
           if (strikeBtn) strikeBtn.classList.add('active');
         }
-        if (tagName === 'code') {
-          const codeBtn = document.querySelector('[data-format="code"]');
-          if (codeBtn) codeBtn.classList.add('active');
-        }
         if (tagName === 'a') {
           const linkBtn = document.querySelector('[data-format="link"]');
           if (linkBtn) linkBtn.classList.add('active');
@@ -926,11 +898,11 @@ const QuickNotesFeature = (() => {
       // Checkbox lists
       if (line.match(/^- \[x\]/i)) {
         const content = line.replace(/^- \[x\]\s*/i, '');
-        return `<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${escapeHtml(content)}</span></div>`;
+        return `<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
       }
       if (line.match(/^- \[ \]/)) {
         const content = line.replace(/^- \[ \]\s*/, '');
-        return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${escapeHtml(content)}</span></div>`;
+        return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
       }
       // Bullet lists
       if (line.match(/^- /)) {
@@ -985,7 +957,7 @@ const QuickNotesFeature = (() => {
           const checkbox = node.querySelector('input[type="checkbox"]');
           const span = node.querySelector('span');
           const checked = checkbox && checkbox.checked;
-          const text = span ? span.textContent : '';
+          const text = span ? extractInlineMarkdown(span) : '';
           markdown += `- [${checked ? 'x' : ' '}] ${text}\n`;
         } else if (node.classList.contains('jt-note-bullet')) {
           const text = node.textContent.replace(/^•\s*/, '');
@@ -1119,29 +1091,6 @@ const QuickNotesFeature = (() => {
       case 'strikethrough':
         document.execCommand('strikeThrough', false, null);
         break;
-
-      case 'code': {
-        // Wrap selected text in <code> tags
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const selectedText = range.toString();
-
-          if (selectedText) {
-            const codeElement = document.createElement('code');
-            codeElement.textContent = selectedText;
-            range.deleteContents();
-            range.insertNode(codeElement);
-
-            // Move cursor after the code element
-            range.setStartAfter(codeElement);
-            range.setEndAfter(codeElement);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
-        }
-        break;
-      }
 
       case 'link': {
         const selection = window.getSelection();
