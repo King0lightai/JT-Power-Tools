@@ -3,7 +3,14 @@
  * Seamless integration with Jobtread's UI
  */
 
-/* Quick Notes Button - Active State */
+/* Quick Notes Button - Base and Active State */
+.jt-quick-notes-btn {
+  /* Ensure button is always visible */
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .jt-quick-notes-btn.jt-notes-button-active {
   background: #3b82f6 !important;
   color: white !important;

@@ -6,9 +6,11 @@
   border-radius: 0.125rem; /* rounded-sm */
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
   padding: 0.25rem; /* p-1 */
-  display: flex;
+  display: flex !important;
   gap: 0.25rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .jt-toolbar-group {

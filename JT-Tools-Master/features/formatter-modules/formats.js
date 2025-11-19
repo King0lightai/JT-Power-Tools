@@ -1,0 +1,640 @@
+// Formatter Formats Module
+// Handles format application and removal logic
+
+const FormatterFormats = (() => {
+  // Flag to prevent MutationObserver interference during text insertion
+  let isInsertingText = false;
+  // Flag to prevent blur handlers from hiding toolbar during prompts
+  let isPromptingUser = false;
+
+  /**
+   * Get insertion lock status
+   * @returns {boolean} True if text insertion is in progress
+   */
+  function isInserting() {
+    return isInsertingText;
+  }
+
+  /**
+   * Get prompting status
+   * @returns {boolean} True if user is being prompted
+   */
+  function isPrompting() {
+    return isPromptingUser;
+  }
+
+  /**
+   * Collect alert data from user with proper prompt locking
+   * @returns {Object|null} Alert data or null if cancelled
+   */
+  function collectAlertData() {
+    isPromptingUser = true;
+
+    try {
+      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
+      if (!alertColor) return null;
+
+      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
+      if (!alertIcon) return null;
+
+      const alertSubject = prompt('Alert subject:', 'Important');
+      if (!alertSubject) return null;
+
+      const alertBody = prompt('Alert body text:', 'Your alert message here.');
+      if (!alertBody) return null;
+
+      return { alertColor, alertIcon, alertSubject, alertBody };
+    } finally {
+      // Always unlock prompting, even if user cancels
+      isPromptingUser = false;
+    }
+  }
+
+  /**
+   * Dispatch events immediately - for cases where React clears value during delays
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {number|null} cursorPos - Cursor position to set
+   */
+  function dispatchReactSafeEventImmediate(field, cursorPos = null) {
+    try {
+      // Set cursor position first
+      if (cursorPos !== null) {
+        field.setSelectionRange(cursorPos, cursorPos);
+      }
+
+      // Dispatch input event IMMEDIATELY (synchronously)
+      const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: false,
+        composed: true,
+        data: null,
+        dataTransfer: null,
+        inputType: 'insertText',
+        isComposing: false
+      });
+
+      field.dispatchEvent(inputEvent);
+
+      // Dispatch change event immediately too
+      const changeEvent = new Event('change', {
+        bubbles: true,
+        cancelable: false
+      });
+      field.dispatchEvent(changeEvent);
+
+      // Unlock after a small delay to ensure React has processed the events
+      setTimeout(() => {
+        isInsertingText = false;
+      }, 100);
+    } catch (error) {
+      console.error('Formatter: Event dispatch error:', error);
+      isInsertingText = false;
+    }
+  }
+
+  /**
+   * Remove a format from the field
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {string} format - The format to remove
+   * @param {Object} options - Additional options
+   */
+  function removeFormat(field, format, options = {}) {
+    const start = field.selectionStart;
+    const end = field.selectionEnd;
+    const text = field.value;
+    const hasSelection = start !== end;
+
+    let newText;
+    let newCursorPos;
+
+    function findMarkerPositions(text, pos, marker) {
+      let openPos = -1;
+      let closePos = -1;
+
+      for (let i = pos - 1; i >= 0; i--) {
+        if (text[i] === marker) {
+          openPos = i;
+          break;
+        }
+        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
+          break;
+        }
+      }
+
+      for (let i = pos; i < text.length; i++) {
+        if (text[i] === marker) {
+          closePos = i;
+          break;
+        }
+        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
+          break;
+        }
+      }
+
+      return { openPos, closePos };
+    }
+
+    switch(format) {
+      case 'bold':
+      case 'italic':
+      case 'underline':
+      case 'strikethrough':
+        const markerMap = {
+          'bold': '*',
+          'italic': '^',
+          'underline': '_',
+          'strikethrough': '~'
+        };
+        const marker = markerMap[format];
+
+        if (hasSelection) {
+          const before = text.substring(0, start);
+          const after = text.substring(end);
+          const selection = text.substring(start, end);
+
+          if (before.endsWith(marker) && after.startsWith(marker)) {
+            newText = before.slice(0, -1) + selection + after.slice(1);
+            newCursorPos = start - 1;
+          } else {
+            const cleaned = selection.replace(new RegExp(`\\${marker}`, 'g'), '');
+            newText = before + cleaned + after;
+            newCursorPos = start;
+          }
+        } else {
+          const { openPos, closePos } = findMarkerPositions(text, start, marker);
+
+          if (openPos !== -1 && closePos !== -1) {
+            const before = text.substring(0, openPos);
+            const middle = text.substring(openPos + 1, closePos);
+            const after = text.substring(closePos + 1);
+            newText = before + middle + after;
+            newCursorPos = start - 1;
+          } else {
+            return;
+          }
+        }
+        break;
+
+      case 'color':
+        const before = text.substring(0, start);
+        const lineStart = before.lastIndexOf('\n') + 1;
+        const lineText = text.substring(lineStart);
+        const lineEnd = lineText.indexOf('\n');
+        const fullLine = lineEnd === -1 ? lineText : lineText.substring(0, lineEnd);
+
+        // Match color tag at the beginning of the line
+        const colorMatch = fullLine.match(/^\[!color:\w+\]\s*/);
+        if (colorMatch) {
+          const beforeLine = text.substring(0, lineStart);
+          const afterMatch = text.substring(lineStart + colorMatch[0].length);
+          newText = beforeLine + afterMatch;
+          newCursorPos = lineStart;
+        } else {
+          // No color tag found on this line, nothing to remove
+          return;
+        }
+        break;
+
+      case 'justify-center':
+      case 'justify-right':
+        const before2 = text.substring(0, start);
+        const jLineStart = before2.lastIndexOf('\n') + 1;
+        const beforeLine2 = text.substring(0, jLineStart);
+        const afterLine = text.substring(jLineStart);
+
+        const cleaned = afterLine.replace(/^(-:-|--:)\s*/, '');
+        newText = beforeLine2 + cleaned;
+        newCursorPos = jLineStart;
+        break;
+
+      default:
+        return;
+    }
+
+    // Update field value using native setter to avoid React state issues
+    isInsertingText = true; // Lock to prevent MutationObserver interference
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    nativeInputValueSetter.call(field, newText);
+
+    // Dispatch events immediately - React will clear value if we delay
+    dispatchReactSafeEventImmediate(field, newCursorPos);
+  }
+
+  /**
+   * Apply a format to the field
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {string} format - The format to apply
+   * @param {Object} options - Additional options (e.g., color)
+   */
+  function applyFormat(field, format, options = {}) {
+    const start = field.selectionStart;
+    const end = field.selectionEnd;
+    const text = field.value;
+    const selection = text.substring(start, end);
+    const hasSelection = selection.length > 0;
+
+    // Check if format is already active
+    const activeFormats = window.FormatterDetection.detectActiveFormats(field);
+
+    // Toggle logic for inline formats
+    if (['bold', 'italic', 'underline', 'strikethrough'].includes(format)) {
+      if (activeFormats[format]) {
+        removeFormat(field, format);
+        return;
+      }
+    }
+
+    // Toggle logic for colors
+    if (format === 'color' && activeFormats.color === options.color) {
+      removeFormat(field, 'color');
+      return;
+    }
+
+    // Toggle logic for justify
+    if (format === 'justify-center' && activeFormats['justify-center']) {
+      removeFormat(field, format);
+      return;
+    }
+    if (format === 'justify-right' && activeFormats['justify-right']) {
+      removeFormat(field, format);
+      return;
+    }
+
+    // Apply format logic
+    let before = text.substring(0, start);
+    let after = text.substring(end);
+    let replacement;
+    let cursorPos;
+
+    switch(format) {
+      case 'bold':
+        replacement = hasSelection ? `*${selection}*` : '**';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'italic':
+        replacement = hasSelection ? `^${selection}^` : '^^';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'underline':
+        replacement = hasSelection ? `_${selection}_` : '__';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'strikethrough':
+        replacement = hasSelection ? `~${selection}~` : '~~';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'h1':
+        const lineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart);
+        after = text.substring(lineStart);
+        replacement = `# ${after}`;
+        cursorPos = lineStart + 2;
+        after = '';
+        break;
+
+      case 'h2':
+        const lineStart2 = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart2);
+        after = text.substring(lineStart2);
+        replacement = `## ${after}`;
+        cursorPos = lineStart2 + 3;
+        after = '';
+        break;
+
+      case 'h3':
+        const lineStart3 = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, lineStart3);
+        after = text.substring(lineStart3);
+        replacement = `### ${after}`;
+        cursorPos = lineStart3 + 4;
+        after = '';
+        break;
+
+      case 'bullet':
+        if (hasSelection) {
+          replacement = selection.split('\n').map(line => `- ${line}`).join('\n');
+        } else {
+          replacement = '- ';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 2;
+        break;
+
+      case 'numbered':
+        if (hasSelection) {
+          replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
+        } else {
+          replacement = '1. ';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 3;
+        break;
+
+      case 'quote':
+        const quoteLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, quoteLineStart);
+        const afterQuote = text.substring(quoteLineStart);
+        replacement = `> ${afterQuote}`;
+        cursorPos = quoteLineStart + 2;
+        after = '';
+        break;
+
+      case 'table':
+        isPromptingUser = true;
+        const cols = prompt('Number of columns:', '3');
+        if (!cols || isNaN(cols) || cols < 1) {
+          isPromptingUser = false;
+          return;
+        }
+        const rows = prompt('Number of rows (including header):', '3');
+        isPromptingUser = false;
+
+        if (!rows || isNaN(rows) || rows < 2) {
+          return;
+        }
+
+        const numCols = parseInt(cols);
+        const numRows = parseInt(rows);
+
+        // Create table
+        let table = [];
+
+        // Header row
+        const headers = Array(numCols).fill('Header').map((h, i) => i === 0 ? h : h + (i + 1));
+        table.push('| ' + headers.join(' | ') + ' |');
+
+        // Data rows (no separator row for JobTread compatibility)
+        for (let i = 1; i < numRows; i++) {
+          const cells = Array(numCols).fill('Data');
+          table.push('| ' + cells.join(' | ') + ' |');
+        }
+
+        replacement = '\n' + table.join('\n') + '\n';
+        cursorPos = start + 3; // Position cursor in first header cell
+        break;
+
+      case 'justify-left':
+        const leftLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, leftLineStart);
+        let afterLeft = text.substring(leftLineStart);
+        afterLeft = afterLeft.replace(/^(-:-|--:)\s*/, '');
+        replacement = afterLeft;
+        cursorPos = leftLineStart;
+        after = '';
+        break;
+
+      case 'justify-center':
+        const centerLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, centerLineStart);
+        let afterCenter = text.substring(centerLineStart);
+        afterCenter = afterCenter.replace(/^(-:-|--:)\s*/, '');
+        replacement = `-:- ${afterCenter}`;
+        cursorPos = centerLineStart + 4;
+        after = '';
+        break;
+
+      case 'justify-right':
+        const rightLineStart = before.lastIndexOf('\n') + 1;
+        before = text.substring(0, rightLineStart);
+        let afterRight = text.substring(rightLineStart);
+        afterRight = afterRight.replace(/^(-:-|--:)\s*/, '');
+        replacement = `--: ${afterRight}`;
+        cursorPos = rightLineStart + 4;
+        after = '';
+        break;
+
+      case 'link':
+        isPromptingUser = true;
+        const url = prompt('Enter URL:', 'https://');
+        isPromptingUser = false;
+
+        if (!url) {
+          return;
+        }
+
+        replacement = `[${hasSelection ? selection : 'link text'}](${url})`;
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'color':
+        const color = options.color;
+        const cLineStart = before.lastIndexOf('\n') + 1;
+        const cLineEnd = text.indexOf('\n', start);
+        const lineEndPos = cLineEnd === -1 ? text.length : cLineEnd;
+
+        // Check the FULL line for existing color (not just before cursor)
+        const fullLine = text.substring(cLineStart, lineEndPos);
+        const existingColorMatch = fullLine.match(/^\[!color:(\w+)\]\s*/);
+
+        if (existingColorMatch) {
+          // Found existing color formatting on this line
+          const existingColor = existingColorMatch[1];
+          const colorTagEnd = cLineStart + existingColorMatch[0].length;
+
+          // Extract the text after the color tag (excluding the tag itself)
+          const existingText = text.substring(colorTagEnd, lineEndPos).trim();
+
+          // Determine what text to use
+          let textToUse;
+          if (hasSelection) {
+            // User has selection, use that
+            textToUse = selection;
+          } else if (existingText) {
+            // Reuse existing content
+            textToUse = existingText;
+          } else {
+            // No content, use placeholder
+            textToUse = 'text';
+          }
+
+          // Replace the entire line with new color (or remove if same color being toggled)
+          before = text.substring(0, cLineStart);
+          replacement = `[!color:${color}] ${textToUse}`;
+          after = text.substring(lineEndPos);
+        } else {
+          // No existing color on this line - add new color
+          if (hasSelection) {
+            replacement = `[!color:${color}] ${selection}`;
+          } else {
+            // Check if cursor is on a line with content
+            const lineText = fullLine.trim();
+
+            if (lineText.length > 0) {
+              // There's content on this line, add color tag at start
+              replacement = `[!color:${color}] ${lineText}`;
+              before = text.substring(0, cLineStart);
+              after = text.substring(lineEndPos);
+            } else {
+              // Empty line, use placeholder
+              replacement = `[!color:${color}] text`;
+            }
+          }
+        }
+        cursorPos = before.length + `[!color:${color}] `.length;
+        break;
+
+      case 'alert':
+        const alertData = collectAlertData();
+        if (!alertData) {
+          return;
+        }
+
+        // Restore focus immediately after prompts complete
+        if (field && document.body.contains(field)) {
+          field.focus();
+        } else {
+          console.error('Formatter: Field is not in DOM after alert prompts!');
+          return;
+        }
+
+        replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
+        cursorPos = start + replacement.length;
+        break;
+
+      case 'hr':
+        replacement = '\n---\n';
+        cursorPos = start + replacement.length;
+        break;
+
+      default:
+        return;
+    }
+
+    // Update field value using native setter to avoid React state issues
+    // Lock to prevent MutationObserver from interfering
+    isInsertingText = true;
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    const newValue = before + replacement + after;
+    nativeInputValueSetter.call(field, newValue);
+
+    // Dispatch events IMMEDIATELY - React will clear value if we delay!
+    dispatchReactSafeEventImmediate(field, cursorPos);
+  }
+
+  /**
+   * Handle Enter key for smart auto-numbering
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {KeyboardEvent} e - The keyboard event
+   * @returns {boolean} True if handled
+   */
+  function handleEnterKey(field, e) {
+    const start = field.selectionStart;
+    const text = field.value;
+
+    // Find the current line
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', start);
+    const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+    console.log('Formatter: Enter pressed, current line:', `"${currentLine}"`);
+
+    // Check if current line is a numbered list item (e.g., "1. ", "2. Some text")
+    const numberedListMatch = currentLine.match(/^(\d+)\.\s+(.*)$/);
+
+    if (numberedListMatch) {
+      console.log('Formatter: Matched numbered list:', numberedListMatch);
+      e.preventDefault();
+
+      const currentNumber = parseInt(numberedListMatch[1]);
+      const lineContent = numberedListMatch[2];
+
+      // If the line is empty (just the number), exit list mode
+      if (lineContent.trim() === '') {
+        console.log('Formatter: Empty list item, exiting list mode');
+        // Remove the empty list item and exit
+        const before = text.substring(0, lineStart);
+        const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+
+        field.value = before + after;
+        field.setSelectionRange(lineStart, lineStart);
+      } else {
+        // Insert next number on new line
+        const nextNumber = currentNumber + 1;
+        const before = text.substring(0, start);
+        const after = text.substring(start);
+
+        const newText = `\n${nextNumber}. `;
+        console.log('Formatter: Adding next number:', nextNumber);
+        field.value = before + newText + after;
+
+        // Position cursor after the new number
+        const newCursorPos = start + newText.length;
+        field.setSelectionRange(newCursorPos, newCursorPos);
+      }
+
+      // Trigger change events using native setter
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      nativeInputValueSetter.call(field, field.value);
+
+      // Dispatch only input event (not change to avoid breaking React state)
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(inputEvent);
+
+      return true; // Handled
+    }
+
+    // Check for bullet lists too
+    const bulletListMatch = currentLine.match(/^-\s+(.*)$/);
+
+    if (bulletListMatch) {
+      console.log('Formatter: Matched bullet list:', bulletListMatch);
+      e.preventDefault();
+
+      const lineContent = bulletListMatch[1];
+
+      // If the line is empty (just the bullet), exit list mode
+      if (lineContent.trim() === '') {
+        console.log('Formatter: Empty bullet item, exiting list mode');
+        // Remove the empty list item and exit
+        const before = text.substring(0, lineStart);
+        const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
+
+        field.value = before + after;
+        field.setSelectionRange(lineStart, lineStart);
+      } else {
+        // Insert new bullet on new line
+        const before = text.substring(0, start);
+        const after = text.substring(start);
+
+        const newText = `\n- `;
+        console.log('Formatter: Adding new bullet');
+        field.value = before + newText + after;
+
+        // Position cursor after the new bullet
+        const newCursorPos = start + newText.length;
+        field.setSelectionRange(newCursorPos, newCursorPos);
+      }
+
+      // Trigger change events using native setter
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+      nativeInputValueSetter.call(field, field.value);
+
+      // Dispatch only input event (not change to avoid breaking React state)
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(inputEvent);
+
+      return true; // Handled
+    }
+
+    console.log('Formatter: No list pattern matched');
+    return false; // Not handled, allow default Enter behavior
+  }
+
+  // Public API
+  return {
+    applyFormat,
+    removeFormat,
+    handleEnterKey,
+    collectAlertData,
+    isInserting,
+    isPrompting
+  };
+})();
+
+// Export to window
+if (typeof window !== 'undefined') {
+  window.FormatterFormats = FormatterFormats;
+}
