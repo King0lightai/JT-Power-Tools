@@ -1401,31 +1401,46 @@ const QuickNotesFeature = (() => {
   function injectQuickNotesButton() {
     // Try multiple selectors to find the action buttons container
     const selectors = [
-      'div.absolute.inset-0.flex.justify-end',  // Original selector
-      'div[class*="absolute"][class*="inset-0"][class*="flex"][class*="justify-end"]',  // More flexible
-      'div.flex.justify-end',  // Even more generic
-      '.action-buttons',  // Generic class name
-      '[role="toolbar"]',  // ARIA role
+      // Primary target: action bar at top with existing buttons
+      'div.absolute.inset-0.flex.justify-end',
+      'div.flex.justify-end.items-center',
+      'div.flex.items-center.justify-end',
+      // Secondary targets: any flex container with buttons
+      'div[class*="absolute"][class*="inset-0"][class*="flex"][class*="justify-end"]',
+      'div.flex.justify-end',
+      // Generic targets
+      '.action-buttons',
+      '[role="toolbar"]',
     ];
 
     let container = null;
     for (const selector of selectors) {
-      container = document.querySelector(selector);
-      if (container) {
-        console.log('Quick Notes: Found container with selector:', selector);
-        break;
+      const elements = document.querySelectorAll(selector);
+      // Find the first visible container with existing buttons
+      for (const el of elements) {
+        if (el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0) {
+          const hasButtons = el.querySelectorAll('button, [role="button"], div[role="button"]').length > 0;
+          if (hasButtons) {
+            container = el;
+            console.log('Quick Notes: Found container with selector:', selector);
+            console.log('Quick Notes: Container classes:', el.className);
+            break;
+          }
+        }
       }
+      if (container) break;
     }
 
-    // If still no container, try to find any container with action buttons
+    // If still no container, try to find any visible container with action buttons
     if (!container) {
-      // Look for containers that have button-like children
+      console.log('Quick Notes: Searching for containers with buttons...');
       const allContainers = document.querySelectorAll('div[class*="flex"]');
       for (const c of allContainers) {
-        const hasButtons = c.querySelectorAll('button, [role="button"], .btn, [class*="button"]').length > 0;
-        if (hasButtons && c.offsetParent !== null) { // Check if visible
+        const hasButtons = c.querySelectorAll('button, [role="button"], div[role="button"]').length >= 2;
+        const isVisible = c.offsetParent !== null && c.offsetWidth > 100; // At least 100px wide
+        if (hasButtons && isVisible) {
           container = c;
-          console.log('Quick Notes: Found container with buttons:', c.className);
+          console.log('Quick Notes: Found fallback container:', c.className);
           break;
         }
       }
@@ -1434,9 +1449,12 @@ const QuickNotesFeature = (() => {
     if (container && !container.querySelector('.jt-quick-notes-btn')) {
       console.log('Quick Notes: Injecting button into container');
       createQuickNotesButton(container);
+      return true; // Success
     } else if (!container) {
-      console.warn('Quick Notes: Could not find suitable container for button');
+      console.warn('Quick Notes: Could not find suitable action bar container');
+      return false; // Failed
     }
+    return true; // Already injected
   }
 
   // Create a floating Quick Notes button as fallback
@@ -1475,17 +1493,32 @@ const QuickNotesFeature = (() => {
     console.log('Quick Notes: Setting up button observer');
 
     // Initial injection attempt
-    injectQuickNotesButton();
+    let injected = injectQuickNotesButton();
 
-    // After 2 seconds, if button wasn't injected, create a floating button
-    setTimeout(() => {
-      if (!notesButton || !notesButton.parentNode) {
-        console.warn('Quick Notes: Button not injected after 2s, creating floating button');
-        createFloatingButton();
-      } else {
-        console.log('Quick Notes: Button successfully injected inline');
-      }
-    }, 2000);
+    // Retry injection every 500ms for up to 5 seconds if not successful
+    if (!injected) {
+      let attempts = 0;
+      const maxAttempts = 10; // 10 * 500ms = 5 seconds
+      const retryInterval = setInterval(() => {
+        attempts++;
+        console.log(`Quick Notes: Retry injection attempt ${attempts}/${maxAttempts}`);
+
+        injected = injectQuickNotesButton();
+
+        if (injected || attempts >= maxAttempts) {
+          clearInterval(retryInterval);
+          if (injected) {
+            console.log('Quick Notes: Button successfully injected into action bar');
+          } else {
+            console.warn('Quick Notes: Failed to inject button after', attempts, 'attempts');
+            console.warn('Quick Notes: Creating floating button as last resort');
+            createFloatingButton();
+          }
+        }
+      }, 500);
+    } else {
+      console.log('Quick Notes: Button successfully injected on first attempt');
+    }
 
     // Watch for DOM changes to re-inject button if needed
     buttonObserver = new MutationObserver(() => {
