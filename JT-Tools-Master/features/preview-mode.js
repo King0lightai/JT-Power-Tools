@@ -716,6 +716,9 @@ const PreviewModeFeature = (() => {
     // Icons [!icon:name] - process before inline formatting
     result = result.replace(/\[!icon:(\w+)\]/g, '<span class="jt-icon jt-icon-$1">⚠</span>');
 
+    // Inline colors [!color:green] text - process before other formatting
+    result = result.replace(/\[!color:(\w+)\]\s*(.+?)(?=\[!color:|$)/g, '<span class="jt-color-$1">$2</span>');
+
     // Links [text](url)
     result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
 

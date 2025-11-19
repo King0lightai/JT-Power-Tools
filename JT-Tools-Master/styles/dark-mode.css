@@ -431,3 +431,129 @@ div[class*="pl-3.5"][class*="bg-blue"] {
     z-index: 50 !important;
     position: relative;
 }
+
+/* === Alert Modal Dark Mode === */
+.jt-alert-modal-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.jt-alert-modal {
+    background: #2c2c2c !important;
+}
+
+.jt-alert-modal-header {
+    background: #2c2c2c !important;
+    border-bottom-color: #464646 !important;
+}
+
+.jt-alert-modal-title {
+    color: #60a5fa !important; /* Lighter cyan for dark mode */
+}
+
+.jt-alert-modal-close {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-modal-close:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-modal-body {
+    background: #2c2c2c !important;
+}
+
+.jt-alert-dropdown-button {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    color: #e0e0e0 !important;
+}
+
+.jt-alert-dropdown-button:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-dropdown-menu {
+    background: #353535 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-dropdown-item {
+    background: #353535 !important;
+    border-bottom-color: #464646 !important;
+    color: #e0e0e0 !important;
+}
+
+.jt-alert-dropdown-item:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-dropdown-item.active {
+    background: #1e3a5f !important; /* Darker blue for dark mode */
+}
+
+.jt-alert-subject {
+    background: #353535 !important;
+    border-color: #464646 !important;
+    color: #f2f2f2 !important;
+}
+
+.jt-alert-subject:hover:not(:focus) {
+    background: #464646 !important;
+    border-color: #5a5a5a !important;
+}
+
+.jt-alert-subject:focus {
+    background: #3a3a3a !important;
+    border-color: #60a5fa !important;
+}
+
+.jt-alert-subject::placeholder {
+    color: #9ca3af !important;
+}
+
+.jt-alert-message-container {
+    border-color: #464646 !important;
+}
+
+.jt-alert-message {
+    background: #353535 !important;
+    color: #f2f2f2 !important;
+}
+
+.jt-alert-message:hover:not(:focus) {
+    background: #464646 !important;
+}
+
+.jt-alert-message:focus {
+    background: #3a3a3a !important;
+}
+
+.jt-alert-message::placeholder {
+    color: #9ca3af !important;
+}
+
+.jt-alert-modal-footer {
+    background: #2c2c2c !important;
+    border-top-color: #464646 !important;
+}
+
+.jt-alert-btn-cancel {
+    background: #353535 !important;
+    color: #e0e0e0 !important;
+    border-color: #464646 !important;
+}
+
+.jt-alert-btn-cancel:hover {
+    background: #464646 !important;
+}
+
+.jt-alert-btn-add {
+    background: #10b981 !important;
+    border-color: #059669 !important;
+}
+
+.jt-alert-btn-add:hover {
+    background: #059669 !important;
+}
