@@ -1389,12 +1389,8 @@ const QuickNotesFeature = (() => {
       }
     });
 
-    // Insert at the beginning of the container (to the left of existing buttons)
-    if (container.firstChild) {
-      container.insertBefore(notesButton, container.firstChild);
-    } else {
-      container.appendChild(notesButton);
-    }
+    // Insert at the end of the container (to the right of existing buttons)
+    container.appendChild(notesButton);
   }
 
   // Find and inject button into action buttons container
