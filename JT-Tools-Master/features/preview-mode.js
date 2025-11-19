@@ -327,9 +327,16 @@ const PreviewModeFeature = (() => {
 
   // Toggle preview panel
   function togglePreview(textarea, button) {
-    // If this preview is already open, close it
-    if (activePreview && previewMap.get(textarea) === activePreview) {
+    // Check if this textarea already has an open preview
+    const existingPreview = previewMap.get(textarea);
+
+    // If this preview is already open, close it and remove active state from button
+    if (existingPreview && document.body.contains(existingPreview)) {
       closePreview();
+      // Ensure the button's active class is removed
+      if (button) {
+        button.classList.remove('active');
+      }
       return;
     }
 
@@ -450,8 +457,15 @@ const PreviewModeFeature = (() => {
     // Position preview
     positionPreview(preview, textarea, button);
 
-    // Mark button as active
-    button.classList.add('active');
+    // Remove active class from previous button if any
+    if (activeButton && activeButton !== button) {
+      activeButton.classList.remove('active');
+    }
+
+    // Mark new button as active
+    if (button) {
+      button.classList.add('active');
+    }
 
     // Store references
     activePreview = preview;
@@ -535,16 +549,23 @@ const PreviewModeFeature = (() => {
       }, 200);
     }
 
+    // Always remove active class from button
     if (activeButton) {
       activeButton.classList.remove('active');
 
-      // Hide button if textarea is not focused
+      // Hide standalone button if textarea is not focused (toolbar buttons don't have _textarea)
       const textarea = activeButton._textarea;
       if (textarea && document.activeElement !== textarea) {
         activeButton.style.opacity = '0';
         activeButton.style.pointerEvents = 'none';
       }
     }
+
+    // Also check for any other buttons that might have the active class (cleanup)
+    const allActiveButtons = document.querySelectorAll('.jt-preview-btn.active, .jt-preview-toggle.active');
+    allActiveButtons.forEach(btn => {
+      btn.classList.remove('active');
+    });
 
     activePreview = null;
     activeButton = null;
