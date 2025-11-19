@@ -2,7 +2,8 @@
 /* Custom dark theme for JobTread interface */
 
 /* === Logo Colors === */
-/* Make the JOBTREAD text white in dark mode, but keep orange elements orange */
+/* Make both the JT icon and JOBTREAD text white in dark mode */
+.text-jtOrange,
 .text-gray-800 {
     color: #ffffff !important;
 }
@@ -51,21 +52,7 @@ td div.cursor-pointer[style*="border-left"] {
 
 /* Dark caret color */
 .caret-black {
-    caret-color: #ffffff !important;
-}
-
-/* Ensure budget textareas specifically have white cursor */
-textarea.caret-black,
-textarea[placeholder="Description"],
-textarea[data-formatter-ready="true"],
-textarea.bg-white {
-    caret-color: #ffffff !important;
-}
-
-/* Override inline styles and transparent text color affecting caret */
-textarea[style*="color: transparent"],
-textarea[style*="color:transparent"] {
-    caret-color: #ffffff !important;
+    caret-color: #ffffff;
 }
 
 /* White border for dark mode */
@@ -98,15 +85,15 @@ textarea[style*="color:transparent"] {
 
 /* === Background Colors === */
 .bg-white {
-    background-color: #2c2c2c !important;
+    background-color: #2c2c2c;
 }
 
 .bg-gray-50 {
-    background-color: #353535 !important;
+    background-color: #353535;
 }
 
 .bg-gray-100 {
-    background-color: #353535 !important;
+    background-color: #353535;
 }
 
 .bg-gray-700 {
@@ -436,23 +423,4 @@ textarea[style*="color:transparent"] {
 .sticky[style*="left:0px"] .bg-blue-50 {
     z-index: 50 !important;
     position: relative;
-}
-
-/* === CURSOR VISIBILITY FIX - MAXIMUM PRIORITY === */
-/* Placed at END of file to ensure highest cascade priority */
-/* Ultra-specific selector matching exact budget textarea classes */
-textarea.absolute.caret-black.bg-white[style*="color: transparent"],
-textarea.absolute.caret-black.bg-white,
-textarea.absolute.caret-black,
-textarea.caret-black.bg-white,
-textarea.absolute.bg-white[placeholder="Description"],
-textarea.bg-white.caret-black[data-formatter-ready],
-input.caret-black,
-textarea.caret-black,
-.caret-black,
-textarea[style*="color: transparent"],
-textarea[style*="color:transparent"],
-input,
-textarea {
-    caret-color: #ffffff !important;
 }
