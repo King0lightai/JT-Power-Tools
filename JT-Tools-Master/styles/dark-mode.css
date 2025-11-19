@@ -557,3 +557,64 @@ div[class*="pl-3.5"][class*="bg-blue"] {
 .jt-alert-btn-add:hover {
     background: #059669 !important;
 }
+
+/* === Preview Mode Alert Dark Mode === */
+.jt-preview-content .bg-blue-50 {
+    background-color: #1e3a5f !important;
+}
+
+.jt-preview-content .bg-yellow-50 {
+    background-color: #4a3a1a !important;
+}
+
+.jt-preview-content .bg-red-50 {
+    background-color: #4a1f1f !important;
+}
+
+.jt-preview-content .bg-green-50 {
+    background-color: #1a3a2e !important;
+}
+
+.jt-preview-content .bg-orange-50 {
+    background-color: #4a2a1a !important;
+}
+
+.jt-preview-content .bg-purple-50 {
+    background-color: #3a2a4a !important;
+}
+
+.jt-preview-content .text-blue-500,
+.jt-preview-content .border-blue-500 {
+    color: #60a5fa !important;
+    border-color: #60a5fa !important;
+}
+
+.jt-preview-content .text-yellow-500,
+.jt-preview-content .border-yellow-500 {
+    color: #fbbf24 !important;
+    border-color: #fbbf24 !important;
+}
+
+.jt-preview-content .text-red-500,
+.jt-preview-content .border-red-500 {
+    color: #f87171 !important;
+    border-color: #f87171 !important;
+}
+
+.jt-preview-content .text-green-500,
+.jt-preview-content .border-green-500 {
+    color: #34d399 !important;
+    border-color: #34d399 !important;
+}
+
+.jt-preview-content .text-jtOrange,
+.jt-preview-content .border-jtOrange {
+    color: #ff7733 !important;
+    border-color: #ff7733 !important;
+}
+
+.jt-preview-content .text-purple-500,
+.jt-preview-content .border-purple-500 {
+    color: #a78bfa !important;
+    border-color: #a78bfa !important;
+}
