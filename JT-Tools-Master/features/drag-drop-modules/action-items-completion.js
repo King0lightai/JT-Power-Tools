@@ -2,6 +2,10 @@
 // Adds checkboxes to Action Items card for quick task completion
 
 const ActionItemsCompletion = (() => {
+  // Feature state
+  let isActive = false;
+  let observer = null;
+
   // Track which action items have checkboxes added
   const processedItems = new WeakSet();
 
@@ -9,13 +13,19 @@ const ActionItemsCompletion = (() => {
    * Initialize action items completion feature
    */
   function init() {
+    if (isActive) {
+      console.log('ActionItemsCompletion: Already initialized');
+      return;
+    }
+
     console.log('ActionItemsCompletion: Initializing...');
+    isActive = true;
 
     // Add checkboxes to action items
     addCompletionCheckboxes();
 
     // Watch for changes to the Action Items card
-    const observer = new MutationObserver(() => {
+    observer = new MutationObserver(() => {
       addCompletionCheckboxes();
     });
 
@@ -466,16 +476,33 @@ const ActionItemsCompletion = (() => {
    * Cleanup function
    */
   function cleanup() {
+    if (!isActive) {
+      console.log('ActionItemsCompletion: Not active, nothing to cleanup');
+      return;
+    }
+
+    console.log('ActionItemsCompletion: Cleaning up...');
+    isActive = false;
+
+    // Disconnect observer
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    // Remove all checkboxes
     const checkboxes = document.querySelectorAll('.jt-action-item-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
-    console.log('ActionItemsCompletion: Cleaned up checkboxes');
+
+    console.log('ActionItemsCompletion: Cleanup complete');
   }
 
   // Public API
   return {
     init,
     cleanup,
-    addCompletionCheckboxes
+    addCompletionCheckboxes,
+    isActive: () => isActive
   };
 })();
 
