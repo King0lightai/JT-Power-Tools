@@ -862,14 +862,17 @@ const FormatterFeature = (() => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Toggle preview mode for this field
-      if (window.PreviewModeFeature && window.PreviewModeFeature.togglePreview) {
-        window.PreviewModeFeature.togglePreview(field, previewBtn);
+      // Toggle preview mode for the currently active field (not the captured field)
+      // This ensures when the toolbar is reused for different fields, the preview
+      // always shows content from the current field, not the field from initial setup
+      const currentField = activeField;
+      if (window.PreviewModeFeature && window.PreviewModeFeature.togglePreview && currentField) {
+        window.PreviewModeFeature.togglePreview(currentField, previewBtn);
       }
 
-      // Keep focus on the field
-      if (field && document.body.contains(field)) {
-        field.focus();
+      // Keep focus on the current field
+      if (currentField && document.body.contains(currentField)) {
+        currentField.focus();
       }
     });
   }
