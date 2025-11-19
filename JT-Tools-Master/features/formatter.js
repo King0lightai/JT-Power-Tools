@@ -180,11 +180,12 @@ const FormatterFeature = (() => {
       return true;
     }
 
-    // Check if it's ANY Daily Log field (textarea inside label with bold heading)
+    // Check if it's ANY Daily Log field, Todo, or Task description
+    // (textarea inside label with bold heading)
     const label = textarea.closest('label');
     if (label) {
       const heading = label.querySelector('div.font-bold');
-      // If there's a bold heading in the label, this is a Daily Log field
+      // If there's a bold heading in the label, this is a Daily Log/Todo/Task field
       if (heading && heading.textContent.trim().length > 0) {
         return true;
       }
@@ -242,7 +243,8 @@ const FormatterFeature = (() => {
     const descriptionFields = document.querySelectorAll('textarea[placeholder="Description"]');
     fields.push(...descriptionFields);
 
-    // 2. ALL Daily Log fields (any textarea inside label with bold heading)
+    // 2. ALL Daily Log fields, Todo descriptions, Task descriptions
+    // (any textarea inside label with bold heading)
     const labels = document.querySelectorAll('label');
     labels.forEach(label => {
       // Check if this label has any bold heading
@@ -303,10 +305,11 @@ const FormatterFeature = (() => {
         }
       }
 
-      return true;
+      // Extra guard: ensure no native formatter exists
+      return !hasNativeFormatter(field);
     });
 
-    console.log('Formatter: Found', filteredFields.length, 'fields (Description + Daily Log + Edit)');
+    console.log('Formatter: Found', filteredFields.length, 'fields (Budget Description + Daily Log + Todo + Task + Edit)');
 
     filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {

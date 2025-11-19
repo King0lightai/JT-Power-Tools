@@ -71,11 +71,12 @@ const FormatterDetection = (() => {
       return true;
     }
 
-    // Check if it's ANY Daily Log field (textarea inside label with bold heading)
+    // Check if it's ANY Daily Log field, Todo, or Task description
+    // (textarea inside label with bold heading)
     const label = textarea.closest('label');
     if (label) {
       const heading = label.querySelector('div.font-bold');
-      // If there's a bold heading in the label, this is a Daily Log field
+      // If there's a bold heading in the label, this is a Daily Log/Todo/Task field
       if (heading && heading.textContent.trim().length > 0) {
         return true;
       }
