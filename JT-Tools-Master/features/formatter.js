@@ -1686,7 +1686,7 @@ const FormatterFeature = (() => {
             return;
           }
 
-          const replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
+          const replacement = `> [!color:${alertData.alertColor}] ### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
           const start = field.selectionStart;
           const end = field.selectionEnd;
           const text = field.value;
