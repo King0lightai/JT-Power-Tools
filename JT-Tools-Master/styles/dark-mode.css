@@ -406,7 +406,13 @@ div[class*="pl-3.5"][class*="bg-blue"] {
 /* === Budget Group Level Row Shading === */
 /* Ensure group level rows have consistent gray shading across ALL cells */
 /* This makes sure row numbers and unit columns also get the group shade */
-[class*="jt-group-level"] > div {
+/* BUT preserve yellow highlighting for unsaved changes and blue for selection */
+[class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+    background-color: inherit !important;
+}
+
+/* Also apply to item-under-level rows */
+[class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
     background-color: inherit !important;
 }
 
