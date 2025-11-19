@@ -5,7 +5,45 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.3.1] - 2025-01-XX
+## [3.3.2] - 2025-01-XX
+
+### Improved
+
+#### Preview Mode Enhancements
+- Added inline color markup support for text highlighting
+- Upgraded alert builder to JobTread-style modal dialog
+- Improved alert rendering with proper styling and icons
+- Fixed alert heading level from 4 to 3 hashtags for better hierarchy
+
+#### Quick Notes Improvements
+- Expanded Quick Notes button to appear on all main pages with action bars
+- Better integration with JobTread's page structure
+
+### Fixed
+
+#### Preview Mode Fixes
+- Fixed preview button staying blue when preview window closes
+- Fixed preview mode bug where switching rows showed previous row content
+- Improved preview button state management
+
+#### Text Formatter Fixes
+- Prevented text formatter from appearing on settings page
+- Improved compatibility with different page types
+
+#### Dark Mode Fixes
+- Fixed cursor visibility in dark mode for budget textareas
+- Fixed budget row highlighting to supersede hierarchy shading in dark mode
+- Fixed bright spacer divs in budget rows when highlighted
+- Restored blue row highlight for budget row selection in dark mode
+- Removed orange text to white conversion in dark mode for better consistency
+
+#### General Fixes
+- Fixed button detection to support both div and link action buttons
+- Improved overall UI stability and consistency
+
+---
+
+## [3.3.1] - 2025-01-17
 
 ### Added
 
@@ -228,6 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.3.2]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.2
 [3.3.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.1
 [3.3.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.0
 [3.2.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.2.3
