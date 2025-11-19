@@ -54,6 +54,11 @@ td div.cursor-pointer[style*="border-left"] {
     caret-color: #ffffff;
 }
 
+/* Override transparent caret in dark mode to be visible */
+.caret-transparent {
+    caret-color: #ffffff !important;
+}
+
 /* Ensure all input fields and contenteditable elements have visible white cursor */
 input,
 textarea,
