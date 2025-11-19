@@ -1523,6 +1523,8 @@ const QuickNotesFeature = (() => {
 
   // Set up observer to watch for action buttons container
   function setupButtonObserver() {
+    console.log('Quick Notes: Setting up button observer');
+
     // Initial injection attempt
     injectQuickNotesButton();
 
@@ -1531,13 +1533,16 @@ const QuickNotesFeature = (() => {
       if (!notesButton || !notesButton.parentNode) {
         console.warn('Quick Notes: Button not injected after 2s, creating floating button');
         createFloatingButton();
+      } else {
+        console.log('Quick Notes: Button successfully injected inline');
       }
     }, 2000);
 
     // Watch for DOM changes to re-inject button if needed
     buttonObserver = new MutationObserver(() => {
-      // Only try to inject if we don't already have a button
-      if (!notesButton || !notesButton.parentNode) {
+      // Check if our button still exists in the DOM
+      if (!notesButton || !document.body.contains(notesButton)) {
+        console.log('Quick Notes: Button removed from DOM, re-injecting');
         injectQuickNotesButton();
       }
     });
