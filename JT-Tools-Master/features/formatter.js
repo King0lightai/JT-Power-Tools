@@ -25,34 +25,42 @@ const FormatterFeature = (() => {
     console.log('Formatter: Initializing...');
     isActive = true;
 
-    // Inject CSS
-    injectCSS();
+    try {
+      // Inject CSS
+      injectCSS();
+      console.log('Formatter: CSS injected');
 
-    // Initialize fields
-    initializeFields();
+      // Initialize fields
+      initializeFields();
+      console.log('Formatter: Fields initialized');
 
-    // Watch for budget textareas (with error handling)
-    observer = new MutationObserver(() => {
-      try {
-        initializeFields();
-      } catch (error) {
-        console.error('Formatter: Error in MutationObserver callback:', error);
-      }
-    });
+      // Watch for budget textareas (with error handling)
+      observer = new MutationObserver(() => {
+        try {
+          initializeFields();
+        } catch (error) {
+          console.error('Formatter: Error in MutationObserver callback:', error);
+        }
+      });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
 
-    // Handle window scroll and resize
-    window.addEventListener('scroll', handleScroll, true);
-    window.addEventListener('resize', handleResize);
-    document.addEventListener('click', handleGlobalClick, true);
-    // Use capture phase to catch Enter before React's handlers
-    document.addEventListener('keydown', handleKeydown, true);
+      // Handle window scroll and resize
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+      document.addEventListener('click', handleGlobalClick, true);
+      // Use capture phase to catch Enter before React's handlers
+      document.addEventListener('keydown', handleKeydown, true);
 
-    console.log('Formatter: Feature loaded');
+      console.log('Formatter: Feature loaded successfully');
+    } catch (error) {
+      console.error('Formatter: Error during initialization:', error);
+      isActive = false;
+      throw error;
+    }
   }
 
   // Cleanup the feature
