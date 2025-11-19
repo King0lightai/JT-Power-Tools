@@ -111,9 +111,61 @@ const FormatterFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
+  // Helper function to check if field already has JobTread's native formatter
+  function hasNativeFormatter(textarea) {
+    if (!textarea) return false;
+
+    // Look for JobTread's native formatter toolbar in parent containers
+    // Their toolbar has: sticky z-[1] p-1 flex gap-1 bg-white shadow-line-bottom
+    // The toolbar is typically a sibling to the textarea's parent container
+
+    const container = textarea.closest('div');
+    if (!container) return false;
+
+    // Strategy 1: Check if the parent container has a sibling with the toolbar
+    if (container.parentElement) {
+      const parentContainer = container.parentElement;
+
+      // Look for sticky toolbar as a sibling to the field container
+      const siblings = parentContainer.querySelectorAll('.sticky.shadow-line-bottom');
+      for (const toolbar of siblings) {
+        // Verify it's actually a formatter toolbar by checking for button elements
+        const buttons = toolbar.querySelectorAll('div[role="button"]');
+        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
+          return true;
+        }
+      }
+    }
+
+    // Strategy 2: Check parent containers (in case structure varies)
+    let current = container;
+    for (let i = 0; i < 5; i++) { // Check up to 5 levels up
+      if (!current) break;
+
+      // Look for the sticky toolbar as a child of ancestor
+      const toolbar = current.querySelector('.sticky.shadow-line-bottom');
+      if (toolbar) {
+        // Verify it's actually a formatter toolbar by checking for button elements
+        const buttons = toolbar.querySelectorAll('div[role="button"]');
+        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
+          return true;
+        }
+      }
+
+      current = current.parentElement;
+    }
+
+    return false;
+  }
+
   // Helper function to check if a textarea should have the formatter
   function isFormatterField(textarea) {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
+
+    // First, check if field already has JobTread's native formatter
+    if (hasNativeFormatter(textarea)) {
+      return false; // Skip fields that already have native formatter
+    }
 
     // Check if it's a Budget Description field
     if (textarea.getAttribute('placeholder') === 'Description') {
@@ -594,8 +646,27 @@ const FormatterFeature = (() => {
     const toolbar = document.createElement('div');
     toolbar.className = 'jt-formatter-toolbar jt-formatter-compact';
 
-    // Compact toolbar - optimized for all contexts including sidebars
-    toolbar.innerHTML = `
+    // Check if PreviewModeFeature is available and active
+    const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
+
+    // Build toolbar HTML - add Preview button if preview mode is active
+    let toolbarHTML = '';
+
+    if (hasPreviewMode) {
+      toolbarHTML += `
+      <button class="jt-preview-toggle" data-action="preview" title="Preview">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="jt-icon">
+          <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span>Preview</span>
+      </button>
+
+      <div class="jt-toolbar-divider"></div>
+      `;
+    }
+
+    toolbarHTML += `
     <div class="jt-toolbar-group">
       <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
         <strong>B</strong>
@@ -609,7 +680,10 @@ const FormatterFeature = (() => {
       <button data-format="strikethrough" title="Strikethrough (~text~)">
         <s>S</s>
       </button>
-    </div>
+    </div>`;
+
+    // Continue with rest of toolbar (moved outside the conditional part)
+    toolbarHTML += `
 
     <div class="jt-toolbar-divider"></div>
 
@@ -660,11 +734,19 @@ const FormatterFeature = (() => {
     </div>
   `;
 
+    // Set the toolbar HTML
+    toolbar.innerHTML = toolbarHTML;
+
     // Setup dropdown handlers
     setupDropdowns(toolbar);
     setupColorPicker(toolbar);
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
+
+    // Setup Preview button handler if present
+    if (hasPreviewMode) {
+      setupPreviewButton(toolbar, field);
+    }
 
     document.body.appendChild(toolbar);
     return toolbar;
@@ -752,6 +834,30 @@ const FormatterFeature = (() => {
           }, 10);
         }
       });
+    });
+  }
+
+  function setupPreviewButton(toolbar, field) {
+    const previewBtn = toolbar.querySelector('[data-action="preview"]');
+    if (!previewBtn) return;
+
+    previewBtn.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
+
+    previewBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Toggle preview mode for this field
+      if (window.PreviewModeFeature && window.PreviewModeFeature.togglePreview) {
+        window.PreviewModeFeature.togglePreview(field, previewBtn);
+      }
+
+      // Keep focus on the field
+      if (field && document.body.contains(field)) {
+        field.focus();
+      }
     });
   }
 
@@ -956,9 +1062,9 @@ const FormatterFeature = (() => {
     const lineEnd = text.indexOf('\n', start);
     const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
 
-    if (currentLine.trim().startsWith('--:')) {
+    if (currentLine.trim().startsWith('-:-')) {
       activeFormats['justify-center'] = true;
-    } else if (currentLine.trim().startsWith('---:')) {
+    } else if (currentLine.trim().startsWith('--:')) {
       activeFormats['justify-right'] = true;
     }
 
@@ -1110,7 +1216,7 @@ const FormatterFeature = (() => {
         const beforeLine2 = text.substring(0, jLineStart);
         const afterLine = text.substring(jLineStart);
 
-        const cleaned = afterLine.replace(/^(--:|---:)\s*/, '');
+        const cleaned = afterLine.replace(/^(-:-|--:)\s*/, '');
         newText = beforeLine2 + cleaned;
         newCursorPos = jLineStart;
         break;
@@ -1281,7 +1387,7 @@ const FormatterFeature = (() => {
         const leftLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, leftLineStart);
         let afterLeft = text.substring(leftLineStart);
-        afterLeft = afterLeft.replace(/^(--:|---:)\s*/, '');
+        afterLeft = afterLeft.replace(/^(-:-|--:)\s*/, '');
         replacement = afterLeft;
         cursorPos = leftLineStart;
         after = '';
@@ -1291,8 +1397,8 @@ const FormatterFeature = (() => {
         const centerLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, centerLineStart);
         let afterCenter = text.substring(centerLineStart);
-        afterCenter = afterCenter.replace(/^(--:|---:)\s*/, '');
-        replacement = `--: ${afterCenter}`;
+        afterCenter = afterCenter.replace(/^(-:-|--:)\s*/, '');
+        replacement = `-:- ${afterCenter}`;
         cursorPos = centerLineStart + 4;
         after = '';
         break;
@@ -1301,9 +1407,9 @@ const FormatterFeature = (() => {
         const rightLineStart = before.lastIndexOf('\n') + 1;
         before = text.substring(0, rightLineStart);
         let afterRight = text.substring(rightLineStart);
-        afterRight = afterRight.replace(/^(--:|---:)\s*/, '');
-        replacement = `---: ${afterRight}`;
-        cursorPos = rightLineStart + 5;
+        afterRight = afterRight.replace(/^(-:-|--:)\s*/, '');
+        replacement = `--: ${afterRight}`;
+        cursorPos = rightLineStart + 4;
         after = '';
         break;
 
