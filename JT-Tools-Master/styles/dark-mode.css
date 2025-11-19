@@ -49,30 +49,23 @@ td div.cursor-pointer[style*="border-left"] {
     border-color: transparent;
 }
 
-/* Dark caret color */
-.caret-black {
-    caret-color: #ffffff;
-}
-
-/* Override transparent caret in dark mode to be visible */
-.caret-transparent {
-    caret-color: #ffffff !important;
-}
-
-/* Ensure all input fields and contenteditable elements have visible white cursor */
+/* CURSOR VISIBILITY FIX - Nuclear option with maximum specificity */
+/* Target ALL inputs and textareas regardless of classes */
 input,
+input[class],
+input[class][style],
 textarea,
+textarea[class],
+textarea[class][style],
 [contenteditable="true"],
 [contenteditable="plaintext-only"] {
     caret-color: #ffffff !important;
 }
 
-/* Fix opacity-0 inputs/textareas - make cursor visible while keeping text transparent */
-input.opacity-0,
-textarea.opacity-0 {
+/* Fix opacity-0 inputs - override opacity but keep text invisible */
+input[class*="opacity-0"],
+textarea[class*="opacity-0"] {
     opacity: 1 !important;
-    color: transparent !important;
-    caret-color: #ffffff !important;
 }
 
 /* White border for dark mode */
@@ -440,13 +433,19 @@ textarea.opacity-0 {
     background: #4c1d95 !important;
 }
 
+/* === Budget Group Level Row Shading === */
+/* Ensure group level rows have consistent gray shading across ALL cells */
+/* This makes sure row numbers and unit columns also get the group shade */
+[class*="jt-group-level"] > div {
+    background-color: inherit !important;
+}
+
 /* === Budget Table Frozen Column Z-Index Fix === */
-/* Ensure sticky/frozen columns stay above resize handles */
-/* Only target the actual frozen column (left: 0), not internal sticky text elements */
+/* Ensure sticky/frozen columns (row numbers) stay above ALL other content when scrolling */
 .sticky[style*="left: 0px"],
 .sticky[style*="left:0px"] {
-    z-index: 20 !important;
-    position: relative; /* Ensure z-index takes effect */
+    z-index: 50 !important;
+    position: sticky !important;
 }
 
 /* Reduce z-index of column resize handles */
@@ -459,6 +458,6 @@ textarea.opacity-0 {
 .sticky[style*="left: 0px"] .bg-blue-50,
 .sticky[style*="left:0px"] .bg-blue-100,
 .sticky[style*="left:0px"] .bg-blue-50 {
-    z-index: 20 !important;
+    z-index: 50 !important;
     position: relative;
 }
