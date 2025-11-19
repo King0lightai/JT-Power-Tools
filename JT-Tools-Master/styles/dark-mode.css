@@ -51,21 +51,7 @@ td div.cursor-pointer[style*="border-left"] {
 
 /* Dark caret color */
 .caret-black {
-    caret-color: #ffffff !important;
-}
-
-/* Ensure budget textareas specifically have white cursor */
-textarea.caret-black,
-textarea[placeholder="Description"],
-textarea[data-formatter-ready="true"],
-textarea.bg-white {
-    caret-color: #ffffff !important;
-}
-
-/* Override inline styles and transparent text color affecting caret */
-textarea[style*="color: transparent"],
-textarea[style*="color:transparent"] {
-    caret-color: #ffffff !important;
+    caret-color: #ffffff;
 }
 
 /* White border for dark mode */
@@ -98,15 +84,15 @@ textarea[style*="color:transparent"] {
 
 /* === Background Colors === */
 .bg-white {
-    background-color: #2c2c2c !important;
+    background-color: #2c2c2c;
 }
 
 .bg-gray-50 {
-    background-color: #353535 !important;
+    background-color: #353535;
 }
 
 .bg-gray-100 {
-    background-color: #353535 !important;
+    background-color: #353535;
 }
 
 .bg-gray-700 {
@@ -122,11 +108,19 @@ textarea[style*="color:transparent"] {
 }
 
 .bg-blue-100 {
-    background-color: #334155; /* Tailwind Blue-800 */
+    background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
 }
 
 .bg-blue-50 {
-    background-color: #383b3f;
+    background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for selection in dark mode */
+}
+
+/* Fix bright spacer divs in budget rows - make them inherit parent background */
+div.pl-3\.5.bg-blue-50,
+div.pl-3\.5.bg-blue-100,
+div.pl-3\.5.group-hover\/row\:bg-blue-100,
+div[class*="pl-3.5"][class*="bg-blue"] {
+    background-color: inherit !important;
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
@@ -228,7 +222,7 @@ textarea[style*="color:transparent"] {
 }
 
 .focus-within\:bg-blue-50:focus-within {
-    background-color: #334155; /* Tailwind Blue-800 for dark mode */
+    background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
 }
 
 .focus\:bg-gray-100 {
@@ -272,12 +266,12 @@ textarea[style*="color:transparent"] {
 
 .hover\:bg-blue-50 {
     &:hover {
-        background-color: #383b3f;
+        background-color: rgba(59, 130, 246, 0.25); /* Blue with 25% opacity for hover in dark mode */
     }
 }
 
 .hover\:bg-blue-100:hover {
-    background-color: #353535;
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for hover in dark mode */
 }
 
 /* === Active Styles === */
@@ -293,7 +287,7 @@ textarea[style*="color:transparent"] {
 }
 
 .group-hover\/row\:bg-blue-100 {
-    background-color: #353535; /* Tailwind Zinc-900 */
+    background-color: rgba(59, 130, 246, 0.35); /* Blue with 35% opacity for group hover in dark mode */
 }
 
 .group:hover .group-hover\:text-gray-800 {
