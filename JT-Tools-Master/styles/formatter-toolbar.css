@@ -30,7 +30,7 @@
   cursor: pointer;
   user-select: none;
   background: #ffffff;
-  border: 1px solid #d1d5db;
+  border: none;
   border-radius: 0.125rem; /* rounded-sm */
   padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-size: 14px;
@@ -44,9 +44,8 @@
   flex-shrink: 0;
 }
 
-/* Remove border between adjacent buttons in same group */
+/* Keep grouped buttons with rounded corners on ends only */
 .jt-toolbar-group button:not(:first-child) {
-  border-left: none;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -58,7 +57,6 @@
 
 .jt-formatter-toolbar button:hover {
   background: #f9fafb; /* hover:bg-gray-50 */
-  border-color: #9ca3af;
 }
 
 .jt-formatter-toolbar button:active {
@@ -69,13 +67,11 @@
 .jt-formatter-toolbar button.active {
   background: #3b82f6;
   color: #ffffff;
-  border-color: #2563eb;
   box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
 }
 
 .jt-formatter-toolbar button.active:hover {
   background: #2563eb;
-  border-color: #1d4ed8;
 }
 
 .jt-formatter-toolbar button.active:active {
@@ -150,7 +146,6 @@
   width: 100%;
   padding: 0.25rem 0.5rem; /* py-1 px-2 */
   border-radius: 0;
-  border: none;
   box-shadow: none;
 }
 
@@ -217,7 +212,6 @@
   padding: 0.25rem 0.5rem; /* py-1 px-2 */
   font-weight: 700;
   border-radius: 0;
-  border: none;
   box-shadow: none;
 }
 
@@ -243,7 +237,6 @@
 .jt-formatter-toolbar button.jt-color-green.active {
   background: #10b981;
   color: #ffffff;
-  border-color: #059669;
 }
 
 .jt-formatter-toolbar button.jt-color-green.active:hover {
@@ -261,7 +254,6 @@
 .jt-formatter-toolbar button.jt-color-yellow.active {
   background: #f59e0b;
   color: #ffffff;
-  border-color: #d97706;
 }
 
 .jt-formatter-toolbar button.jt-color-yellow.active:hover {
@@ -279,7 +271,6 @@
 .jt-formatter-toolbar button.jt-color-blue.active {
   background: #3b82f6;
   color: #ffffff;
-  border-color: #2563eb;
 }
 
 .jt-formatter-toolbar button.jt-color-blue.active:hover {
@@ -297,7 +288,6 @@
 .jt-formatter-toolbar button.jt-color-red.active {
   background: #ef4444;
   color: #ffffff;
-  border-color: #dc2626;
 }
 
 .jt-formatter-toolbar button.jt-color-red.active:hover {
@@ -315,7 +305,6 @@
 .jt-formatter-toolbar button.jt-color-orange.active {
   background: #f97316;
   color: #ffffff;
-  border-color: #ea580c;
 }
 
 .jt-formatter-toolbar button.jt-color-orange.active:hover {
@@ -333,7 +322,6 @@
 .jt-formatter-toolbar button.jt-color-purple.active {
   background: #8b5cf6;
   color: #ffffff;
-  border-color: #7c3aed;
 }
 
 .jt-formatter-toolbar button.jt-color-purple.active:hover {
