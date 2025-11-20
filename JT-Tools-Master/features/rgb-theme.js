@@ -397,15 +397,25 @@ const CustomThemeFeature = (() => {
 
       /* === Background Colors === */
       /* Note: .bg-yellow-100 is excluded to preserve edited cell highlighting */
+      /* Note: .bg-blue-50 and .bg-blue-100 are excluded - they're used for selection highlighting */
       .bg-white,
       .bg-gray-50,
       .bg-gray-100,
       .bg-gray-200,
       .bg-gray-700,
-      .bg-slate-50,
-      .bg-blue-50,
-      .bg-blue-100 {
+      .bg-slate-50 {
         background-color: ${background};
+      }
+
+      /* === Budget Row Selection Highlighting === */
+      /* When budget rows are selected, they get bg-blue-50 or bg-blue-100 classes */
+      /* Use lightened primary colors for selection instead of default background */
+      .bg-blue-50 {
+        background-color: ${primaryLight45} !important;
+      }
+
+      .bg-blue-100 {
+        background-color: ${primaryLight40} !important;
       }
 
       .focus\\:bg-white:focus,
@@ -528,9 +538,12 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Focus Styles === */
-      .focus-within\\:bg-white,
-      .focus-within\\:bg-blue-50:focus-within {
+      .focus-within\\:bg-white {
         background-color: ${background};
+      }
+
+      .focus-within\\:bg-blue-50:focus-within {
+        background-color: ${primaryLight40} !important;
       }
 
       /* === Hover Styles === */
@@ -538,11 +551,17 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
       .hover\\:bg-gray-800:hover,
-      .hover\\:bg-gray-900:hover,
-      .hover\\:bg-blue-50:hover,
-      .hover\\:bg-blue-100:hover {
+      .hover\\:bg-gray-900:hover {
         background-color: ${background};
         filter: brightness(0.9);
+      }
+
+      .hover\\:bg-blue-50:hover {
+        background-color: ${primaryLight40} !important;
+      }
+
+      .hover\\:bg-blue-100:hover {
+        background-color: ${primaryLight35} !important;
       }
 
       .hover\\:text-gray-800:hover,
@@ -557,9 +576,12 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Group Hover Styles === */
-      .group-hover\\/row\\:bg-gray-50,
-      .group-hover\\/row\\:bg-blue-100 {
+      .group-hover\\/row\\:bg-gray-50 {
         background-color: ${background};
+      }
+
+      .group-hover\\/row\\:bg-blue-100 {
+        background-color: ${primaryLight35} !important;
       }
 
       .group:hover .group-hover\\:text-gray-800 {
@@ -740,6 +762,29 @@ const CustomThemeFeature = (() => {
         opacity: 0.5;
       }
 
+      /* === Budget Table Row Selection & Hierarchy === */
+      /* Fix bright spacer divs in budget rows - make them inherit parent background */
+      /* This ensures selection highlighting flows consistently across all cells */
+      div.pl-3\\.5.bg-blue-50,
+      div.pl-3\\.5.bg-blue-100,
+      div.pl-3\\.5.group-hover\\/row\\:bg-blue-100,
+      div[class*="pl-3.5"][class*="bg-blue"] {
+        background-color: inherit !important;
+      }
+
+      /* === Budget Group Level Row Shading === */
+      /* Ensure group level rows have consistent shading across ALL cells */
+      /* This makes sure row numbers and unit columns also get the group shade */
+      /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
+      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+        background-color: inherit !important;
+      }
+
+      /* Also apply to item-under-level rows */
+      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+        background-color: inherit !important;
+      }
+
       /* === Budget Table Frozen Column Z-Index Fix === */
       /* Ensure sticky/frozen columns stay above resize handles */
       /* Only target the actual frozen column (left: 0), not internal sticky text elements */
@@ -751,6 +796,15 @@ const CustomThemeFeature = (() => {
       /* Reduce z-index of column resize handles */
       .absolute.z-10.cursor-col-resize {
         z-index: 5 !important;
+      }
+
+      /* Ensure selected row backgrounds show properly in frozen columns */
+      .sticky[style*="left: 0px"] .bg-blue-100,
+      .sticky[style*="left: 0px"] .bg-blue-50,
+      .sticky[style*="left:0px"] .bg-blue-100,
+      .sticky[style*="left:0px"] .bg-blue-50 {
+        z-index: 50 !important;
+        position: relative;
       }
 
       /* === Quick Notes Button Theme === */
