@@ -397,15 +397,25 @@ const CustomThemeFeature = (() => {
 
       /* === Background Colors === */
       /* Note: .bg-yellow-100 is excluded to preserve edited cell highlighting */
+      /* Note: .bg-blue-50 and .bg-blue-100 are excluded - they're used for selection highlighting */
       .bg-white,
       .bg-gray-50,
       .bg-gray-100,
       .bg-gray-200,
       .bg-gray-700,
-      .bg-slate-50,
-      .bg-blue-50,
-      .bg-blue-100 {
+      .bg-slate-50 {
         background-color: ${background};
+      }
+
+      /* === Budget Row Selection Highlighting === */
+      /* When budget rows are selected, they get bg-blue-50 or bg-blue-100 classes */
+      /* Use lightened primary colors for selection instead of default background */
+      .bg-blue-50 {
+        background-color: ${primaryLight45} !important;
+      }
+
+      .bg-blue-100 {
+        background-color: ${primaryLight40} !important;
       }
 
       .focus\\:bg-white:focus,
@@ -528,9 +538,12 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Focus Styles === */
-      .focus-within\\:bg-white,
-      .focus-within\\:bg-blue-50:focus-within {
+      .focus-within\\:bg-white {
         background-color: ${background};
+      }
+
+      .focus-within\\:bg-blue-50:focus-within {
+        background-color: ${primaryLight40} !important;
       }
 
       /* === Hover Styles === */
@@ -538,11 +551,17 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
       .hover\\:bg-gray-800:hover,
-      .hover\\:bg-gray-900:hover,
-      .hover\\:bg-blue-50:hover,
-      .hover\\:bg-blue-100:hover {
+      .hover\\:bg-gray-900:hover {
         background-color: ${background};
         filter: brightness(0.9);
+      }
+
+      .hover\\:bg-blue-50:hover {
+        background-color: ${primaryLight40} !important;
+      }
+
+      .hover\\:bg-blue-100:hover {
+        background-color: ${primaryLight35} !important;
       }
 
       .hover\\:text-gray-800:hover,
@@ -557,9 +576,12 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Group Hover Styles === */
-      .group-hover\\/row\\:bg-gray-50,
-      .group-hover\\/row\\:bg-blue-100 {
+      .group-hover\\/row\\:bg-gray-50 {
         background-color: ${background};
+      }
+
+      .group-hover\\/row\\:bg-blue-100 {
+        background-color: ${primaryLight35} !important;
       }
 
       .group:hover .group-hover\\:text-gray-800 {
@@ -740,6 +762,29 @@ const CustomThemeFeature = (() => {
         opacity: 0.5;
       }
 
+      /* === Budget Table Row Selection & Hierarchy === */
+      /* Fix bright spacer divs in budget rows - make them inherit parent background */
+      /* This ensures selection highlighting flows consistently across all cells */
+      div.pl-3\\.5.bg-blue-50,
+      div.pl-3\\.5.bg-blue-100,
+      div.pl-3\\.5.group-hover\\/row\\:bg-blue-100,
+      div[class*="pl-3.5"][class*="bg-blue"] {
+        background-color: inherit !important;
+      }
+
+      /* === Budget Group Level Row Shading === */
+      /* Ensure group level rows have consistent shading across ALL cells */
+      /* This makes sure row numbers and unit columns also get the group shade */
+      /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
+      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+        background-color: inherit !important;
+      }
+
+      /* Also apply to item-under-level rows */
+      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+        background-color: inherit !important;
+      }
+
       /* === Budget Table Frozen Column Z-Index Fix === */
       /* Ensure sticky/frozen columns stay above resize handles */
       /* Only target the actual frozen column (left: 0), not internal sticky text elements */
@@ -751,6 +796,212 @@ const CustomThemeFeature = (() => {
       /* Reduce z-index of column resize handles */
       .absolute.z-10.cursor-col-resize {
         z-index: 5 !important;
+      }
+
+      /* Ensure selected row backgrounds show properly in frozen columns */
+      .sticky[style*="left: 0px"] .bg-blue-100,
+      .sticky[style*="left: 0px"] .bg-blue-50,
+      .sticky[style*="left:0px"] .bg-blue-100,
+      .sticky[style*="left:0px"] .bg-blue-50 {
+        z-index: 50 !important;
+        position: relative;
+      }
+
+      /* === Quick Notes Button Theme === */
+      /* Quick Notes button active state uses primary color */
+      .jt-quick-notes-btn.jt-notes-button-active {
+        background: ${primary} !important;
+        color: #ffffff !important;
+      }
+
+      .jt-quick-notes-btn.jt-notes-button-active:hover {
+        background: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      .jt-quick-notes-floating-btn {
+        background: ${primary} !important;
+      }
+
+      .jt-quick-notes-floating-btn:hover {
+        background: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      .jt-quick-notes-floating-btn.jt-notes-button-active {
+        background: ${primary} !important;
+        filter: brightness(0.8);
+      }
+
+      /* Quick Notes Panel custom theme support */
+      .jt-quick-notes-panel.custom-theme {
+        --jt-notes-bg: ${background};
+        --jt-notes-text: ${text};
+        --jt-notes-border: ${borderColor};
+        --jt-notes-primary: ${primary};
+        --jt-notes-input-bg: ${background};
+      }
+
+      /* === Preview Button Theme === */
+      /* Preview button active state uses primary color */
+      .jt-preview-btn.active {
+        background: ${primary} !important;
+        color: #ffffff !important;
+        border-color: ${primary} !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .jt-preview-btn {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-preview-btn:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+        border-color: ${borderColor} !important;
+      }
+
+      /* Preview Panel custom theme support */
+      .jt-preview-panel.custom-theme {
+        --jt-preview-bg: ${background};
+        --jt-preview-text: ${text};
+        --jt-preview-border: ${borderColor};
+        --jt-preview-primary: ${primary};
+        --jt-preview-btn-bg: ${background};
+        --jt-preview-btn-text: ${text};
+        --jt-preview-btn-border: ${borderColor};
+        --jt-preview-btn-hover-bg: ${background};
+        --jt-preview-btn-hover-text: ${text};
+        --jt-preview-btn-hover-border: ${borderColor};
+        --jt-preview-text-muted: ${text};
+        --jt-preview-scrollbar-track: ${background};
+        --jt-preview-scrollbar-thumb: ${borderColor};
+        --jt-preview-scrollbar-thumb-hover: ${borderColor};
+      }
+
+      .jt-preview-panel.custom-theme .jt-preview-header {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-preview-panel.custom-theme .jt-preview-content {
+        background: ${background} !important;
+        color: ${text} !important;
+      }
+
+      /* === Alert Modal Theme === */
+      /* Alert modal integration with custom theme */
+      .jt-alert-modal {
+        background: ${background} !important;
+      }
+
+      .jt-alert-modal-header {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+      }
+
+      .jt-alert-modal-title {
+        color: ${primary} !important;
+      }
+
+      .jt-alert-modal-close {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-modal-close:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-modal-body {
+        background: ${background} !important;
+      }
+
+      .jt-alert-dropdown-button {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-dropdown-button:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-dropdown-menu {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-dropdown-item {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-dropdown-item:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-dropdown-item.active {
+        background: ${primaryLight40} !important;
+      }
+
+      .jt-alert-subject {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-subject:hover:not(:focus) {
+        background: ${background} !important;
+        filter: brightness(0.95);
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-subject:focus {
+        background: ${background} !important;
+        border-color: ${primary} !important;
+      }
+
+      .jt-alert-message-container {
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-message {
+        background: ${background} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-message:hover:not(:focus) {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-message:focus {
+        background: ${background} !important;
+      }
+
+      .jt-alert-modal-footer {
+        background: ${background} !important;
+        border-top-color: ${borderColor} !important;
+      }
+
+      .jt-alert-btn-cancel {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-btn-cancel:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
       }
     `;
 
