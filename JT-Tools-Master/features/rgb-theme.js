@@ -752,6 +752,203 @@ const CustomThemeFeature = (() => {
       .absolute.z-10.cursor-col-resize {
         z-index: 5 !important;
       }
+
+      /* === Quick Notes Button Theme === */
+      /* Quick Notes button active state uses primary color */
+      .jt-quick-notes-btn.jt-notes-button-active {
+        background: ${primary} !important;
+        color: #ffffff !important;
+      }
+
+      .jt-quick-notes-btn.jt-notes-button-active:hover {
+        background: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      .jt-quick-notes-floating-btn {
+        background: ${primary} !important;
+      }
+
+      .jt-quick-notes-floating-btn:hover {
+        background: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
+      .jt-quick-notes-floating-btn.jt-notes-button-active {
+        background: ${primary} !important;
+        filter: brightness(0.8);
+      }
+
+      /* Quick Notes Panel custom theme support */
+      .jt-quick-notes-panel.custom-theme {
+        --jt-notes-bg: ${background};
+        --jt-notes-text: ${text};
+        --jt-notes-border: ${borderColor};
+        --jt-notes-primary: ${primary};
+        --jt-notes-input-bg: ${background};
+      }
+
+      /* === Preview Button Theme === */
+      /* Preview button active state uses primary color */
+      .jt-preview-btn.active {
+        background: ${primary} !important;
+        color: #ffffff !important;
+        border-color: ${primary} !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .jt-preview-btn {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-preview-btn:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+        border-color: ${borderColor} !important;
+      }
+
+      /* Preview Panel custom theme support */
+      .jt-preview-panel.custom-theme {
+        --jt-preview-bg: ${background};
+        --jt-preview-text: ${text};
+        --jt-preview-border: ${borderColor};
+        --jt-preview-primary: ${primary};
+        --jt-preview-btn-bg: ${background};
+        --jt-preview-btn-text: ${text};
+        --jt-preview-btn-border: ${borderColor};
+        --jt-preview-btn-hover-bg: ${background};
+        --jt-preview-btn-hover-text: ${text};
+        --jt-preview-btn-hover-border: ${borderColor};
+        --jt-preview-text-muted: ${text};
+        --jt-preview-scrollbar-track: ${background};
+        --jt-preview-scrollbar-thumb: ${borderColor};
+        --jt-preview-scrollbar-thumb-hover: ${borderColor};
+      }
+
+      .jt-preview-panel.custom-theme .jt-preview-header {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-preview-panel.custom-theme .jt-preview-content {
+        background: ${background} !important;
+        color: ${text} !important;
+      }
+
+      /* === Alert Modal Theme === */
+      /* Alert modal integration with custom theme */
+      .jt-alert-modal {
+        background: ${background} !important;
+      }
+
+      .jt-alert-modal-header {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+      }
+
+      .jt-alert-modal-title {
+        color: ${primary} !important;
+      }
+
+      .jt-alert-modal-close {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-modal-close:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-modal-body {
+        background: ${background} !important;
+      }
+
+      .jt-alert-dropdown-button {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-dropdown-button:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-dropdown-menu {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-dropdown-item {
+        background: ${background} !important;
+        border-bottom-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-dropdown-item:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-dropdown-item.active {
+        background: ${primaryLight40} !important;
+      }
+
+      .jt-alert-subject {
+        background: ${background} !important;
+        border-color: ${borderColor} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-subject:hover:not(:focus) {
+        background: ${background} !important;
+        filter: brightness(0.95);
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-subject:focus {
+        background: ${background} !important;
+        border-color: ${primary} !important;
+      }
+
+      .jt-alert-message-container {
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-message {
+        background: ${background} !important;
+        color: ${text} !important;
+      }
+
+      .jt-alert-message:hover:not(:focus) {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
+
+      .jt-alert-message:focus {
+        background: ${background} !important;
+      }
+
+      .jt-alert-modal-footer {
+        background: ${background} !important;
+        border-top-color: ${borderColor} !important;
+      }
+
+      .jt-alert-btn-cancel {
+        background: ${background} !important;
+        color: ${text} !important;
+        border-color: ${borderColor} !important;
+      }
+
+      .jt-alert-btn-cancel:hover {
+        background: ${background} !important;
+        filter: brightness(0.95);
+      }
     `;
 
     styleElement = document.createElement('style');
