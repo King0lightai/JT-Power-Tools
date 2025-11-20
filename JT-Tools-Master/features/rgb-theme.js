@@ -418,6 +418,14 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryLight40} !important;
       }
 
+      /* Fix spacer divs in budget rows - make them inherit parent background */
+      div.pl-3\\.5.bg-blue-50,
+      div.pl-3\\.5.bg-blue-100,
+      div.pl-3\\.5.group-hover\\/row\\:bg-blue-100,
+      div[class*="pl-3.5"][class*="bg-blue"] {
+        background-color: inherit !important;
+      }
+
       .focus\\:bg-white:focus,
       .focus\\:bg-gray-100:focus {
         background-color: ${background};
