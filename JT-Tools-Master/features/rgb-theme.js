@@ -629,10 +629,23 @@ const CustomThemeFeature = (() => {
         color: ${primaryText} !important;
       }
 
+      /* Override text-white when used with primary background colors */
+      .bg-blue-500.text-white,
+      .bg-blue-600.text-white {
+        color: ${primaryText} !important;
+      }
+
       .hover\\:bg-blue-600:hover,
-      .hover\\:bg-blue-700:hover {
+      .hover\\:bg-blue-700:hover,
+      .hover\\:bg-blue-500:hover {
         background-color: ${primary} !important;
         filter: brightness(0.9);
+      }
+
+      /* Override hover text color for elements with hover:text-white on primary backgrounds */
+      .hover\\:bg-blue-500:hover.hover\\:text-white,
+      .hover\\:text-white.hover\\:bg-blue-500:hover {
+        color: ${primaryText} !important;
       }
 
       .text-blue-500,
