@@ -7,14 +7,16 @@
 
 **JT Power Tools** - Professional productivity enhancement suite for JobTread construction management software.
 
-✨ **LATEST IMPROVEMENTS (v3.3.1)**
-• NEW: Quick completion checkboxes on Action Items card - complete tasks without navigation
-• NEW: Month schedule task completion - mark tasks complete/incomplete directly from calendar
-• NEW: Help Sidebar Integration - JT Power Tools support in JobTread help sidebar
-• Fixed Quick Notes from running on settings pages
-• Fixed dark mode background flash and improved visual stability
-• Fixed text formatter disabled for Time Clock Notes field
-• Improved task completion reliability with better error handling
+✨ **LATEST IMPROVEMENTS (v3.3.2)**
+• Enhanced Preview Mode with inline color markup support for text highlighting
+• Upgraded alert builder to JobTread-style modal dialog with proper styling
+• Expanded Quick Notes button to appear on all main pages with action bars
+• Fixed preview button staying blue when preview window closes
+• Fixed preview mode bug where switching rows showed previous row content
+• Fixed cursor visibility in dark mode for budget textareas
+• Fixed budget row highlighting to supersede hierarchy shading in dark mode
+• Prevented text formatter from appearing on settings page
+• Improved overall UI stability and consistency
 
 🚀 **FEATURES**
 
