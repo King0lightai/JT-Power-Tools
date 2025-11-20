@@ -148,6 +148,14 @@ const CustomThemeFeature = (() => {
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   }
 
+  // Get appropriate text color (white or black) based on background luminance
+  // Uses WCAG 2.0 contrast calculation - same as contrast-fix feature
+  function getTextColor(backgroundColor) {
+    const luminance = getLuminance(backgroundColor);
+    // Use black text for light backgrounds (luminance > 0.5), white for dark backgrounds
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+  }
+
   // Adjust color brightness (amount: positive to lighten, negative to darken)
   function adjustBrightness(hex, amount) {
     const rgb = hexToRgb(hex);
@@ -194,6 +202,19 @@ const CustomThemeFeature = (() => {
     const primaryLight35 = adjustBrightness(primary, 65);  // 35% lighter -> brightness +65
     const primaryLight40 = adjustBrightness(primary, 60);  // 40% lighter -> brightness +60
     const primaryLight45 = adjustBrightness(primary, 55);  // 45% lighter -> brightness +55
+
+    // Get appropriate text color for primary background (auto white/black based on luminance)
+    // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
+    const primaryText = getTextColor(primary);
+
+    // Get appropriate text colors for standard color picker colors
+    // These ensure formatter toolbar color buttons have readable text on their background colors
+    const greenText = getTextColor('#10b981');   // green-500
+    const yellowText = getTextColor('#f59e0b');  // yellow-500
+    const blueText = getTextColor('#3b82f6');    // blue-500
+    const redText = getTextColor('#ef4444');     // red-500
+    const orangeText = getTextColor('#f97316');  // orange-500
+    const purpleText = getTextColor('#a855f7');  // purple-500
 
     // Create CSS using user's chosen colors
     const css = `
@@ -255,7 +276,7 @@ const CustomThemeFeature = (() => {
       /* Active buttons use primary color instead of blue */
       .jt-formatter-toolbar button.active {
         background: ${primary} !important;
-        color: #ffffff !important;
+        color: ${primaryText} !important;
         border-color: ${primary} !important;
       }
 
@@ -292,32 +313,32 @@ const CustomThemeFeature = (() => {
       /* Active color buttons keep their color but with filled background */
       .jt-formatter-toolbar button.jt-color-green.active {
         background: #10b981 !important;
-        color: #ffffff !important;
+        color: ${greenText} !important;
       }
 
       .jt-formatter-toolbar button.jt-color-yellow.active {
         background: #f59e0b !important;
-        color: #ffffff !important;
+        color: ${yellowText} !important;
       }
 
       .jt-formatter-toolbar button.jt-color-blue.active {
         background: #3b82f6 !important;
-        color: #ffffff !important;
+        color: ${blueText} !important;
       }
 
       .jt-formatter-toolbar button.jt-color-red.active {
         background: #ef4444 !important;
-        color: #ffffff !important;
+        color: ${redText} !important;
       }
 
       .jt-formatter-toolbar button.jt-color-orange.active {
         background: #f97316 !important;
-        color: #ffffff !important;
+        color: ${orangeText} !important;
       }
 
       .jt-formatter-toolbar button.jt-color-purple.active {
         background: #a855f7 !important;
-        color: #ffffff !important;
+        color: ${purpleText} !important;
       }
 
       .jt-toolbar-divider {
@@ -605,6 +626,7 @@ const CustomThemeFeature = (() => {
       .bg-blue-600,
       button[class*="bg-blue"] {
         background-color: ${primary} !important;
+        color: ${primaryText} !important;
       }
 
       .hover\\:bg-blue-600:hover,
@@ -739,6 +761,7 @@ const CustomThemeFeature = (() => {
       .bg-purple-800,
       button[class*="bg-purple"] {
         background-color: ${primary} !important;
+        color: ${primaryText} !important;
       }
 
       .hover\\:bg-purple-800:hover {
@@ -819,7 +842,7 @@ const CustomThemeFeature = (() => {
       /* Quick Notes button active state uses primary color */
       .jt-quick-notes-btn.jt-notes-button-active {
         background: ${primary} !important;
-        color: #ffffff !important;
+        color: ${primaryText} !important;
       }
 
       .jt-quick-notes-btn.jt-notes-button-active:hover {
@@ -829,6 +852,7 @@ const CustomThemeFeature = (() => {
 
       .jt-quick-notes-floating-btn {
         background: ${primary} !important;
+        color: ${primaryText} !important;
       }
 
       .jt-quick-notes-floating-btn:hover {
@@ -854,7 +878,7 @@ const CustomThemeFeature = (() => {
       /* Preview button active state uses primary color */
       .jt-preview-btn.active {
         background: ${primary} !important;
-        color: #ffffff !important;
+        color: ${primaryText} !important;
         border-color: ${primary} !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       }
