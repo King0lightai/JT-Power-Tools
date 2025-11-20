@@ -417,10 +417,10 @@ div[class*="pl-3.5"][class*="bg-blue"] {
 }
 
 /* === Budget Table Frozen Column Z-Index Fix === */
-/* Ensure sticky/frozen columns (row numbers) stay above ALL other content when scrolling */
+/* Ensure sticky/frozen columns stay above resize handles */
 .sticky[style*="left: 0px"],
 .sticky[style*="left:0px"] {
-    z-index: 50 !important;
+    z-index: 20 !important;
     position: sticky !important;
 }
 
