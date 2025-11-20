@@ -1907,11 +1907,28 @@ const QuickNotesFeature = (() => {
   }
 
   // Keyboard shortcuts
+  let lastKeyTime = 0;
+  let lastKey = '';
+  const SHORTCUT_TIMEOUT = 500; // milliseconds
+
   function handleKeyboard(e) {
-    // Alt + N to toggle panel
-    if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'n') {
-      e.preventDefault();
-      togglePanel();
+    // Q + N shortcut (press Q then N within 500ms)
+    const currentTime = Date.now();
+    const key = e.key.toLowerCase();
+
+    // Don't trigger if user is typing in an input field
+    const isInputField = e.target.matches('input, textarea, [contenteditable="true"]');
+
+    if (!isInputField && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (key === 'q') {
+        lastKey = 'q';
+        lastKeyTime = currentTime;
+      } else if (key === 'n' && lastKey === 'q' && (currentTime - lastKeyTime) < SHORTCUT_TIMEOUT) {
+        e.preventDefault();
+        togglePanel();
+        lastKey = '';
+        lastKeyTime = 0;
+      }
     }
 
     // Escape to close editor or panel
