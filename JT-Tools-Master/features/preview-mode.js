@@ -483,8 +483,26 @@ const PreviewModeFeature = (() => {
       }
     };
 
+    // Close preview when textarea loses focus (user clicks out of textarea)
+    const handleBlur = (e) => {
+      // Use a small delay to check where focus went
+      setTimeout(() => {
+        const newFocus = document.activeElement;
+
+        // Don't close if focus went to the preview button or preview panel
+        // This allows clicking the preview button to toggle it off, or clicking inside preview
+        if (!newFocus?.closest('.jt-preview-btn') &&
+            !newFocus?.closest('.jt-preview-toggle') &&
+            !newFocus?.closest('.jt-preview-panel')) {
+          closePreview();
+        }
+      }, 100);
+    };
+
     textarea.addEventListener('input', updatePreview);
+    textarea.addEventListener('blur', handleBlur);
     preview._updateHandler = updatePreview;
+    preview._blurHandler = handleBlur;
     preview._textarea = textarea;
 
     console.log('Premium Formatter: Preview shown');
@@ -542,6 +560,11 @@ const PreviewModeFeature = (() => {
         previewMap.delete(activePreview._textarea);
       }
 
+      // Remove blur listener
+      if (activePreview._blurHandler && activePreview._textarea) {
+        activePreview._textarea.removeEventListener('blur', activePreview._blurHandler);
+      }
+
       activePreview.classList.remove('show');
       setTimeout(() => {
         if (activePreview && activePreview.parentNode) {
@@ -573,18 +596,14 @@ const PreviewModeFeature = (() => {
     activeButton = null;
   }
 
-  // Handle global clicks to close preview and hide buttons
+  // Handle global clicks to hide buttons (preview stays open until blur or toggle)
   function handleGlobalClick(e) {
     const clickedElement = e.target;
 
-    // Handle preview panel closing
-    if (activePreview) {
-      // Don't close if clicking inside the preview or the button
-      if (!clickedElement.closest('.jt-preview-panel') &&
-          !clickedElement.closest('.jt-preview-btn')) {
-        closePreview();
-      }
-    }
+    // Note: Preview is no longer closed on outside clicks
+    // It only closes via:
+    // 1. Clicking the preview button again (toggle)
+    // 2. Textarea blur event (clicking/focusing out of textarea)
 
     // Handle button hiding when clicking outside (matches formatter pattern)
     if (!clickedElement.closest('textarea[data-preview-mode-ready="true"]') &&
