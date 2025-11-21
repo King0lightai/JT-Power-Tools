@@ -836,10 +836,11 @@ const PreviewModeFeature = (() => {
     result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
 
     // Inline formatting (bold, italic, underline, strikethrough)
-    result = result.replace(/\*([^*]+)\*/g, '<strong>$1</strong>');
-    result = result.replace(/\^([^^]+)\^/g, '<em>$1</em>');
-    result = result.replace(/_([^_]+)_/g, '<u>$1</u>');
-    result = result.replace(/~([^~]+)~/g, '<s>$1</s>');
+    // Using non-greedy matching to properly handle nested formatting
+    result = result.replace(/\*(.+?)\*/g, '<strong>$1</strong>');
+    result = result.replace(/\^(.+?)\^/g, '<em>$1</em>');
+    result = result.replace(/_(.+?)_/g, '<u>$1</u>');
+    result = result.replace(/~(.+?)~/g, '<s>$1</s>');
 
     return result;
   }

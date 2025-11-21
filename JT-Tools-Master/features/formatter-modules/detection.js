@@ -125,25 +125,47 @@ const FormatterDetection = (() => {
     // For selections, check if entire selection is wrapped
     if (start !== end) {
       const selection = text.substring(start, end);
-      const before = text.substring(0, start);
-      const after = text.substring(end);
 
-      // Check inline formats
-      if (before.endsWith('*') && after.startsWith('*')) {
-        activeFormats.bold = true;
-      }
-      if (before.endsWith('^') && after.startsWith('^')) {
-        activeFormats.italic = true;
-      }
-      if (before.endsWith('_') && after.startsWith('_')) {
-        activeFormats.underline = true;
-      }
-      if (before.endsWith('~') && after.startsWith('~')) {
-        activeFormats.strikethrough = true;
+      // Check multiple levels of nested formatting
+      let checkStart = start;
+      let checkEnd = end;
+
+      // Keep checking outward for format markers
+      while (checkStart > 0 && checkEnd < text.length) {
+        const charBefore = text[checkStart - 1];
+        const charAfter = text[checkEnd];
+        let foundFormat = false;
+
+        // Check each format type at this level
+        if (charBefore === '*' && charAfter === '*') {
+          activeFormats.bold = true;
+          foundFormat = true;
+        }
+        if (charBefore === '^' && charAfter === '^') {
+          activeFormats.italic = true;
+          foundFormat = true;
+        }
+        if (charBefore === '_' && charAfter === '_') {
+          activeFormats.underline = true;
+          foundFormat = true;
+        }
+        if (charBefore === '~' && charAfter === '~') {
+          activeFormats.strikethrough = true;
+          foundFormat = true;
+        }
+
+        // Move outward to check next level
+        if (foundFormat) {
+          checkStart--;
+          checkEnd++;
+        } else {
+          // No format markers at this level, stop checking
+          break;
+        }
       }
 
       // Check for color (look for color tag at start of line)
-      const selLineStart = before.lastIndexOf('\n') + 1;
+      const selLineStart = text.lastIndexOf('\n', start - 1) + 1;
       const beforeSelection = text.substring(selLineStart, start);
       const colorMatch = beforeSelection.match(/^\[!color:(\w+)\]/);
       if (colorMatch) {
@@ -151,33 +173,44 @@ const FormatterDetection = (() => {
       }
     } else {
       // For cursor position, check what we're inside of
+      // Check multiple levels of nesting by repeatedly expanding outward
       let checkStart = start;
       let checkEnd = start;
 
-      // Expand to find format boundaries
-      while (checkStart > 0 && !'*^_~\n'.includes(text[checkStart - 1])) {
-        checkStart--;
-      }
-      while (checkEnd < text.length && !'*^_~\n'.includes(text[checkEnd])) {
-        checkEnd++;
-      }
+      // Keep expanding to find all nested format boundaries
+      while (checkStart > 0 || checkEnd < text.length) {
+        // Expand to next format boundary
+        while (checkStart > 0 && !'*^_~\n'.includes(text[checkStart - 1])) {
+          checkStart--;
+        }
+        while (checkEnd < text.length && !'*^_~\n'.includes(text[checkEnd])) {
+          checkEnd++;
+        }
 
-      // Check if we're between format markers
-      if (checkStart > 0 && checkEnd < text.length) {
-        const charBefore = text[checkStart - 1];
-        const charAfter = text[checkEnd];
+        // Check if we're between format markers at this level
+        if (checkStart > 0 && checkEnd < text.length) {
+          const charBefore = text[checkStart - 1];
+          const charAfter = text[checkEnd];
 
-        if (charBefore === '*' && charAfter === '*') {
-          activeFormats.bold = true;
-        }
-        if (charBefore === '^' && charAfter === '^') {
-          activeFormats.italic = true;
-        }
-        if (charBefore === '_' && charAfter === '_') {
-          activeFormats.underline = true;
-        }
-        if (charBefore === '~' && charAfter === '~') {
-          activeFormats.strikethrough = true;
+          if (charBefore === '*' && charAfter === '*') {
+            activeFormats.bold = true;
+          }
+          if (charBefore === '^' && charAfter === '^') {
+            activeFormats.italic = true;
+          }
+          if (charBefore === '_' && charAfter === '_') {
+            activeFormats.underline = true;
+          }
+          if (charBefore === '~' && charAfter === '~') {
+            activeFormats.strikethrough = true;
+          }
+
+          // Move outward to check next level of nesting
+          checkStart--;
+          checkEnd++;
+        } else {
+          // No more format markers to check
+          break;
         }
       }
 
