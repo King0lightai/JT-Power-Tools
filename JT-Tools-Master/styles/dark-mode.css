@@ -107,20 +107,9 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: #2b2b2b;
 }
 
-.bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.3); /* Blue with 30% opacity for selection in dark mode */
-}
-
+.bg-blue-100,
 .bg-blue-50 {
-    background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for selection in dark mode */
-}
-
-/* Fix bright spacer divs in budget rows - make them inherit parent background */
-div.pl-3\.5.bg-blue-50,
-div.pl-3\.5.bg-blue-100,
-div.pl-3\.5.group-hover\/row\:bg-blue-100,
-div[class*="pl-3.5"][class*="bg-blue"] {
-    background-color: inherit !important;
+    background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
@@ -442,16 +431,9 @@ div[class*="pl-3.5"][class*="bg-blue"] {
 /* Handle sticky elements that themselves have blue backgrounds */
 /* Force GPU layer to ensure browser repaints when background changes */
 /* Match ANY sticky column (any left value), not just left: 0px */
-.sticky[style*="left"].bg-blue-50 {
-    background-color: rgba(59, 130, 246, 0.2) !important;
-    z-index: 50 !important;
-    position: sticky !important;
-    transform: translateZ(0);
-    will-change: background-color;
-}
-
+.sticky[style*="left"].bg-blue-50,
 .sticky[style*="left"].bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.3) !important;
+    background-color: rgba(59, 130, 246, 0.2) !important;
     z-index: 50 !important;
     position: sticky !important;
     transform: translateZ(0);
@@ -474,6 +456,7 @@ div[class*="pl-3.5"][class*="bg-blue"] {
 .sticky[style*="top:0px"].bg-blue-50,
 .sticky[style*="top: 0"].bg-blue-100,
 .sticky[style*="top: 0"].bg-blue-50 {
+    background-color: rgba(59, 130, 246, 0.2) !important;
     z-index: 50 !important;
     position: sticky !important;
     transform: translateZ(0);
