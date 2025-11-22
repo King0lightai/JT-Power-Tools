@@ -461,7 +461,12 @@ const CustomThemeFeature = (() => {
       /* Ensure header sticky columns stay above data rows when scrolling */
       .sticky[style*="left"].bg-gray-100,
       .sticky[style*="left"].bg-gray-50 {
-        z-index: 100 !important; /* Headers stay on top */
+        z-index: 1000 !important; /* Headers stay on top */
+      }
+
+      /* Also ensure ALL sticky columns have a base z-index */
+      .sticky[style*="left"] {
+        z-index: 10 !important;
       }
 
       /* Sticky columns need solid colors to prevent see-through when scrolling */
