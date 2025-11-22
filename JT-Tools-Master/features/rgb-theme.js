@@ -854,10 +854,18 @@ const CustomThemeFeature = (() => {
 
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
-      .sticky[style*="left: 0px"].bg-blue-100,
       .sticky[style*="left: 0px"].bg-blue-50,
-      .sticky[style*="left:0px"].bg-blue-100,
       .sticky[style*="left:0px"].bg-blue-50 {
+        background-color: ${primaryLight45} !important;
+        z-index: 50 !important;
+        position: sticky !important;
+        transform: translateZ(0);
+        will-change: background-color;
+      }
+
+      .sticky[style*="left: 0px"].bg-blue-100,
+      .sticky[style*="left:0px"].bg-blue-100 {
+        background-color: ${primaryLight40} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
@@ -865,12 +873,20 @@ const CustomThemeFeature = (() => {
       }
 
       /* Handle cells with sticky positioning that contain blue backgrounds */
-      .sticky[style*="top: 0px"].bg-blue-100,
       .sticky[style*="top: 0px"].bg-blue-50,
-      .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top:0px"].bg-blue-50,
-      .sticky[style*="top: 0"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-50 {
+        background-color: ${primaryLight45} !important;
+        z-index: 50 !important;
+        position: sticky !important;
+        transform: translateZ(0);
+        will-change: background-color;
+      }
+
+      .sticky[style*="top: 0px"].bg-blue-100,
+      .sticky[style*="top:0px"].bg-blue-100,
+      .sticky[style*="top: 0"].bg-blue-100 {
+        background-color: ${primaryLight40} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
