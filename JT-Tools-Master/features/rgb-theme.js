@@ -444,14 +444,6 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryFaded15} !important;
       }
 
-      /* Fix spacer divs in budget rows - make them inherit parent background */
-      div.pl-3\\.5.bg-blue-50,
-      div.pl-3\\.5.bg-blue-100,
-      div.pl-3\\.5.group-hover\\/row\\:bg-blue-100,
-      div[class*="pl-3.5"][class*="bg-blue"] {
-        background-color: inherit !important;
-      }
-
       .focus\\:bg-white:focus,
       .focus\\:bg-gray-100:focus {
         background-color: ${background};
@@ -806,16 +798,6 @@ const CustomThemeFeature = (() => {
       .group-hover\\:placeholder-gray-500:hover::placeholder {
         color: ${text} !important;
         opacity: 0.5;
-      }
-
-      /* === Budget Table Row Selection & Hierarchy === */
-      /* Fix bright spacer divs in budget rows - make them inherit parent background */
-      /* This ensures selection highlighting flows consistently across all cells */
-      div.pl-3\\.5.bg-blue-50,
-      div.pl-3\\.5.bg-blue-100,
-      div.pl-3\\.5.group-hover\\/row\\:bg-blue-100,
-      div[class*="pl-3.5"][class*="bg-blue"] {
-        background-color: inherit !important;
       }
 
       /* === Budget Group Level Row Shading === */
