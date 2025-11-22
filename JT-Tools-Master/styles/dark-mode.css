@@ -112,6 +112,23 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
+/* Sticky columns need solid colors to prevent see-through when scrolling */
+/* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
+.sticky[style*="left"].bg-blue-50,
+.sticky[style*="left"].bg-blue-100 {
+    background-color: #2f3d54 !important; /* Solid blend of #2c2c2c + 20% blue */
+}
+
+.group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
+.group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
+    background-color: #2f3d54 !important; /* Solid blend for sticky columns */
+}
+
+.sticky[style*="top"].bg-blue-50,
+.sticky[style*="top"].bg-blue-100 {
+    background-color: #2f3d54 !important; /* Solid blend for sticky rows */
+}
+
 /* Today's date indicator in calendar - keep solid blue in dark mode */
 .bg-blue-500 {
     background-color: #3b82f6 !important;
@@ -431,9 +448,9 @@ td div.cursor-pointer[style*="border-left"] {
 /* Handle sticky elements that themselves have blue backgrounds */
 /* Force GPU layer to ensure browser repaints when background changes */
 /* Match ANY sticky column (any left value), not just left: 0px */
+/* Background colors are set above - these just add positioning/performance */
 .sticky[style*="left"].bg-blue-50,
 .sticky[style*="left"].bg-blue-100 {
-    background-color: rgba(59, 130, 246, 0.2) !important;
     z-index: 50 !important;
     position: sticky !important;
     transform: translateZ(0);
@@ -441,22 +458,21 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 /* Handle sticky columns in selected rows that still have bg-white/bg-gray classes */
-/* When a row is selected (has bg-blue-50/100 cells), all sticky columns should be highlighted */
+/* Background color is set above - this just adds positioning/performance */
 .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
 .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-    background-color: rgba(59, 130, 246, 0.2) !important;
     transform: translateZ(0);
     will-change: background-color;
 }
 
 /* Handle cells with sticky positioning that contain blue backgrounds */
+/* Background color is set above - these just add positioning/performance */
 .sticky[style*="top: 0px"].bg-blue-100,
 .sticky[style*="top: 0px"].bg-blue-50,
 .sticky[style*="top:0px"].bg-blue-100,
 .sticky[style*="top:0px"].bg-blue-50,
 .sticky[style*="top: 0"].bg-blue-100,
 .sticky[style*="top: 0"].bg-blue-50 {
-    background-color: rgba(59, 130, 246, 0.2) !important;
     z-index: 50 !important;
     position: sticky !important;
     transform: translateZ(0);
