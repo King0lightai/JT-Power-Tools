@@ -464,18 +464,6 @@ const CustomThemeFeature = (() => {
         z-index: 100 !important; /* Headers stay on top */
       }
 
-      /* Ensure row number cells don't overlap with header when scrolling */
-      /* Target both header row numbers (need high z-index) and data row numbers (need low z-index) */
-      .sticky[style*="left"].bg-gray-100 .relative.cursor-pointer,
-      .sticky[style*="left"].bg-gray-50 .relative.cursor-pointer {
-        z-index: 10 !important; /* Header row numbers stay on top */
-      }
-
-      .sticky[style*="left"].bg-blue-50 .relative.cursor-pointer,
-      .sticky[style*="left"].bg-blue-100 .relative.cursor-pointer {
-        z-index: 1 !important; /* Data row numbers stay below header */
-      }
-
       /* Sticky columns need solid colors to prevent see-through when scrolling */
       /* Use blended color: background + 15% primary = solid result */
       .sticky[style*="left"].bg-blue-50,
@@ -893,9 +881,9 @@ const CustomThemeFeature = (() => {
       /* Force GPU layer to ensure browser repaints when background changes */
       /* Match ANY sticky column (any left value), not just left: 0px */
       /* Background colors are set above with solid blend - these just add positioning/performance */
+      /* Don't set z-index - let JobTread's default stacking work */
       .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {
-        z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
         will-change: background-color;
