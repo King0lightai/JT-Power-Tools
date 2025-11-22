@@ -203,6 +203,14 @@ const CustomThemeFeature = (() => {
     const primaryLight40 = adjustBrightness(primary, 60);  // 40% lighter -> brightness +60
     const primaryLight45 = adjustBrightness(primary, 55);  // 45% lighter -> brightness +55
 
+    // Generate subtle selection colors using rgba with low opacity for a faded effect
+    const hexToRgba = (hex, alpha) => {
+      const rgb = hexToRgb(hex);
+      return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : hex;
+    };
+    const primaryFaded15 = hexToRgba(primary, 0.15);  // 15% opacity for subtle highlight
+    const primaryFaded20 = hexToRgba(primary, 0.20);  // 20% opacity for hover state
+
     // Get appropriate text color for primary background (auto white/black based on luminance)
     // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
     const primaryText = getTextColor(primary);
@@ -430,13 +438,10 @@ const CustomThemeFeature = (() => {
 
       /* === Budget Row Selection Highlighting === */
       /* When budget rows are selected, they get bg-blue-50 or bg-blue-100 classes */
-      /* Use lightened primary colors for selection instead of default background */
-      .bg-blue-50 {
-        background-color: ${primaryLight45} !important;
-      }
-
+      /* Use same subtle color for consistent highlighting across all selected cells */
+      .bg-blue-50,
       .bg-blue-100 {
-        background-color: ${primaryLight40} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       /* Fix spacer divs in budget rows - make them inherit parent background */
@@ -585,12 +590,9 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.9);
       }
 
-      .hover\\:bg-blue-50:hover {
-        background-color: ${primaryLight40} !important;
-      }
-
+      .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
-        background-color: ${primaryLight35} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       .hover\\:text-gray-800:hover,
@@ -610,7 +612,7 @@ const CustomThemeFeature = (() => {
       }
 
       .group-hover\\/row\\:bg-blue-100 {
-        background-color: ${primaryLight35} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       .group:hover .group-hover\\:text-gray-800 {
@@ -855,16 +857,9 @@ const CustomThemeFeature = (() => {
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
       /* Match ANY sticky column (any left value), not just left: 0px */
-      .sticky[style*="left"].bg-blue-50 {
-        background-color: ${primaryLight45} !important;
-        z-index: 50 !important;
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
+      .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {
-        background-color: ${primaryLight40} !important;
+        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
@@ -875,7 +870,7 @@ const CustomThemeFeature = (() => {
       /* When a row is selected (has bg-blue-50/100 cells), all sticky columns should be highlighted */
       .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
       .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-        background-color: ${primaryLight45} !important;
+        background-color: ${primaryFaded15} !important;
         transform: translateZ(0);
         will-change: background-color;
       }
@@ -883,18 +878,11 @@ const CustomThemeFeature = (() => {
       /* Handle cells with sticky positioning that contain blue backgrounds */
       .sticky[style*="top: 0px"].bg-blue-50,
       .sticky[style*="top:0px"].bg-blue-50,
-      .sticky[style*="top: 0"].bg-blue-50 {
-        background-color: ${primaryLight45} !important;
-        z-index: 50 !important;
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
+      .sticky[style*="top: 0"].bg-blue-50,
       .sticky[style*="top: 0px"].bg-blue-100,
       .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-100 {
-        background-color: ${primaryLight40} !important;
+        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
