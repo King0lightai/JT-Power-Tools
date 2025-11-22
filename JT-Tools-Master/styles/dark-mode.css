@@ -429,6 +429,16 @@ td div.cursor-pointer[style*="border-left"] {
 /* === Budget Table Frozen Column Highlighting === */
 /* Only handle colors - no z-index or positioning changes */
 
+/* === Column Resize Handles === */
+/* Reduce z-index so they don't appear over sticky headers when scrolling */
+.absolute.z-10.cursor-col-resize {
+    z-index: 1 !important;
+}
+
+.absolute.z-10.cursor-col-resize:hover {
+    background-color: #555555 !important;
+}
+
 /* === Alert Modal Dark Mode === */
 .jt-alert-modal-overlay {
     background: rgba(0, 0, 0, 0.7) !important;

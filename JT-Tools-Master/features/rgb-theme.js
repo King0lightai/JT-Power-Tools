@@ -639,6 +639,17 @@ const CustomThemeFeature = (() => {
       /* === Budget Table Frozen Column Highlighting === */
       /* Only handle colors - no z-index or positioning changes */
 
+      /* === Column Resize Handles === */
+      /* Reduce z-index so they don't appear over sticky headers when scrolling */
+      .absolute.z-10.cursor-col-resize {
+        z-index: 1 !important;
+      }
+
+      .absolute.z-10.cursor-col-resize:hover {
+        background-color: ${borderColor} !important;
+        filter: brightness(0.8);
+      }
+
       /* === Quick Notes Button Theme === */
       /* Quick Notes button active state uses primary color */
       .jt-quick-notes-btn.jt-notes-button-active {
