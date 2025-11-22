@@ -124,9 +124,13 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: #2f3d54 !important; /* Solid blend for sticky columns */
 }
 
-.sticky[style*="top"].bg-blue-50,
-.sticky[style*="top"].bg-blue-100 {
-    background-color: #2f3d54 !important; /* Solid blend for sticky rows */
+.sticky[style*="top: 0px"].bg-blue-50,
+.sticky[style*="top: 0px"].bg-blue-100,
+.sticky[style*="top:0px"].bg-blue-50,
+.sticky[style*="top:0px"].bg-blue-100,
+.sticky[style*="top: 0"].bg-blue-50,
+.sticky[style*="top: 0"].bg-blue-100 {
+    background-color: #2f3d54 !important; /* Solid blend for sticky rows at top: 0 only */
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */

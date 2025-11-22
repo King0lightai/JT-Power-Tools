@@ -470,8 +470,12 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryBlended15} !important;
       }
 
-      .sticky[style*="top"].bg-blue-50,
-      .sticky[style*="top"].bg-blue-100 {
+      .sticky[style*="top: 0px"].bg-blue-50,
+      .sticky[style*="top: 0px"].bg-blue-100,
+      .sticky[style*="top:0px"].bg-blue-50,
+      .sticky[style*="top:0px"].bg-blue-100,
+      .sticky[style*="top: 0"].bg-blue-50,
+      .sticky[style*="top: 0"].bg-blue-100 {
         background-color: ${primaryBlended15} !important;
       }
 
