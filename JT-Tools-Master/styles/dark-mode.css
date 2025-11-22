@@ -112,6 +112,12 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
+/* Ensure header sticky columns stay above data rows when scrolling */
+.sticky[style*="left"].bg-gray-100,
+.sticky[style*="left"].bg-gray-50 {
+    z-index: 100 !important; /* Headers stay on top */
+}
+
 /* Sticky columns need solid colors to prevent see-through when scrolling */
 /* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
 .sticky[style*="left"].bg-blue-50,
