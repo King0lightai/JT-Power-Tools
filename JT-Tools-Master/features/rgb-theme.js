@@ -855,12 +855,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Budget Table Frozen Column Z-Index Fix === */
-      /* Ensure sticky/frozen columns stay above resize handles */
-      /* Only target the actual frozen column (left: 0), not internal sticky text elements */
-      .sticky[style*="left: 0px"],
-      .sticky[style*="left:0px"] {
-        z-index: 20 !important;
-      }
+      /* Don't set z-index on data sticky columns - trust JobTread's defaults */
 
       /* Reduce z-index of column resize handles */
       .absolute.z-10.cursor-col-resize {
@@ -868,14 +863,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* Ensure selected row backgrounds show properly in frozen columns */
-      /* Handle blue backgrounds inside sticky elements */
-      .sticky[style*="left: 0px"] .bg-blue-100,
-      .sticky[style*="left: 0px"] .bg-blue-50,
-      .sticky[style*="left:0px"] .bg-blue-100,
-      .sticky[style*="left:0px"] .bg-blue-50 {
-        z-index: 50 !important;
-        position: relative;
-      }
+      /* No z-index needed - JobTread's defaults handle stacking correctly */
 
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
@@ -899,13 +887,13 @@ const CustomThemeFeature = (() => {
 
       /* Handle cells with sticky positioning that contain blue backgrounds */
       /* Background color is set above with solid blend - these just add positioning/performance */
+      /* No z-index - trust JobTread's defaults for proper stacking */
       .sticky[style*="top: 0px"].bg-blue-50,
       .sticky[style*="top:0px"].bg-blue-50,
       .sticky[style*="top: 0"].bg-blue-50,
       .sticky[style*="top: 0px"].bg-blue-100,
       .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-100 {
-        z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
         will-change: background-color;
