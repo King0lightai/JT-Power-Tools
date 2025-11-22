@@ -853,12 +853,15 @@ const CustomThemeFeature = (() => {
       }
 
       /* Handle sticky elements that themselves have blue backgrounds */
+      /* Force GPU layer to ensure browser repaints when background changes */
       .sticky[style*="left: 0px"].bg-blue-100,
       .sticky[style*="left: 0px"].bg-blue-50,
       .sticky[style*="left:0px"].bg-blue-100,
       .sticky[style*="left:0px"].bg-blue-50 {
         z-index: 50 !important;
         position: sticky !important;
+        transform: translateZ(0);
+        will-change: background-color;
       }
 
       /* Handle cells with sticky positioning that contain blue backgrounds */
@@ -870,6 +873,8 @@ const CustomThemeFeature = (() => {
       .sticky[style*="top: 0"].bg-blue-50 {
         z-index: 50 !important;
         position: sticky !important;
+        transform: translateZ(0);
+        will-change: background-color;
       }
 
       /* === Quick Notes Button Theme === */
