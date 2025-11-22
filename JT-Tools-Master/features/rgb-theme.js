@@ -464,6 +464,12 @@ const CustomThemeFeature = (() => {
         z-index: 100 !important; /* Headers stay on top */
       }
 
+      /* Ensure row number cells don't overlap with header when scrolling */
+      .sticky[style*="left"] .relative.cursor-pointer.grow.py-2.text-center {
+        z-index: 1; /* Keep row numbers below header */
+        position: relative;
+      }
+
       /* Sticky columns need solid colors to prevent see-through when scrolling */
       /* Use blended color: background + 15% primary = solid result */
       .sticky[style*="left"].bg-blue-50,
