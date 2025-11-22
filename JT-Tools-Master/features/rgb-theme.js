@@ -438,13 +438,10 @@ const CustomThemeFeature = (() => {
 
       /* === Budget Row Selection Highlighting === */
       /* When budget rows are selected, they get bg-blue-50 or bg-blue-100 classes */
-      /* Use subtle faded primary colors for selection - low opacity for gentle effect */
-      .bg-blue-50 {
-        background-color: ${primaryFaded15} !important;
-      }
-
+      /* Use same subtle color for consistent highlighting across all selected cells */
+      .bg-blue-50,
       .bg-blue-100 {
-        background-color: ${primaryFaded20} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       /* Fix spacer divs in budget rows - make them inherit parent background */
@@ -593,12 +590,9 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.9);
       }
 
-      .hover\\:bg-blue-50:hover {
-        background-color: ${primaryFaded15} !important;
-      }
-
+      .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
-        background-color: ${primaryFaded20} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       .hover\\:text-gray-800:hover,
@@ -618,7 +612,7 @@ const CustomThemeFeature = (() => {
       }
 
       .group-hover\\/row\\:bg-blue-100 {
-        background-color: ${primaryFaded20} !important;
+        background-color: ${primaryFaded15} !important;
       }
 
       .group:hover .group-hover\\:text-gray-800 {
@@ -863,16 +857,9 @@ const CustomThemeFeature = (() => {
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
       /* Match ANY sticky column (any left value), not just left: 0px */
-      .sticky[style*="left"].bg-blue-50 {
-        background-color: ${primaryFaded15} !important;
-        z-index: 50 !important;
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
+      .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {
-        background-color: ${primaryFaded20} !important;
+        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
@@ -891,18 +878,11 @@ const CustomThemeFeature = (() => {
       /* Handle cells with sticky positioning that contain blue backgrounds */
       .sticky[style*="top: 0px"].bg-blue-50,
       .sticky[style*="top:0px"].bg-blue-50,
-      .sticky[style*="top: 0"].bg-blue-50 {
-        background-color: ${primaryFaded15} !important;
-        z-index: 50 !important;
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
+      .sticky[style*="top: 0"].bg-blue-50,
       .sticky[style*="top: 0px"].bg-blue-100,
       .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-100 {
-        background-color: ${primaryFaded20} !important;
+        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
