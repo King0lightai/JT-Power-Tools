@@ -854,8 +854,8 @@ const CustomThemeFeature = (() => {
 
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
-      .sticky[style*="left: 0px"].bg-blue-50,
-      .sticky[style*="left:0px"].bg-blue-50 {
+      /* Match ANY sticky column (any left value), not just left: 0px */
+      .sticky[style*="left"].bg-blue-50 {
         background-color: ${primaryLight45} !important;
         z-index: 50 !important;
         position: sticky !important;
@@ -863,11 +863,19 @@ const CustomThemeFeature = (() => {
         will-change: background-color;
       }
 
-      .sticky[style*="left: 0px"].bg-blue-100,
-      .sticky[style*="left:0px"].bg-blue-100 {
+      .sticky[style*="left"].bg-blue-100 {
         background-color: ${primaryLight40} !important;
         z-index: 50 !important;
         position: sticky !important;
+        transform: translateZ(0);
+        will-change: background-color;
+      }
+
+      /* Handle sticky columns in selected rows that still have bg-white/bg-gray classes */
+      /* When a row is selected (has bg-blue-50/100 cells), all sticky columns should be highlighted */
+      .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
+      .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
+        background-color: ${primaryLight45} !important;
         transform: translateZ(0);
         will-change: background-color;
       }
