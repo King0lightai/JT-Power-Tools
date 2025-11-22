@@ -119,9 +119,15 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 /* Ensure row number cells don't overlap with header when scrolling */
-.sticky[style*="left"] .relative.cursor-pointer.grow.py-2.text-center {
-    z-index: 1; /* Keep row numbers below header */
-    position: relative;
+/* Target both header row numbers (need high z-index) and data row numbers (need low z-index) */
+.sticky[style*="left"].bg-gray-100 .relative.cursor-pointer,
+.sticky[style*="left"].bg-gray-50 .relative.cursor-pointer {
+    z-index: 10 !important; /* Header row numbers stay on top */
+}
+
+.sticky[style*="left"].bg-blue-50 .relative.cursor-pointer,
+.sticky[style*="left"].bg-blue-100 .relative.cursor-pointer {
+    z-index: 1 !important; /* Data row numbers stay below header */
 }
 
 /* Sticky columns need solid colors to prevent see-through when scrolling */
