@@ -390,52 +390,9 @@ const CustomThemeFeature = (() => {
         border-color: ${borderColor} !important;
       }
 
-      /* === Gray Border Color Overrides === */
-      .border-gray-100,
-      .border-gray-200,
-      .border-gray-300,
-      .border-gray-400,
-      .border-gray-500,
-      .border-gray-600,
-      .border-gray-700,
-      .border-gray-800,
-      [class*="border-gray"] {
-        border-color: ${borderColor} !important;
-      }
-
-      /* === Table Border Overrides === */
-      .border,
-      .border-b,
-      .border-t,
-      .border-l,
-      .border-r {
-        border-color: ${borderColor} !important;
-      }
-
-      /* === Input Field Border Overrides === */
-      input.border,
-      input[class*="border-"],
-      textarea.border,
-      textarea[class*="border-"] {
-        border-color: ${borderColor} !important;
-      }
-
-      input.hover\\:border-blue-500:hover,
-      input.focus\\:border-blue-500:focus,
-      textarea.hover\\:border-blue-500:hover,
-      textarea.focus\\:border-blue-500:focus {
-        border-color: ${borderColor} !important;
-      }
-
       input.border-transparent,
       textarea.border-transparent {
         border-color: transparent !important;
-      }
-
-      /* === Divider Colors === */
-      .divide-gray-500 > * + *,
-      [class*="divide-gray"] > * + * {
-        border-color: ${borderColor} !important;
       }
 
       /* === Background Colors === */
@@ -456,17 +413,6 @@ const CustomThemeFeature = (() => {
       .bg-blue-50,
       .bg-blue-100 {
         background-color: ${primaryFaded15} !important;
-      }
-
-      /* Ensure header sticky columns stay above data rows when scrolling */
-      .sticky[style*="left"].bg-gray-100,
-      .sticky[style*="left"].bg-gray-50 {
-        z-index: 1000 !important; /* Headers stay on top */
-      }
-
-      /* Also ensure ALL sticky columns have a base z-index */
-      .sticky[style*="left"] {
-        z-index: 10 !important;
       }
 
       /* Sticky columns need solid colors to prevent see-through when scrolling */
@@ -527,46 +473,6 @@ const CustomThemeFeature = (() => {
       div[class*="z-"][class*="bg-"] {
         background-color: ${background} !important;
         color: ${text} !important;
-      }
-
-      /* === Custom Tooltips with Primary Color === */
-      .jt-custom-tooltip {
-        position: absolute;
-        background-color: ${primary} !important;
-        color: #ffffff !important;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 500;
-        white-space: nowrap;
-        z-index: 1000000;
-        pointer-events: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-
-      .jt-custom-tooltip.visible {
-        opacity: 1;
-      }
-
-      .jt-custom-tooltip::before {
-        content: '';
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        border: 5px solid transparent;
-        border-top-color: ${primary};
-      }
-
-      /* === Native JobTread Tooltips with Primary Color === */
-      /* Target Popper.js tooltips throughout JobTread interface */
-      div[data-popper-placement].bg-black,
-      div[data-popper-placement].bg-gray-800,
-      div[data-popper-placement].bg-gray-900 {
-        background-color: ${primary} !important;
-        color: #ffffff !important;
       }
 
       /* === Black/Dark Background Overrides === */
@@ -661,53 +567,20 @@ const CustomThemeFeature = (() => {
         background-color: ${background};
       }
 
-      /* === Primary Color Overrides === */
-      .bg-blue-500,
-      .bg-blue-600,
+      /* === Primary Color for Action Buttons === */
+      /* Only theme actual buttons, not all blue elements */
+      button.bg-blue-500,
+      button.bg-blue-600,
       button[class*="bg-blue"] {
         background-color: ${primary} !important;
         color: ${primaryText} !important;
       }
 
-      /* Override text-white when used with primary background colors */
-      .bg-blue-500.text-white,
-      .bg-blue-600.text-white {
-        color: ${primaryText} !important;
-      }
-
-      .hover\\:bg-blue-600:hover,
-      .hover\\:bg-blue-700:hover,
-      .hover\\:bg-blue-500:hover {
+      button.hover\\:bg-blue-600:hover,
+      button.hover\\:bg-blue-700:hover,
+      button.hover\\:bg-blue-500:hover {
         background-color: ${primary} !important;
         filter: brightness(0.9);
-      }
-
-      /* Override hover text color for elements with hover:text-white on primary backgrounds */
-      .hover\\:bg-blue-500:hover.hover\\:text-white,
-      .hover\\:text-white.hover\\:bg-blue-500:hover {
-        color: ${primaryText} !important;
-      }
-
-      .text-blue-500,
-      .text-blue-600,
-      [class*="text-blue"] {
-        color: ${primary} !important;
-      }
-
-      .border-blue-500,
-      [class*="border-blue"] {
-        border-color: ${borderColor} !important;
-      }
-
-      /* === Budget Table Border Normalization === */
-      /* Ensure all table cells have thin borders, not thick ones */
-      table input.border-blue-500,
-      table textarea.border-blue-500,
-      table input[class*="border-blue"],
-      table textarea[class*="border-blue"],
-      table input[class*="border-\\[calc"],
-      table textarea[class*="border-\\[calc"] {
-        border-width: 1px !important;
       }
 
       /* === Selected Box Border (Orange -> Primary) === */
@@ -730,102 +603,6 @@ const CustomThemeFeature = (() => {
       div:has(> input[placeholder*="Search"]):focus-within {
         background-color: ${background} !important;
         filter: brightness(0.95);
-      }
-
-      /* === Hover state for sidebar buttons === */
-      /* Only apply primary color to sidebar buttons with border-jtOrange or specific navigation elements */
-      .hover\\:bg-gray-100:hover:not(:has(input)):not(div:has(> input[placeholder*="Search"])) {
-        background-color: ${primaryLight45} !important;
-      }
-
-      .hover\\:border-gray-100:hover {
-        border-color: ${primaryLight45} !important;
-      }
-
-      /* Hover state when already selected */
-      .hover\\:bg-gray-100:hover.border-jtOrange {
-        background-color: ${primaryLight35} !important;
-      }
-
-      .hover\\:border-gray-100:hover.border-jtOrange {
-        border-color: ${primary} !important;
-      }
-
-      /* Active state for sidebar buttons */
-      .active\\:bg-gray-200:active {
-        background-color: ${primaryLight30} !important;
-      }
-
-      .active\\:border-gray-200:active {
-        border-color: ${primaryLight30} !important;
-      }
-
-      /* === Selection Boxes and Checkboxes === */
-      /* Checkbox and radio button accent colors */
-      input[type="checkbox"]:checked,
-      input[type="radio"]:checked {
-        accent-color: ${primary} !important;
-      }
-
-      /* Selected rows in tables/lists */
-      tr.selected,
-      div.selected,
-      [aria-selected="true"] {
-        background-color: ${primaryLight45} !important;
-        border-color: ${primary} !important;
-      }
-
-      /* === Per-job Tab Navigation Selected States === */
-      /* Selected tab with gray-50 background */
-      .border-t-2.border-jtOrange.bg-gray-50,
-      .border-b-2.border-jtOrange.bg-gray-50 {
-        background-color: ${primaryLight40} !important;
-      }
-
-      /* Hover states for tabs */
-      .hover\\:bg-gray-50:hover {
-        background-color: ${primaryLight45} !important;
-      }
-
-      .hover\\:border-gray-50:hover {
-        border-color: ${primaryLight45} !important;
-      }
-
-      /* Hover state when tab is already selected */
-      .hover\\:bg-gray-50:hover.border-jtOrange {
-        background-color: ${primaryLight35} !important;
-      }
-
-      /* === Cyan Link Overrides === */
-      .text-cyan-500,
-      .text-cyan-600,
-      a[class*="text-cyan"] {
-        color: ${primary} !important;
-      }
-
-      .hover\\:text-cyan-600:hover,
-      .focus\\:text-cyan-600:focus {
-        color: ${primary} !important;
-        filter: brightness(0.9);
-      }
-
-      /* === Purple Button Overrides (Send buttons, etc.) === */
-      .bg-purple-700,
-      .bg-purple-800,
-      button[class*="bg-purple"] {
-        background-color: ${primary} !important;
-        color: ${primaryText} !important;
-      }
-
-      .hover\\:bg-purple-800:hover {
-        background-color: ${primary} !important;
-        filter: brightness(0.9);
-      }
-
-      .border-purple-700,
-      .border-purple-800,
-      [class*="border-purple"] {
-        border-color: ${primary} !important;
       }
 
       /* === Search Bar and Gray Text Overrides === */
@@ -859,50 +636,8 @@ const CustomThemeFeature = (() => {
         background-color: inherit !important;
       }
 
-      /* === Budget Table Frozen Column Z-Index Fix === */
-      /* Don't set z-index on data sticky columns - trust JobTread's defaults */
-
-      /* Reduce z-index of column resize handles */
-      .absolute.z-10.cursor-col-resize {
-        z-index: 5 !important;
-      }
-
-      /* Ensure selected row backgrounds show properly in frozen columns */
-      /* No z-index needed - JobTread's defaults handle stacking correctly */
-
-      /* Handle sticky elements that themselves have blue backgrounds */
-      /* Force GPU layer to ensure browser repaints when background changes */
-      /* Match ANY sticky column (any left value), not just left: 0px */
-      /* Background colors are set above with solid blend - these just add positioning/performance */
-      /* Don't set z-index - let JobTread's default stacking work */
-      .sticky[style*="left"].bg-blue-50,
-      .sticky[style*="left"].bg-blue-100 {
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
-      /* Handle sticky columns in selected rows that still have bg-white/bg-gray classes */
-      /* Background color is set above with solid blend - this just adds positioning/performance */
-      .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
-      .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
-      /* Handle cells with sticky positioning that contain blue backgrounds */
-      /* Background color is set above with solid blend - these just add positioning/performance */
-      /* No z-index - trust JobTread's defaults for proper stacking */
-      .sticky[style*="top: 0px"].bg-blue-50,
-      .sticky[style*="top:0px"].bg-blue-50,
-      .sticky[style*="top: 0"].bg-blue-50,
-      .sticky[style*="top: 0px"].bg-blue-100,
-      .sticky[style*="top:0px"].bg-blue-100,
-      .sticky[style*="top: 0"].bg-blue-100 {
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
+      /* === Budget Table Frozen Column Highlighting === */
+      /* Only handle colors - no z-index or positioning changes */
 
       /* === Quick Notes Button Theme === */
       /* Quick Notes button active state uses primary color */
