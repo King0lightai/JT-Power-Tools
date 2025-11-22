@@ -458,17 +458,6 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryFaded15} !important;
       }
 
-      /* Ensure header sticky columns stay above data rows when scrolling */
-      .sticky[style*="left"].bg-gray-100,
-      .sticky[style*="left"].bg-gray-50 {
-        z-index: 1000 !important; /* Headers stay on top */
-      }
-
-      /* Also ensure ALL sticky columns have a base z-index */
-      .sticky[style*="left"] {
-        z-index: 10 !important;
-      }
-
       /* Sticky columns need solid colors to prevent see-through when scrolling */
       /* Use blended color: background + 15% primary = solid result */
       .sticky[style*="left"].bg-blue-50,
@@ -859,50 +848,8 @@ const CustomThemeFeature = (() => {
         background-color: inherit !important;
       }
 
-      /* === Budget Table Frozen Column Z-Index Fix === */
-      /* Don't set z-index on data sticky columns - trust JobTread's defaults */
-
-      /* Reduce z-index of column resize handles */
-      .absolute.z-10.cursor-col-resize {
-        z-index: 5 !important;
-      }
-
-      /* Ensure selected row backgrounds show properly in frozen columns */
-      /* No z-index needed - JobTread's defaults handle stacking correctly */
-
-      /* Handle sticky elements that themselves have blue backgrounds */
-      /* Force GPU layer to ensure browser repaints when background changes */
-      /* Match ANY sticky column (any left value), not just left: 0px */
-      /* Background colors are set above with solid blend - these just add positioning/performance */
-      /* Don't set z-index - let JobTread's default stacking work */
-      .sticky[style*="left"].bg-blue-50,
-      .sticky[style*="left"].bg-blue-100 {
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
-      /* Handle sticky columns in selected rows that still have bg-white/bg-gray classes */
-      /* Background color is set above with solid blend - this just adds positioning/performance */
-      .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
-      .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-        transform: translateZ(0);
-        will-change: background-color;
-      }
-
-      /* Handle cells with sticky positioning that contain blue backgrounds */
-      /* Background color is set above with solid blend - these just add positioning/performance */
-      /* No z-index - trust JobTread's defaults for proper stacking */
-      .sticky[style*="top: 0px"].bg-blue-50,
-      .sticky[style*="top:0px"].bg-blue-50,
-      .sticky[style*="top: 0"].bg-blue-50,
-      .sticky[style*="top: 0px"].bg-blue-100,
-      .sticky[style*="top:0px"].bg-blue-100,
-      .sticky[style*="top: 0"].bg-blue-100 {
-        position: sticky !important;
-        transform: translateZ(0);
-        will-change: background-color;
-      }
+      /* === Budget Table Frozen Column Highlighting === */
+      /* Only handle colors - no z-index or positioning changes */
 
       /* === Quick Notes Button Theme === */
       /* Quick Notes button active state uses primary color */
