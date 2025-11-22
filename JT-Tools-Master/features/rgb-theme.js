@@ -458,6 +458,12 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryFaded15} !important;
       }
 
+      /* Ensure header sticky columns stay above data rows when scrolling */
+      .sticky[style*="left"].bg-gray-100,
+      .sticky[style*="left"].bg-gray-50 {
+        z-index: 100 !important; /* Headers stay on top */
+      }
+
       /* Sticky columns need solid colors to prevent see-through when scrolling */
       /* Use blended color: background + 15% primary = solid result */
       .sticky[style*="left"].bg-blue-50,
