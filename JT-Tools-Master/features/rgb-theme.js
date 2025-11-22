@@ -211,6 +211,20 @@ const CustomThemeFeature = (() => {
     const primaryFaded15 = hexToRgba(primary, 0.15);  // 15% opacity for subtle highlight
     const primaryFaded20 = hexToRgba(primary, 0.20);  // 20% opacity for hover state
 
+    // Blend primary color with background for solid sticky column colors (prevent see-through)
+    const blendColors = (foregroundHex, backgroundHex, alpha) => {
+      const fg = hexToRgb(foregroundHex);
+      const bg = hexToRgb(backgroundHex);
+      if (!fg || !bg) return backgroundHex;
+
+      const r = Math.round(bg.r * (1 - alpha) + fg.r * alpha);
+      const g = Math.round(bg.g * (1 - alpha) + fg.g * alpha);
+      const b = Math.round(bg.b * (1 - alpha) + fg.b * alpha);
+
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    };
+    const primaryBlended15 = blendColors(primary, background, 0.15);  // Solid blend for sticky columns
+
     // Get appropriate text color for primary background (auto white/black based on luminance)
     // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
     const primaryText = getTextColor(primary);
@@ -442,6 +456,23 @@ const CustomThemeFeature = (() => {
       .bg-blue-50,
       .bg-blue-100 {
         background-color: ${primaryFaded15} !important;
+      }
+
+      /* Sticky columns need solid colors to prevent see-through when scrolling */
+      /* Use blended color: background + 15% primary = solid result */
+      .sticky[style*="left"].bg-blue-50,
+      .sticky[style*="left"].bg-blue-100 {
+        background-color: ${primaryBlended15} !important;
+      }
+
+      .group\\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
+      .group\\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
+        background-color: ${primaryBlended15} !important;
+      }
+
+      .sticky[style*="top"].bg-blue-50,
+      .sticky[style*="top"].bg-blue-100 {
+        background-color: ${primaryBlended15} !important;
       }
 
       .focus\\:bg-white:focus,
@@ -839,9 +870,9 @@ const CustomThemeFeature = (() => {
       /* Handle sticky elements that themselves have blue backgrounds */
       /* Force GPU layer to ensure browser repaints when background changes */
       /* Match ANY sticky column (any left value), not just left: 0px */
+      /* Background colors are set above with solid blend - these just add positioning/performance */
       .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {
-        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
@@ -849,22 +880,21 @@ const CustomThemeFeature = (() => {
       }
 
       /* Handle sticky columns in selected rows that still have bg-white/bg-gray classes */
-      /* When a row is selected (has bg-blue-50/100 cells), all sticky columns should be highlighted */
+      /* Background color is set above with solid blend - this just adds positioning/performance */
       .group\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
       .group\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-        background-color: ${primaryFaded15} !important;
         transform: translateZ(0);
         will-change: background-color;
       }
 
       /* Handle cells with sticky positioning that contain blue backgrounds */
+      /* Background color is set above with solid blend - these just add positioning/performance */
       .sticky[style*="top: 0px"].bg-blue-50,
       .sticky[style*="top:0px"].bg-blue-50,
       .sticky[style*="top: 0"].bg-blue-50,
       .sticky[style*="top: 0px"].bg-blue-100,
       .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-100 {
-        background-color: ${primaryFaded15} !important;
         z-index: 50 !important;
         position: sticky !important;
         transform: translateZ(0);
