@@ -1218,12 +1218,15 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Check for color (look for color tag at start of line)
+      // Check for color (look for color tag anywhere before selection on the line)
       const selLineStart = text.lastIndexOf('\n', start - 1) + 1;
       const beforeSelection = text.substring(selLineStart, start);
-      const colorMatch = beforeSelection.match(/^\[!color:(\w+)\]/);
-      if (colorMatch) {
-        activeFormats.color = colorMatch[1];
+      // Find the LAST color tag before the selection (in case there are multiple)
+      const colorMatches = beforeSelection.match(/\[!color:(\w+)\]/g);
+      if (colorMatches && colorMatches.length > 0) {
+        const lastColorMatch = colorMatches[colorMatches.length - 1];
+        const colorName = lastColorMatch.match(/\[!color:(\w+)\]/)[1];
+        activeFormats.color = colorName;
       }
     } else {
       // For cursor position, check what we're inside of
@@ -1268,13 +1271,15 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Check for color at line start (check full line, not just up to cursor)
+      // Check for color (look for color tag anywhere before cursor on the line)
       const curLineStart = text.lastIndexOf('\n', start - 1) + 1;
-      const curLineEnd = text.indexOf('\n', start);
-      const fullLineText = text.substring(curLineStart, curLineEnd === -1 ? text.length : curLineEnd);
-      const colorMatch = fullLineText.match(/^\[!color:(\w+)\]/);
-      if (colorMatch) {
-        activeFormats.color = colorMatch[1];
+      const beforeCursor = text.substring(curLineStart, start);
+      // Find the LAST color tag before the cursor (in case there are multiple)
+      const colorMatches = beforeCursor.match(/\[!color:(\w+)\]/g);
+      if (colorMatches && colorMatches.length > 0) {
+        const lastColorMatch = colorMatches[colorMatches.length - 1];
+        const colorName = lastColorMatch.match(/\[!color:(\w+)\]/)[1];
+        activeFormats.color = colorName;
       }
     }
 
