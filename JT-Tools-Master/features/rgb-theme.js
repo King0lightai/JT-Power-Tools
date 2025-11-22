@@ -843,12 +843,33 @@ const CustomThemeFeature = (() => {
       }
 
       /* Ensure selected row backgrounds show properly in frozen columns */
+      /* Handle blue backgrounds inside sticky elements */
       .sticky[style*="left: 0px"] .bg-blue-100,
       .sticky[style*="left: 0px"] .bg-blue-50,
       .sticky[style*="left:0px"] .bg-blue-100,
       .sticky[style*="left:0px"] .bg-blue-50 {
         z-index: 50 !important;
         position: relative;
+      }
+
+      /* Handle sticky elements that themselves have blue backgrounds */
+      .sticky[style*="left: 0px"].bg-blue-100,
+      .sticky[style*="left: 0px"].bg-blue-50,
+      .sticky[style*="left:0px"].bg-blue-100,
+      .sticky[style*="left:0px"].bg-blue-50 {
+        z-index: 50 !important;
+        position: sticky !important;
+      }
+
+      /* Handle cells with sticky positioning that contain blue backgrounds */
+      .sticky[style*="top: 0px"].bg-blue-100,
+      .sticky[style*="top: 0px"].bg-blue-50,
+      .sticky[style*="top:0px"].bg-blue-100,
+      .sticky[style*="top:0px"].bg-blue-50,
+      .sticky[style*="top: 0"].bg-blue-100,
+      .sticky[style*="top: 0"].bg-blue-50 {
+        z-index: 50 !important;
+        position: sticky !important;
       }
 
       /* === Quick Notes Button Theme === */
