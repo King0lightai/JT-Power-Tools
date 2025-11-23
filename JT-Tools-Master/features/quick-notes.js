@@ -651,61 +651,127 @@ const QuickNotesFeature = (() => {
           if (currentElement && currentElement.closest('.jt-note-checkbox')) {
             e.preventDefault();
             const checkboxParent = currentElement.closest('.jt-note-checkbox');
+            const span = checkboxParent.querySelector('span');
 
-            // Create new checkbox
-            const newCheckbox = document.createElement('div');
-            newCheckbox.className = 'jt-note-checkbox';
-            newCheckbox.setAttribute('contenteditable', 'false');
+            // Check if current checkbox is empty
+            const isEmpty = !span || span.textContent.trim() === '' || span.innerHTML === '<br>' || span.innerHTML === '';
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
+            if (isEmpty) {
+              // Exit checkbox mode: remove empty checkbox and create regular div
+              const nextElement = checkboxParent.nextSibling;
+              checkboxParent.remove();
 
-            const span = document.createElement('span');
-            span.setAttribute('contenteditable', 'true');
-            span.textContent = ''; // Empty text node instead of BR
+              // Create a regular div
+              const newDiv = document.createElement('div');
+              newDiv.innerHTML = '<br>';
 
-            newCheckbox.appendChild(checkbox);
-            newCheckbox.appendChild(span);
+              // Insert at the position where the checkbox was
+              if (nextElement) {
+                contentInput.insertBefore(newDiv, nextElement);
+              } else {
+                contentInput.appendChild(newDiv);
+              }
 
-            // Insert after current checkbox
-            checkboxParent.parentNode.insertBefore(newCheckbox, checkboxParent.nextSibling);
+              // Focus the new div
+              setTimeout(() => {
+                const newRange = document.createRange();
+                newRange.selectNodeContents(newDiv);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }, 0);
 
-            // Focus the new checkbox's span with proper cursor placement
-            setTimeout(() => {
-              span.focus();
-              const newRange = document.createRange();
-              newRange.selectNodeContents(span);
-              newRange.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
-            }, 0);
+              // Trigger input event to save
+              contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+              // Create new checkbox
+              const newCheckbox = document.createElement('div');
+              newCheckbox.className = 'jt-note-checkbox';
+              newCheckbox.setAttribute('contenteditable', 'false');
+
+              const checkbox = document.createElement('input');
+              checkbox.type = 'checkbox';
+
+              const newSpan = document.createElement('span');
+              newSpan.setAttribute('contenteditable', 'true');
+              newSpan.textContent = ''; // Empty text node instead of BR
+
+              newCheckbox.appendChild(checkbox);
+              newCheckbox.appendChild(newSpan);
+
+              // Insert after current checkbox
+              checkboxParent.parentNode.insertBefore(newCheckbox, checkboxParent.nextSibling);
+
+              // Focus the new checkbox's span with proper cursor placement
+              setTimeout(() => {
+                newSpan.focus();
+                const newRange = document.createRange();
+                newRange.selectNodeContents(newSpan);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }, 0);
+            }
           }
           // Check if we're in a bullet
           else if (currentElement && currentElement.closest('.jt-note-bullet')) {
             e.preventDefault();
             const bulletParent = currentElement.closest('.jt-note-bullet');
 
-            // Create new bullet with same indentation as parent
-            const newBullet = document.createElement('div');
-            newBullet.className = 'jt-note-bullet';
-            // Copy indentation from parent bullet
-            const parentIndent = bulletParent.getAttribute('data-indent');
-            if (parentIndent) {
-              newBullet.setAttribute('data-indent', parentIndent);
-            }
-            newBullet.textContent = '• ';
+            // Check if current bullet is empty (only has the bullet character)
+            const text = bulletParent.textContent.replace(/^•\s*/, '').trim();
+            const isEmpty = text === '';
 
-            // Insert after current bullet
-            bulletParent.parentNode.insertBefore(newBullet, bulletParent.nextSibling);
+            if (isEmpty) {
+              // Exit bullet mode: remove empty bullet and create regular div
+              const nextElement = bulletParent.nextSibling;
+              bulletParent.remove();
 
-            // Focus at the end of the bullet text (after "• ")
-            const newRange = document.createRange();
-            const textNode = newBullet.firstChild;
-            if (textNode) {
-              newRange.setStart(textNode, textNode.length);
-              newRange.setEnd(textNode, textNode.length);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
+              // Create a regular div
+              const newDiv = document.createElement('div');
+              newDiv.innerHTML = '<br>';
+
+              // Insert at the position where the bullet was
+              if (nextElement) {
+                contentInput.insertBefore(newDiv, nextElement);
+              } else {
+                contentInput.appendChild(newDiv);
+              }
+
+              // Focus the new div
+              setTimeout(() => {
+                const newRange = document.createRange();
+                newRange.selectNodeContents(newDiv);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }, 0);
+
+              // Trigger input event to save
+              contentInput.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+              // Create new bullet with same indentation as parent
+              const newBullet = document.createElement('div');
+              newBullet.className = 'jt-note-bullet';
+              // Copy indentation from parent bullet
+              const parentIndent = bulletParent.getAttribute('data-indent');
+              if (parentIndent) {
+                newBullet.setAttribute('data-indent', parentIndent);
+              }
+              newBullet.textContent = '• ';
+
+              // Insert after current bullet
+              bulletParent.parentNode.insertBefore(newBullet, bulletParent.nextSibling);
+
+              // Focus at the end of the bullet text (after "• ")
+              const newRange = document.createRange();
+              const textNode = newBullet.firstChild;
+              if (textNode) {
+                newRange.setStart(textNode, textNode.length);
+                newRange.setEnd(textNode, textNode.length);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }
             }
           }
         }
