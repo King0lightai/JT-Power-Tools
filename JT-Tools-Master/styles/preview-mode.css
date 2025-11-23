@@ -599,6 +599,92 @@
   color: #93c5fd !important;
 }
 
+/* Text colors for dark theme */
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red {
+  color: #f87171 !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green {
+  color: #34d399 !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue {
+  color: #60a5fa !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow {
+  color: #fbbf24 !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange {
+  color: #fb923c !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple {
+  color: #a78bfa !important;
+  font-weight: 500;
+}
+
+/* Make formatted elements inside color spans inherit the color in dark theme */
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-red s {
+  color: #f87171 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-green s {
+  color: #34d399 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-blue s {
+  color: #60a5fa !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-yellow s {
+  color: #fbbf24 !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-orange s {
+  color: #fb923c !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple strong,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple b,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple em,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple i,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple u,
+.jt-preview-panel.dark-theme .jt-preview-content .jt-color-purple s {
+  color: #a78bfa !important;
+}
+
 .jt-preview-panel.dark-theme .jt-preview-content::-webkit-scrollbar-track {
   background: #353535;
 }
@@ -697,6 +783,92 @@
 
 .jt-preview-panel.custom-theme .jt-preview-content a {
   color: var(--jt-preview-primary, #3b82f6) !important;
+}
+
+/* Text colors for custom theme */
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red {
+  color: var(--jt-color-red, #ef4444) !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green {
+  color: var(--jt-color-green, #10b981) !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue {
+  color: var(--jt-color-blue, #3b82f6) !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow {
+  color: var(--jt-color-yellow, #f59e0b) !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange {
+  color: var(--jt-color-orange, #f97316) !important;
+  font-weight: 500;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple {
+  color: var(--jt-color-purple, #8b5cf6) !important;
+  font-weight: 500;
+}
+
+/* Make formatted elements inside color spans inherit the color in custom theme */
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-red s {
+  color: var(--jt-color-red, #ef4444) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-green s {
+  color: var(--jt-color-green, #10b981) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-blue s {
+  color: var(--jt-color-blue, #3b82f6) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-yellow s {
+  color: var(--jt-color-yellow, #f59e0b) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-orange s {
+  color: var(--jt-color-orange, #f97316) !important;
+}
+
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple strong,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple b,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple em,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple i,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple u,
+.jt-preview-panel.custom-theme .jt-preview-content .jt-color-purple s {
+  color: var(--jt-color-purple, #8b5cf6) !important;
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-track {
