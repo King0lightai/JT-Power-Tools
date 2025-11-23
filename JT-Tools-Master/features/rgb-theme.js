@@ -463,7 +463,6 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Popups, Tooltips, and Modals === */
-      /* Use darker background for better contrast */
       [role="dialog"],
       [role="tooltip"],
       [role="menu"],
@@ -475,11 +474,11 @@ const CustomThemeFeature = (() => {
       div[class*="absolute"][class*="bg-"],
       div[class*="fixed"][class*="bg-"],
       div[class*="z-"][class*="bg-"] {
-        background-color: ${backgroundDark} !important;
+        background-color: ${background} !important;
         color: ${text} !important;
       }
 
-      /* JobTread native tooltips (Popper.js) */
+      /* JobTread native tooltips (Popper.js) - use darker background */
       div[data-popper-placement].bg-black,
       div[data-popper-placement].bg-gray-800,
       div[data-popper-placement].bg-gray-900 {
