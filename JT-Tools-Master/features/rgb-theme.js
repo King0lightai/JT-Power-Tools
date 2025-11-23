@@ -225,6 +225,9 @@ const CustomThemeFeature = (() => {
     };
     const primaryBlended15 = blendColors(primary, background, 0.15);  // Solid blend for sticky columns
 
+    // Darkened background for tooltips and popovers (15% darker)
+    const backgroundDark = adjustBrightness(background, -15);
+
     // Get appropriate text color for primary background (auto white/black based on luminance)
     // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
     const primaryText = getTextColor(primary);
@@ -460,6 +463,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Popups, Tooltips, and Modals === */
+      /* Use darker background for better contrast */
       [role="dialog"],
       [role="tooltip"],
       [role="menu"],
@@ -471,7 +475,15 @@ const CustomThemeFeature = (() => {
       div[class*="absolute"][class*="bg-"],
       div[class*="fixed"][class*="bg-"],
       div[class*="z-"][class*="bg-"] {
-        background-color: ${background} !important;
+        background-color: ${backgroundDark} !important;
+        color: ${text} !important;
+      }
+
+      /* JobTread native tooltips (Popper.js) */
+      div[data-popper-placement].bg-black,
+      div[data-popper-placement].bg-gray-800,
+      div[data-popper-placement].bg-gray-900 {
+        background-color: ${backgroundDark} !important;
         color: ${text} !important;
       }
 
