@@ -5,6 +5,32 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.3] - 2025-01-XX (Alpha)
+
+### Improved
+
+#### Architecture & Stability
+- **Most Stable Version Yet**: Comprehensive restructuring for enhanced reliability
+- Restructured color theme and dark mode systems for better performance
+- Improved code organization and modularity across all features
+
+#### Text Formatter & Preview Mode Enhancements
+- Added more robust formatting rendering and detection
+- Enhanced compatibility with various textarea types and page structures
+- Improved reliability of formatter toolbar appearance
+- Better detection of editable fields for formatter activation
+
+#### Color Theme & Dark Mode
+- Complete restructuring of color theme implementation
+- Enhanced dark mode reliability and consistency
+- Improved theme switching and color application logic
+- Better integration between custom themes and dark mode
+
+### Notes
+This release represents a major stability milestone for JT Power Tools. Extensive restructuring of core systems has significantly improved reliability and performance. This is the alpha version demonstrating the extension's readiness for broader use.
+
+---
+
 ## [3.3.2] - 2025-01-XX
 
 ### Improved
@@ -266,6 +292,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[3.3.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.3
 [3.3.2]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.2
 [3.3.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.1
 [3.3.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.0
