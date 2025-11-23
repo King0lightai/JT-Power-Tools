@@ -61,14 +61,6 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 • Can be used together with Text Formatter
 • Smart visibility - stays visible when needed, hides when not
 
-**✅ Action Items Quick Completion (Free)**
-• Checkboxes on Action Items card for instant task completion
-• Complete action items directly from dashboard without navigation
-• Visual feedback with smooth fade-out animation
-• Automatic task removal from list upon completion
-• Smart task detection for both schedule and to-do items
-• Works seamlessly in the background
-
 **📒 Quick Notes (Free)**
 • Persistent notepad accessible from any JobTread page
 • Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
