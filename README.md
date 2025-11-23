@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.3.1-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.3.3%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
@@ -345,7 +345,42 @@ const featureModules = {
 
 **For detailed release notes and complete changelog, see the [Changelog](https://king0lightai.github.io/JT-Power-Tools/changelog.html)**
 
-### v3.3.1 (Current)
+### v3.3.3 (Current - Beta)
+- **Architecture & Stability**
+  - **Most Stable Version Yet**: Comprehensive restructuring for enhanced reliability
+  - Restructured color theme and dark mode systems for better performance
+  - Improved code organization and modularity across all features
+- **Text Formatter & Preview Mode Enhancements**
+  - Added more robust formatting rendering and detection
+  - Enhanced compatibility with various textarea types and page structures
+  - Improved reliability of formatter toolbar appearance
+  - Better detection of editable fields for formatter activation
+- **Color Theme & Dark Mode**
+  - Complete restructuring of color theme implementation
+  - Enhanced dark mode reliability and consistency
+  - Improved theme switching and color application logic
+  - Better integration between custom themes and dark mode
+
+This release represents a major stability milestone for JT Power Tools. Extensive restructuring of core systems has significantly improved reliability and performance.
+
+### v3.3.2
+- **Preview Mode Enhancements**
+  - Added inline color markup support for text highlighting
+  - Upgraded alert builder to JobTread-style modal dialog
+  - Improved alert rendering with proper styling and icons
+  - Fixed alert heading level from 4 to 3 hashtags for better hierarchy
+- **Quick Notes Improvements**
+  - Expanded Quick Notes button to appear on all main pages with action bars
+  - Better integration with JobTread's page structure
+- **Bug Fixes**
+  - Fixed preview button staying blue when preview window closes
+  - Fixed preview mode bug where switching rows showed previous row content
+  - Prevented text formatter from appearing on settings page
+  - Fixed cursor visibility in dark mode for budget textareas
+  - Fixed budget row highlighting to supersede hierarchy shading in dark mode
+  - Fixed button detection to support both div and link action buttons
+
+### v3.3.1
 - **New Feature: Action Items Quick Completion**
   - Checkboxes added to Action Items card for instant task completion
   - Complete action items directly from dashboard without navigation
