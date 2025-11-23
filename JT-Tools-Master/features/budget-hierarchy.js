@@ -379,6 +379,16 @@ const BudgetHierarchyFeature = (() => {
       .jt-item-under-level-5 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) div.pl-3\\.5.bg-white {
         background-color: inherit !important;
       }
+
+      /* Column resize handles */
+      /* Reduce z-index so they don't appear over sticky headers when scrolling */
+      .absolute.z-10.cursor-col-resize {
+        z-index: 1 !important;
+      }
+
+      .absolute.z-10.cursor-col-resize:hover {
+        background-color: ${isDarkMode ? '#555555' : hoverShades[0]} !important;
+      }
     `;
 
     document.head.appendChild(styleElement);
