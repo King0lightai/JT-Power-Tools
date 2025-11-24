@@ -232,12 +232,16 @@ const PrintMassActionsFeature = (() => {
     console.log(`Print Mass Actions: Current URL: ${url}`);
     console.log(`Print Mass Actions: Current pathname: ${pathname}`);
 
-    // Check URL patterns
-    if (url.includes('/todos') || url.includes('/tasks') || pathname.includes('/todos') || pathname.includes('/tasks')) {
+    // Check URL patterns (note: JobTread uses /to-dos with hyphen)
+    if (url.includes('/to-dos') || url.includes('/todos') || url.includes('/tasks') ||
+        pathname.includes('/to-dos') || pathname.includes('/todos') || pathname.includes('/tasks')) {
+      console.log('Print Mass Actions: Detected todos from URL pattern');
       return 'todos';
     } else if (url.includes('/schedule') || pathname.includes('/schedule')) {
+      console.log('Print Mass Actions: Detected schedule from URL pattern');
       return 'schedule';
     } else if (url.includes('/budget') || pathname.includes('/budget')) {
+      console.log('Print Mass Actions: Detected budget from URL pattern');
       return 'budget';
     }
 
