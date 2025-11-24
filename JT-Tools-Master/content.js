@@ -54,6 +54,11 @@ const featureModules = {
     name: 'Help Sidebar Support',
     feature: () => window.HelpSidebarSupportFeature,
     instance: null
+  },
+  printMassActions: {
+    name: 'Print Mass Actions',
+    feature: () => window.PrintMassActionsFeature,
+    instance: null
   }
 };
 
@@ -69,6 +74,7 @@ let currentSettings = {
   budgetHierarchy: false,
   quickNotes: true,
   helpSidebarSupport: true,
+  printMassActions: true,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',

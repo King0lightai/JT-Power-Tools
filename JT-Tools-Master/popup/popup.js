@@ -10,6 +10,7 @@ const defaultSettings = {
   budgetHierarchy: false,
   quickNotes: true,
   helpSidebarSupport: true,
+  printMassActions: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -33,6 +34,8 @@ async function checkLicenseStatus() {
   const rgbThemeCheckbox = document.getElementById('rgbTheme');
   const previewModeFeature = document.getElementById('previewModeFeature');
   const previewModeCheckbox = document.getElementById('previewMode');
+  const printMassActionsFeature = document.getElementById('printMassActionsFeature');
+  const printMassActionsCheckbox = document.getElementById('printMassActions');
 
   if (licenseData && licenseData.valid) {
     // Valid license
@@ -44,6 +47,8 @@ async function checkLicenseStatus() {
     rgbThemeCheckbox.disabled = false;
     previewModeFeature.classList.remove('locked');
     previewModeCheckbox.disabled = false;
+    printMassActionsFeature.classList.remove('locked');
+    printMassActionsCheckbox.disabled = false;
     return true; // Has license
   } else {
     // No license or invalid
@@ -55,6 +60,8 @@ async function checkLicenseStatus() {
     rgbThemeCheckbox.disabled = true;
     previewModeFeature.classList.add('locked');
     previewModeCheckbox.disabled = true;
+    printMassActionsFeature.classList.add('locked');
+    printMassActionsCheckbox.disabled = true;
     // Don't change checked state here - let loadSettings handle it
     return false; // No license
   }
@@ -116,6 +123,7 @@ async function loadSettings() {
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
     document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
+    document.getElementById('printMassActions').checked = hasLicense && (settings.printMassActions !== undefined ? settings.printMassActions : true);
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -175,6 +183,14 @@ async function saveSettings(settings) {
       return;
     }
 
+    // Check if user is trying to enable Print Mass Actions without license
+    if (settings.printMassActions && !hasLicense) {
+      showStatus('Print Mass Actions requires a premium license', 'error');
+      document.getElementById('printMassActions').checked = false;
+      settings.printMassActions = false;
+      return;
+    }
+
     // Show/hide customize button based on rgbTheme toggle
     const customizeBtn = document.getElementById('customizeThemeBtn');
     const themeCustomization = document.getElementById('themeCustomization');
@@ -222,6 +238,7 @@ async function getCurrentSettings() {
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
     quickNotes: document.getElementById('quickNotes').checked,
     helpSidebarSupport: true, // Always enabled, not user-toggleable
+    printMassActions: document.getElementById('printMassActions').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };

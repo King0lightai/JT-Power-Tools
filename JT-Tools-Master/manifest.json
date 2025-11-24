@@ -30,6 +30,7 @@
         "utils/storage-wrapper.js",
         "utils/dom-helpers.js",
         "utils/sanitizer.js",
+        "services/license.js",
         "features/drag-drop-modules/view-detector.js",
         "features/drag-drop-modules/date-utils.js",
         "features/drag-drop-modules/weekend-utils.js",
@@ -50,6 +51,7 @@
         "features/budget-hierarchy.js",
         "features/quick-notes.js",
         "features/help-sidebar-support.js",
+        "features/print-mass-actions.js",
         "content.js"
       ],
       "run_at": "document_end"
