@@ -227,15 +227,42 @@ const PrintMassActionsFeature = (() => {
    */
   function detectPageType() {
     const url = window.location.href;
+    const pathname = window.location.pathname;
 
-    if (url.includes('/todos') || url.includes('/tasks')) {
+    console.log(`Print Mass Actions: Current URL: ${url}`);
+    console.log(`Print Mass Actions: Current pathname: ${pathname}`);
+
+    // Check URL patterns
+    if (url.includes('/todos') || url.includes('/tasks') || pathname.includes('/todos') || pathname.includes('/tasks')) {
       return 'todos';
-    } else if (url.includes('/schedule')) {
+    } else if (url.includes('/schedule') || pathname.includes('/schedule')) {
       return 'schedule';
-    } else if (url.includes('/budget')) {
+    } else if (url.includes('/budget') || pathname.includes('/budget')) {
       return 'budget';
     }
 
+    // Check page title as fallback
+    const pageTitle = document.title.toLowerCase();
+    console.log(`Print Mass Actions: Page title: "${pageTitle}"`);
+
+    if (pageTitle.includes('todo') || pageTitle.includes('task')) {
+      console.log('Print Mass Actions: Detected todos from page title');
+      return 'todos';
+    } else if (pageTitle.includes('schedule') || pageTitle.includes('calendar')) {
+      console.log('Print Mass Actions: Detected schedule from page title');
+      return 'schedule';
+    } else if (pageTitle.includes('budget')) {
+      console.log('Print Mass Actions: Detected budget from page title');
+      return 'budget';
+    }
+
+    // Check for specific UI elements as last resort
+    if (document.querySelector('input[placeholder="Name"]')) {
+      console.log('Print Mass Actions: Detected todos from UI elements');
+      return 'todos';
+    }
+
+    console.warn('Print Mass Actions: Could not detect page type');
     return 'unknown';
   }
 
