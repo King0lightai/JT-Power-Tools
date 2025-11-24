@@ -80,13 +80,23 @@ const PrintMassActionsFeature = (() => {
     // Look for the sidebar with "Mass Actions" heading
     const sidebars = document.querySelectorAll('div.z-30.absolute.top-0.bottom-0.right-0');
 
+    console.log(`Print Mass Actions: Found ${sidebars.length} potential sidebars`);
+
     for (const sidebar of sidebars) {
       const heading = sidebar.querySelector('.font-bold.text-jtOrange.uppercase');
-      if (heading && heading.textContent.trim() === 'MASS ACTIONS') {
-        return sidebar;
+      if (heading) {
+        const headingText = heading.textContent.trim();
+        console.log(`Print Mass Actions: Checking heading: "${headingText}"`);
+
+        // Match "Mass Actions" (case-insensitive)
+        if (headingText.toUpperCase() === 'MASS ACTIONS') {
+          console.log('Print Mass Actions: ✓ Found Mass Actions sidebar!');
+          return sidebar;
+        }
       }
     }
 
+    console.log('Print Mass Actions: No Mass Actions sidebar found');
     return null;
   }
 
@@ -95,16 +105,24 @@ const PrintMassActionsFeature = (() => {
    * @param {HTMLElement} sidebar
    */
   function injectPrintButton(sidebar) {
+    console.log('Print Mass Actions: Attempting to inject print button...');
+
     // Find the bottom section with the "Remove" button
     const removeSection = sidebar.querySelector('.px-4.pb-4.space-y-2.text-center');
 
     if (!removeSection) {
-      console.warn('Print Mass Actions: Could not find bottom section for button placement');
+      console.warn('Print Mass Actions: Could not find bottom section (.px-4.pb-4.space-y-2.text-center)');
+      // Try alternative selectors
+      const allSections = sidebar.querySelectorAll('.px-4');
+      console.log(`Print Mass Actions: Found ${allSections.length} sections with .px-4`);
       return;
     }
 
+    console.log('Print Mass Actions: ✓ Found remove section');
+
     // Check if button already exists
     if (removeSection.querySelector('.jt-print-mass-actions-btn')) {
+      console.log('Print Mass Actions: Button already exists, skipping');
       return;
     }
 
@@ -149,12 +167,14 @@ const PrintMassActionsFeature = (() => {
     // Insert before the remove button
     const removeButton = removeSection.querySelector('div[role="button"]');
     if (removeButton) {
+      console.log('Print Mass Actions: Inserting before remove button');
       removeSection.insertBefore(printButton, removeButton);
     } else {
+      console.log('Print Mass Actions: Appending to section (no remove button found)');
       removeSection.appendChild(printButton);
     }
 
-    console.log('Print Mass Actions: Print button injected');
+    console.log('Print Mass Actions: ✅ Print button successfully injected!');
   }
 
   /**
