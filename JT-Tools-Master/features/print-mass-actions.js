@@ -246,33 +246,41 @@ const PrintMassActionsFeature = (() => {
   function collectSelectedTodos() {
     const items = [];
 
-    // Find all selected todo rows (they have a checkbox that's checked)
-    const selectedRows = document.querySelectorAll('tr[class*="bg-blue"]');
+    console.log('Print Mass Actions: Collecting selected To-Dos...');
 
-    selectedRows.forEach(row => {
-      const checkbox = row.querySelector('input[type="checkbox"]');
-      if (checkbox && checkbox.checked) {
+    // JobTread uses divs with group/row class for To-Dos
+    // Selected rows have bg-blue-50 or bg-blue-100 classes on child elements
+    const allRows = document.querySelectorAll('div.group\\/row, div[class*="group/row"]');
+    console.log(`Print Mass Actions: Found ${allRows.length} total rows`);
+
+    allRows.forEach((row, index) => {
+      // Check if any child has blue background (indicates selection)
+      const hasBlueBackground = row.querySelector('[class*="bg-blue-50"], [class*="bg-blue-100"]');
+
+      if (hasBlueBackground) {
+        console.log(`Print Mass Actions: Row ${index} is selected (has blue background)`);
         const item = extractTodoData(row);
         if (item) {
           items.push(item);
+          console.log(`Print Mass Actions: ✓ Extracted todo: "${item.title}"`);
         }
       }
     });
 
-    // If no rows with bg-blue, try finding checked checkboxes directly
+    // Fallback: Try table-based structure (older JobTread layout)
     if (items.length === 0) {
-      const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-      checkboxes.forEach(checkbox => {
-        const row = checkbox.closest('tr');
-        if (row) {
-          const item = extractTodoData(row);
-          if (item && !items.find(i => i.title === item.title)) {
-            items.push(item);
-          }
+      console.log('Print Mass Actions: No div-based todos found, trying table structure...');
+      const selectedTableRows = document.querySelectorAll('tr[class*="bg-blue"]');
+
+      selectedTableRows.forEach(row => {
+        const item = extractTodoData(row);
+        if (item && !items.find(i => i.title === item.title)) {
+          items.push(item);
         }
       });
     }
 
+    console.log(`Print Mass Actions: Collected ${items.length} selected To-Dos`);
     return items;
   }
 
@@ -283,20 +291,50 @@ const PrintMassActionsFeature = (() => {
    */
   function extractTodoData(row) {
     try {
-      // Get task title
-      const titleElement = row.querySelector('div.truncate, div.font-bold');
-      const title = titleElement ? titleElement.textContent.trim() : 'Untitled Task';
+      // Get task title - could be in an input or a div
+      let title = 'Untitled Task';
+      const titleInput = row.querySelector('input[placeholder="Name"]');
+      if (titleInput && titleInput.value) {
+        title = titleInput.value.trim();
+      } else {
+        const titleElement = row.querySelector('div.truncate, div.font-bold');
+        if (titleElement) {
+          title = titleElement.textContent.trim();
+        }
+      }
 
-      // Get due date
-      const dateElement = row.querySelector('td:nth-child(3), td:nth-child(4)');
-      const dueDate = dateElement ? dateElement.textContent.trim() : '';
+      // Get due date - look in all child divs
+      let dueDate = '';
+      const cellDivs = row.querySelectorAll('div.shrink-0.border-b.border-r');
+      cellDivs.forEach(cell => {
+        const text = cell.textContent.trim();
+        // Check if it looks like a date
+        if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text) || /[A-Z][a-z]{2}\s+\d{1,2}/.test(text) || /(Today|Tomorrow|Yesterday)/.test(text)) {
+          if (!dueDate) {
+            dueDate = text;
+          }
+        }
+      });
 
-      // Get assignees
-      const assigneeElements = row.querySelectorAll('[style*="background-color"]');
+      // Fallback for table-based structure
+      if (!dueDate) {
+        const dateElement = row.querySelector('td:nth-child(3), td:nth-child(4)');
+        dueDate = dateElement ? dateElement.textContent.trim() : '';
+      }
+
+      // Get assignees - look for elements with background-color or background-image
+      const assigneeElements = row.querySelectorAll('[style*="background-color"], [style*="background-image"]');
       const assignees = Array.from(assigneeElements)
-        .map(el => el.getAttribute('title') || el.textContent.trim())
-        .filter(text => text && text.length > 0)
-        .slice(0, 3); // Limit to first 3
+        .map(el => {
+          // Try to get text from SVG or adjacent div
+          const textDiv = el.nextElementSibling;
+          if (textDiv && textDiv.textContent) {
+            return textDiv.textContent.trim();
+          }
+          return el.getAttribute('title') || el.textContent.trim();
+        })
+        .filter(text => text && text.length > 0 && text.length < 50) // Filter out long strings
+        .slice(0, 5); // Limit to first 5
 
       // Get progress/status
       const progressElement = row.querySelector('input[type="range"], .text-green-600, .text-gray-600');
@@ -313,6 +351,8 @@ const PrintMassActionsFeature = (() => {
           progress = progressElement.textContent.trim();
         }
       }
+
+      console.log(`Print Mass Actions: Extracted data - Title: "${title}", Due: "${dueDate}", Assignees: ${assignees.length}`);
 
       return {
         type: 'todo',
@@ -334,16 +374,27 @@ const PrintMassActionsFeature = (() => {
   function collectSelectedScheduleItems() {
     const items = [];
 
-    // Find all selected schedule items (they have bg-blue classes when selected)
-    const selectedItems = document.querySelectorAll('[class*="bg-blue-50"], [class*="bg-blue-100"]');
+    console.log('Print Mass Actions: Collecting selected Schedule items...');
 
-    selectedItems.forEach(item => {
-      const scheduleData = extractScheduleData(item);
-      if (scheduleData && !items.find(i => i.title === scheduleData.title)) {
-        items.push(scheduleData);
+    // Find all rows (divs or table rows)
+    const allRows = document.querySelectorAll('div.group\\/row, div[class*="group/row"], tr');
+    console.log(`Print Mass Actions: Found ${allRows.length} potential schedule rows`);
+
+    allRows.forEach((row, index) => {
+      // Check if any child has blue background (indicates selection)
+      const hasBlueBackground = row.querySelector('[class*="bg-blue-50"], [class*="bg-blue-100"]');
+
+      if (hasBlueBackground) {
+        console.log(`Print Mass Actions: Schedule row ${index} is selected`);
+        const scheduleData = extractScheduleData(row);
+        if (scheduleData && !items.find(i => i.title === scheduleData.title)) {
+          items.push(scheduleData);
+          console.log(`Print Mass Actions: ✓ Extracted schedule item: "${scheduleData.title}"`);
+        }
       }
     });
 
+    console.log(`Print Mass Actions: Collected ${items.length} selected Schedule items`);
     return items;
   }
 
