@@ -384,6 +384,16 @@ const PrintMassActionsFeature = (() => {
         }
       });
 
+      // Get completion status - look for yellow background with blue checkmark
+      let isCompleted = false;
+      const statusCell = row.querySelector('.bg-yellow-100, .bg-yellow-50');
+      if (statusCell) {
+        const checkmarkSVG = statusCell.querySelector('svg.text-blue-500');
+        if (checkmarkSVG) {
+          isCompleted = true;
+        }
+      }
+
       // Get progress/status
       const progressElement = row.querySelector('input[type="range"], .text-green-600, .text-gray-600');
       let progress = '';
@@ -400,7 +410,7 @@ const PrintMassActionsFeature = (() => {
         }
       }
 
-      console.log(`Print Mass Actions: Extracted - Title: "${title}", Description: "${description.substring(0, 30)}...", Due: "${dueDate}", Category: "${category}", Assignees: ${assignees.join(', ')}`);
+      console.log(`Print Mass Actions: Extracted - Title: "${title}", Completed: ${isCompleted}, Description: "${description.substring(0, 30)}...", Due: "${dueDate}", Category: "${category}", Assignees: ${assignees.join(', ')}`);
 
       return {
         type: 'todo',
@@ -409,7 +419,8 @@ const PrintMassActionsFeature = (() => {
         dueDate,
         category,
         assignees,
-        progress
+        progress,
+        isCompleted
       };
     } catch (error) {
       console.error('Print Mass Actions: Error extracting todo data:', error);
@@ -680,11 +691,12 @@ const PrintMassActionsFeature = (() => {
     // Add items based on type
     if (itemType === 'todo') {
       items.forEach((item, index) => {
+        const checkbox = item.isCompleted ? '☑' : '☐';
         html += `
     <div class="item">
-      <div class="item-title">${index + 1}. ${escapeHtml(item.title)}</div>
-      ${item.description ? `<div style="margin-top: 8px; color: #6b7280; font-size: 14px;">${escapeHtml(item.description)}</div>` : ''}
-      <div class="item-details">
+      <div class="item-title">${checkbox} ${index + 1}. ${escapeHtml(item.title)}</div>
+      ${item.description ? `<div style="margin-top: 8px; margin-left: 24px; color: #6b7280; font-size: 14px;">${escapeHtml(item.description)}</div>` : ''}
+      <div class="item-details" style="margin-left: 24px;">
         ${item.dueDate ? `<div class="item-label">Due Date:</div><div class="item-value">${escapeHtml(item.dueDate)}</div>` : ''}
         ${item.category ? `<div class="item-label">Type:</div><div class="item-value">${escapeHtml(item.category)}</div>` : ''}
         ${item.progress ? `<div class="item-label">Progress:</div><div class="item-value">${escapeHtml(item.progress)}</div>` : ''}
