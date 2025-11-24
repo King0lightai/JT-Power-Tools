@@ -276,6 +276,7 @@ const PrintMassActionsFeature = (() => {
    */
   function collectSelectedTodos() {
     const items = [];
+    let currentGroup = null;
 
     console.log('Print Mass Actions: Collecting selected To-Dos...');
 
@@ -285,15 +286,28 @@ const PrintMassActionsFeature = (() => {
     console.log(`Print Mass Actions: Found ${allRows.length} total rows`);
 
     allRows.forEach((row, index) => {
+      // Check if this is a group header row
+      const hasGroupMarker = row.querySelector('.shrink-0.border-b.border-r.font-bold');
+
+      if (hasGroupMarker) {
+        // This is a group row - extract the group name
+        const titleInput = row.querySelector('input[placeholder="Name"]');
+        if (titleInput && titleInput.value) {
+          currentGroup = titleInput.value.trim();
+          console.log(`Print Mass Actions: Found group: "${currentGroup}"`);
+        }
+        return; // Skip to next row
+      }
+
       // Check if any child has blue background (indicates selection)
       const hasBlueBackground = row.querySelector('[class*="bg-blue-50"], [class*="bg-blue-100"]');
 
       if (hasBlueBackground) {
         console.log(`Print Mass Actions: Row ${index} is selected (has blue background)`);
-        const item = extractTodoData(row);
+        const item = extractTodoData(row, currentGroup);
         if (item) {
           items.push(item);
-          console.log(`Print Mass Actions: ✓ Extracted todo: "${item.title}"`);
+          console.log(`Print Mass Actions: ✓ Extracted todo: "${item.title}" (Group: ${item.group || 'None'})`);
         }
       }
     });
@@ -304,7 +318,7 @@ const PrintMassActionsFeature = (() => {
       const selectedTableRows = document.querySelectorAll('tr[class*="bg-blue"]');
 
       selectedTableRows.forEach(row => {
-        const item = extractTodoData(row);
+        const item = extractTodoData(row, null);
         if (item && !items.find(i => i.title === item.title)) {
           items.push(item);
         }
@@ -318,9 +332,10 @@ const PrintMassActionsFeature = (() => {
   /**
    * Extract To-Do data from a row
    * @param {HTMLElement} row
+   * @param {string|null} group - The group/category this to-do belongs to
    * @returns {Object|null}
    */
-  function extractTodoData(row) {
+  function extractTodoData(row, group = null) {
     try {
       // Skip group rows (they have font-bold class on cells)
       const hasGroupMarker = row.querySelector('.shrink-0.border-b.border-r.font-bold');
@@ -410,7 +425,7 @@ const PrintMassActionsFeature = (() => {
         }
       }
 
-      console.log(`Print Mass Actions: Extracted - Title: "${title}", Completed: ${isCompleted}, Description: "${description.substring(0, 30)}...", Due: "${dueDate}", Category: "${category}", Assignees: ${assignees.join(', ')}`);
+      console.log(`Print Mass Actions: Extracted - Title: "${title}", Group: "${group || 'None'}", Completed: ${isCompleted}, Description: "${description.substring(0, 30)}...", Due: "${dueDate}", Category: "${category}", Assignees: ${assignees.join(', ')}`);
 
       return {
         type: 'todo',
@@ -420,7 +435,8 @@ const PrintMassActionsFeature = (() => {
         category,
         assignees,
         progress,
-        isCompleted
+        isCompleted,
+        group
       };
     } catch (error) {
       console.error('Print Mass Actions: Error extracting todo data:', error);
@@ -697,6 +713,7 @@ const PrintMassActionsFeature = (() => {
       <div class="item-title">${checkbox} ${index + 1}. ${escapeHtml(item.title)}</div>
       ${item.description ? `<div style="margin-top: 8px; margin-left: 24px; color: #6b7280; font-size: 14px;">${escapeHtml(item.description)}</div>` : ''}
       <div class="item-details" style="margin-left: 24px;">
+        ${item.group ? `<div class="item-label">Group:</div><div class="item-value"><strong>${escapeHtml(item.group)}</strong></div>` : ''}
         ${item.dueDate ? `<div class="item-label">Due Date:</div><div class="item-value">${escapeHtml(item.dueDate)}</div>` : ''}
         ${item.category ? `<div class="item-label">Type:</div><div class="item-value">${escapeHtml(item.category)}</div>` : ''}
         ${item.progress ? `<div class="item-label">Progress:</div><div class="item-value">${escapeHtml(item.progress)}</div>` : ''}
