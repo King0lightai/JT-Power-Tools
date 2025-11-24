@@ -322,50 +322,67 @@ const PrintMassActionsFeature = (() => {
    */
   function extractTodoData(row) {
     try {
-      // Get task title - could be in an input or a div
+      // Skip group rows (they have font-bold class on cells)
+      const hasGroupMarker = row.querySelector('.shrink-0.border-b.border-r.font-bold');
+      if (hasGroupMarker) {
+        console.log('Print Mass Actions: Skipping group row');
+        return null;
+      }
+
+      // Get task title from input
       let title = 'Untitled Task';
       const titleInput = row.querySelector('input[placeholder="Name"]');
       if (titleInput && titleInput.value) {
         title = titleInput.value.trim();
       } else {
-        const titleElement = row.querySelector('div.truncate, div.font-bold');
+        // Fallback to div content
+        const titleElement = row.querySelector('div.truncate');
         if (titleElement) {
           title = titleElement.textContent.trim();
         }
       }
 
-      // Get due date - look in all child divs
-      let dueDate = '';
-      const cellDivs = row.querySelectorAll('div.shrink-0.border-b.border-r');
-      cellDivs.forEach(cell => {
-        const text = cell.textContent.trim();
-        // Check if it looks like a date
-        if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text) || /[A-Z][a-z]{2}\s+\d{1,2}/.test(text) || /(Today|Tomorrow|Yesterday)/.test(text)) {
-          if (!dueDate) {
-            dueDate = text;
-          }
-        }
-      });
-
-      // Fallback for table-based structure
-      if (!dueDate) {
-        const dateElement = row.querySelector('td:nth-child(3), td:nth-child(4)');
-        dueDate = dateElement ? dateElement.textContent.trim() : '';
+      // Get description from the gray text div (separate from title)
+      let description = '';
+      const descElement = row.querySelector('div.whitespace-pre-wrap.text-sm.text-gray-500');
+      if (descElement) {
+        description = descElement.textContent.trim();
       }
 
-      // Get assignees - look for elements with background-color or background-image
-      const assigneeElements = row.querySelectorAll('[style*="background-color"], [style*="background-image"]');
-      const assignees = Array.from(assigneeElements)
-        .map(el => {
-          // Try to get text from SVG or adjacent div
-          const textDiv = el.nextElementSibling;
-          if (textDiv && textDiv.textContent) {
-            return textDiv.textContent.trim();
+      // Get due date from the date input field
+      let dueDate = '';
+      const dueDateInput = row.querySelector('input[placeholder="Today"]');
+      if (dueDateInput && dueDateInput.value) {
+        dueDate = dueDateInput.value.trim();
+      } else {
+        // Fallback: look for date patterns in cells
+        const cellDivs = row.querySelectorAll('div.shrink-0.border-b.border-r');
+        cellDivs.forEach(cell => {
+          const text = cell.textContent.trim();
+          if (/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(text) || /[A-Z][a-z]{2}\s+\d{1,2}/.test(text) || /(Today|Tomorrow|Yesterday)/.test(text)) {
+            if (!dueDate) {
+              dueDate = text;
+            }
           }
-          return el.getAttribute('title') || el.textContent.trim();
-        })
-        .filter(text => text && text.length > 0 && text.length < 50) // Filter out long strings
-        .slice(0, 5); // Limit to first 5
+        });
+      }
+
+      // Get type/category from the colored badge
+      let category = '';
+      const categoryBadge = row.querySelector('div.truncate.text-xs.max-w-max');
+      if (categoryBadge) {
+        category = categoryBadge.textContent.trim();
+      }
+
+      // Get assignees from SVG text elements only
+      const assignees = [];
+      const assigneeSVGs = row.querySelectorAll('svg.fill-current text');
+      assigneeSVGs.forEach(textEl => {
+        const initials = textEl.textContent.trim();
+        if (initials && initials.length <= 4 && !assignees.includes(initials)) {
+          assignees.push(initials);
+        }
+      });
 
       // Get progress/status
       const progressElement = row.querySelector('input[type="range"], .text-green-600, .text-gray-600');
@@ -383,12 +400,14 @@ const PrintMassActionsFeature = (() => {
         }
       }
 
-      console.log(`Print Mass Actions: Extracted data - Title: "${title}", Due: "${dueDate}", Assignees: ${assignees.length}`);
+      console.log(`Print Mass Actions: Extracted - Title: "${title}", Description: "${description.substring(0, 30)}...", Due: "${dueDate}", Category: "${category}", Assignees: ${assignees.join(', ')}`);
 
       return {
         type: 'todo',
         title,
+        description,
         dueDate,
+        category,
         assignees,
         progress
       };
@@ -664,8 +683,10 @@ const PrintMassActionsFeature = (() => {
         html += `
     <div class="item">
       <div class="item-title">${index + 1}. ${escapeHtml(item.title)}</div>
+      ${item.description ? `<div style="margin-top: 8px; color: #6b7280; font-size: 14px;">${escapeHtml(item.description)}</div>` : ''}
       <div class="item-details">
         ${item.dueDate ? `<div class="item-label">Due Date:</div><div class="item-value">${escapeHtml(item.dueDate)}</div>` : ''}
+        ${item.category ? `<div class="item-label">Type:</div><div class="item-value">${escapeHtml(item.category)}</div>` : ''}
         ${item.progress ? `<div class="item-label">Progress:</div><div class="item-value">${escapeHtml(item.progress)}</div>` : ''}
         ${item.assignees && item.assignees.length > 0 ? `
           <div class="item-label">Assignees:</div>
