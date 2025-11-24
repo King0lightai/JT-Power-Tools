@@ -739,6 +739,16 @@ const PrintMassActionsFeature = (() => {
    * @returns {string}
    */
   function extractJobName() {
+    // Look for job name button (e.g., "Job 0002")
+    const jobButton = document.querySelector('div[role="button"].hover\\:text-gray-800');
+    if (jobButton) {
+      const jobName = jobButton.textContent.trim();
+      if (jobName) {
+        console.log(`Print Mass Actions: Found job name: "${jobName}"`);
+        return jobName;
+      }
+    }
+
     // Try to find job name in header or title
     const jobNameElement = document.querySelector('h1, h2, [class*="job-name"], [class*="job-title"]');
     if (jobNameElement) {
