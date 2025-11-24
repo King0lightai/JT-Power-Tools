@@ -544,7 +544,7 @@ const PrintMassActionsFeature = (() => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Print ${itemType === 'todos' ? 'To-Dos' : itemType === 'schedule' ? 'Schedule Items' : 'Budget Items'}</title>
+  <title>Print ${itemType === 'todo' ? 'To-Dos' : itemType === 'schedule' ? 'Schedule Items' : 'Budget Items'}</title>
   <style>
     * {
       margin: 0;
@@ -647,7 +647,7 @@ const PrintMassActionsFeature = (() => {
 </head>
 <body>
   <div class="header">
-    <h1>${itemType === 'todos' ? 'To-Do List' : itemType === 'schedule' ? 'Schedule Items' : 'Budget Items'}</h1>
+    <h1>${itemType === 'todo' ? 'To-Do List' : itemType === 'schedule' ? 'Schedule Items' : 'Budget Items'}</h1>
     <div class="meta">
       ${jobName ? `<strong>Job:</strong> ${jobName}<br>` : ''}
       <strong>Printed:</strong> ${date}<br>
@@ -659,7 +659,7 @@ const PrintMassActionsFeature = (() => {
 `;
 
     // Add items based on type
-    if (itemType === 'todos') {
+    if (itemType === 'todo') {
       items.forEach((item, index) => {
         html += `
     <div class="item">
