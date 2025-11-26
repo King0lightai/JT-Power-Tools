@@ -1,5 +1,5 @@
 // JT Power Tools - Freeze Header Feature
-// Makes job navigation tabs sticky when scrolling on job pages
+// Makes job header and navigation tabs sticky when scrolling on job pages
 
 const FreezeHeaderFeature = (() => {
   let isActiveState = false;
@@ -9,12 +9,20 @@ const FreezeHeaderFeature = (() => {
 
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
-    /* Freeze Header Styles - Job Navigation Tabs */
+    /* Freeze Header Styles */
 
-    /* Target the tab bar container: div.shrink-0 containing div.flex.overflow-auto.border-b */
-    .jt-freeze-header-active .jt-job-tabs-container {
+    /* Top header bar - already sticky in JobTread, just ensure it stays */
+    .jt-freeze-header-active .jt-top-header {
       position: sticky !important;
       top: 0 !important;
+      z-index: 101 !important;
+      background-color: white !important;
+    }
+
+    /* Tab navigation bar - stick below the top header */
+    .jt-freeze-header-active .jt-job-tabs-container {
+      position: sticky !important;
+      top: 50px !important; /* Height of top header */
       z-index: 100 !important;
       background-color: white !important;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
@@ -36,8 +44,10 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* Dark mode compatibility */
+    body.jt-dark-mode .jt-freeze-header-active .jt-top-header,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: #1f2937 !important;
@@ -50,6 +60,7 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* Custom theme compatibility */
+    .jt-custom-theme .jt-freeze-header-active .jt-top-header,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: var(--jt-theme-background, white) !important;
@@ -88,12 +99,50 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark the top header bar
+   * Looking for: div.shrink-0.sticky with JobTread logo and search
+   */
+  function findAndMarkTopHeader() {
+    // Already marked?
+    if (document.querySelector('.jt-top-header')) {
+      return true;
+    }
+
+    // Find the top header: div.shrink-0.sticky containing the JobTread logo SVG
+    const stickyDivs = document.querySelectorAll('div.shrink-0.sticky');
+
+    for (const div of stickyDivs) {
+      // Check if it contains the JobTread logo (viewBox="0 0 120 18" is the text logo)
+      const hasLogo = div.querySelector('svg[viewBox="0 0 120 18"]') ||
+                      div.querySelector('svg[viewBox="0 0 8 8"]');
+      // Also check for the search input
+      const hasSearch = div.querySelector('input[placeholder*="Search"]');
+
+      if (hasLogo || hasSearch) {
+        div.classList.add('jt-top-header');
+        console.log('FreezeHeader: Found and marked top header');
+        return true;
+      }
+    }
+
+    // Fallback: look for the header with shadow-line-bottom class
+    const headerWithShadow = document.querySelector('div.shrink-0.sticky.shadow-line-bottom');
+    if (headerWithShadow) {
+      headerWithShadow.classList.add('jt-top-header');
+      console.log('FreezeHeader: Found top header via shadow-line-bottom');
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Find and mark the job tabs container
    * Looking for: div.shrink-0 > div.flex.overflow-auto.border-b containing links to /jobs/
    */
   function findAndMarkTabs() {
     if (!isJobPage()) {
-      console.log('FreezeHeader: Not on a job page, skipping');
+      console.log('FreezeHeader: Not on a job page, skipping tabs');
       return false;
     }
 
@@ -106,6 +155,9 @@ const FreezeHeaderFeature = (() => {
     const shrinkDivs = document.querySelectorAll('div.shrink-0');
 
     for (const div of shrinkDivs) {
+      // Skip if this is already marked as the top header
+      if (div.classList.contains('jt-top-header')) continue;
+
       const tabContainer = div.querySelector('div.flex.overflow-auto.border-b');
       if (tabContainer) {
         // Verify it contains job navigation links
@@ -131,11 +183,33 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Calculate and set the correct top position for tabs based on header height
+   */
+  function updateTabsPosition() {
+    const topHeader = document.querySelector('.jt-top-header');
+    const tabsContainer = document.querySelector('.jt-job-tabs-container');
+
+    if (topHeader && tabsContainer && styleElement) {
+      const headerHeight = topHeader.offsetHeight;
+      // Update the CSS with the actual header height
+      const updatedStyles = STICKY_STYLES.replace(
+        /top: 50px !important;/g,
+        `top: ${headerHeight}px !important;`
+      );
+      styleElement.textContent = updatedStyles;
+      console.log('FreezeHeader: Set tabs top position to', headerHeight, 'px');
+    }
+  }
+
+  /**
    * Apply sticky behavior to the page
    */
   function applyFreezeHeader() {
     document.body.classList.add('jt-freeze-header-active');
+    findAndMarkTopHeader();
     findAndMarkTabs();
+    // Small delay to ensure elements are rendered before measuring
+    setTimeout(updateTabsPosition, 100);
     console.log('FreezeHeader: Applied');
   }
 
@@ -146,6 +220,9 @@ const FreezeHeaderFeature = (() => {
     document.body.classList.remove('jt-freeze-header-active');
 
     // Remove marker classes
+    document.querySelectorAll('.jt-top-header').forEach(el => {
+      el.classList.remove('jt-top-header');
+    });
     document.querySelectorAll('.jt-job-tabs-container').forEach(el => {
       el.classList.remove('jt-job-tabs-container');
     });
@@ -179,8 +256,11 @@ const FreezeHeaderFeature = (() => {
         if (mutation.addedNodes.length > 0) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              // Check if new content might be a tab area
-              if (node.classList && node.classList.contains('shrink-0')) {
+              // Check if new content might be a header or tab area
+              if (node.classList && (
+                node.classList.contains('shrink-0') ||
+                node.classList.contains('sticky')
+              )) {
                 shouldUpdate = true;
                 break;
               }
@@ -201,7 +281,9 @@ const FreezeHeaderFeature = (() => {
         // Debounce updates
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
+          findAndMarkTopHeader();
           findAndMarkTabs();
+          updateTabsPosition();
         }, 200);
       }
     });
@@ -218,14 +300,25 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
+        document.querySelectorAll('.jt-top-header').forEach(el => {
+          el.classList.remove('jt-top-header');
+        });
         document.querySelectorAll('.jt-job-tabs-container').forEach(el => {
           el.classList.remove('jt-job-tabs-container');
         });
         setTimeout(() => {
+          findAndMarkTopHeader();
           findAndMarkTabs();
+          updateTabsPosition();
         }, 300);
       }
     }, 500);
+
+    // Update position on window resize
+    window.addEventListener('resize', () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updateTabsPosition, 100);
+    });
 
     console.log('FreezeHeader: Feature loaded');
   }
