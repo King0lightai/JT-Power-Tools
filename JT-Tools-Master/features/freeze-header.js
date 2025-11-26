@@ -12,18 +12,20 @@ const FreezeHeaderFeature = (() => {
     /* Freeze Header Styles */
 
     /* Top header bar - already sticky in JobTread, just ensure it stays */
+    /* Keep z-index low (41 is JobTread's default) so modals appear above */
     .jt-freeze-header-active .jt-top-header {
       position: sticky !important;
       top: 0 !important;
-      z-index: 101 !important;
+      z-index: 41 !important;
       background-color: white !important;
     }
 
     /* Tab navigation bar - stick below the top header */
+    /* z-index 40 keeps it below header but above content, below modals */
     .jt-freeze-header-active .jt-job-tabs-container {
       position: sticky !important;
       top: 50px !important; /* Height of top header */
-      z-index: 100 !important;
+      z-index: 40 !important;
       background-color: white !important;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
     }
