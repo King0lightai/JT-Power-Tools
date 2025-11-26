@@ -132,6 +132,34 @@ const CharacterCounterFeature = (() => {
   }
 
   /**
+   * Check if we're on the budget page
+   * @returns {boolean}
+   */
+  function isBudgetPage() {
+    return window.location.pathname.match(/^\/jobs\/[^/]+\/budget/);
+  }
+
+  /**
+   * Check if this textarea is inside a budget cell (not a dialog)
+   * @param {HTMLElement} field - The textarea element
+   * @returns {boolean}
+   */
+  function isBudgetCell(field) {
+    if (!isBudgetPage()) return false;
+
+    // If it's inside a dialog/modal, it's not a budget cell
+    const dialog = field.closest('.shadow-lg, [role="dialog"], .modal, [data-radix-popper-content-wrapper]');
+    if (dialog) return false;
+
+    // Budget cells are typically inside the scrollable budget table area
+    // Check if inside a min-w-max container (budget table structure)
+    const budgetTable = field.closest('.min-w-max, .overflow-x-auto');
+    if (budgetTable) return true;
+
+    return false;
+  }
+
+  /**
    * Check if this is a message textarea (Direct Message, Customer Message, etc.)
    * @param {HTMLElement} field - The textarea element
    * @returns {boolean}
@@ -243,6 +271,11 @@ const CharacterCounterFeature = (() => {
           placeholder === 'optional') {
         return;
       }
+    }
+
+    // Skip budget cells - counter causes layout shifts and cursor issues
+    if (isBudgetCell(field)) {
+      return;
     }
 
     const maxLength = getFieldLimit(field);
