@@ -38,8 +38,18 @@ const CharacterCounterFeature = (() => {
       margin-top: 4px;
       padding-right: 4px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      transition: color 0.2s ease;
+      transition: color 0.2s ease, opacity 0.2s ease;
       pointer-events: none;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    /* Show counter when textarea is focused */
+    .jt-char-counter.visible {
+      opacity: 1;
+      height: auto;
+      overflow: visible;
     }
 
     .jt-char-counter.safe {
@@ -61,7 +71,7 @@ const CharacterCounterFeature = (() => {
       font-weight: 700;
     }
 
-    /* Position counter for message dialogs */
+    /* Position counter for message dialogs - always visible */
     .jt-char-counter-message {
       position: absolute;
       bottom: 2px;
@@ -70,6 +80,9 @@ const CharacterCounterFeature = (() => {
       padding: 2px 6px;
       border-radius: 3px;
       z-index: 10;
+      opacity: 1;
+      height: auto;
+      overflow: visible;
     }
 
     /* Dark mode compatibility */
@@ -276,6 +289,21 @@ const CharacterCounterFeature = (() => {
     field.addEventListener('keyup', updateCounter);
     field.addEventListener('paste', () => setTimeout(updateCounter, 0));
 
+    // Show/hide counter on focus/blur (except for message dialogs which are always visible)
+    if (!isMessage) {
+      field.addEventListener('focus', () => {
+        counter.classList.add('visible');
+      });
+      field.addEventListener('blur', () => {
+        // Small delay to allow clicking on counter area
+        setTimeout(() => {
+          if (document.activeElement !== field) {
+            counter.classList.remove('visible');
+          }
+        }, 150);
+      });
+    }
+
     // Find the best insertion point for the counter
     const parent = field.parentElement;
     if (parent) {
@@ -312,8 +340,14 @@ const CharacterCounterFeature = (() => {
       field.removeEventListener('input', updateCounter);
       field.removeEventListener('keyup', updateCounter);
       field.removeEventListener('paste', updateCounter);
+      // Focus/blur listeners are anonymous so they'll be garbage collected
       counter.remove();
     };
+
+    // If field is already focused, show the counter immediately
+    if (document.activeElement === field && !isMessage) {
+      counter.classList.add('visible');
+    }
 
     console.log('CharCounter: Counter attached to', isMessage ? 'message field' : (field.placeholder || field.name || 'field'), '- limit:', maxLength);
   }
