@@ -24,10 +24,18 @@ const FreezeHeaderFeature = (() => {
     /* z-index 40 keeps it below header but above content, below modals */
     .jt-freeze-header-active .jt-job-tabs-container {
       position: sticky !important;
-      top: 50px !important; /* Height of top header */
+      top: var(--jt-header-height, 50px) !important;
       z-index: 40 !important;
       background-color: white !important;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Action toolbar bar - stick below the tabs (filters, search, view controls) */
+    /* z-index 39 keeps it below tabs, below modals */
+    .jt-freeze-header-active .jt-action-toolbar {
+      position: sticky !important;
+      top: var(--jt-tabs-bottom, 90px) !important;
+      z-index: 39 !important;
+      background-color: white !important;
     }
 
     /* The inner flex container with the actual tabs */
@@ -49,9 +57,11 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode .jt-freeze-header-active .jt-top-header,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar {
       background-color: #1f2937 !important;
       border-color: #374151 !important;
     }
@@ -64,7 +74,8 @@ const FreezeHeaderFeature = (() => {
     /* Custom theme compatibility */
     .jt-custom-theme .jt-freeze-header-active .jt-top-header,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
-    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
+    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar {
       background-color: var(--jt-theme-background, white) !important;
     }
   `;
@@ -117,21 +128,21 @@ const FreezeHeaderFeature = (() => {
       // Check if it contains the JobTread logo (viewBox="0 0 120 18" is the text logo)
       const hasLogo = div.querySelector('svg[viewBox="0 0 120 18"]') ||
                       div.querySelector('svg[viewBox="0 0 8 8"]');
-      // Also check for the search input
+      // Also check for the search input with company name placeholder
       const hasSearch = div.querySelector('input[placeholder*="Search"]');
 
-      if (hasLogo || hasSearch) {
+      if (hasLogo && hasSearch) {
         div.classList.add('jt-top-header');
         console.log('FreezeHeader: Found and marked top header');
         return true;
       }
     }
 
-    // Fallback: look for the header with shadow-line-bottom class
-    const headerWithShadow = document.querySelector('div.shrink-0.sticky.shadow-line-bottom');
-    if (headerWithShadow) {
-      headerWithShadow.classList.add('jt-top-header');
-      console.log('FreezeHeader: Found top header via shadow-line-bottom');
+    // Fallback: look for the header with z-[41] class (JobTread's main header)
+    const headerWithZ41 = document.querySelector('div.shrink-0.sticky.z-\\[41\\]');
+    if (headerWithZ41) {
+      headerWithZ41.classList.add('jt-top-header');
+      console.log('FreezeHeader: Found top header via z-[41]');
       return true;
     }
 
@@ -157,8 +168,9 @@ const FreezeHeaderFeature = (() => {
     const shrinkDivs = document.querySelectorAll('div.shrink-0');
 
     for (const div of shrinkDivs) {
-      // Skip if this is already marked as the top header
+      // Skip if this is already marked as the top header or toolbar
       if (div.classList.contains('jt-top-header')) continue;
+      if (div.classList.contains('jt-action-toolbar')) continue;
 
       const tabContainer = div.querySelector('div.flex.overflow-auto.border-b');
       if (tabContainer) {
@@ -185,22 +197,78 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Calculate and set the correct top position for tabs based on header height
+   * Find and mark the action toolbar (filters, search, view controls)
+   * Looking for: div.shrink-0.sticky with z-30 and shadow-line-bottom, containing filters/search
    */
-  function updateTabsPosition() {
+  function findAndMarkActionToolbar() {
+    if (!isJobPage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-action-toolbar')) {
+      return true;
+    }
+
+    // Find action toolbars: div.shrink-0.sticky with z-30 class
+    const toolbars = document.querySelectorAll('div.shrink-0.sticky.z-30, div.shrink-0.sticky.z-\\[30\\]');
+
+    for (const toolbar of toolbars) {
+      // Skip if already marked as something else
+      if (toolbar.classList.contains('jt-top-header')) continue;
+      if (toolbar.classList.contains('jt-job-tabs-container')) continue;
+
+      // Check if it contains typical toolbar elements (search, filters, view buttons)
+      const hasSearch = toolbar.querySelector('input[placeholder="Search"]');
+      const hasFilters = toolbar.querySelector('svg') && toolbar.querySelectorAll('[role="button"]').length > 2;
+
+      if (hasSearch || hasFilters) {
+        toolbar.classList.add('jt-action-toolbar');
+        console.log('FreezeHeader: Found and marked action toolbar');
+        return true;
+      }
+    }
+
+    // Fallback: look for any sticky div with shadow-line-bottom and p-2 that has filter controls
+    const shadowToolbars = document.querySelectorAll('div.shrink-0.sticky.shadow-line-bottom.p-2');
+    for (const toolbar of shadowToolbars) {
+      if (toolbar.classList.contains('jt-top-header')) continue;
+      if (toolbar.classList.contains('jt-job-tabs-container')) continue;
+
+      // Verify it has multiple buttons (typical of action toolbar)
+      const buttons = toolbar.querySelectorAll('[role="button"]');
+      if (buttons.length >= 3) {
+        toolbar.classList.add('jt-action-toolbar');
+        console.log('FreezeHeader: Found action toolbar via shadow-line-bottom');
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Calculate and set the correct top positions based on actual element heights
+   */
+  function updatePositions() {
     const topHeader = document.querySelector('.jt-top-header');
     const tabsContainer = document.querySelector('.jt-job-tabs-container');
+    const actionToolbar = document.querySelector('.jt-action-toolbar');
 
-    if (topHeader && tabsContainer && styleElement) {
-      const headerHeight = topHeader.offsetHeight;
-      // Update the CSS with the actual header height
-      const updatedStyles = STICKY_STYLES.replace(
-        /top: 50px !important;/g,
-        `top: ${headerHeight}px !important;`
-      );
-      styleElement.textContent = updatedStyles;
-      console.log('FreezeHeader: Set tabs top position to', headerHeight, 'px');
+    if (!topHeader) return;
+
+    const headerHeight = topHeader.offsetHeight;
+    let tabsBottom = headerHeight;
+
+    if (tabsContainer) {
+      tabsBottom = headerHeight + tabsContainer.offsetHeight;
     }
+
+    // Set CSS custom properties for positioning
+    document.documentElement.style.setProperty('--jt-header-height', `${headerHeight}px`);
+    document.documentElement.style.setProperty('--jt-tabs-bottom', `${tabsBottom}px`);
+
+    console.log('FreezeHeader: Updated positions - header:', headerHeight, 'px, tabs bottom:', tabsBottom, 'px');
   }
 
   /**
@@ -210,8 +278,9 @@ const FreezeHeaderFeature = (() => {
     document.body.classList.add('jt-freeze-header-active');
     findAndMarkTopHeader();
     findAndMarkTabs();
+    findAndMarkActionToolbar();
     // Small delay to ensure elements are rendered before measuring
-    setTimeout(updateTabsPosition, 100);
+    setTimeout(updatePositions, 100);
     console.log('FreezeHeader: Applied');
   }
 
@@ -228,6 +297,13 @@ const FreezeHeaderFeature = (() => {
     document.querySelectorAll('.jt-job-tabs-container').forEach(el => {
       el.classList.remove('jt-job-tabs-container');
     });
+    document.querySelectorAll('.jt-action-toolbar').forEach(el => {
+      el.classList.remove('jt-action-toolbar');
+    });
+
+    // Remove CSS custom properties
+    document.documentElement.style.removeProperty('--jt-header-height');
+    document.documentElement.style.removeProperty('--jt-tabs-bottom');
 
     console.log('FreezeHeader: Removed');
   }
@@ -258,7 +334,7 @@ const FreezeHeaderFeature = (() => {
         if (mutation.addedNodes.length > 0) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              // Check if new content might be a header or tab area
+              // Check if new content might be a header, tab, or toolbar area
               if (node.classList && (
                 node.classList.contains('shrink-0') ||
                 node.classList.contains('sticky')
@@ -268,7 +344,8 @@ const FreezeHeaderFeature = (() => {
               }
               if (node.querySelector && (
                 node.querySelector('div.shrink-0') ||
-                node.querySelector('a[href^="/jobs/"]')
+                node.querySelector('a[href^="/jobs/"]') ||
+                node.querySelector('div.sticky')
               )) {
                 shouldUpdate = true;
                 break;
@@ -285,7 +362,8 @@ const FreezeHeaderFeature = (() => {
         debounceTimer = setTimeout(() => {
           findAndMarkTopHeader();
           findAndMarkTabs();
-          updateTabsPosition();
+          findAndMarkActionToolbar();
+          updatePositions();
         }, 200);
       }
     });
@@ -302,16 +380,14 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
-        document.querySelectorAll('.jt-top-header').forEach(el => {
-          el.classList.remove('jt-top-header');
-        });
-        document.querySelectorAll('.jt-job-tabs-container').forEach(el => {
-          el.classList.remove('jt-job-tabs-container');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar');
         });
         setTimeout(() => {
           findAndMarkTopHeader();
           findAndMarkTabs();
-          updateTabsPosition();
+          findAndMarkActionToolbar();
+          updatePositions();
         }, 300);
       }
     }, 500);
@@ -319,7 +395,7 @@ const FreezeHeaderFeature = (() => {
     // Update position on window resize
     window.addEventListener('resize', () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(updateTabsPosition, 100);
+      debounceTimer = setTimeout(updatePositions, 100);
     });
 
     console.log('FreezeHeader: Feature loaded');
