@@ -7,17 +7,18 @@ const CharacterCounterFeature = (() => {
   let debounceTimer = null;
   const processedFields = new WeakSet();
 
-  // Default character limits for different field types
-  // These may need adjustment based on actual JobTread limits
+  // Character limits for JobTread fields
+  // Comments and messages have a 4096 character limit
   const FIELD_LIMITS = {
+    // Message and comment fields - 4096 limit
+    'message': 4096,
+    'comment': 4096,
+    'comments': 4096,
     // Notes and description fields
     'notes': 5000,
     'note': 5000,
     'description': 5000,
     'details': 5000,
-    'comment': 2000,
-    'comments': 2000,
-    'message': 2000,
     // Shorter fields
     'name': 255,
     'title': 255,
@@ -25,8 +26,8 @@ const CharacterCounterFeature = (() => {
     'address': 500,
     'email': 255,
     'phone': 50,
-    // Default for unknown fields
-    'default': 2000
+    // Default for unknown textareas
+    'default': 4096
   };
 
   // CSS for counter styling
@@ -38,6 +39,7 @@ const CharacterCounterFeature = (() => {
       padding-right: 4px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       transition: color 0.2s ease;
+      pointer-events: none;
     }
 
     .jt-char-counter.safe {
@@ -59,10 +61,27 @@ const CharacterCounterFeature = (() => {
       font-weight: 700;
     }
 
+    /* Position counter for message dialogs */
+    .jt-char-counter-message {
+      position: absolute;
+      bottom: 2px;
+      right: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 2px 6px;
+      border-radius: 3px;
+      z-index: 10;
+    }
+
     /* Dark mode compatibility */
     .jt-dark-mode .jt-char-counter.safe,
+    #jt-dark-mode-styles ~ * .jt-char-counter.safe,
     [data-theme="dark"] .jt-char-counter.safe {
       color: #9ca3af;
+    }
+
+    .jt-dark-mode .jt-char-counter-message,
+    #jt-dark-mode-styles ~ * .jt-char-counter-message {
+      background: rgba(31, 41, 55, 0.9);
     }
 
     /* Counter wrapper to keep it aligned */
@@ -100,6 +119,28 @@ const CharacterCounterFeature = (() => {
   }
 
   /**
+   * Check if this is a message textarea (Direct Message, Customer Message, etc.)
+   * @param {HTMLElement} field - The textarea element
+   * @returns {boolean}
+   */
+  function isMessageTextarea(field) {
+    // Check placeholder
+    const placeholder = (field.placeholder || '').toLowerCase();
+    if (placeholder === 'message') return true;
+
+    // Check if inside a message dialog (has "Message" in header)
+    const dialog = field.closest('.shadow-lg, [role="dialog"], .modal');
+    if (dialog) {
+      const header = dialog.querySelector('.font-bold, h1, h2, h3');
+      if (header && header.textContent.toLowerCase().includes('message')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Determine the character limit for a field
    * @param {HTMLElement} field - The textarea or input element
    * @returns {number} The character limit
@@ -115,6 +156,11 @@ const CharacterCounterFeature = (() => {
     const dataLimit = field.getAttribute('data-char-limit');
     if (dataLimit) {
       return parseInt(dataLimit, 10);
+    }
+
+    // Check if this is a message textarea - 4096 limit
+    if (isMessageTextarea(field)) {
+      return FIELD_LIMITS.message;
     }
 
     // Try to infer from field name, id, placeholder, or aria-label
@@ -148,7 +194,7 @@ const CharacterCounterFeature = (() => {
       }
     }
 
-    // Return default limit
+    // Return default limit for textareas
     return FIELD_LIMITS.default;
   }
 
@@ -175,11 +221,23 @@ const CharacterCounterFeature = (() => {
       return;
     }
 
+    // Skip inputs that are too short to need a counter
+    if (field.tagName === 'INPUT') {
+      const placeholder = (field.placeholder || '').toLowerCase();
+      // Skip recipient/to fields, search fields
+      if (placeholder === 'recipients' ||
+          placeholder === 'search' ||
+          placeholder === 'optional') {
+        return;
+      }
+    }
+
     const maxLength = getFieldLimit(field);
+    const isMessage = isMessageTextarea(field);
 
     // Create counter element
     const counter = document.createElement('div');
-    counter.className = 'jt-char-counter safe';
+    counter.className = 'jt-char-counter safe' + (isMessage ? ' jt-char-counter-message' : '');
     counter.setAttribute('aria-live', 'polite');
     counter.setAttribute('aria-atomic', 'true');
 
@@ -192,23 +250,24 @@ const CharacterCounterFeature = (() => {
 
       // Update text
       if (remaining < 0) {
-        counter.textContent = `${Math.abs(remaining)} characters over limit`;
-        counter.className = 'jt-char-counter over-limit';
+        counter.textContent = `${Math.abs(remaining)} over limit`;
+        counter.className = 'jt-char-counter over-limit' + (isMessage ? ' jt-char-counter-message' : '');
       } else if (remaining === 0) {
-        counter.textContent = 'Character limit reached';
-        counter.className = 'jt-char-counter danger';
+        counter.textContent = 'Limit reached';
+        counter.className = 'jt-char-counter danger' + (isMessage ? ' jt-char-counter-message' : '');
       } else {
-        counter.textContent = `${remaining.toLocaleString()} / ${maxLength.toLocaleString()} characters remaining`;
+        // Show compact format for messages
+        counter.textContent = `${currentLength.toLocaleString()} / ${maxLength.toLocaleString()}`;
 
         // Color coding based on remaining percentage
         const percentRemaining = (remaining / maxLength) * 100;
+        let colorClass = 'safe';
         if (percentRemaining <= 5) {
-          counter.className = 'jt-char-counter danger';
+          colorClass = 'danger';
         } else if (percentRemaining <= 15) {
-          counter.className = 'jt-char-counter warning';
-        } else {
-          counter.className = 'jt-char-counter safe';
+          colorClass = 'warning';
         }
+        counter.className = 'jt-char-counter ' + colorClass + (isMessage ? ' jt-char-counter-message' : '');
       }
     }
 
@@ -217,16 +276,23 @@ const CharacterCounterFeature = (() => {
     field.addEventListener('keyup', updateCounter);
     field.addEventListener('paste', () => setTimeout(updateCounter, 0));
 
-    // Insert counter after the field
-    // Try to find the best insertion point
+    // Find the best insertion point for the counter
     const parent = field.parentElement;
     if (parent) {
-      // Check if there's already a wrapper we should use
-      const existingWrapper = parent.querySelector('.jt-char-counter-wrapper');
-      if (existingWrapper) {
-        existingWrapper.appendChild(counter);
+      if (isMessage) {
+        // For message textareas, position relative to the scrollable container
+        // The textarea is inside: div.border.rounded-b-sm > div.space-y-1 > div.relative
+        const scrollContainer = field.closest('.border.rounded-b-sm');
+        if (scrollContainer) {
+          scrollContainer.style.position = 'relative';
+          scrollContainer.appendChild(counter);
+        } else {
+          // Fallback: add to parent
+          parent.style.position = 'relative';
+          parent.appendChild(counter);
+        }
       } else {
-        // Insert after the field
+        // Standard positioning: after the field
         if (field.nextSibling) {
           parent.insertBefore(counter, field.nextSibling);
         } else {
@@ -249,48 +315,16 @@ const CharacterCounterFeature = (() => {
       counter.remove();
     };
 
-    console.log('CharCounter: Counter attached to field:', field.name || field.id || 'unnamed');
+    console.log('CharCounter: Counter attached to', isMessage ? 'message field' : (field.placeholder || field.name || 'field'), '- limit:', maxLength);
   }
 
   /**
    * Find and process all text fields on the page
    */
   function processAllFields() {
-    // Find all textareas
+    // Find all textareas - these are the main target
     const textareas = document.querySelectorAll('textarea:not([data-jt-no-counter])');
     textareas.forEach(attachCounter);
-
-    // Find text inputs that might benefit from a counter
-    const textInputs = document.querySelectorAll(
-      'input[type="text"]:not([data-jt-no-counter]), ' +
-      'input:not([type]):not([data-jt-no-counter])'
-    );
-
-    textInputs.forEach(input => {
-      // Only attach to inputs that seem like they could have substantial text
-      // Skip search boxes, short fields, etc.
-      const placeholder = (input.placeholder || '').toLowerCase();
-      const name = (input.name || '').toLowerCase();
-      const id = (input.id || '').toLowerCase();
-
-      const isLikelyTextContent =
-        placeholder.includes('note') ||
-        placeholder.includes('description') ||
-        placeholder.includes('comment') ||
-        placeholder.includes('message') ||
-        name.includes('note') ||
-        name.includes('description') ||
-        name.includes('comment') ||
-        id.includes('note') ||
-        id.includes('description') ||
-        id.includes('comment') ||
-        input.classList.contains('description') ||
-        input.classList.contains('notes');
-
-      if (isLikelyTextContent) {
-        attachCounter(input);
-      }
-    });
   }
 
   /**
@@ -311,7 +345,7 @@ const CharacterCounterFeature = (() => {
     // Process existing fields
     processAllFields();
 
-    // Watch for new fields being added
+    // Watch for new fields being added (dialogs opening, etc.)
     observer = new MutationObserver((mutations) => {
       let shouldProcess = false;
 
@@ -319,13 +353,9 @@ const CharacterCounterFeature = (() => {
         if (mutation.addedNodes.length > 0) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
-              // Check if the added node contains textareas or inputs
+              // Check if the added node contains textareas
               if (node.tagName === 'TEXTAREA' ||
-                  node.tagName === 'INPUT' ||
-                  (node.querySelector && (
-                    node.querySelector('textarea') ||
-                    node.querySelector('input[type="text"]')
-                  ))) {
+                  (node.querySelector && node.querySelector('textarea'))) {
                 shouldProcess = true;
                 break;
               }
