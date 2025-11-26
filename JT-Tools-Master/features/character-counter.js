@@ -291,17 +291,35 @@ const CharacterCounterFeature = (() => {
 
     // Show/hide counter on focus/blur (except for message dialogs which are always visible)
     if (!isMessage) {
-      field.addEventListener('focus', () => {
+      // Track focus state
+      let isFocused = false;
+      let hideTimeout = null;
+
+      const showCounter = () => {
+        isFocused = true;
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
         counter.classList.add('visible');
-      });
-      field.addEventListener('blur', () => {
-        // Small delay to allow clicking on counter area
-        setTimeout(() => {
-          if (document.activeElement !== field) {
+      };
+
+      const hideCounter = () => {
+        isFocused = false;
+        // Longer delay to handle JobTread's UI interactions
+        hideTimeout = setTimeout(() => {
+          if (!isFocused) {
             counter.classList.remove('visible');
           }
-        }, 150);
-      });
+        }, 300);
+      };
+
+      field.addEventListener('focus', showCounter);
+      field.addEventListener('blur', hideCounter);
+      // Also show on click in case focus event doesn't fire properly
+      field.addEventListener('click', showCounter);
+      // Keep visible while typing
+      field.addEventListener('input', showCounter);
     }
 
     // Find the best insertion point for the counter
