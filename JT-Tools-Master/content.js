@@ -64,11 +64,6 @@ const featureModules = {
     name: 'Character Counter',
     feature: () => window.CharacterCounterFeature,
     instance: null
-  },
-  budgetQuickSum: {
-    name: 'Budget QuickSum',
-    feature: () => window.BudgetQuickSumFeature,
-    instance: null
   }
 };
 
@@ -86,7 +81,6 @@ let currentSettings = {
   helpSidebarSupport: true,
   freezeHeader: false,
   characterCounter: false,
-  budgetQuickSum: false,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
