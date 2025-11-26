@@ -38,17 +38,14 @@ const FreezeHeaderFeature = (() => {
       background-color: white !important;
     }
 
-    /* Budget table header - stick below the action toolbar */
-    /* z-index 38 keeps it below toolbar, below modals */
-    .jt-freeze-header-active .jt-budget-table-header {
-      position: sticky !important;
+    /* Budget table header container - JobTread already makes this sticky,
+       but we need to override its top position to account for our frozen headers */
+    .jt-freeze-header-active .jt-budget-header-container {
       top: var(--jt-toolbar-bottom, 138px) !important;
-      z-index: 38 !important;
-      background-color: white !important;
     }
 
     /* Ensure budget header children have white background */
-    .jt-freeze-header-active .jt-budget-table-header > div {
+    .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: white !important;
     }
 
@@ -72,14 +69,12 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
-    body.jt-dark-mode .jt-freeze-header-active .jt-budget-table-header,
-    body.jt-dark-mode .jt-freeze-header-active .jt-budget-table-header > div,
+    body.jt-dark-mode .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-table-header,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-table-header > div {
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: #1f2937 !important;
       border-color: #374151 !important;
     }
@@ -94,8 +89,7 @@ const FreezeHeaderFeature = (() => {
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar,
-    .jt-custom-theme .jt-freeze-header-active .jt-budget-table-header,
-    .jt-custom-theme .jt-freeze-header-active .jt-budget-table-header > div {
+    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: var(--jt-theme-background, white) !important;
     }
   `;
@@ -198,7 +192,7 @@ const FreezeHeaderFeature = (() => {
       // Skip if this is already marked as something else
       if (div.classList.contains('jt-top-header')) continue;
       if (div.classList.contains('jt-action-toolbar')) continue;
-      if (div.classList.contains('jt-budget-table-header')) continue;
+      if (div.classList.contains('jt-budget-header-container')) continue;
 
       const tabContainer = div.querySelector('div.flex.overflow-auto.border-b');
       if (tabContainer) {
@@ -245,7 +239,7 @@ const FreezeHeaderFeature = (() => {
       // Skip if already marked as something else
       if (toolbar.classList.contains('jt-top-header')) continue;
       if (toolbar.classList.contains('jt-job-tabs-container')) continue;
-      if (toolbar.classList.contains('jt-budget-table-header')) continue;
+      if (toolbar.classList.contains('jt-budget-header-container')) continue;
 
       // Check if it contains typical toolbar elements (search, filters, view buttons)
       const hasSearch = toolbar.querySelector('input[placeholder="Search"]');
@@ -263,7 +257,7 @@ const FreezeHeaderFeature = (() => {
     for (const toolbar of shadowToolbars) {
       if (toolbar.classList.contains('jt-top-header')) continue;
       if (toolbar.classList.contains('jt-job-tabs-container')) continue;
-      if (toolbar.classList.contains('jt-budget-table-header')) continue;
+      if (toolbar.classList.contains('jt-budget-header-container')) continue;
 
       // Verify it has multiple buttons (typical of action toolbar)
       const buttons = toolbar.querySelectorAll('[role="button"]');
@@ -278,8 +272,9 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Find and mark the budget table header row
-   * Looking for: div.flex.min-w-max containing multiple div.shrink-0 with border-b-4
+   * Find and mark the budget table header container
+   * Looking for: div.sticky.z-30.break-inside-avoid that contains the budget header rows
+   * JobTread already makes this sticky but with a hardcoded top value we need to override
    */
   function findAndMarkBudgetTableHeader() {
     if (!isBudgetPage()) {
@@ -287,28 +282,32 @@ const FreezeHeaderFeature = (() => {
     }
 
     // Already marked?
-    if (document.querySelector('.jt-budget-table-header')) {
+    if (document.querySelector('.jt-budget-header-container')) {
       return true;
     }
 
-    // Find the budget table header: div.flex.min-w-max with border-b-4 children
-    const flexContainers = document.querySelectorAll('div.flex.min-w-max');
+    // Find the sticky container that holds the budget header
+    // It's div.sticky.z-30.break-inside-avoid containing div.flex.min-w-max with border-b-4
+    const stickyContainers = document.querySelectorAll('div.sticky.z-30.break-inside-avoid');
 
-    for (const container of flexContainers) {
-      // Skip if already marked
+    for (const container of stickyContainers) {
+      // Skip if already marked as something else
       if (container.classList.contains('jt-top-header')) continue;
       if (container.classList.contains('jt-job-tabs-container')) continue;
       if (container.classList.contains('jt-action-toolbar')) continue;
 
-      // Check if it has children with border-b-4 (the thick bottom border)
-      const borderChildren = container.querySelectorAll(':scope > div.border-b-4');
-      if (borderChildren.length > 0) {
-        // Check for typical header text like "Details", "Estimating"
-        const headerText = container.textContent.toLowerCase();
-        if (headerText.includes('details') || headerText.includes('estimating')) {
-          container.classList.add('jt-budget-table-header');
-          console.log('FreezeHeader: Found and marked budget table header');
-          return true;
+      // Check if it contains the budget header structure (flex.min-w-max with border-b-4 children)
+      const flexContainer = container.querySelector('div.flex.min-w-max');
+      if (flexContainer) {
+        const borderChildren = flexContainer.querySelectorAll(':scope > div.border-b-4');
+        if (borderChildren.length > 0) {
+          // Check for typical header text like "Details", "Estimating"
+          const headerText = container.textContent.toLowerCase();
+          if (headerText.includes('details') || headerText.includes('estimating') || headerText.includes('name')) {
+            container.classList.add('jt-budget-header-container');
+            console.log('FreezeHeader: Found and marked budget header container');
+            return true;
+          }
         }
       }
     }
@@ -323,7 +322,6 @@ const FreezeHeaderFeature = (() => {
     const topHeader = document.querySelector('.jt-top-header');
     const tabsContainer = document.querySelector('.jt-job-tabs-container');
     const actionToolbar = document.querySelector('.jt-action-toolbar');
-    const budgetTableHeader = document.querySelector('.jt-budget-table-header');
 
     if (!topHeader) return;
 
@@ -378,8 +376,8 @@ const FreezeHeaderFeature = (() => {
     document.querySelectorAll('.jt-action-toolbar').forEach(el => {
       el.classList.remove('jt-action-toolbar');
     });
-    document.querySelectorAll('.jt-budget-table-header').forEach(el => {
-      el.classList.remove('jt-budget-table-header');
+    document.querySelectorAll('.jt-budget-header-container').forEach(el => {
+      el.classList.remove('jt-budget-header-container');
     });
 
     // Remove CSS custom properties
@@ -465,8 +463,8 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-table-header').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-table-header');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container');
         });
         setTimeout(() => {
           findAndMarkTopHeader();
