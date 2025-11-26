@@ -50,6 +50,9 @@
         "features/budget-hierarchy.js",
         "features/quick-notes.js",
         "features/help-sidebar-support.js",
+        "features/freeze-header.js",
+        "features/character-counter.js",
+        "features/budget-quicksum.js",
         "content.js"
       ],
       "run_at": "document_end"

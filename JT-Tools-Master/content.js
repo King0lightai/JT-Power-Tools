@@ -54,6 +54,21 @@ const featureModules = {
     name: 'Help Sidebar Support',
     feature: () => window.HelpSidebarSupportFeature,
     instance: null
+  },
+  freezeHeader: {
+    name: 'Freeze Header',
+    feature: () => window.FreezeHeaderFeature,
+    instance: null
+  },
+  characterCounter: {
+    name: 'Character Counter',
+    feature: () => window.CharacterCounterFeature,
+    instance: null
+  },
+  budgetQuickSum: {
+    name: 'Budget QuickSum',
+    feature: () => window.BudgetQuickSumFeature,
+    instance: null
   }
 };
 
@@ -69,6 +84,9 @@ let currentSettings = {
   budgetHierarchy: false,
   quickNotes: true,
   helpSidebarSupport: true,
+  freezeHeader: false,
+  characterCounter: false,
+  budgetQuickSum: false,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
