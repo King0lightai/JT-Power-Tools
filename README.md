@@ -103,6 +103,20 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Real-time updates when expanding/collapsing groups
 - Helps quickly identify group hierarchy and relationships at a glance
 
+### 📌 Freeze Header
+- Keeps job info and navigation tabs visible while scrolling
+- Sticky header stays at top of viewport for easy access
+- Quick access to job details without scrolling back up
+- Works seamlessly with sidebar content
+- Prevents frozen elements from overlapping scrollable content
+
+### 🔢 Message Character Counter
+- Displays character count for message text fields
+- Shows current character count in real-time as you type
+- Counter appears in the toolbar next to the writing assistant
+- Helps stay within character limits before submitting messages
+- Clean, unobtrusive display that doesn't interfere with typing
+
 ## 📦 Installation
 
 ### ⭐ Recommended: Chrome Web Store (For All Users)
