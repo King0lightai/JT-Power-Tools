@@ -5,6 +5,24 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.4] - 2025-01-XX (Beta)
+
+### Added
+
+#### New Feature: Freeze Headers
+- Freeze column and row headers in table views for easier navigation
+- Keep important headers visible while scrolling through large datasets
+- Works seamlessly with budget tables and other data views
+- Toggle on/off from the extension popup
+
+#### New Feature: Message Character Counter
+- Real-time character count display for message fields
+- Helps stay within character limits when composing messages
+- Unobtrusive counter that appears when typing
+- Useful for daily logs and communication fields
+
+---
+
 ## [3.3.3] - 2025-01-XX (Beta)
 
 ### Improved
@@ -292,6 +310,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
+[3.3.4]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.4
 [3.3.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.3
 [3.3.2]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.2
 [3.3.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.1
