@@ -315,7 +315,7 @@ const CharacterCounterFeature = (() => {
           const toolbars = dialog.querySelectorAll('div.flex.justify-between');
           for (const t of toolbars) {
             // Look for the one with a Send button
-            const sendButton = t.querySelector('button[type="submit"], button:contains("Send")') ||
+            const sendButton = t.querySelector('button[type="submit"]') ||
                                Array.from(t.querySelectorAll('button')).find(b => b.textContent.trim() === 'Send');
             if (sendButton) {
               toolbar = t;
