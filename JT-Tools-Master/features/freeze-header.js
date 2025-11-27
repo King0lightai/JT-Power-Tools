@@ -49,6 +49,16 @@ const FreezeHeaderFeature = (() => {
       background-color: white !important;
     }
 
+    /* Schedule header container - same approach as budget header */
+    .jt-freeze-header-active .jt-schedule-header-container {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
+    /* Ensure schedule list view header has white background */
+    .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
+      background-color: white !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
@@ -70,11 +80,13 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
     body.jt-dark-mode .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    body.jt-dark-mode .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
       background-color: #1f2937 !important;
       border-color: #374151 !important;
     }
@@ -89,7 +101,8 @@ const FreezeHeaderFeature = (() => {
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar,
-    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    .jt-custom-theme .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
       background-color: var(--jt-theme-background, white) !important;
     }
   `;
@@ -130,6 +143,13 @@ const FreezeHeaderFeature = (() => {
    */
   function isBudgetPage() {
     return window.location.pathname.match(/^\/jobs\/[^/]+\/budget/);
+  }
+
+  /**
+   * Check if we're on the schedule page
+   */
+  function isSchedulePage() {
+    return window.location.pathname.match(/^\/jobs\/[^/]+\/schedule/);
   }
 
   /**
@@ -316,6 +336,71 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark the schedule header container
+   * Looking for: div.sticky.z-30 that contains the schedule header
+   * Two views to support:
+   *   1. Gantt view: has bg-gray-700 dark header cells with month names
+   *   2. List view: white background with Name/Start/End/Type columns
+   * JobTread already makes this sticky but with a hardcoded top value we need to override
+   */
+  function findAndMarkScheduleHeader() {
+    if (!isSchedulePage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-schedule-header-container')) {
+      return true;
+    }
+
+    // Find sticky z-30 containers that contain the schedule header
+    const stickyContainers = document.querySelectorAll('div.sticky.z-30');
+
+    for (const container of stickyContainers) {
+      // Skip if already marked as something else
+      if (container.classList.contains('jt-top-header')) continue;
+      if (container.classList.contains('jt-job-tabs-container')) continue;
+      if (container.classList.contains('jt-action-toolbar')) continue;
+      if (container.classList.contains('jt-budget-header-container')) continue;
+
+      const headerText = container.textContent;
+
+      // Check for GANTT VIEW: bg-gray-700 header cells with "Name" column and month names
+      const darkHeaderCells = container.querySelectorAll('.bg-gray-700');
+      if (darkHeaderCells.length > 0) {
+        // Verify it has schedule-like content (month names or year)
+        const hasGanttContent = headerText.includes('Name') &&
+          (headerText.includes('2025') || headerText.includes('2026') || headerText.includes('2027') ||
+           /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/.test(headerText));
+
+        if (hasGanttContent) {
+          container.classList.add('jt-schedule-header-container');
+          console.log('FreezeHeader: Found and marked schedule header container (gantt view)');
+          return true;
+        }
+      }
+
+      // Check for LIST VIEW: has Name, Start, End, Type columns (white background)
+      // Look for a flex container with min-w-max that has schedule column headers
+      const flexContainer = container.querySelector('div.flex.min-w-max');
+      if (flexContainer) {
+        const hasListColumns = headerText.includes('Name') &&
+          headerText.includes('Start') &&
+          headerText.includes('End') &&
+          (headerText.includes('Type') || headerText.includes('Assignees'));
+
+        if (hasListColumns) {
+          container.classList.add('jt-schedule-header-container');
+          console.log('FreezeHeader: Found and marked schedule header container (list view)');
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Calculate and set the correct top positions based on actual element heights
    */
   function updatePositions() {
@@ -355,6 +440,7 @@ const FreezeHeaderFeature = (() => {
     findAndMarkTabs();
     findAndMarkActionToolbar();
     findAndMarkBudgetTableHeader();
+    findAndMarkScheduleHeader();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
     console.log('FreezeHeader: Applied');
@@ -378,6 +464,9 @@ const FreezeHeaderFeature = (() => {
     });
     document.querySelectorAll('.jt-budget-header-container').forEach(el => {
       el.classList.remove('jt-budget-header-container');
+    });
+    document.querySelectorAll('.jt-schedule-header-container').forEach(el => {
+      el.classList.remove('jt-schedule-header-container');
     });
 
     // Remove CSS custom properties
@@ -446,6 +535,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkTabs();
           findAndMarkActionToolbar();
           findAndMarkBudgetTableHeader();
+          findAndMarkScheduleHeader();
           updatePositions();
         }, 200);
       }
@@ -463,14 +553,15 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container');
         });
         setTimeout(() => {
           findAndMarkTopHeader();
           findAndMarkTabs();
           findAndMarkActionToolbar();
           findAndMarkBudgetTableHeader();
+          findAndMarkScheduleHeader();
           updatePositions();
         }, 300);
       }
