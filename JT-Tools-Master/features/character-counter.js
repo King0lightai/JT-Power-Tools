@@ -73,16 +73,21 @@ const CharacterCounterFeature = (() => {
 
     /* Position counter for message dialogs - always visible */
     .jt-char-counter-message {
-      position: absolute;
-      bottom: 2px;
-      right: 8px;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 2px 6px;
-      border-radius: 3px;
-      z-index: 10;
+      position: sticky;
+      bottom: 4px;
+      float: right;
+      clear: both;
+      margin-right: 8px;
+      margin-top: -24px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2px 8px;
+      border-radius: 4px;
+      z-index: 100;
       opacity: 1;
       height: auto;
       overflow: visible;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      pointer-events: none;
     }
 
     /* Dark mode compatibility */
@@ -94,7 +99,8 @@ const CharacterCounterFeature = (() => {
 
     .jt-dark-mode .jt-char-counter-message,
     #jt-dark-mode-styles ~ * .jt-char-counter-message {
-      background: rgba(31, 41, 55, 0.9);
+      background: rgba(31, 41, 55, 0.95);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     /* Counter wrapper to keep it aligned */
@@ -305,16 +311,18 @@ const CharacterCounterFeature = (() => {
     const parent = field.parentElement;
     if (parent) {
       if (isMessage) {
-        // For message textareas, position relative to the scrollable container
+        // For message textareas, find the scrollable container and place counter inside
         // The textarea is inside: div.border.rounded-b-sm > div.space-y-1 > div.relative
+        // We need to place the counter inside the scrolling context for sticky to work
         const scrollContainer = field.closest('.border.rounded-b-sm');
         if (scrollContainer) {
-          scrollContainer.style.position = 'relative';
+          // Ensure overflow allows sticky positioning
+          scrollContainer.style.overflow = 'auto';
           scrollContainer.appendChild(counter);
         } else {
-          // Fallback: add to parent
-          parent.style.position = 'relative';
-          parent.appendChild(counter);
+          // Fallback: try to find any scrollable parent
+          const scrollableParent = field.closest('[class*="overflow"]') || parent;
+          scrollableParent.appendChild(counter);
         }
       } else {
         // Standard positioning: after the field
