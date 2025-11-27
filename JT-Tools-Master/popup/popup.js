@@ -10,6 +10,8 @@ const defaultSettings = {
   budgetHierarchy: false,
   quickNotes: true,
   helpSidebarSupport: true,
+  freezeHeader: false,
+  characterCounter: false,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -116,6 +118,8 @@ async function loadSettings() {
     document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
     document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
+    document.getElementById('freezeHeader').checked = settings.freezeHeader !== undefined ? settings.freezeHeader : false;
+    document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -222,6 +226,8 @@ async function getCurrentSettings() {
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
     quickNotes: document.getElementById('quickNotes').checked,
     helpSidebarSupport: true, // Always enabled, not user-toggleable
+    freezeHeader: document.getElementById('freezeHeader').checked,
+    characterCounter: document.getElementById('characterCounter').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
