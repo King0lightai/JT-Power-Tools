@@ -58,11 +58,6 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Ensure schedule list view header has white background */
-    .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
-      background-color: white !important;
-    }
-
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
@@ -84,13 +79,11 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
     body.jt-dark-mode .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
-    body.jt-dark-mode .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: #1f2937 !important;
       border-color: #374151 !important;
     }
@@ -113,8 +106,7 @@ const FreezeHeaderFeature = (() => {
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar,
-    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
-    .jt-custom-theme .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
+    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: var(--jt-theme-background, white) !important;
     }
 
