@@ -1,23 +1,22 @@
 # Chrome Web Store Listing - JT Power Tools
 
 ## Short Description (132 characters max)
-9 powerful tools for JobTread: Drag & Drop, Notes, Preview, Formatter, Job Switcher, Dark Mode, Custom Theme & more!
+11 powerful tools for JobTread: Drag & Drop, Notes, Preview, Formatter, Freeze Headers, Character Counter & more!
 
 ## Detailed Description
 
 **JT Power Tools** - Professional productivity enhancement suite for JobTread construction management software.
 
-✨ **LATEST IMPROVEMENTS (v3.3.3 Beta)**
-• **Most Stable Version Yet**: Comprehensive restructuring for enhanced reliability
-• Complete restructuring of color theme and dark mode systems for better performance
-• More robust formatting rendering and detection for text formatter and preview mode
-• Enhanced compatibility with various textarea types and page structures
-• Improved theme switching and color application logic
-• Better integration between custom themes and dark mode
-• Enhanced dark mode reliability and consistency
-• Improved code organization and modularity across all features
+✨ **LATEST IMPROVEMENTS (v3.3.4 Beta)**
+• **NEW: Freeze Headers** - Keep column and row headers visible while scrolling through large tables
+• **NEW: Message Character Counter** - Real-time character count display for message fields
+• Works seamlessly with budget tables and other data views
+• Helps stay within character limits when composing messages
 
-This release represents a major stability milestone for JT Power Tools. Extensive restructuring of core systems has significantly improved reliability and performance.
+Previous highlights (v3.3.3):
+• Most Stable Version Yet: Comprehensive restructuring for enhanced reliability
+• Complete restructuring of color theme and dark mode systems
+• More robust formatting rendering and detection
 
 🚀 **FEATURES**
 
@@ -101,6 +100,18 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 • Preserves yellow highlighting for unsaved changes
 • Real-time updates when expanding/collapsing groups
 • Helps quickly identify group hierarchy and relationships at a glance
+
+**🧊 Freeze Headers (Free)**
+• Freeze column and row headers in table views for easier navigation
+• Keep important headers visible while scrolling through large datasets
+• Works seamlessly with budget tables and other data views
+• Toggle on/off from the extension popup
+
+**🔢 Message Character Counter (Free)**
+• Real-time character count display for message fields
+• Helps stay within character limits when composing messages
+• Unobtrusive counter that appears when typing
+• Useful for daily logs and communication fields
 
 💼 **PROFESSIONAL DESIGN**
 Clean, minimalistic interface that matches JobTread's aesthetic. Simple controls with thin lines and professional styling.
