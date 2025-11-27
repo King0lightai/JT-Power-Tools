@@ -58,6 +58,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
+    /* Task/item sidebar sticky header - boost z-index so it doesn't get covered by frozen headers */
+    /* The sidebar container is z-30, but the inner sticky header is z-10 which is too low */
+    .jt-freeze-header-active div.z-30 div.sticky.z-10 {
+      z-index: 42 !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
