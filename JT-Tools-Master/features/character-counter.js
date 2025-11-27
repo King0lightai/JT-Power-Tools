@@ -71,23 +71,17 @@ const CharacterCounterFeature = (() => {
       font-weight: 700;
     }
 
-    /* Position counter for message dialogs - always visible */
+    /* Position counter for message dialogs - in toolbar next to writing assistant */
     .jt-char-counter-message {
-      position: sticky;
-      bottom: 4px;
-      float: right;
-      clear: both;
-      margin-right: 8px;
-      margin-top: -24px;
-      background: rgba(255, 255, 255, 0.95);
-      padding: 2px 8px;
-      border-radius: 4px;
-      z-index: 100;
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      color: #6b7280;
+      padding: 4px 8px;
+      margin-left: 8px;
       opacity: 1;
       height: auto;
       overflow: visible;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      pointer-events: none;
     }
 
     /* Dark mode compatibility */
@@ -99,8 +93,7 @@ const CharacterCounterFeature = (() => {
 
     .jt-dark-mode .jt-char-counter-message,
     #jt-dark-mode-styles ~ * .jt-char-counter-message {
-      background: rgba(31, 41, 55, 0.95);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      color: #9ca3af;
     }
 
     /* Counter wrapper to keep it aligned */
@@ -311,18 +304,45 @@ const CharacterCounterFeature = (() => {
     const parent = field.parentElement;
     if (parent) {
       if (isMessage) {
-        // For message textareas, find the scrollable container and place counter inside
-        // The textarea is inside: div.border.rounded-b-sm > div.space-y-1 > div.relative
-        // We need to place the counter inside the scrolling context for sticky to work
-        const scrollContainer = field.closest('.border.rounded-b-sm');
-        if (scrollContainer) {
-          // Ensure overflow allows sticky positioning
-          scrollContainer.style.overflow = 'auto';
-          scrollContainer.appendChild(counter);
+        // For message textareas, find the toolbar below the textarea
+        // Structure: div.flex.justify-between containing buttons and Send button
+        // We want to insert the counter next to the writing assistant buttons
+        const dialog = field.closest('.shadow-lg, [role="dialog"], .modal, form');
+        let toolbar = null;
+
+        if (dialog) {
+          // Find the toolbar with Send button - it's a div.flex.justify-between
+          const toolbars = dialog.querySelectorAll('div.flex.justify-between');
+          for (const t of toolbars) {
+            // Look for the one with a Send button
+            const sendButton = t.querySelector('button[type="submit"], button:contains("Send")') ||
+                               Array.from(t.querySelectorAll('button')).find(b => b.textContent.trim() === 'Send');
+            if (sendButton) {
+              toolbar = t;
+              break;
+            }
+          }
+        }
+
+        if (toolbar) {
+          // Find the left side container (div.flex.gap-1) with the buttons
+          const leftSide = toolbar.querySelector('div.flex.gap-1');
+          if (leftSide) {
+            // Insert counter after the left side buttons
+            leftSide.appendChild(counter);
+          } else {
+            // Fallback: insert as second child of toolbar (between left and right)
+            const rightSide = toolbar.querySelector('div.shrink-0');
+            if (rightSide) {
+              toolbar.insertBefore(counter, rightSide);
+            } else {
+              toolbar.appendChild(counter);
+            }
+          }
         } else {
-          // Fallback: try to find any scrollable parent
-          const scrollableParent = field.closest('[class*="overflow"]') || parent;
-          scrollableParent.appendChild(counter);
+          // Fallback: add after the textarea's container
+          const container = field.closest('.border.rounded-b-sm') || parent;
+          container.parentElement?.appendChild(counter);
         }
       } else {
         // Standard positioning: after the field
