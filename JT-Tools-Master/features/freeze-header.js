@@ -27,6 +27,8 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-header-height, 50px) !important;
       z-index: 40 !important;
       background-color: white !important;
+      /* Extend background slightly to cover any subpixel gaps */
+      box-shadow: 0 1px 0 0 white !important;
     }
 
     /* Action toolbar bar - stick below the tabs (filters, search, view controls) */
@@ -36,6 +38,8 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-tabs-bottom, 90px) !important;
       z-index: 39 !important;
       background-color: white !important;
+      /* Extend background slightly to cover any subpixel gaps */
+      box-shadow: 0 1px 0 0 white !important;
     }
 
     /* Budget table header container - JobTread already makes this sticky,
@@ -91,6 +95,14 @@ const FreezeHeaderFeature = (() => {
       border-color: #374151 !important;
     }
 
+    /* Dark mode box-shadow for gap coverage */
+    body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
+    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar {
+      box-shadow: 0 1px 0 0 #1f2937 !important;
+    }
+
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container a,
     #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container a {
       color: #e5e7eb !important;
@@ -104,6 +116,12 @@ const FreezeHeaderFeature = (() => {
     .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
     .jt-custom-theme .jt-freeze-header-active .jt-schedule-header-container .flex.min-w-max > div {
       background-color: var(--jt-theme-background, white) !important;
+    }
+
+    /* Custom theme box-shadow for gap coverage */
+    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
+    .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar {
+      box-shadow: 0 1px 0 0 var(--jt-theme-background, white) !important;
     }
   `;
 
