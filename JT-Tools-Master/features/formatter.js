@@ -175,8 +175,33 @@ const FormatterFeature = (() => {
       return false; // Skip fields that already have native formatter
     }
 
+    // Exclude message fields - these should not have the formatter
+    const placeholder = textarea.getAttribute('placeholder');
+    if (placeholder === 'Message') {
+      return false;
+    }
+
+    // Exclude subtask/checklist fields
+    if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
+      return false;
+    }
+
+    // Check if textarea is inside a checklist/subtask container
+    const checklistContainer = textarea.closest('div');
+    if (checklistContainer) {
+      // Look for a Checklist heading in the ancestor elements
+      let ancestor = checklistContainer;
+      for (let i = 0; i < 10 && ancestor; i++) {
+        const heading = ancestor.querySelector(':scope > div > .font-bold');
+        if (heading && heading.textContent.trim() === 'Checklist') {
+          return false; // This is a subtask field
+        }
+        ancestor = ancestor.parentElement;
+      }
+    }
+
     // Check if it's a Budget Description field
-    if (textarea.getAttribute('placeholder') === 'Description') {
+    if (placeholder === 'Description') {
       return true;
     }
 
@@ -195,6 +220,11 @@ const FormatterFeature = (() => {
     // These fields have: style="color: transparent;" and a sibling div with pointer-events-none
     const hasTransparentColor = textarea.style.color === 'transparent';
     if (hasTransparentColor) {
+      // Exclude if this is in a checklist area (small padding p-1 indicates subtask)
+      if (textarea.classList.contains('p-1') && !textarea.classList.contains('p-2')) {
+        return false;
+      }
+
       const parent = textarea.parentElement;
       if (parent) {
         // Look for a sibling div with pointer-events-none (the formatting overlay)
@@ -282,11 +312,36 @@ const FormatterFeature = (() => {
       }
     });
 
-    // Filter out time entry notes fields and Time Clock notes fields
+    // Filter out time entry notes fields, Time Clock notes fields, message fields, and subtask fields
     const filteredFields = fields.filter(field => {
       const placeholder = field.getAttribute('placeholder');
       if (placeholder === 'Set notes') {
         return false; // Exclude time entry notes
+      }
+
+      // Exclude message fields
+      if (placeholder === 'Message') {
+        return false;
+      }
+
+      // Exclude subtask/checklist fields
+      if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
+        return false;
+      }
+
+      // Check if textarea is inside a checklist/subtask container
+      let ancestor = field.closest('div');
+      for (let i = 0; i < 10 && ancestor; i++) {
+        const heading = ancestor.querySelector(':scope > div > .font-bold');
+        if (heading && heading.textContent.trim() === 'Checklist') {
+          return false; // This is a subtask field
+        }
+        ancestor = ancestor.parentElement;
+      }
+
+      // Exclude subtask fields by small padding (p-1 without p-2)
+      if (field.classList.contains('p-1') && !field.classList.contains('p-2') && field.style.color === 'transparent') {
+        return false;
       }
 
       // Exclude Notes field in Time Clock sidebar
