@@ -58,10 +58,9 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Task/item sidebar - boost z-index so sticky header doesn't get covered by frozen headers */
-    /* The sidebar container is z-30 which creates its own stacking context, so we need to */
-    /* boost the entire container above the frozen headers (z-39 to z-41) */
-    .jt-freeze-header-active div.z-30.absolute.top-0.bottom-0.right-0 {
+    /* Task/item sidebar sticky header - boost z-index so it doesn't get covered by frozen headers */
+    /* The sidebar container is z-30, but the inner sticky header is z-10 which is too low */
+    .jt-freeze-header-active div.z-30 div.sticky.z-10 {
       z-index: 42 !important;
     }
 
