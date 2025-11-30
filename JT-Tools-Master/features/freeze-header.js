@@ -111,6 +111,11 @@ const FreezeHeaderFeature = (() => {
       color: #e5e7eb !important;
     }
 
+    /* Active tab in dark mode */
+    body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
+      background-color: #353535 !important;
+    }
+
     /* Custom theme compatibility */
     .jt-custom-theme .jt-freeze-header-active .jt-top-header,
     .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
