@@ -294,6 +294,7 @@ const FreezeHeaderFeature = (() => {
   /**
    * Find and mark the action toolbar (filters, search, view controls)
    * Looking for: div.shrink-0.sticky with z-30 and shadow-line-bottom, containing filters/search
+   * Also handles Daily Logs and Files page action bars with different structure
    */
   function findAndMarkActionToolbar() {
     if (!isJobPage()) {
@@ -337,6 +338,35 @@ const FreezeHeaderFeature = (() => {
       if (buttons.length >= 3) {
         toolbar.classList.add('jt-action-toolbar');
         console.log('FreezeHeader: Found action toolbar via shadow-line-bottom');
+        return true;
+      }
+    }
+
+    // Check for Daily Logs / Files page action bars
+    // These use div.p-2 > div.relative > div.absolute.inset-0.flex structure
+    const p2Containers = document.querySelectorAll('div.p-2');
+    for (const container of p2Containers) {
+      // Skip if already marked
+      if (container.classList.contains('jt-action-toolbar')) continue;
+
+      // Check for the specific structure: div.relative > div.absolute.inset-0.flex
+      const relativeDiv = container.querySelector(':scope > div.relative');
+      if (!relativeDiv) continue;
+
+      const absoluteToolbar = relativeDiv.querySelector(':scope > div.absolute.inset-0.flex');
+      if (!absoluteToolbar) continue;
+
+      // Verify it's an action bar by checking for:
+      // - Daily logs: links to /daily-logs with Details/Calendar tabs
+      // - Files: Upload button, List/Grid toggles
+      const hasDailyLogsLinks = absoluteToolbar.querySelector('a[href*="/daily-logs"]');
+      const hasUploadButton = absoluteToolbar.textContent.includes('Upload');
+      const hasListGridToggle = absoluteToolbar.textContent.includes('List') && absoluteToolbar.textContent.includes('Grid');
+      const hasSearchInput = absoluteToolbar.querySelector('input[placeholder="Search"]');
+
+      if (hasDailyLogsLinks || hasUploadButton || hasListGridToggle || hasSearchInput) {
+        container.classList.add('jt-action-toolbar');
+        console.log('FreezeHeader: Found and marked page action toolbar (daily logs/files)');
         return true;
       }
     }
