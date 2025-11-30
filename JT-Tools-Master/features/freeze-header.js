@@ -66,6 +66,27 @@ const FreezeHeaderFeature = (() => {
       background-color: white !important;
     }
 
+    /* Files page folder navigation bar (All Files breadcrumb) */
+    .jt-freeze-header-active .jt-files-folder-bar {
+      position: sticky !important;
+      top: var(--jt-toolbar-bottom, 138px) !important;
+      z-index: 38 !important;
+      background-color: white !important;
+    }
+
+    /* Files page list header (Name, Related To, Tags, etc.) */
+    .jt-freeze-header-active .jt-files-list-header {
+      position: sticky !important;
+      top: var(--jt-files-folder-bottom, 170px) !important;
+      z-index: 37 !important;
+      background-color: white !important;
+    }
+
+    /* Ensure files list header children have white background */
+    .jt-freeze-header-active .jt-files-list-header > div {
+      background-color: white !important;
+    }
+
     /* Task/item sidebar - boost z-index so it doesn't get covered by frozen headers */
     /* Use the data attribute for reliable targeting */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
@@ -115,7 +136,10 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode.jt-freeze-header-active .jt-action-toolbar,
     body.jt-dark-mode.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
     body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container,
-    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container > div {
+    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container > div,
+    body.jt-dark-mode.jt-freeze-header-active .jt-files-folder-bar,
+    body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header,
+    body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header > div {
       background-color: #2c2c2c !important;
       border-color: #464646 !important;
     }
@@ -143,7 +167,10 @@ const FreezeHeaderFeature = (() => {
     body.jt-custom-theme.jt-freeze-header-active .jt-action-toolbar,
     body.jt-custom-theme.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
     body.jt-custom-theme.jt-freeze-header-active .jt-schedule-header-container,
-    body.jt-custom-theme.jt-freeze-header-active .jt-schedule-header-container > div {
+    body.jt-custom-theme.jt-freeze-header-active .jt-schedule-header-container > div,
+    body.jt-custom-theme.jt-freeze-header-active .jt-files-folder-bar,
+    body.jt-custom-theme.jt-freeze-header-active .jt-files-list-header,
+    body.jt-custom-theme.jt-freeze-header-active .jt-files-list-header > div {
       background-color: var(--jt-theme-background, white) !important;
     }
 
@@ -371,6 +398,26 @@ const FreezeHeaderFeature = (() => {
       }
     }
 
+    // Check for Documents page action bar
+    // Uses div.bg-white.p-2.flex with Documents/Payments/Cost Inbox links
+    const docToolbars = document.querySelectorAll('div.bg-white.p-2.flex');
+    for (const toolbar of docToolbars) {
+      // Skip if already marked
+      if (toolbar.classList.contains('jt-action-toolbar')) continue;
+
+      // Check for Documents tab links
+      const hasDocumentsLink = toolbar.querySelector('a[href*="/documents"]');
+      const hasPaymentsLink = toolbar.querySelector('a[href*="/payments"]');
+      const hasCostInboxLink = toolbar.querySelector('a[href*="/cost-inbox"]');
+      const hasSearchInput = toolbar.querySelector('input[placeholder="Search"]');
+
+      if ((hasDocumentsLink || hasPaymentsLink || hasCostInboxLink) && hasSearchInput) {
+        toolbar.classList.add('jt-action-toolbar');
+        console.log('FreezeHeader: Found and marked documents page action toolbar');
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -552,18 +599,100 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark the Files page folder navigation bar (All Files breadcrumb)
+   * Looking for: div.sticky.z-30.flex.items-center with "All Files" or folder icon
+   */
+  function findAndMarkFilesFolderBar() {
+    if (!isJobPage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-files-folder-bar')) {
+      return true;
+    }
+
+    // Find sticky z-30 elements that look like folder navigation
+    const stickyContainers = document.querySelectorAll('div.sticky.z-30.flex.items-center');
+
+    for (const container of stickyContainers) {
+      // Skip if already marked as something else
+      if (container.classList.contains('jt-top-header')) continue;
+      if (container.classList.contains('jt-job-tabs-container')) continue;
+      if (container.classList.contains('jt-action-toolbar')) continue;
+      if (container.classList.contains('jt-schedule-header-container')) continue;
+
+      const text = container.textContent;
+
+      // Check for folder navigation indicators
+      const hasFolderText = text.includes('All Files') || text.includes('Edit') && text.includes('Files');
+      const hasFolderIcon = container.querySelector('svg path[d*="M20 20a2 2 0 0 0 2-2V8"]'); // Folder icon path
+
+      if (hasFolderText || hasFolderIcon) {
+        container.classList.add('jt-files-folder-bar');
+        console.log('FreezeHeader: Found and marked files folder bar');
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Find and mark the Files page list header (Name, Related To, Tags, etc.)
+   * Looking for: div.flex.min-w-max.text-xs.font-semibold with file-related columns
+   */
+  function findAndMarkFilesListHeader() {
+    if (!isJobPage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-files-list-header')) {
+      return true;
+    }
+
+    // Find flex headers with text-xs and font-semibold (typical of file list headers)
+    const flexHeaders = document.querySelectorAll('div.flex.min-w-max.text-xs.font-semibold');
+
+    for (const flexHeader of flexHeaders) {
+      // Skip if already marked or inside a marked container
+      if (flexHeader.closest('.jt-files-list-header')) continue;
+      if (flexHeader.closest('.jt-schedule-header-container')) continue;
+      if (flexHeader.closest('.jt-budget-header-container')) continue;
+
+      const headerText = flexHeader.textContent;
+
+      // Check for file list column headers
+      const hasFileColumns = headerText.includes('Name') &&
+        (headerText.includes('Related To') || headerText.includes('Tags') ||
+         headerText.includes('Uploaded By') || headerText.includes('Uploaded At'));
+
+      if (hasFileColumns) {
+        flexHeader.classList.add('jt-files-list-header');
+        console.log('FreezeHeader: Found and marked files list header');
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Calculate and set the correct top positions based on actual element heights
    */
   function updatePositions() {
     const topHeader = document.querySelector('.jt-top-header');
     const tabsContainer = document.querySelector('.jt-job-tabs-container');
     const actionToolbar = document.querySelector('.jt-action-toolbar');
+    const filesFolderBar = document.querySelector('.jt-files-folder-bar');
 
     if (!topHeader) return;
 
     const headerHeight = topHeader.offsetHeight;
     let tabsBottom = headerHeight;
     let toolbarBottom = tabsBottom;
+    let filesFolderBottom = toolbarBottom;
 
     if (tabsContainer) {
       tabsBottom = headerHeight + tabsContainer.offsetHeight;
@@ -572,14 +701,20 @@ const FreezeHeaderFeature = (() => {
 
     if (actionToolbar) {
       toolbarBottom = tabsBottom + actionToolbar.offsetHeight;
+      filesFolderBottom = toolbarBottom;
+    }
+
+    if (filesFolderBar) {
+      filesFolderBottom = toolbarBottom + filesFolderBar.offsetHeight;
     }
 
     // Set CSS custom properties for positioning
     document.documentElement.style.setProperty('--jt-header-height', `${headerHeight}px`);
     document.documentElement.style.setProperty('--jt-tabs-bottom', `${tabsBottom}px`);
     document.documentElement.style.setProperty('--jt-toolbar-bottom', `${toolbarBottom}px`);
+    document.documentElement.style.setProperty('--jt-files-folder-bottom', `${filesFolderBottom}px`);
 
-    console.log('FreezeHeader: Updated positions - header:', headerHeight, 'px, tabs bottom:', tabsBottom, 'px, toolbar bottom:', toolbarBottom, 'px');
+    console.log('FreezeHeader: Updated positions - header:', headerHeight, 'px, tabs bottom:', tabsBottom, 'px, toolbar bottom:', toolbarBottom, 'px, files folder bottom:', filesFolderBottom, 'px');
   }
 
   /**
@@ -593,6 +728,8 @@ const FreezeHeaderFeature = (() => {
     findAndMarkBudgetTableHeader();
     findAndMarkScheduleHeader();
     findAndMarkListHeader();
+    findAndMarkFilesFolderBar();
+    findAndMarkFilesListHeader();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
     console.log('FreezeHeader: Applied');
@@ -620,11 +757,18 @@ const FreezeHeaderFeature = (() => {
     document.querySelectorAll('.jt-schedule-header-container').forEach(el => {
       el.classList.remove('jt-schedule-header-container');
     });
+    document.querySelectorAll('.jt-files-folder-bar').forEach(el => {
+      el.classList.remove('jt-files-folder-bar');
+    });
+    document.querySelectorAll('.jt-files-list-header').forEach(el => {
+      el.classList.remove('jt-files-list-header');
+    });
 
     // Remove CSS custom properties
     document.documentElement.style.removeProperty('--jt-header-height');
     document.documentElement.style.removeProperty('--jt-tabs-bottom');
     document.documentElement.style.removeProperty('--jt-toolbar-bottom');
+    document.documentElement.style.removeProperty('--jt-files-folder-bottom');
 
     console.log('FreezeHeader: Removed');
   }
@@ -689,6 +833,8 @@ const FreezeHeaderFeature = (() => {
           findAndMarkBudgetTableHeader();
           findAndMarkScheduleHeader();
           findAndMarkListHeader();
+          findAndMarkFilesFolderBar();
+          findAndMarkFilesListHeader();
           updatePositions();
         }, 200);
       }
@@ -706,8 +852,8 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header');
         });
         setTimeout(() => {
           findAndMarkTopHeader();
@@ -716,6 +862,8 @@ const FreezeHeaderFeature = (() => {
           findAndMarkBudgetTableHeader();
           findAndMarkScheduleHeader();
           findAndMarkListHeader();
+          findAndMarkFilesFolderBar();
+          findAndMarkFilesListHeader();
           updatePositions();
         }, 300);
       }
