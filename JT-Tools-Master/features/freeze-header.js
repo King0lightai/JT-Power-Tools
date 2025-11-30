@@ -389,11 +389,8 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Find and mark the schedule header container
-   * Looking for: div.sticky.z-30 that contains the schedule header
-   * Two views to support:
-   *   1. Gantt view: has bg-gray-700 dark header cells with month names
-   *   2. List view: white background with Name/Start/End/Type columns
+   * Find and mark the schedule header container (Gantt view only)
+   * Looking for: div.sticky.z-30 with bg-gray-700 dark header cells and month names
    * JobTread already makes this sticky but with a hardcoded top value we need to override
    */
   function findAndMarkScheduleHeader() {
@@ -432,30 +429,56 @@ const FreezeHeaderFeature = (() => {
           return true;
         }
       }
+    }
 
-      // Check for LIST VIEW: has Name, Start, End, Type columns (white background)
-      // Look for a flex container with min-w-max that has schedule column headers
+    return false;
+  }
+
+  /**
+   * Find and mark generic list headers (To-Do, Schedule list view, etc.)
+   * Looking for: div.sticky.z-30 with div.flex.min-w-max containing Name + Due/Start/End columns
+   * Works on any job page
+   */
+  function findAndMarkListHeader() {
+    if (!isJobPage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-schedule-header-container')) {
+      return true;
+    }
+
+    // Find sticky z-30 containers that could be list headers
+    const stickyContainers = document.querySelectorAll('div.sticky.z-30');
+
+    for (const container of stickyContainers) {
+      // Skip if already marked as something else
+      if (container.classList.contains('jt-top-header')) continue;
+      if (container.classList.contains('jt-job-tabs-container')) continue;
+      if (container.classList.contains('jt-action-toolbar')) continue;
+      if (container.classList.contains('jt-budget-header-container')) continue;
+      if (container.classList.contains('jt-schedule-header-container')) continue;
+
+      const headerText = container.textContent;
+
+      // Look for a flex container with min-w-max that has list column headers
       const flexContainer = container.querySelector('div.flex.min-w-max');
       if (flexContainer) {
-        const hasListColumns = headerText.includes('Name') &&
+        // Check for LIST VIEW: has Name + Start/End columns (schedule list)
+        const hasScheduleListColumns = headerText.includes('Name') &&
           headerText.includes('Start') &&
           headerText.includes('End') &&
           (headerText.includes('Type') || headerText.includes('Assignees'));
 
-        if (hasListColumns) {
-          container.classList.add('jt-schedule-header-container');
-          console.log('FreezeHeader: Found and marked schedule header container (list view)');
-          return true;
-        }
-
-        // Check for TASK/TODO LIST VIEW: has Name, Due, Type columns
+        // Check for TASK/TODO LIST VIEW: has Name + Due columns
         const hasTaskListColumns = headerText.includes('Name') &&
           headerText.includes('Due') &&
           (headerText.includes('Type') || headerText.includes('Assignees'));
 
-        if (hasTaskListColumns) {
+        if (hasScheduleListColumns || hasTaskListColumns) {
           container.classList.add('jt-schedule-header-container');
-          console.log('FreezeHeader: Found and marked schedule header container (task list view)');
+          console.log('FreezeHeader: Found and marked list header container');
           return true;
         }
       }
@@ -539,6 +562,7 @@ const FreezeHeaderFeature = (() => {
     findAndMarkActionToolbar();
     findAndMarkBudgetTableHeader();
     findAndMarkScheduleHeader();
+    findAndMarkListHeader();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
     console.log('FreezeHeader: Applied');
@@ -634,6 +658,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkActionToolbar();
           findAndMarkBudgetTableHeader();
           findAndMarkScheduleHeader();
+          findAndMarkListHeader();
           updatePositions();
         }, 200);
       }
@@ -660,6 +685,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkActionToolbar();
           findAndMarkBudgetTableHeader();
           findAndMarkScheduleHeader();
+          findAndMarkListHeader();
           updatePositions();
         }, 300);
       }
