@@ -23,6 +23,9 @@ const CustomThemeFeature = (() => {
     console.log('CustomTheme: Initializing...');
     isActive = true;
 
+    // Add custom theme class to body for other features to detect
+    document.body.classList.add('jt-custom-theme');
+
     // Update colors if provided (with validation)
     if (colors) {
       currentColors = {
@@ -53,6 +56,9 @@ const CustomThemeFeature = (() => {
 
     console.log('CustomTheme: Cleaning up...');
     isActive = false;
+
+    // Remove custom theme class from body
+    document.body.classList.remove('jt-custom-theme');
 
     // Disconnect observer
     if (observer) {
