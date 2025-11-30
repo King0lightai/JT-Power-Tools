@@ -456,18 +456,18 @@ const CustomThemeFeature = (() => {
 
       /* Subtle shade for slight contrast (hover states, badges) */
       .bg-gray-50 {
-        background-color: ${backgroundSubtle};
+        background-color: ${backgroundSubtle} !important;
       }
 
       /* Muted shade for page backgrounds (messages, lists) */
       .bg-gray-100,
       .bg-gray-200 {
-        background-color: ${backgroundMuted};
+        background-color: ${backgroundMuted} !important;
       }
 
       /* Dark backgrounds get the darkest shade */
       .bg-gray-700 {
-        background-color: ${backgroundDark};
+        background-color: ${backgroundDark} !important;
       }
 
       /* === Budget Row Selection Highlighting === */
@@ -549,20 +549,21 @@ const CustomThemeFeature = (() => {
         backdrop-filter: blur(2px);
       }
 
-      /* JobTread native tooltips (Popper.js) - use primary color */
-      div[data-popper-placement].bg-black,
-      div[data-popper-placement].bg-gray-800,
-      div[data-popper-placement].bg-gray-900 {
-        background-color: ${primary} !important;
-        color: ${primaryText} !important;
-      }
-
       /* === Black/Dark Background Overrides === */
       /* Exclude backdrop elements (inset-0 = full screen overlay) */
       .bg-black:not(.inset-0),
       .bg-gray-800:not(.inset-0),
       .bg-gray-900:not(.inset-0) {
         background-color: ${background} !important;
+      }
+
+      /* JobTread native tooltips (Popper.js) - use primary color */
+      /* Must come AFTER .bg-black rules above to take precedence */
+      div[data-popper-placement].bg-black,
+      div[data-popper-placement].bg-gray-800,
+      div[data-popper-placement].bg-gray-900 {
+        background-color: ${primary} !important;
+        color: ${primaryText} !important;
       }
 
       /* === Text Colors === */
