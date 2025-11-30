@@ -116,19 +116,26 @@ const FreezeHeaderFeature = (() => {
       background-color: #353535 !important;
     }
 
-    /* Custom theme compatibility */
-    .jt-custom-theme .jt-freeze-header-active .jt-top-header,
-    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
-    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
-    .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar,
-    .jt-custom-theme .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    /* Custom theme compatibility - uses body.jt-custom-theme class added by rgb-theme.js */
+    /* Note: Both classes are on body, so use body.class1.class2 (no space) */
+    body.jt-custom-theme.jt-freeze-header-active .jt-top-header,
+    body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
+    body.jt-custom-theme.jt-freeze-header-active .jt-action-toolbar,
+    body.jt-custom-theme.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: var(--jt-theme-background, white) !important;
     }
 
     /* Custom theme box-shadow for gap coverage */
-    .jt-custom-theme .jt-freeze-header-active .jt-job-tabs-container,
-    .jt-custom-theme .jt-freeze-header-active .jt-action-toolbar {
+    body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container,
+    body.jt-custom-theme.jt-freeze-header-active .jt-action-toolbar {
       box-shadow: 0 1px 0 0 var(--jt-theme-background, white) !important;
+    }
+
+    /* Active tab in custom theme */
+    body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
+      background-color: var(--jt-theme-background, white) !important;
+      filter: brightness(0.95);
     }
   `;
 
