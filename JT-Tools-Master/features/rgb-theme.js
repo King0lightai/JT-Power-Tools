@@ -509,6 +509,7 @@ const CustomThemeFeature = (() => {
       .hover\\:bg-gray-50:hover,
       .hover\\:bg-gray-100:hover,
       .hover\\:bg-gray-200:hover,
+      .hover\\:bg-slate-50:hover,
       .hover\\:bg-white:hover {
         background-color: ${background} !important;
         filter: brightness(0.95);
