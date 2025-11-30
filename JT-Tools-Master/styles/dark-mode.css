@@ -262,6 +262,10 @@ td div.cursor-pointer[style*="border-left"] {
     background-color: #515151;
 }
 
+.hover\:bg-slate-50:hover {
+    background-color: #353535;
+}
+
 .hover\:bg-gray-800:hover {
     background-color: #5a5a5a;
 }
