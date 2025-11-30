@@ -494,9 +494,11 @@ const CustomThemeFeature = (() => {
 
       /* Preserve modal/popup backdrop with semi-transparent dark overlay */
       /* These elements have inset-0 (full screen) and are used for dimming background */
+      /* Target both fixed and absolute positioned backdrops (JobTread uses absolute) */
       div.fixed.inset-0[class*="bg-black"],
       div.fixed.inset-0[class*="bg-gray"],
-      div.fixed.inset-0[class*="opacity"] {
+      div.absolute.inset-0[class*="bg-black"],
+      div.absolute.inset-0[class*="bg-gray"] {
         background-color: rgba(0, 0, 0, 0.5) !important;
         backdrop-filter: blur(2px);
       }
