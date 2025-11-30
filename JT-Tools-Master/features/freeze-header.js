@@ -75,6 +75,13 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
+    /* Exclude left sidebars (job switcher) - they have their own positioning */
+    /* Higher specificity to override the above rules */
+    .jt-freeze-header-active .shadow-line-left div.overflow-y-auto.overscroll-contain.sticky,
+    .jt-freeze-header-active div.shadow-line-left div.overflow-y-auto.overscroll-contain.sticky {
+      top: unset !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
