@@ -485,11 +485,22 @@ const CustomThemeFeature = (() => {
       .popup,
       .modal,
       .dropdown,
-      div[class*="absolute"][class*="bg-"],
-      div[class*="fixed"][class*="bg-"],
-      div[class*="z-"][class*="bg-"] {
+      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]),
+      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]),
+      div[class*="z-"][class*="bg-"]:not(.inset-0):not([class*="opacity"]) {
         background-color: ${background} !important;
         color: ${text} !important;
+      }
+
+      /* Preserve modal/popup backdrop with semi-transparent dark overlay */
+      /* These elements have inset-0 (full screen) and are used for dimming background */
+      /* Target both fixed and absolute positioned backdrops (JobTread uses absolute) */
+      div.fixed.inset-0[class*="bg-black"],
+      div.fixed.inset-0[class*="bg-gray"],
+      div.absolute.inset-0[class*="bg-black"],
+      div.absolute.inset-0[class*="bg-gray"] {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(2px);
       }
 
       /* JobTread native tooltips (Popper.js) - use darker background */
@@ -501,9 +512,10 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Black/Dark Background Overrides === */
-      .bg-black,
-      .bg-gray-800,
-      .bg-gray-900 {
+      /* Exclude backdrop elements (inset-0 = full screen overlay) */
+      .bg-black:not(.inset-0),
+      .bg-gray-800:not(.inset-0),
+      .bg-gray-900:not(.inset-0) {
         background-color: ${background} !important;
       }
 
