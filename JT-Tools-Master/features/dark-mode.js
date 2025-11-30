@@ -15,6 +15,9 @@ const DarkModeFeature = (() => {
     console.log('DarkMode: Initializing...');
     isActive = true;
 
+    // Add dark mode class to body for other features to detect
+    document.body.classList.add('jt-dark-mode');
+
     // Inject dark mode CSS
     injectDarkModeCSS();
 
@@ -30,6 +33,9 @@ const DarkModeFeature = (() => {
 
     console.log('DarkMode: Cleaning up...');
     isActive = false;
+
+    // Remove dark mode class from body
+    document.body.classList.remove('jt-dark-mode');
 
     // Remove injected CSS
     if (styleElement) {
