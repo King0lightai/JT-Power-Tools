@@ -231,8 +231,10 @@ const CustomThemeFeature = (() => {
     };
     const primaryBlended15 = blendColors(primary, background, 0.15);  // Solid blend for sticky columns
 
-    // Darkened background for tooltips and popovers (15% darker)
-    const backgroundDark = adjustBrightness(background, -15);
+    // Subtle background shades for visual hierarchy
+    const backgroundSubtle = adjustBrightness(background, -5);   // 5% darker for bg-gray-50
+    const backgroundMuted = adjustBrightness(background, -10);   // 10% darker for bg-gray-100
+    const backgroundDark = adjustBrightness(background, -15);    // 15% darker for tooltips
 
     // Get appropriate text color for primary background (auto white/black based on luminance)
     // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
@@ -448,12 +450,24 @@ const CustomThemeFeature = (() => {
       /* Note: .bg-yellow-100 is excluded to preserve edited cell highlighting */
       /* Note: .bg-blue-50 and .bg-blue-100 are excluded - they're used for selection highlighting */
       .bg-white,
-      .bg-gray-50,
-      .bg-gray-100,
-      .bg-gray-200,
-      .bg-gray-700,
       .bg-slate-50 {
         background-color: ${background};
+      }
+
+      /* Subtle shade for slight contrast (hover states, badges) */
+      .bg-gray-50 {
+        background-color: ${backgroundSubtle};
+      }
+
+      /* Muted shade for page backgrounds (messages, lists) */
+      .bg-gray-100,
+      .bg-gray-200 {
+        background-color: ${backgroundMuted};
+      }
+
+      /* Dark backgrounds get the darkest shade */
+      .bg-gray-700 {
+        background-color: ${backgroundDark};
       }
 
       /* === Budget Row Selection Highlighting === */
