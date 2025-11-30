@@ -666,6 +666,21 @@ const CustomThemeFeature = (() => {
         filter: brightness(0.9);
       }
 
+      /* Purple buttons (Send button, etc.) */
+      button.bg-purple-700,
+      button.bg-purple-600,
+      button[class*="bg-purple"] {
+        background-color: ${primary} !important;
+        border-color: ${primary} !important;
+        color: ${primaryText} !important;
+      }
+
+      button.hover\\:bg-purple-800:hover,
+      button.hover\\:bg-purple-700:hover {
+        background-color: ${primary} !important;
+        filter: brightness(0.9);
+      }
+
       /* === Selected Box Border (Orange -> Primary) === */
       .border-jtOrange {
         border-color: ${primary} !important;
