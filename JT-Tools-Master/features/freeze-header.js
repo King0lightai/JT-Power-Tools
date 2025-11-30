@@ -66,6 +66,7 @@ const FreezeHeaderFeature = (() => {
 
     /* Sidebar sticky content - position below frozen headers when scrolling */
     /* The inner sticky element needs to stick below the action toolbar */
+    /* Target right-side sidebars only (shadow-line-right or explicit right-0 positioning) */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.overflow-y-auto.overscroll-contain.sticky {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
@@ -75,11 +76,11 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Exclude left sidebars (job switcher) - they have their own positioning */
-    /* Higher specificity to override the above rules */
-    .jt-freeze-header-active .shadow-line-left div.overflow-y-auto.overscroll-contain.sticky,
-    .jt-freeze-header-active div.shadow-line-left div.overflow-y-auto.overscroll-contain.sticky {
-      top: unset !important;
+    /* IMPORTANT: Exclude job switcher - it's inside shadow-line-left container */
+    /* This must come after the above rules to override them */
+    /* The sticky element that is a direct child of shadow-line-left container */
+    .jt-freeze-header-active .shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
+      top: 48px !important;
     }
 
     /* The inner flex container with the actual tabs */
