@@ -76,10 +76,11 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* IMPORTANT: Exclude job switcher - it's inside shadow-line-left container */
-    /* This must come after the above rules to override them */
-    /* The sticky element that is a direct child of shadow-line-left container */
-    .jt-freeze-header-active .shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
+    /* IMPORTANT: Exclude job switcher sidebar - it's inside shadow-line-left container */
+    /* This must come after the above rules and have higher specificity to override them */
+    /* Match the full parent class chain for maximum specificity */
+    .jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky,
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
       top: 48px !important;
     }
 
