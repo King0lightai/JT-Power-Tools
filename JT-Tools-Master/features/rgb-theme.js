@@ -252,6 +252,14 @@ const CustomThemeFeature = (() => {
       /* === JT Power Tools - Custom Color Theme === */
       /* Using user's chosen Primary, Background, and Text colors */
 
+      /* === CSS Custom Properties for other features === */
+      :root {
+        --jt-theme-primary: ${primary};
+        --jt-theme-background: ${background};
+        --jt-theme-text: ${text};
+        --jt-theme-border: ${borderColor};
+      }
+
       /* === Logo Colors === */
       /* Make JOBTREAD text use primary color (keep orange text as-is) */
       .text-gray-800 {
