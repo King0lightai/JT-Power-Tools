@@ -523,6 +523,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Popups, Tooltips, and Modals === */
+      /* Exclude data-popper tooltips - they get primary color below */
       [role="dialog"],
       [role="tooltip"],
       [role="menu"],
@@ -531,37 +532,35 @@ const CustomThemeFeature = (() => {
       .popup,
       .modal,
       .dropdown,
-      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]),
-      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]),
-      div[class*="z-"][class*="bg-"]:not(.inset-0):not([class*="opacity"]) {
+      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
+      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
+      div[class*="z-"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]) {
         background-color: ${background} !important;
         color: ${text} !important;
       }
 
       /* Preserve modal/popup backdrop with semi-transparent dark overlay */
-      /* These elements have inset-0 (full screen) and are used for dimming background */
-      /* Target both fixed and absolute positioned backdrops (JobTread uses absolute) */
-      div.fixed.inset-0[class*="bg-black"],
-      div.fixed.inset-0[class*="bg-gray"],
-      div.absolute.inset-0[class*="bg-black"],
-      div.absolute.inset-0[class*="bg-gray"] {
+      /* Only target actual backdrop colors (800/900), not page backgrounds (100/200) */
+      div.fixed.inset-0.bg-black,
+      div.fixed.inset-0.bg-gray-800,
+      div.fixed.inset-0.bg-gray-900,
+      div.absolute.inset-0.bg-black,
+      div.absolute.inset-0.bg-gray-800,
+      div.absolute.inset-0.bg-gray-900 {
         background-color: rgba(0, 0, 0, 0.5) !important;
         backdrop-filter: blur(2px);
       }
 
       /* === Black/Dark Background Overrides === */
       /* Exclude backdrop elements (inset-0 = full screen overlay) */
-      .bg-black:not(.inset-0),
-      .bg-gray-800:not(.inset-0),
-      .bg-gray-900:not(.inset-0) {
+      .bg-black:not(.inset-0):not([data-popper-placement]),
+      .bg-gray-800:not(.inset-0):not([data-popper-placement]),
+      .bg-gray-900:not(.inset-0):not([data-popper-placement]) {
         background-color: ${background} !important;
       }
 
       /* JobTread native tooltips (Popper.js) - use primary color */
-      /* Must come AFTER .bg-black rules above to take precedence */
-      div[data-popper-placement].bg-black,
-      div[data-popper-placement].bg-gray-800,
-      div[data-popper-placement].bg-gray-900 {
+      div[data-popper-placement] {
         background-color: ${primary} !important;
         color: ${primaryText} !important;
       }
