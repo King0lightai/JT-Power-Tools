@@ -539,16 +539,14 @@ const CustomThemeFeature = (() => {
         color: ${text} !important;
       }
 
-      /* Preserve modal/popup backdrop with semi-transparent dark overlay */
-      /* Only target actual backdrop colors (800/900), not page backgrounds (100/200) */
+      /* Modal/popup backdrop - solid background for RGB theme */
       div.fixed.inset-0.bg-black,
       div.fixed.inset-0.bg-gray-800,
       div.fixed.inset-0.bg-gray-900,
       div.absolute.inset-0.bg-black,
       div.absolute.inset-0.bg-gray-800,
       div.absolute.inset-0.bg-gray-900 {
-        background-color: rgba(0, 0, 0, 0.5) !important;
-        backdrop-filter: blur(2px);
+        background-color: ${background} !important;
       }
 
       /* === Black/Dark Background Overrides === */
@@ -556,6 +554,21 @@ const CustomThemeFeature = (() => {
       .bg-black:not(.inset-0):not([data-popper-placement]),
       .bg-gray-800:not(.inset-0):not([data-popper-placement]),
       .bg-gray-900:not(.inset-0):not([data-popper-placement]) {
+        background-color: ${background} !important;
+      }
+
+      /* Opacity-based dark backgrounds - make solid for RGB theme */
+      [class*="bg-gray-800\\/"],
+      [class*="bg-gray-900\\/"],
+      [class*="bg-black\\/"] {
+        background-color: ${background} !important;
+      }
+
+      /* File/document viewer panels - solid background */
+      /* Targets panels with dark text (text-white) indicating dark background parent */
+      div.lg\\:grow.flex.flex-col.h-full,
+      div.relative.grow.min-w-0,
+      div.h-full.overflow-auto {
         background-color: ${background} !important;
       }
 
