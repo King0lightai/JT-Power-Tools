@@ -260,6 +260,38 @@ const CustomThemeFeature = (() => {
         --jt-theme-border: ${borderColor};
       }
 
+      /* === Custom Scrollbar Styling === */
+      /* WebKit browsers (Chrome, Safari, Edge) */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: ${background};
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: ${borderColor};
+        border-radius: 5px;
+        border: 2px solid ${background};
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: ${primary};
+      }
+
+      ::-webkit-scrollbar-corner {
+        background: ${background};
+      }
+
+      /* Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: ${borderColor} ${background};
+      }
+
       /* === Logo Colors === */
       /* Make JOBTREAD text use primary color (keep orange text as-is) */
       .text-gray-800 {
