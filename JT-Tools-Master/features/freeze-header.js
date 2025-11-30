@@ -55,7 +55,15 @@ const FreezeHeaderFeature = (() => {
 
     /* Schedule header container - same approach as budget header */
     .jt-freeze-header-active .jt-schedule-header-container {
+      position: sticky !important;
       top: var(--jt-toolbar-bottom, 138px) !important;
+      z-index: 30 !important;
+      background-color: white !important;
+    }
+
+    /* Ensure schedule/task list header children have white background */
+    .jt-freeze-header-active .jt-schedule-header-container > div {
+      background-color: white !important;
     }
 
     /* Task/item sidebar - boost z-index so it doesn't get covered by frozen headers */
@@ -105,7 +113,9 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode.jt-freeze-header-active .jt-action-toolbar,
-    body.jt-dark-mode.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    body.jt-dark-mode.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container,
+    body.jt-dark-mode.jt-freeze-header-active .jt-schedule-header-container > div {
       background-color: #2c2c2c !important;
       border-color: #464646 !important;
     }
@@ -131,7 +141,9 @@ const FreezeHeaderFeature = (() => {
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container,
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-custom-theme.jt-freeze-header-active .jt-action-toolbar,
-    body.jt-custom-theme.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    body.jt-custom-theme.jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
+    body.jt-custom-theme.jt-freeze-header-active .jt-schedule-header-container,
+    body.jt-custom-theme.jt-freeze-header-active .jt-schedule-header-container > div {
       background-color: var(--jt-theme-background, white) !important;
     }
 
@@ -433,6 +445,51 @@ const FreezeHeaderFeature = (() => {
         if (hasListColumns) {
           container.classList.add('jt-schedule-header-container');
           console.log('FreezeHeader: Found and marked schedule header container (list view)');
+          return true;
+        }
+
+        // Check for TASK/TODO LIST VIEW: has Name, Due, Type columns
+        const hasTaskListColumns = headerText.includes('Name') &&
+          headerText.includes('Due') &&
+          (headerText.includes('Type') || headerText.includes('Assignees'));
+
+        if (hasTaskListColumns) {
+          container.classList.add('jt-schedule-header-container');
+          console.log('FreezeHeader: Found and marked schedule header container (task list view)');
+          return true;
+        }
+      }
+    }
+
+    // Check for standalone flex.min-w-max headers with sticky columns
+    // These are headers where the container itself may not be sticky.z-30
+    const flexHeaders = document.querySelectorAll('div.flex.min-w-max');
+    for (const flexHeader of flexHeaders) {
+      // Check if it has sticky z-10 children (typical of list headers)
+      const stickyColumns = flexHeader.querySelectorAll(':scope > div.sticky.z-10');
+      if (stickyColumns.length === 0) continue;
+
+      // Skip if already marked or inside a marked container
+      if (flexHeader.closest('.jt-schedule-header-container')) continue;
+      if (flexHeader.closest('.jt-budget-header-container')) continue;
+
+      const headerText = flexHeader.textContent;
+
+      // Check for task/todo list headers with Name + Due or Name + Start/End
+      const hasTaskColumns = headerText.includes('Name') &&
+        (headerText.includes('Due') || (headerText.includes('Start') && headerText.includes('End')));
+
+      if (hasTaskColumns) {
+        // Find the parent sticky container or create marking on the flex header's parent
+        let targetContainer = flexHeader.closest('div.sticky');
+        if (!targetContainer) {
+          // The flex header itself needs to be made sticky
+          targetContainer = flexHeader;
+        }
+
+        if (!targetContainer.classList.contains('jt-schedule-header-container')) {
+          targetContainer.classList.add('jt-schedule-header-container');
+          console.log('FreezeHeader: Found and marked standalone list header');
           return true;
         }
       }
