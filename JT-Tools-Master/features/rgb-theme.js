@@ -549,12 +549,12 @@ const CustomThemeFeature = (() => {
         backdrop-filter: blur(2px);
       }
 
-      /* JobTread native tooltips (Popper.js) - use darker background */
+      /* JobTread native tooltips (Popper.js) - use primary color */
       div[data-popper-placement].bg-black,
       div[data-popper-placement].bg-gray-800,
       div[data-popper-placement].bg-gray-900 {
-        background-color: ${backgroundDark} !important;
-        color: ${text} !important;
+        background-color: ${primary} !important;
+        color: ${primaryText} !important;
       }
 
       /* === Black/Dark Background Overrides === */
