@@ -90,31 +90,23 @@ const FreezeHeaderFeature = (() => {
       background-color: rgb(249, 250, 251) !important;
     }
 
-    /* Dark mode compatibility */
+    /* Dark mode compatibility - uses body.jt-dark-mode class added by dark-mode.js */
     body.jt-dark-mode .jt-freeze-header-active .jt-top-header,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
-    body.jt-dark-mode .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-top-header,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
+    body.jt-dark-mode .jt-freeze-header-active .jt-budget-header-container .flex.min-w-max > div {
       background-color: #1f2937 !important;
       border-color: #374151 !important;
     }
 
     /* Dark mode box-shadow for gap coverage */
     body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container,
-    body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-action-toolbar {
+    body.jt-dark-mode .jt-freeze-header-active .jt-action-toolbar {
       box-shadow: 0 1px 0 0 #1f2937 !important;
     }
 
-    body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container a,
-    #jt-dark-mode-styles ~ * .jt-freeze-header-active .jt-job-tabs-container a {
+    body.jt-dark-mode .jt-freeze-header-active .jt-job-tabs-container a {
       color: #e5e7eb !important;
     }
 
