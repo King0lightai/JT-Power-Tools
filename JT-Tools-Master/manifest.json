@@ -52,6 +52,7 @@
         "features/help-sidebar-support.js",
         "features/freeze-header.js",
         "features/character-counter.js",
+        "features/expand-all-day.js",
         "content.js"
       ],
       "run_at": "document_end"
