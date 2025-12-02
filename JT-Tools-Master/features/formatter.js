@@ -1015,8 +1015,23 @@ const FormatterFeature = (() => {
       toolbar.style.top = `${rect.bottom + window.scrollY + padding}px`;
     }
 
-    toolbar.style.left = `${rect.left + window.scrollX}px`;
     toolbar.style.width = `auto`;
+
+    // Calculate left position with right-side overflow prevention
+    let leftPosition = rect.left + window.scrollX;
+
+    // Get the toolbar's actual width (need to temporarily show it to measure)
+    const toolbarWidth = toolbar.offsetWidth || toolbar.getBoundingClientRect().width;
+    const viewportWidth = window.innerWidth;
+    const rightEdgePadding = 8;
+
+    // Check if toolbar would overflow on the right side
+    if (leftPosition + toolbarWidth > viewportWidth - rightEdgePadding) {
+      // Shift toolbar left so its right edge aligns with viewport edge (minus padding)
+      leftPosition = Math.max(rightEdgePadding, viewportWidth - toolbarWidth - rightEdgePadding);
+    }
+
+    toolbar.style.left = `${leftPosition}px`;
   }
 
   // Collect alert data from user with proper prompt locking
