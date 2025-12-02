@@ -134,12 +134,19 @@ td div.cursor-pointer[style*="border-left"] {
 }
 
 /* Today's date indicator in calendar - keep solid blue in dark mode */
-.bg-blue-500 {
+/* Exclude Gantt task bars which have rounded-l-sm/rounded-r-sm and inline background colors */
+.bg-blue-500:not(.rounded-l-sm):not(.rounded-r-sm):not([style*="background-color"]) {
     background-color: #3b82f6 !important;
 }
 
 .bg-blue-500.text-white {
     color: #ffffff !important;
+}
+
+/* Gantt task bars - preserve their inline background-color (task type colors) */
+/* These bars have bg-blue-500 as a fallback but should use inline style colors */
+.h-4.rounded-l-sm.rounded-r-sm.bg-blue-500[style*="background-color"] {
+    /* Allow inline styles to take precedence - no !important override */
 }
 
 .bg-gray-800\/80 {
