@@ -36,6 +36,13 @@ const TaskCompletion = (() => {
         return;
       }
 
+      // Skip tasks with subtasks - JT requires all subtasks to be completed first
+      // Subtask indicator looks like "0/2" or "1/3" in a div.grow.shrink-0.text-right
+      if (hasSubtaskIndicator(taskNameContainer)) {
+        console.log('TaskCompletion: Skipping task with subtasks');
+        return;
+      }
+
       // Detect if task is already complete
       const isComplete = isTaskComplete(taskNameContainer);
 
@@ -65,6 +72,26 @@ const TaskCompletion = (() => {
     // Completed tasks have: <path d="M20 6 9 17l-5-5"></path>
     const checkmarkPath = taskNameContainer.querySelector('path[d="M20 6 9 17l-5-5"]');
     return !!checkmarkPath;
+  }
+
+  /**
+   * Check if a task has subtasks by looking for the subtask indicator (e.g., "0/2", "1/3")
+   * JT requires all subtasks to be completed before the parent can be marked complete
+   * @param {HTMLElement} taskNameContainer - The task name container element
+   * @returns {boolean} True if task has subtasks
+   */
+  function hasSubtaskIndicator(taskNameContainer) {
+    // Subtask indicator is in a div with classes: grow shrink-0 text-right
+    // and contains text like "0/2" or "1/3"
+    const subtaskDiv = taskNameContainer.querySelector('div.grow.shrink-0.text-right');
+    if (!subtaskDiv) {
+      return false;
+    }
+
+    // Check if the text matches the subtask pattern (number/number)
+    const text = subtaskDiv.textContent.trim();
+    const subtaskPattern = /^\d+\/\d+$/;
+    return subtaskPattern.test(text);
   }
 
   /**
