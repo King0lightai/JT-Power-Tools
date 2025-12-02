@@ -66,10 +66,12 @@ const FormatterDetection = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // Exclude message fields - these should not have the formatter
+    // Get placeholder for field checks
     const placeholder = textarea.getAttribute('placeholder');
+
+    // Include message fields - users can format and preview messages
     if (placeholder === 'Message') {
-      return false;
+      return true;
     }
 
     // Exclude subtask/checklist fields
