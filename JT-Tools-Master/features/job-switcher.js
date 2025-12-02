@@ -219,10 +219,10 @@ const QuickJobSwitcherFeature = (() => {
   }
 
   /**
-   * Select the top job from the filtered list and close sidebar
+   * Select the currently highlighted job (or top job) and close sidebar
    */
   function selectTopJobAndClose() {
-    console.log('QuickJobSwitcher: Selecting top job...');
+    console.log('QuickJobSwitcher: Selecting job...');
 
     // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
@@ -232,38 +232,58 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    // Find all job buttons
-    const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
-    console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
+    // First, check if there's a currently focused job button (from arrow key navigation)
+    const activeElement = document.activeElement;
+    let selectedButton = null;
 
-    // Find the first job (skip close button and header)
-    let topJobButton = null;
-    for (const button of jobButtons) {
-      const text = button.textContent.trim();
-
-      // Skip close button
-      if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
-        console.log('  → Skipping close button');
-        continue;
+    // Check if the active element is a job button in the sidebar (not the search input)
+    if (activeElement &&
+        sidebar.contains(activeElement) &&
+        activeElement.getAttribute('role') === 'button' &&
+        activeElement.tagName !== 'INPUT') {
+      const text = activeElement.textContent.trim();
+      // Make sure it's not the close button or header
+      if (!text.includes('Close') &&
+          !text.includes('×') &&
+          !text.includes('Job Switcher') &&
+          !activeElement.querySelector('path[d*="M18 6"]')) {
+        selectedButton = activeElement;
+        console.log(`QuickJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
       }
-
-      // Skip header
-      if (text.includes('Job Switcher')) {
-        console.log('  → Skipping header');
-        continue;
-      }
-
-      // This is the first job in the list
-      topJobButton = button;
-      console.log(`QuickJobSwitcher: ✅ Top job: ${text.substring(0, 50)}`);
-      break;
     }
 
-    if (topJobButton) {
-      console.log('QuickJobSwitcher: Clicking top job...');
+    // If no focused job, fall back to finding the top job
+    if (!selectedButton) {
+      // Find all job buttons
+      const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
+      console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
+
+      // Find the first job (skip close button and header)
+      for (const button of jobButtons) {
+        const text = button.textContent.trim();
+
+        // Skip close button
+        if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
+          continue;
+        }
+
+        // Skip header
+        if (text.includes('Job Switcher')) {
+          continue;
+        }
+
+        // This is the first job in the list
+        selectedButton = button;
+        console.log(`QuickJobSwitcher: ✅ Top job: ${text.substring(0, 50)}`);
+        break;
+      }
+    }
+
+    if (selectedButton) {
+      console.log('QuickJobSwitcher: Clicking selected job...');
 
       // Click the job button to navigate
-      topJobButton.click();
+      selectedButton.click();
 
       // Close sidebar immediately after clicking
       // If navigation happens, sidebar will be removed anyway
