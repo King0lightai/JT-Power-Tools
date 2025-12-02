@@ -1,5 +1,5 @@
 // JT Power Tools - Expand All Day Events Feature
-// Expands all-day events section in week/day views and hides hourly time slots
+// Collapses hourly time grid and expands all-day events section in week/day views
 
 const ExpandAllDayFeature = (() => {
   let isActiveState = false;
@@ -7,9 +7,9 @@ const ExpandAllDayFeature = (() => {
   let styleElement = null;
   let debounceTimer = null;
   let urlCheckInterval = null;
-  let isExpanded = false;
+  let isCollapsed = false; // When true, time grid is hidden and all-day is expanded
 
-  // CSS for expanded all-day view
+  // CSS for collapsed/expanded all-day view
   const EXPAND_STYLES = `
     /* Expand All Day Events Styles */
 
@@ -54,20 +54,56 @@ const ExpandAllDayFeature = (() => {
       margin-right: 3px;
     }
 
-    /* When expanded, hide the hourly time grid */
-    .jt-allday-expanded .jt-hourly-grid {
+    /* When collapsed (time grid hidden), hide the hourly time grid */
+    .jt-allday-collapsed .jt-hourly-grid {
       display: none !important;
     }
 
-    /* When expanded, remove max-height constraint on all-day container */
-    .jt-allday-expanded .jt-allday-container {
+    /* When collapsed, remove max-height constraint on all-day container */
+    .jt-allday-collapsed .jt-allday-container {
       max-height: none !important;
       overflow-y: visible !important;
     }
 
-    /* Ensure all-day events section fills available space when expanded */
-    .jt-allday-expanded .jt-allday-section {
+    /* Ensure all-day events section fills available space when collapsed */
+    .jt-allday-collapsed .jt-allday-section {
       flex-grow: 1;
+    }
+
+    /* Make all-day event cards larger when time grid is collapsed */
+    .jt-allday-collapsed .jt-allday-container .grid > div > div[style*="height: 20px"] {
+      height: 48px !important;
+    }
+
+    .jt-allday-collapsed .jt-allday-container .select-none.break-inside-avoid {
+      height: 48px !important;
+    }
+
+    /* Increase font size and padding for event cards when collapsed */
+    .jt-allday-collapsed .jt-allday-container .text-xs {
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+    }
+
+    .jt-allday-collapsed .jt-allday-container .px-1 {
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
+    }
+
+    .jt-allday-collapsed .jt-allday-container .py-0\\.5 {
+      padding-top: 0.375rem !important;
+      padding-bottom: 0.375rem !important;
+    }
+
+    /* Make assignee avatars slightly larger */
+    .jt-allday-collapsed .jt-allday-container .h-4.w-4 {
+      height: 1.25rem !important;
+      width: 1.25rem !important;
+    }
+
+    /* Increase spacing between rows */
+    .jt-allday-collapsed .jt-allday-container .grid {
+      gap: 2px;
     }
 
     /* Dark mode support */
@@ -248,25 +284,25 @@ const ExpandAllDayFeature = (() => {
   }
 
   /**
-   * Create the expand/collapse toggle button
+   * Create the collapse/expand toggle button
    */
   function createToggleButton() {
     const btn = document.createElement('button');
     btn.className = 'jt-expand-allday-btn';
-    btn.setAttribute('title', 'Expand all-day events (hide hourly grid)');
+    btn.setAttribute('title', 'Collapse time grid to show only all-day events');
 
-    // Icon - expand arrows
+    // Icon - collapse arrows (pointing inward)
     btn.innerHTML = `
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        <path d="M4 14h6v6M14 4h6v6M10 14l-7 7M21 3l-7 7"/>
       </svg>
-      <span>Expand</span>
+      <span>Collapse</span>
     `;
 
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleExpanded();
+      toggleCollapsed();
     });
 
     return btn;
@@ -292,7 +328,7 @@ const ExpandAllDayFeature = (() => {
     // Insert button after the "all-day" text
     allDayLabel.appendChild(btn);
 
-    // Update button state based on current expansion state
+    // Update button state based on current collapsed state
     updateButtonState(btn);
 
     console.log('ExpandAllDay: Toggle button added');
@@ -307,39 +343,41 @@ const ExpandAllDayFeature = (() => {
     }
     if (!btn) return;
 
-    if (isExpanded) {
+    if (isCollapsed) {
+      // Time grid is hidden, show "Expand" to restore it
       btn.classList.add('active');
-      btn.querySelector('span').textContent = 'Collapse';
-      btn.setAttribute('title', 'Collapse to show hourly grid');
-      // Update icon to collapse arrows
-      btn.querySelector('svg').innerHTML = '<path d="M4 14h6v6M14 4h6v6M4 14l6-6M20 4l-6 6"/>';
-    } else {
-      btn.classList.remove('active');
       btn.querySelector('span').textContent = 'Expand';
-      btn.setAttribute('title', 'Expand all-day events (hide hourly grid)');
-      // Update icon to expand arrows
+      btn.setAttribute('title', 'Expand to show hourly time grid');
+      // Update icon to expand arrows (pointing outward)
       btn.querySelector('svg').innerHTML = '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+    } else {
+      // Time grid is visible, show "Collapse" to hide it
+      btn.classList.remove('active');
+      btn.querySelector('span').textContent = 'Collapse';
+      btn.setAttribute('title', 'Collapse time grid to show only all-day events');
+      // Update icon to collapse arrows (pointing inward)
+      btn.querySelector('svg').innerHTML = '<path d="M4 14h6v6M14 4h6v6M10 14l-7 7M21 3l-7 7"/>';
     }
   }
 
   /**
-   * Toggle the expanded state
+   * Toggle the collapsed state
    */
-  function toggleExpanded() {
-    isExpanded = !isExpanded;
-    applyExpandedState();
+  function toggleCollapsed() {
+    isCollapsed = !isCollapsed;
+    applyCollapsedState();
     updateButtonState();
 
     // Save state to storage
-    saveExpandedState();
+    saveCollapsedState();
 
-    console.log('ExpandAllDay: Toggled to', isExpanded ? 'expanded' : 'collapsed');
+    console.log('ExpandAllDay: Toggled to', isCollapsed ? 'collapsed (time grid hidden)' : 'expanded (time grid visible)');
   }
 
   /**
-   * Apply the expanded/collapsed state to the DOM
+   * Apply the collapsed/expanded state to the DOM
    */
-  function applyExpandedState() {
+  function applyCollapsedState() {
     // Mark elements for CSS targeting
     const allDayContainer = findAllDayContainer();
     const hourlyGrid = findHourlyGrid();
@@ -349,17 +387,17 @@ const ExpandAllDayFeature = (() => {
     const calendarContainer = document.querySelector('div.grow.flex.flex-col');
 
     if (calendarContainer) {
-      if (isExpanded) {
-        calendarContainer.classList.add('jt-allday-expanded');
+      if (isCollapsed) {
+        calendarContainer.classList.add('jt-allday-collapsed');
       } else {
-        calendarContainer.classList.remove('jt-allday-expanded');
+        calendarContainer.classList.remove('jt-allday-collapsed');
       }
     }
 
     // Mark the all-day container
     if (allDayContainer) {
       allDayContainer.classList.add('jt-allday-container');
-      if (isExpanded) {
+      if (isCollapsed) {
         allDayContainer.style.maxHeight = 'none';
       } else {
         allDayContainer.style.maxHeight = '';
@@ -369,7 +407,7 @@ const ExpandAllDayFeature = (() => {
     // Mark the hourly grid
     if (hourlyGrid) {
       hourlyGrid.classList.add('jt-hourly-grid');
-      if (isExpanded) {
+      if (isCollapsed) {
         hourlyGrid.style.display = 'none';
       } else {
         hourlyGrid.style.display = '';
@@ -380,15 +418,60 @@ const ExpandAllDayFeature = (() => {
     if (allDaySection) {
       allDaySection.classList.add('jt-allday-section');
     }
+
+    // Apply larger card styles via inline style override when collapsed
+    if (isCollapsed) {
+      applyLargerCardStyles();
+    } else {
+      removeLargerCardStyles();
+    }
   }
 
   /**
-   * Save expanded state to chrome storage
+   * Apply larger styles to all-day event cards
    */
-  async function saveExpandedState() {
+  function applyLargerCardStyles() {
+    const allDayContainer = document.querySelector('.jt-allday-container');
+    if (!allDayContainer) return;
+
+    // Find all event card containers and increase their height
+    const eventRows = allDayContainer.querySelectorAll('.select-none.break-inside-avoid');
+    eventRows.forEach(row => {
+      row.style.height = '48px';
+    });
+
+    // Also target the grid row divs that set height
+    const gridRows = allDayContainer.querySelectorAll('div[style*="height: 20px"]');
+    gridRows.forEach(row => {
+      row.style.height = '48px';
+    });
+  }
+
+  /**
+   * Remove larger card styles
+   */
+  function removeLargerCardStyles() {
+    const allDayContainer = document.querySelector('.jt-allday-container');
+    if (!allDayContainer) return;
+
+    const eventRows = allDayContainer.querySelectorAll('.select-none.break-inside-avoid');
+    eventRows.forEach(row => {
+      row.style.height = '';
+    });
+
+    const gridRows = allDayContainer.querySelectorAll('div[style*="height: 48px"]');
+    gridRows.forEach(row => {
+      row.style.height = '20px';
+    });
+  }
+
+  /**
+   * Save collapsed state to chrome storage
+   */
+  async function saveCollapsedState() {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage) {
-        await chrome.storage.local.set({ jtExpandAllDayState: isExpanded });
+        await chrome.storage.local.set({ jtExpandAllDayCollapsed: isCollapsed });
       }
     } catch (error) {
       console.error('ExpandAllDay: Error saving state:', error);
@@ -396,14 +479,14 @@ const ExpandAllDayFeature = (() => {
   }
 
   /**
-   * Load expanded state from chrome storage
+   * Load collapsed state from chrome storage
    */
-  async function loadExpandedState() {
+  async function loadCollapsedState() {
     try {
       if (typeof chrome !== 'undefined' && chrome.storage) {
-        const result = await chrome.storage.local.get(['jtExpandAllDayState']);
-        if (result.jtExpandAllDayState !== undefined) {
-          isExpanded = result.jtExpandAllDayState;
+        const result = await chrome.storage.local.get(['jtExpandAllDayCollapsed']);
+        if (result.jtExpandAllDayCollapsed !== undefined) {
+          isCollapsed = result.jtExpandAllDayCollapsed;
         }
       }
     } catch (error) {
@@ -421,7 +504,7 @@ const ExpandAllDayFeature = (() => {
     }
 
     addToggleButton();
-    applyExpandedState();
+    applyCollapsedState();
     console.log('ExpandAllDay: Feature set up');
   }
 
@@ -435,10 +518,10 @@ const ExpandAllDayFeature = (() => {
       btn.remove();
     }
 
-    // Remove expansion state
-    const calendarContainer = document.querySelector('.jt-allday-expanded');
+    // Remove collapsed state
+    const calendarContainer = document.querySelector('.jt-allday-collapsed');
     if (calendarContainer) {
-      calendarContainer.classList.remove('jt-allday-expanded');
+      calendarContainer.classList.remove('jt-allday-collapsed');
     }
 
     // Remove markers and reset styles
@@ -455,6 +538,9 @@ const ExpandAllDayFeature = (() => {
     document.querySelectorAll('.jt-allday-section').forEach(el => {
       el.classList.remove('jt-allday-section');
     });
+
+    // Reset card heights
+    removeLargerCardStyles();
   }
 
   /**
@@ -470,7 +556,7 @@ const ExpandAllDayFeature = (() => {
     isActiveState = true;
 
     // Load saved state
-    await loadExpandedState();
+    await loadCollapsedState();
 
     // Inject styles
     injectStyles();
@@ -575,7 +661,7 @@ const ExpandAllDayFeature = (() => {
     init,
     cleanup,
     isActive: () => isActiveState,
-    isExpanded: () => isExpanded
+    isCollapsed: () => isCollapsed
   };
 })();
 
