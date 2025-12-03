@@ -11,6 +11,13 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Visual feedback with drop zone highlighting
 - Full year boundary support (Dec 2025 → Jan 2026)
 
+### 🗂️ Kanban Type Filter
+- Automatically hides empty columns in Kanban view when grouped by type
+- Clean up your Kanban board by removing columns with 0 items
+- Works on Schedule and Tasks/To-Dos pages
+- Real-time updates as you filter or change content
+- Toggle on/off from the extension popup
+
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability in schedule views
 - Works on Month, Week, and Day schedule views only
