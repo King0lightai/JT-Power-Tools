@@ -378,13 +378,17 @@ const ExpandAllDayFeature = (() => {
    * Apply the collapsed/expanded state to the DOM
    */
   function applyCollapsedState() {
-    // Mark elements for CSS targeting
+    // Always re-find elements in case DOM has changed
     const allDayContainer = findAllDayContainer();
     const hourlyGrid = findHourlyGrid();
     const allDaySection = findAllDaySection();
 
-    // Find the main calendar view container
-    const calendarContainer = document.querySelector('div.grow.flex.flex-col');
+    // Find the main calendar view container (try multiple selectors)
+    let calendarContainer = document.querySelector('div.grow.flex.flex-col');
+    if (!calendarContainer) {
+      // Fallback: find the container that holds the schedule view
+      calendarContainer = document.querySelector('div.flex.flex-col.grow');
+    }
 
     if (calendarContainer) {
       if (isCollapsed) {
@@ -399,8 +403,10 @@ const ExpandAllDayFeature = (() => {
       allDayContainer.classList.add('jt-allday-container');
       if (isCollapsed) {
         allDayContainer.style.maxHeight = 'none';
+        allDayContainer.style.overflow = 'visible';
       } else {
         allDayContainer.style.maxHeight = '';
+        allDayContainer.style.overflow = '';
       }
     }
 
@@ -425,6 +431,9 @@ const ExpandAllDayFeature = (() => {
     } else {
       removeLargerCardStyles();
     }
+
+    // Update button state in case it was re-created
+    updateButtonState();
   }
 
   /**
@@ -432,19 +441,43 @@ const ExpandAllDayFeature = (() => {
    */
   function applyLargerCardStyles() {
     const allDayContainer = document.querySelector('.jt-allday-container');
-    if (!allDayContainer) return;
+    if (!allDayContainer) {
+      // Try to find and mark it again
+      const container = findAllDayContainer();
+      if (container) {
+        container.classList.add('jt-allday-container');
+        applyLargerCardStyles();
+      }
+      return;
+    }
 
     // Find all event card containers and increase their height
     const eventRows = allDayContainer.querySelectorAll('.select-none.break-inside-avoid');
     eventRows.forEach(row => {
-      row.style.height = '48px';
+      if (row.style.height !== '48px') {
+        row.style.height = '48px';
+      }
     });
 
-    // Also target the grid row divs that set height
-    const gridRows = allDayContainer.querySelectorAll('div[style*="height: 20px"]');
+    // Also target the grid row divs that set height (both 20px original and any unmarked)
+    const gridRows = allDayContainer.querySelectorAll('div[style*="height"]');
     gridRows.forEach(row => {
-      row.style.height = '48px';
+      const currentHeight = row.style.height;
+      if (currentHeight && currentHeight !== '48px' && parseInt(currentHeight) < 48) {
+        row.style.height = '48px';
+      }
     });
+
+    // Also target parent wrapper divs in the grid
+    const gridParent = allDayContainer.querySelector('.grid');
+    if (gridParent) {
+      const gridChildren = gridParent.querySelectorAll(':scope > div > div[style*="height"]');
+      gridChildren.forEach(child => {
+        if (child.style.height !== '48px' && parseInt(child.style.height) < 48) {
+          child.style.height = '48px';
+        }
+      });
+    }
   }
 
   /**
@@ -564,11 +597,18 @@ const ExpandAllDayFeature = (() => {
     // Set up feature
     setupFeature();
 
-    // Watch for DOM changes (SPA navigation, view changes)
+    // Watch for DOM changes (SPA navigation, view changes, sidebar open/close)
     observer = new MutationObserver((mutations) => {
       let shouldUpdate = false;
+      let shouldReapplyStyles = false;
 
       for (const mutation of mutations) {
+        // Check if changes happened inside the all-day container (cards added/removed)
+        const allDayContainer = document.querySelector('.jt-allday-container');
+        if (allDayContainer && allDayContainer.contains(mutation.target)) {
+          shouldReapplyStyles = true;
+        }
+
         if (mutation.addedNodes.length > 0) {
           for (const node of mutation.addedNodes) {
             if (node.nodeType === Node.ELEMENT_NODE) {
@@ -582,14 +622,28 @@ const ExpandAllDayFeature = (() => {
                 shouldUpdate = true;
                 break;
               }
+              // Check if schedule cards are being added (e.g., after sidebar closes)
+              if (node.classList && (node.classList.contains('select-none') ||
+                  node.classList.contains('break-inside-avoid'))) {
+                shouldReapplyStyles = true;
+              }
+              if (node.querySelector && node.querySelector('.select-none.break-inside-avoid')) {
+                shouldReapplyStyles = true;
+              }
             }
           }
         }
         if (shouldUpdate) break;
       }
 
-      if (shouldUpdate) {
-        // Debounce updates
+      // Re-apply styles to new cards if collapsed
+      if (shouldReapplyStyles && isCollapsed) {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          applyCollapsedState();
+        }, 100);
+      } else if (shouldUpdate) {
+        // Debounce full setup updates
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           setupFeature();
@@ -599,7 +653,9 @@ const ExpandAllDayFeature = (() => {
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
     });
 
     // Watch for URL changes (SPA navigation)
