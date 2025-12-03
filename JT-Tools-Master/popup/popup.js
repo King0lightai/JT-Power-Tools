@@ -12,7 +12,6 @@ const defaultSettings = {
   helpSidebarSupport: true,
   freezeHeader: false,
   characterCounter: false,
-  expandAllDay: false,
   kanbanTypeFilter: false,
   themeColors: {
     primary: '#3B82F6',     // Default blue
@@ -122,7 +121,6 @@ async function loadSettings() {
     document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
     document.getElementById('freezeHeader').checked = settings.freezeHeader !== undefined ? settings.freezeHeader : false;
     document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
-    document.getElementById('expandAllDay').checked = settings.expandAllDay !== undefined ? settings.expandAllDay : false;
     document.getElementById('kanbanTypeFilter').checked = settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false;
 
     // Load theme colors
@@ -232,7 +230,6 @@ async function getCurrentSettings() {
     helpSidebarSupport: true, // Always enabled, not user-toggleable
     freezeHeader: document.getElementById('freezeHeader').checked,
     characterCounter: document.getElementById('characterCounter').checked,
-    expandAllDay: document.getElementById('expandAllDay').checked,
     kanbanTypeFilter: document.getElementById('kanbanTypeFilter').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
