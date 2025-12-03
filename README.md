@@ -22,6 +22,13 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Checkboxes added to task cards in month schedule view for instant task completion
 - Checkboxes added to Action Items card for instant task completion
 
+### ⚠️ Kanban Type Filter
+- Automatically hides empty columns (0 items) when in Kanban view grouped by type
+- Clean up your Kanban board by removing clutter from empty type columns
+- Works on both Schedule and Tasks/To-Dos pages
+- Real-time updates as filters are applied or content changes
+- Easy toggle on/off from the extension popup
+  
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability in schedule views
 - Works on Month, Week, and Day schedule views only
