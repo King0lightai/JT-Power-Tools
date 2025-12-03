@@ -262,12 +262,14 @@ const AutoCollapseGroupsFeature = (() => {
 
   // Listen for URL changes (for SPA navigation)
   function setupNavigationListener() {
-    // Reset flag on URL change
-    let lastUrl = window.location.href;
+    // Only track pathname changes, not query params or hash
+    // This prevents re-collapse when clicking on tasks (which adds task ID to URL)
+    let lastPathname = window.location.pathname;
 
     const checkUrl = () => {
-      if (window.location.href !== lastUrl) {
-        lastUrl = window.location.href;
+      const currentPathname = window.location.pathname;
+      if (currentPathname !== lastPathname) {
+        lastPathname = currentPathname;
         initialCollapseApplied = false;
 
         // Only apply collapse on schedule pages
@@ -280,11 +282,15 @@ const AutoCollapseGroupsFeature = (() => {
     // Check periodically for URL changes (handles pushState)
     setInterval(checkUrl, 500);
 
-    // Also listen for popstate
+    // Also listen for popstate (browser back/forward)
     window.addEventListener('popstate', () => {
-      initialCollapseApplied = false;
-      if (isOnSchedulePage()) {
-        applyInitialCollapse();
+      const currentPathname = window.location.pathname;
+      if (currentPathname !== lastPathname) {
+        lastPathname = currentPathname;
+        initialCollapseApplied = false;
+        if (isOnSchedulePage()) {
+          applyInitialCollapse();
+        }
       }
     });
   }
