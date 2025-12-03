@@ -13,6 +13,7 @@ const defaultSettings = {
   freezeHeader: false,
   characterCounter: false,
   kanbanTypeFilter: false,
+  autoCollapseGroups: false,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -122,6 +123,7 @@ async function loadSettings() {
     document.getElementById('freezeHeader').checked = settings.freezeHeader !== undefined ? settings.freezeHeader : false;
     document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
     document.getElementById('kanbanTypeFilter').checked = settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false;
+    document.getElementById('autoCollapseGroups').checked = settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -231,6 +233,7 @@ async function getCurrentSettings() {
     freezeHeader: document.getElementById('freezeHeader').checked,
     characterCounter: document.getElementById('characterCounter').checked,
     kanbanTypeFilter: document.getElementById('kanbanTypeFilter').checked,
+    autoCollapseGroups: document.getElementById('autoCollapseGroups').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };

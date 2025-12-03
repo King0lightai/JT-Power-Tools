@@ -69,6 +69,11 @@ const featureModules = {
     name: 'Kanban Type Filter',
     feature: () => window.KanbanTypeFilterFeature,
     instance: null
+  },
+  autoCollapseGroups: {
+    name: 'Auto-Collapse Full Groups',
+    feature: () => window.AutoCollapseGroupsFeature,
+    instance: null
   }
 };
 
@@ -87,6 +92,7 @@ let currentSettings = {
   freezeHeader: false,
   characterCounter: false,
   kanbanTypeFilter: false,
+  autoCollapseGroups: false,
   themeColors: {
     primary: '#3B82F6',
     background: '#F3E8FF',
