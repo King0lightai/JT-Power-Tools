@@ -175,13 +175,8 @@ const FormatterFeature = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // Exclude message fields - these should not have the formatter
-    const placeholder = textarea.getAttribute('placeholder');
-    if (placeholder === 'Message') {
-      return false;
-    }
-
     // Exclude subtask/checklist fields
+    const placeholder = textarea.getAttribute('placeholder');
     if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
       return false;
     }
@@ -202,6 +197,11 @@ const FormatterFeature = (() => {
 
     // Check if it's a Budget Description field
     if (placeholder === 'Description') {
+      return true;
+    }
+
+    // Check if it's a Message field
+    if (placeholder === 'Message') {
       return true;
     }
 
@@ -273,7 +273,11 @@ const FormatterFeature = (() => {
     const descriptionFields = document.querySelectorAll('textarea[placeholder="Description"]');
     fields.push(...descriptionFields);
 
-    // 2. ALL Daily Log fields, Todo descriptions, Task descriptions
+    // 2. Message fields
+    const messageFields = document.querySelectorAll('textarea[placeholder="Message"]');
+    fields.push(...messageFields);
+
+    // 3. ALL Daily Log fields, Todo descriptions, Task descriptions
     // (any textarea inside label with bold heading)
     const labels = document.querySelectorAll('label');
     labels.forEach(label => {
@@ -290,7 +294,7 @@ const FormatterFeature = (() => {
       }
     });
 
-    // 3. Daily Log EDIT fields (textareas with transparent color and formatting overlay)
+    // 4. Daily Log EDIT fields (textareas with transparent color and formatting overlay)
     const allTextareas = document.querySelectorAll('textarea');
     allTextareas.forEach(textarea => {
       if (!fields.includes(textarea)) {
@@ -312,16 +316,11 @@ const FormatterFeature = (() => {
       }
     });
 
-    // Filter out time entry notes fields, Time Clock notes fields, message fields, and subtask fields
+    // Filter out time entry notes fields, Time Clock notes fields, and subtask fields
     const filteredFields = fields.filter(field => {
       const placeholder = field.getAttribute('placeholder');
       if (placeholder === 'Set notes') {
         return false; // Exclude time entry notes
-      }
-
-      // Exclude message fields
-      if (placeholder === 'Message') {
-        return false;
       }
 
       // Exclude subtask/checklist fields
