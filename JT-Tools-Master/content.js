@@ -65,11 +65,6 @@ const featureModules = {
     feature: () => window.CharacterCounterFeature,
     instance: null
   },
-  expandAllDay: {
-    name: 'Expand All Day Events',
-    feature: () => window.ExpandAllDayFeature,
-    instance: null
-  },
   kanbanTypeFilter: {
     name: 'Kanban Type Filter',
     feature: () => window.KanbanTypeFilterFeature,
@@ -91,7 +86,6 @@ let currentSettings = {
   helpSidebarSupport: true,
   freezeHeader: false,
   characterCounter: false,
-  expandAllDay: false,
   kanbanTypeFilter: false,
   themeColors: {
     primary: '#3B82F6',
