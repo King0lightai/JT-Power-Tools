@@ -499,6 +499,90 @@ const CustomThemeFeature = (() => {
         background-color: ${primaryBlended15} !important;
       }
 
+      /* === Alert Background Colors === */
+      /* Dark backgrounds for alert boxes to maintain readability */
+      .bg-green-50 {
+        background-color: #1a3a2e !important;
+      }
+
+      .bg-yellow-50 {
+        background-color: #4a3a1a !important;
+      }
+
+      .bg-red-50 {
+        background-color: #4a1f1f !important;
+      }
+
+      .bg-orange-50 {
+        background-color: #4a2a1a !important;
+      }
+
+      .bg-purple-50 {
+        background-color: #3a2a4a !important;
+      }
+
+      /* === Alert Text Colors === */
+      /* Bright text colors for alert headers */
+      .text-green-500,
+      .border-green-500 {
+        color: #34d399;
+        border-color: #34d399;
+      }
+
+      .text-yellow-500,
+      .border-yellow-500 {
+        color: #fbbf24;
+        border-color: #fbbf24;
+      }
+
+      .text-red-500,
+      .border-red-500 {
+        color: #f87171;
+        border-color: #f87171;
+      }
+
+      .text-orange-500,
+      .border-orange-500 {
+        color: #fb923c;
+        border-color: #fb923c;
+      }
+
+      .text-purple-500,
+      .border-purple-500 {
+        color: #a78bfa;
+        border-color: #a78bfa;
+      }
+
+      /* Alert body text should be white, not colored */
+      .bg-green-50,
+      .bg-yellow-50,
+      .bg-red-50,
+      .bg-orange-50,
+      .bg-purple-50 {
+        color: #ffffff;
+      }
+
+      /* Keep the header/title colored */
+      .bg-green-50 .text-green-500 {
+        color: #34d399 !important;
+      }
+
+      .bg-yellow-50 .text-yellow-500 {
+        color: #fbbf24 !important;
+      }
+
+      .bg-red-50 .text-red-500 {
+        color: #f87171 !important;
+      }
+
+      .bg-orange-50 .text-orange-500 {
+        color: #fb923c !important;
+      }
+
+      .bg-purple-50 .text-purple-500 {
+        color: #a78bfa !important;
+      }
+
       .focus\\:bg-white:focus,
       .focus\\:bg-gray-100:focus {
         background-color: ${background};
