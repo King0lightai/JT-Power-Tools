@@ -200,6 +200,37 @@ div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
     border-color: #a78bfa;
 }
 
+/* Alert body text should be white in dark mode, not colored */
+/* Target direct text content inside alert containers */
+.bg-green-50,
+.bg-yellow-50,
+.bg-red-50,
+.bg-orange-50,
+.bg-purple-50 {
+    color: #ffffff;
+}
+
+/* Keep the header/title colored (override the white text for header elements) */
+.bg-green-50 .text-green-500 {
+    color: #34d399 !important;
+}
+
+.bg-yellow-50 .text-yellow-500 {
+    color: #fbbf24 !important;
+}
+
+.bg-red-50 .text-red-500 {
+    color: #f87171 !important;
+}
+
+.bg-orange-50 .text-orange-500 {
+    color: #fb923c !important;
+}
+
+.bg-purple-50 .text-purple-500 {
+    color: #a78bfa !important;
+}
+
 /* Sticky columns need solid colors to prevent see-through when scrolling */
 /* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
 .sticky[style*="left"].bg-blue-50,
