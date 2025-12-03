@@ -148,6 +148,58 @@ div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
     background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
+/* Alert background colors for dark mode */
+.bg-green-50 {
+    background-color: #1a3a2e; /* Dark green for green alerts */
+}
+
+.bg-yellow-50 {
+    background-color: #4a3a1a; /* Dark yellow/amber for yellow alerts */
+}
+
+.bg-red-50 {
+    background-color: #4a1f1f; /* Dark red for red alerts */
+}
+
+.bg-orange-50 {
+    background-color: #4a2a1a; /* Dark orange for orange alerts */
+}
+
+.bg-purple-50 {
+    background-color: #3a2a4a; /* Dark purple for purple alerts */
+}
+
+/* Alert text and border colors for dark mode */
+.text-green-500,
+.border-green-500 {
+    color: #34d399;
+    border-color: #34d399;
+}
+
+.text-yellow-500,
+.border-yellow-500 {
+    color: #fbbf24;
+    border-color: #fbbf24;
+}
+
+.text-red-500,
+.border-red-500 {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+.text-orange-500,
+.border-orange-500 {
+    color: #fb923c;
+    border-color: #fb923c;
+}
+
+.text-purple-500,
+.border-purple-500 {
+    color: #a78bfa;
+    border-color: #a78bfa;
+}
+
 /* Sticky columns need solid colors to prevent see-through when scrolling */
 /* Use blended color: dark background (#2c2c2c) + 20% blue = solid result */
 .sticky[style*="left"].bg-blue-50,
