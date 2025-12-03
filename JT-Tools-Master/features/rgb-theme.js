@@ -249,6 +249,38 @@ const CustomThemeFeature = (() => {
     const orangeText = getTextColor('#f97316');  // orange-500
     const purpleText = getTextColor('#a855f7');  // purple-500
 
+    // Determine if background is light or dark for alert styling
+    const isLightBackground = getLuminance(background) > 0.5;
+
+    // Alert colors - adapt based on background luminance
+    const alertColors = isLightBackground ? {
+      // Light background: use light alert backgrounds with dark text
+      greenBg: '#f0fdf4',
+      yellowBg: '#fffbeb',
+      redBg: '#fef2f2',
+      orangeBg: '#fff7ed',
+      purpleBg: '#faf5ff',
+      greenText: '#10b981',
+      yellowText: '#f59e0b',
+      redText: '#ef4444',
+      orangeText: '#f97316',
+      purpleText: '#8b5cf6',
+      bodyText: '#374151'  // Dark gray for body text on light backgrounds
+    } : {
+      // Dark background: use dark alert backgrounds with light text
+      greenBg: '#1a3a2e',
+      yellowBg: '#4a3a1a',
+      redBg: '#4a1f1f',
+      orangeBg: '#4a2a1a',
+      purpleBg: '#3a2a4a',
+      greenText: '#34d399',
+      yellowText: '#fbbf24',
+      redText: '#f87171',
+      orangeText: '#fb923c',
+      purpleText: '#a78bfa',
+      bodyText: '#ffffff'  // White for body text on dark backgrounds
+    };
+
     // Create CSS using user's chosen colors
     const css = `
       /* === JT Power Tools - Custom Color Theme === */
@@ -500,87 +532,87 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Alert Background Colors === */
-      /* Dark backgrounds for alert boxes to maintain readability */
+      /* Backgrounds adapt based on theme luminance */
       .bg-green-50 {
-        background-color: #1a3a2e !important;
+        background-color: ${alertColors.greenBg} !important;
       }
 
       .bg-yellow-50 {
-        background-color: #4a3a1a !important;
+        background-color: ${alertColors.yellowBg} !important;
       }
 
       .bg-red-50 {
-        background-color: #4a1f1f !important;
+        background-color: ${alertColors.redBg} !important;
       }
 
       .bg-orange-50 {
-        background-color: #4a2a1a !important;
+        background-color: ${alertColors.orangeBg} !important;
       }
 
       .bg-purple-50 {
-        background-color: #3a2a4a !important;
+        background-color: ${alertColors.purpleBg} !important;
       }
 
       /* === Alert Text Colors === */
-      /* Bright text colors for alert headers */
+      /* Text colors adapt based on theme luminance */
       .text-green-500,
       .border-green-500 {
-        color: #34d399;
-        border-color: #34d399;
+        color: ${alertColors.greenText};
+        border-color: ${alertColors.greenText};
       }
 
       .text-yellow-500,
       .border-yellow-500 {
-        color: #fbbf24;
-        border-color: #fbbf24;
+        color: ${alertColors.yellowText};
+        border-color: ${alertColors.yellowText};
       }
 
       .text-red-500,
       .border-red-500 {
-        color: #f87171;
-        border-color: #f87171;
+        color: ${alertColors.redText};
+        border-color: ${alertColors.redText};
       }
 
       .text-orange-500,
       .border-orange-500 {
-        color: #fb923c;
-        border-color: #fb923c;
+        color: ${alertColors.orangeText};
+        border-color: ${alertColors.orangeText};
       }
 
       .text-purple-500,
       .border-purple-500 {
-        color: #a78bfa;
-        border-color: #a78bfa;
+        color: ${alertColors.purpleText};
+        border-color: ${alertColors.purpleText};
       }
 
-      /* Alert body text should be white, not colored */
+      /* Alert body text color adapts to background */
       .bg-green-50,
       .bg-yellow-50,
       .bg-red-50,
       .bg-orange-50,
       .bg-purple-50 {
-        color: #ffffff;
+        color: ${alertColors.bodyText};
       }
 
       /* Keep the header/title colored */
       .bg-green-50 .text-green-500 {
-        color: #34d399 !important;
+        color: ${alertColors.greenText} !important;
       }
 
       .bg-yellow-50 .text-yellow-500 {
-        color: #fbbf24 !important;
+        color: ${alertColors.yellowText} !important;
       }
 
       .bg-red-50 .text-red-500 {
-        color: #f87171 !important;
+        color: ${alertColors.redText} !important;
       }
 
       .bg-orange-50 .text-orange-500 {
-        color: #fb923c !important;
+        color: ${alertColors.orangeText} !important;
       }
 
       .bg-purple-50 .text-purple-500 {
-        color: #a78bfa !important;
+        color: ${alertColors.purpleText} !important;
       }
 
       .focus\\:bg-white:focus,
