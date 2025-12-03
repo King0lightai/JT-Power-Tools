@@ -39,7 +39,12 @@ div.border-l[style*="grid-column"] {
     background-color: #2c2c2c !important;
 }
 
-/* Target the card wrapper in week/day view */
+/* Target all week/day view card wrappers */
+div.select-none.break-inside-avoid.p-0.align-top {
+    background-color: #2c2c2c !important;
+}
+
+/* Also target when inside border-l container */
 div.border-l div.select-none.break-inside-avoid {
     background-color: #2c2c2c !important;
 }
@@ -47,6 +52,11 @@ div.border-l div.select-none.break-inside-avoid {
 /* Week/day view card text should be readable */
 div.border-l div.cursor-pointer[style*="background-color"] * {
     color: inherit !important;
+}
+
+/* Week/day view cards with inline background - ensure dark container */
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
+    /* Card has its own color, just ensure parent wrapper is dark */
 }
 
 /* === General Styles === */
