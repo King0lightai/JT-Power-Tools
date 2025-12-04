@@ -320,11 +320,12 @@ const BudgetHierarchyFeature = (() => {
 
       /* Apply shading to all cells in the group row */
       /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
-      .jt-group-level-1 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-group-level-2 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-group-level-3 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-group-level-4 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-group-level-5 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+      /* Exclude resize handles (.cursor-col-resize) from inheriting background */
+      .jt-group-level-1 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-group-level-2 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-group-level-3 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-group-level-4 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-group-level-5 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize) {
         background-color: inherit !important;
       }
 
@@ -351,11 +352,12 @@ const BudgetHierarchyFeature = (() => {
 
       /* Apply shading to all cells in line item rows */
       /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
-      .jt-item-under-level-1 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-item-under-level-2 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-item-under-level-3 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-item-under-level-4 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]),
-      .jt-item-under-level-5 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]) {
+      /* Exclude resize handles (.cursor-col-resize) from inheriting background */
+      .jt-item-under-level-1 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-item-under-level-2 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-item-under-level-3 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-item-under-level-4 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize),
+      .jt-item-under-level-5 > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.cursor-col-resize) {
         background-color: inherit !important;
       }
 
