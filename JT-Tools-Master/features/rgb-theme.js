@@ -471,32 +471,54 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Custom Scrollbar Styling === */
-      ::-webkit-scrollbar {
+      /* Only style scrollbars on scrollable containers, not all elements */
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar,
+      [class*="overflow-auto"]::-webkit-scrollbar,
+      [class*="overflow-y-auto"]::-webkit-scrollbar,
+      [class*="overflow-x-auto"]::-webkit-scrollbar,
+      [class*="overflow-scroll"]::-webkit-scrollbar {
         width: 10px;
         height: 10px;
       }
 
-      ::-webkit-scrollbar-track {
+      html::-webkit-scrollbar-track,
+      body::-webkit-scrollbar-track,
+      [class*="overflow-auto"]::-webkit-scrollbar-track,
+      [class*="overflow-y-auto"]::-webkit-scrollbar-track,
+      [class*="overflow-x-auto"]::-webkit-scrollbar-track,
+      [class*="overflow-scroll"]::-webkit-scrollbar-track {
         background: ${p.scrollbar.track};
         border-radius: 5px;
       }
 
-      ::-webkit-scrollbar-thumb {
+      html::-webkit-scrollbar-thumb,
+      body::-webkit-scrollbar-thumb,
+      [class*="overflow-auto"]::-webkit-scrollbar-thumb,
+      [class*="overflow-y-auto"]::-webkit-scrollbar-thumb,
+      [class*="overflow-x-auto"]::-webkit-scrollbar-thumb,
+      [class*="overflow-scroll"]::-webkit-scrollbar-thumb {
         background: ${p.scrollbar.thumb};
         border-radius: 5px;
         border: 2px solid ${p.background.base};
       }
 
-      ::-webkit-scrollbar-thumb:hover {
+      html::-webkit-scrollbar-thumb:hover,
+      body::-webkit-scrollbar-thumb:hover,
+      [class*="overflow-auto"]::-webkit-scrollbar-thumb:hover,
+      [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover,
+      [class*="overflow-x-auto"]::-webkit-scrollbar-thumb:hover,
+      [class*="overflow-scroll"]::-webkit-scrollbar-thumb:hover {
         background: ${p.scrollbar.thumbHover};
       }
 
-      ::-webkit-scrollbar-corner {
+      html::-webkit-scrollbar-corner,
+      body::-webkit-scrollbar-corner {
         background: ${p.background.base};
       }
 
-      /* Firefox */
-      * {
+      /* Firefox - only on html/body, not all elements */
+      html, body {
         scrollbar-width: thin;
         scrollbar-color: ${p.scrollbar.thumb} ${p.scrollbar.track};
       }
