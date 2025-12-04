@@ -942,34 +942,20 @@ const CustomThemeFeature = (() => {
       /* The outer container gets themed via .bg-white rules */
 
       /* === Budget Group Level Rows === */
-      /* Exclude resize handles (.cursor-col-resize) from inheriting background */
-      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
+      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
         background-color: inherit !important;
       }
 
-      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
+      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
         background-color: inherit !important;
       }
 
       /* === Column Resize Handles === */
-      /* Give resize handles a solid background matching page bg for clean visual separation */
-      /* Otherwise the themed column headers show through the transparent handles */
-      .cursor-col-resize,
-      .absolute.cursor-col-resize,
-      .absolute.z-10.cursor-col-resize,
-      div.cursor-col-resize,
-      div.absolute.cursor-col-resize,
-      [class*="jt-group-level"] .cursor-col-resize,
-      [class*="jt-item-under-level"] .cursor-col-resize,
-      .absolute.z-10.-ml-1.inset-y-0.w-2.cursor-col-resize {
-        background: ${p.background.base} !important;
-        background-color: ${p.background.base} !important;
+      .absolute.z-10.cursor-col-resize {
+        z-index: 1 !important;
       }
 
-      .cursor-col-resize:hover,
-      .absolute.cursor-col-resize:hover,
       .absolute.z-10.cursor-col-resize:hover {
-        background: ${p.border.strong} !important;
         background-color: ${p.border.strong} !important;
       }
 
