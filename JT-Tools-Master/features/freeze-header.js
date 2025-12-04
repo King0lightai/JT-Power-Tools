@@ -89,20 +89,26 @@ const FreezeHeaderFeature = (() => {
 
     /* Task/item sidebar - boost z-index so it doesn't get covered by frozen headers */
     /* Use the data attribute for reliable targeting */
+    /* Also offset from top so sidebar doesn't cover header icons */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
       z-index: 42 !important;
+      top: var(--jt-header-height, 50px) !important;
     }
 
-    /* Sidebar sticky content - position below frozen headers when scrolling */
-    /* The inner sticky element needs to stick below the action toolbar */
-    /* Target right-side sidebars only (shadow-line-right or explicit right-0 positioning) */
+    /* Also handle sidebars without the data attribute */
+    .jt-freeze-header-active div.z-30.absolute.top-0.bottom-0.right-0 {
+      top: var(--jt-header-height, 50px) !important;
+    }
+
+    /* Sidebar sticky content - since sidebar container is now offset from top, */
+    /* the inner sticky content can use a smaller offset (or 0 for flush positioning) */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.overflow-y-auto.overscroll-contain.sticky {
-      top: var(--jt-toolbar-bottom, 138px) !important;
+      top: 0 !important;
     }
 
     /* Fallback selector for sidebar sticky content without data attribute */
     .jt-freeze-header-active div.z-30.absolute.top-0.bottom-0.right-0 div.overflow-y-auto.overscroll-contain.sticky {
-      top: var(--jt-toolbar-bottom, 138px) !important;
+      top: 0 !important;
     }
 
     /* IMPORTANT: Exclude job switcher sidebar - it's inside shadow-line-left container */
