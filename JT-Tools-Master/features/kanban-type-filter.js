@@ -1,11 +1,12 @@
 // JT Power Tools - Kanban Type Filter Feature
 // Hides empty columns (0 items) in Kanban view when grouped by type
+// Dependencies: utils/debounce.js (TimingUtils)
 
 const KanbanTypeFilterFeature = (() => {
   let isActiveState = false;
   let observer = null;
   let styleElement = null;
-  let debounceTimer = null;
+  let debouncedApplyFiltering = null;
 
   // CSS for hiding empty Kanban columns
   const KANBAN_FILTER_STYLES = `
@@ -219,18 +220,6 @@ const KanbanTypeFilterFeature = (() => {
   }
 
   /**
-   * Debounced apply filtering
-   */
-  function debouncedApplyFiltering() {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    debounceTimer = setTimeout(() => {
-      applyFiltering();
-    }, 150);
-  }
-
-  /**
    * Initialize the feature
    */
   function init() {
@@ -241,6 +230,9 @@ const KanbanTypeFilterFeature = (() => {
 
     console.log('KanbanTypeFilter: Initializing...');
     isActiveState = true;
+
+    // Create debounced filtering function using TimingUtils
+    debouncedApplyFiltering = window.TimingUtils.debounce(applyFiltering, 150);
 
     // Inject styles
     injectStyles();
@@ -348,10 +340,10 @@ const KanbanTypeFilterFeature = (() => {
       observer = null;
     }
 
-    // Clear debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
+    // Cancel debounced function
+    if (debouncedApplyFiltering) {
+      debouncedApplyFiltering.cancel();
+      debouncedApplyFiltering = null;
     }
 
     // Remove styles and applied classes
