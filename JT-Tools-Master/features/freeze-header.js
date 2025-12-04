@@ -100,6 +100,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
+    /* Job Switcher sidebar - position below frozen toolbar on all pages */
+    /* Identified by shadow-line-left class on its container */
+    .jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
