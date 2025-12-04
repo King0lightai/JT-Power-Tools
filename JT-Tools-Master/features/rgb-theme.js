@@ -714,9 +714,12 @@ const CustomThemeFeature = (() => {
         background-color: ${p.states.hover} !important;
       }
 
-      .hover\\:bg-gray-800:hover,
-      .hover\\:bg-gray-900:hover {
-        background-color: ${p.states.active} !important;
+      /* Note: hover:bg-gray-800 and hover:bg-gray-900 are NOT overridden */
+      /* They're used intentionally on dark toolbars/headers */
+
+      /* Resize handles */
+      .hover\\:bg-gray-300:hover {
+        background-color: ${p.border.default} !important;
       }
 
       .hover\\:bg-blue-50:hover,
@@ -762,31 +765,21 @@ const CustomThemeFeature = (() => {
         box-shadow: 0 8px 24px ${p.shadows.colorStrong} !important;
       }
 
-      /* Modal backdrop */
+      /* Modal backdrop - keep semi-transparent */
       div.fixed.inset-0.bg-black,
       div.fixed.inset-0.bg-gray-800,
       div.fixed.inset-0.bg-gray-900 {
         background-color: rgba(0, 0, 0, 0.5) !important;
       }
 
-      /* Dark backgrounds */
-      .bg-black:not(.inset-0):not([data-popper-placement]),
-      .bg-gray-800:not(.inset-0):not([data-popper-placement]),
-      .bg-gray-900:not(.inset-0):not([data-popper-placement]) {
-        background-color: ${p.background.strong} !important;
-      }
+      /* Note: .bg-gray-800, .bg-gray-900, .bg-black are NOT overridden */
+      /* They're used intentionally for dark toolbars, file viewers, etc. */
 
-      [class*="bg-gray-800\\/"],
-      [class*="bg-gray-900\\/"],
-      [class*="bg-black\\/"] {
+      /* Only override opacity-based backgrounds in themed content areas */
+      .bg-white [class*="bg-gray-800\\/"],
+      .bg-white [class*="bg-gray-900\\/"],
+      .bg-white [class*="bg-black\\/"] {
         background-color: ${p.background.strong} !important;
-      }
-
-      /* File viewer panels */
-      div.lg\\:grow.flex.flex-col.h-full,
-      div.relative.grow.min-w-0,
-      div.h-full.overflow-auto {
-        background-color: ${p.background.base} !important;
       }
 
       /* Native tooltips - primary color */
@@ -797,6 +790,7 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Text Color Hierarchy === */
+      /* Note: .text-white is NOT overridden - it's used intentionally on dark toolbars */
       .text-gray-900,
       .text-gray-800,
       .text-black {
@@ -817,9 +811,8 @@ const CustomThemeFeature = (() => {
         color: ${p.text.disabled};
       }
 
-      .text-white {
-        color: ${p.text.primary};
-      }
+      /* Keep .text-white as white - used on intentionally dark UI elements */
+      /* .text-white is NOT themed */
 
       .hover\\:text-gray-800:hover,
       .hover\\:text-gray-900:hover {
