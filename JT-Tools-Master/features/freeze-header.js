@@ -87,37 +87,9 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Task/item sidebar - boost z-index so it doesn't get covered by frozen headers */
-    /* Use the data attribute for reliable targeting */
-    /* Also offset from top so sidebar doesn't cover header icons */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
-      z-index: 42 !important;
-      top: var(--jt-header-height, 50px) !important;
-    }
-
-    /* Also handle sidebars without the data attribute */
-    .jt-freeze-header-active div.z-30.absolute.top-0.bottom-0.right-0 {
-      top: var(--jt-header-height, 50px) !important;
-    }
-
-    /* Sidebar sticky content - since sidebar container is now offset from top, */
-    /* the inner sticky content can use a smaller offset (or 0 for flush positioning) */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.overflow-y-auto.overscroll-contain.sticky {
-      top: 0 !important;
-    }
-
-    /* Fallback selector for sidebar sticky content without data attribute */
-    .jt-freeze-header-active div.z-30.absolute.top-0.bottom-0.right-0 div.overflow-y-auto.overscroll-contain.sticky {
-      top: 0 !important;
-    }
-
-    /* IMPORTANT: Exclude job switcher sidebar - it's inside shadow-line-left container */
-    /* This must come after the above rules and have higher specificity to override them */
-    /* Match the full parent class chain for maximum specificity */
-    .jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky,
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
-      top: 48px !important;
-    }
+    /* Note: Right-side sidebars (Time Clock, Task Details, etc.) with */
+    /* data-is-drag-scroll-boundary="true" are already properly positioned */
+    /* by JobTread - we don't override them */
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
