@@ -547,12 +547,13 @@ div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
 /* Ensure group level rows have consistent gray shading across ALL cells */
 /* This makes sure row numbers and unit columns also get the group shade */
 /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
-[class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
+/* Exclude resize handles (.cursor-col-resize) from inheriting background */
+[class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
     background-color: inherit !important;
 }
 
 /* Also apply to item-under-level rows */
-[class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
+[class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
     background-color: inherit !important;
 }
 
