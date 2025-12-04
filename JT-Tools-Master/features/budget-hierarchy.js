@@ -383,61 +383,12 @@ const BudgetHierarchyFeature = (() => {
       }
 
       /* Column resize handles */
-      /* Reduce z-index so they don't appear over sticky headers when scrolling */
-      .absolute.z-10.cursor-col-resize {
+      /* Keep resize handles transparent - don't inherit shading */
+      .absolute.z-10.cursor-col-resize,
+      [class*="jt-group-level"] .cursor-col-resize,
+      [class*="jt-item-under-level"] .cursor-col-resize {
+        background-color: transparent !important;
         z-index: 1 !important;
-      }
-
-      /* Make resize handles inherit parent row's shading */
-      .jt-group-level-1 .absolute.cursor-col-resize,
-      .jt-item-under-level-1 .absolute.cursor-col-resize {
-        background-color: ${shades[0]} !important;
-      }
-
-      .jt-group-level-2 .absolute.cursor-col-resize,
-      .jt-item-under-level-2 .absolute.cursor-col-resize {
-        background-color: ${shades[1]} !important;
-      }
-
-      .jt-group-level-3 .absolute.cursor-col-resize,
-      .jt-item-under-level-3 .absolute.cursor-col-resize {
-        background-color: ${shades[2]} !important;
-      }
-
-      .jt-group-level-4 .absolute.cursor-col-resize,
-      .jt-item-under-level-4 .absolute.cursor-col-resize {
-        background-color: ${shades[3]} !important;
-      }
-
-      .jt-group-level-5 .absolute.cursor-col-resize,
-      .jt-item-under-level-5 .absolute.cursor-col-resize {
-        background-color: ${shades[4]} !important;
-      }
-
-      /* Hover states for resize handles */
-      .jt-group-level-1 .absolute.cursor-col-resize:hover,
-      .jt-item-under-level-1 .absolute.cursor-col-resize:hover {
-        background-color: ${hoverShades[0]} !important;
-      }
-
-      .jt-group-level-2 .absolute.cursor-col-resize:hover,
-      .jt-item-under-level-2 .absolute.cursor-col-resize:hover {
-        background-color: ${hoverShades[1]} !important;
-      }
-
-      .jt-group-level-3 .absolute.cursor-col-resize:hover,
-      .jt-item-under-level-3 .absolute.cursor-col-resize:hover {
-        background-color: ${hoverShades[2]} !important;
-      }
-
-      .jt-group-level-4 .absolute.cursor-col-resize:hover,
-      .jt-item-under-level-4 .absolute.cursor-col-resize:hover {
-        background-color: ${hoverShades[3]} !important;
-      }
-
-      .jt-group-level-5 .absolute.cursor-col-resize:hover,
-      .jt-item-under-level-5 .absolute.cursor-col-resize:hover {
-        background-color: ${hoverShades[4]} !important;
       }
     `;
 
