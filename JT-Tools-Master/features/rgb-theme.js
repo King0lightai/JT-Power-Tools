@@ -631,20 +631,21 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Primary colors on non-button elements (menu items, etc.) === */
-      .bg-blue-500:not(button),
-      .bg-blue-600:not(button) {
+      /* Exclude elements with inline background-color (task type colors on schedule) */
+      .bg-blue-500:not(button):not([style*="background-color"]),
+      .bg-blue-600:not(button):not([style*="background-color"]) {
         background-color: ${p.primary.base} !important;
       }
 
       /* Preserve text-white on blue backgrounds */
-      .bg-blue-500.text-white,
-      .bg-blue-600.text-white {
+      .bg-blue-500.text-white:not([style*="background-color"]),
+      .bg-blue-600.text-white:not([style*="background-color"]) {
         color: ${primaryText} !important;
       }
 
       /* Hover states for non-button elements */
-      .hover\\:bg-blue-500:hover:not(button),
-      .hover\\:bg-blue-600:hover:not(button) {
+      .hover\\:bg-blue-500:hover:not(button):not([style*="background-color"]),
+      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]) {
         background-color: ${p.primary.base} !important;
       }
 
