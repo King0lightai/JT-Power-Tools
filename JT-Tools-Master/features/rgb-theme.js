@@ -1,6 +1,6 @@
 // JobTread Custom Theme Feature Module
 // Applies custom color theme to JobTread interface (PREMIUM FEATURE)
-// Generates a complete color palette from a single base color
+// Generates a complete color palette from three base colors using HSL manipulation
 
 const CustomThemeFeature = (() => {
   let isActive = false;
@@ -12,6 +12,9 @@ const CustomThemeFeature = (() => {
     background: '#F3E8FF',
     text: '#1F1B29'
   };
+
+  // Generated palette (populated by generatePalette)
+  let palette = {};
 
   // Initialize the feature
   function init(colors = null) {
@@ -35,6 +38,9 @@ const CustomThemeFeature = (() => {
       };
     }
 
+    // Generate the full color palette from base colors
+    palette = generatePalette(currentColors);
+
     // Inject custom theme CSS
     injectThemeCSS();
 
@@ -44,7 +50,7 @@ const CustomThemeFeature = (() => {
     // Start observing for new elements
     startObserver();
 
-    console.log('CustomTheme: Custom theme applied with colors', currentColors);
+    console.log('CustomTheme: Custom theme applied with palette', palette);
   }
 
   // Cleanup the feature
@@ -96,6 +102,9 @@ const CustomThemeFeature = (() => {
     }
 
     if (isActive) {
+      // Regenerate the full palette with new colors
+      palette = generatePalette(currentColors);
+
       // Re-inject CSS with new colors
       if (styleElement) {
         styleElement.remove();
@@ -105,7 +114,7 @@ const CustomThemeFeature = (() => {
       // Reapply contrast fixes with new colors
       applyContrastFixes();
 
-      console.log('CustomTheme: Colors updated to', currentColors);
+      console.log('CustomTheme: Colors updated with palette', palette);
     }
   }
 
@@ -114,15 +123,21 @@ const CustomThemeFeature = (() => {
     return { ...currentColors };
   }
 
+  // Get the generated palette
+  function getPalette() {
+    return { ...palette };
+  }
+
+  // ============================================================
+  // COLOR UTILITY FUNCTIONS - HSL-based for better color control
+  // ============================================================
+
   // Helper function to convert hex to RGB
   function hexToRgb(hex) {
-    // Strict validation to prevent CSS injection
     if (!hex || typeof hex !== 'string') {
       console.warn('CustomTheme: Invalid hex color input:', hex);
       return null;
     }
-
-    // Only allow valid hex color format
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
       r: parseInt(result[1], 16),
@@ -133,344 +148,387 @@ const CustomThemeFeature = (() => {
 
   // Helper function to convert RGB to hex
   function rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    const toHex = (n) => {
+      const clamped = Math.max(0, Math.min(255, Math.round(n)));
+      return clamped.toString(16).padStart(2, '0');
+    };
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   }
 
-  // Calculate luminance to determine if color is light or dark
-  function getLuminance(hex) {
+  // Convert hex to HSL (returns {h: 0-360, s: 0-100, l: 0-100})
+  function hexToHsl(hex) {
     const rgb = hexToRgb(hex);
-    if (!rgb) {
-      // Fallback to assuming dark color if invalid
-      console.warn('CustomTheme: Invalid color for luminance calculation:', hex);
-      return 0;
-    }
+    if (!rgb) return { h: 0, s: 0, l: 50 };
 
-    // Normalize RGB values
     const r = rgb.r / 255;
     const g = rgb.g / 255;
     const b = rgb.b / 255;
 
-    // Calculate relative luminance
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    let h = 0;
+    let s = 0;
 
-  // Get appropriate text color (white or black) based on background luminance
-  // Uses WCAG 2.0 contrast calculation - same as contrast-fix feature
-  function getTextColor(backgroundColor) {
-    const luminance = getLuminance(backgroundColor);
-    // Use black text for light backgrounds (luminance > 0.5), white for dark backgrounds
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-  }
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-  // Adjust color brightness (amount: positive to lighten, negative to darken)
-  function adjustBrightness(hex, amount) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
 
-    const adjust = (value) => {
-      const newValue = value + amount;
-      return Math.max(0, Math.min(255, newValue));
+    return {
+      h: Math.round(h * 360),
+      s: Math.round(s * 100),
+      l: Math.round(l * 100)
     };
+  }
+
+  // Convert HSL to hex
+  function hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360; // Normalize hue to 0-360
+    s = Math.max(0, Math.min(100, s)) / 100;
+    l = Math.max(0, Math.min(100, l)) / 100;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+
+    let r = 0, g = 0, b = 0;
+
+    if (h < 60) { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
 
     return rgbToHex(
-      adjust(rgb.r),
-      adjust(rgb.g),
-      adjust(rgb.b)
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
     );
   }
 
-  // Generate border color based on background luminance
-  function getBorderColor(backgroundColor) {
-    const luminance = getLuminance(backgroundColor);
+  // Calculate relative luminance (WCAG 2.0)
+  function getLuminance(hex) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return 0;
 
-    // If background is dark (luminance < 0.5), lighten the border
-    // If background is light (luminance >= 0.5), darken the border
-    if (luminance < 0.5) {
-      return adjustBrightness(backgroundColor, 30); // Lighten by 30
-    } else {
-      return adjustBrightness(backgroundColor, -30); // Darken by 30
-    }
+    const toLinear = (c) => {
+      const sRGB = c / 255;
+      return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4);
+    };
+
+    return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
   }
 
-  // Inject theme CSS using user's chosen colors directly
+  // Check if background is dark
+  function isDark(hex) {
+    return getLuminance(hex) < 0.4;
+  }
+
+  // Get contrasting text color (white or black)
+  function getContrastText(backgroundColor) {
+    return isDark(backgroundColor) ? '#ffffff' : '#000000';
+  }
+
+  // Adjust lightness of a color (amount: -100 to +100)
+  function adjustLightness(hex, amount) {
+    const hsl = hexToHsl(hex);
+    return hslToHex(hsl.h, hsl.s, hsl.l + amount);
+  }
+
+  // Adjust saturation of a color (amount: -100 to +100)
+  function adjustSaturation(hex, amount) {
+    const hsl = hexToHsl(hex);
+    return hslToHex(hsl.h, hsl.s + amount, hsl.l);
+  }
+
+  // Set specific lightness value
+  function setLightness(hex, lightness) {
+    const hsl = hexToHsl(hex);
+    return hslToHex(hsl.h, hsl.s, lightness);
+  }
+
+  // Set specific saturation value
+  function setSaturation(hex, saturation) {
+    const hsl = hexToHsl(hex);
+    return hslToHex(hsl.h, saturation, hsl.l);
+  }
+
+  // Blend two colors (0 = color1, 1 = color2)
+  function blendColors(hex1, hex2, ratio) {
+    const rgb1 = hexToRgb(hex1);
+    const rgb2 = hexToRgb(hex2);
+    if (!rgb1 || !rgb2) return hex1;
+
+    return rgbToHex(
+      rgb1.r + (rgb2.r - rgb1.r) * ratio,
+      rgb1.g + (rgb2.g - rgb1.g) * ratio,
+      rgb1.b + (rgb2.b - rgb1.b) * ratio
+    );
+  }
+
+  // Create rgba string from hex and alpha
+  function hexToRgba(hex, alpha) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+  }
+
+  // ============================================================
+  // PALETTE GENERATION - Creates rich color system from 3 inputs
+  // ============================================================
+
+  function generatePalette(colors) {
+    const { primary, background, text } = colors;
+    const bgHsl = hexToHsl(background);
+    const primaryHsl = hexToHsl(primary);
+    const darkMode = isDark(background);
+
+    // Calculate contrast direction (positive = lighten, negative = darken for contrast)
+    const contrastDir = darkMode ? 1 : -1;
+
+    // ---- BACKGROUND SHADES ----
+    // Create 5 distinct background levels for visual hierarchy
+    const bgShades = {
+      // Level 0: Base background (cards, main content)
+      base: background,
+      // Level 1: Subtle shade (slight contrast for sections)
+      subtle: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 3)),
+      // Level 2: Muted (input backgrounds, list items)
+      muted: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 6)),
+      // Level 3: Emphasis (active states, hover)
+      emphasis: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 10)),
+      // Level 4: Strong (tooltips, overlays)
+      strong: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 15)),
+      // Level 5: Elevated (modals, dropdowns - opposite direction for depth)
+      elevated: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * -2))
+    };
+
+    // ---- BORDER COLORS ----
+    // Create distinct border shades for depth perception
+    const borderShades = {
+      // Subtle border for cards and sections
+      subtle: hslToHex(bgHsl.h, Math.min(bgHsl.s + 5, 30), bgHsl.l + (contrastDir * 12)),
+      // Default border for inputs and dividers
+      default: hslToHex(bgHsl.h, Math.min(bgHsl.s + 8, 35), bgHsl.l + (contrastDir * 18)),
+      // Strong border for focus states
+      strong: hslToHex(bgHsl.h, Math.min(bgHsl.s + 10, 40), bgHsl.l + (contrastDir * 25))
+    };
+
+    // ---- TEXT COLORS ----
+    // Create text hierarchy
+    const textShades = {
+      primary: text,
+      secondary: blendColors(text, background, 0.25),
+      muted: blendColors(text, background, 0.45),
+      disabled: blendColors(text, background, 0.6)
+    };
+
+    // ---- PRIMARY COLOR VARIATIONS ----
+    // Create primary color palette for interactive elements
+    const primaryShades = {
+      base: primary,
+      hover: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 8 : -8)),
+      active: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 12 : -12)),
+      // Light versions for backgrounds
+      light: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 20, 20), darkMode ? 25 : 92),
+      lighter: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 30, 15), darkMode ? 20 : 95),
+      // For selection highlighting - blend with background
+      selection: blendColors(background, primary, 0.15),
+      selectionHover: blendColors(background, primary, 0.25),
+      selectionStrong: blendColors(background, primary, 0.35)
+    };
+
+    // ---- HOVER/FOCUS/ACTIVE STATES ----
+    // Distinct colors for interactive states (not just brightness filters!)
+    const states = {
+      hover: hslToHex(bgHsl.h, bgHsl.s + 2, bgHsl.l + (contrastDir * 5)),
+      focus: blendColors(background, primary, 0.1),
+      active: hslToHex(bgHsl.h, bgHsl.s + 3, bgHsl.l + (contrastDir * 8)),
+      // Row hover - subtle but noticeable
+      rowHover: hslToHex(bgHsl.h, bgHsl.s + 1, bgHsl.l + (contrastDir * 3))
+    };
+
+    // ---- ALERT COLORS ----
+    // Generate alert colors that harmonize with the theme
+    const alerts = generateAlertColors(background, darkMode);
+
+    // ---- SCROLLBAR COLORS ----
+    const scrollbar = {
+      track: bgShades.muted,
+      thumb: borderShades.default,
+      thumbHover: primary
+    };
+
+    // ---- SHADOW COLORS ----
+    const shadows = {
+      color: darkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)',
+      colorStrong: darkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.2)'
+    };
+
+    return {
+      isDark: darkMode,
+      background: bgShades,
+      border: borderShades,
+      text: textShades,
+      primary: primaryShades,
+      states,
+      alerts,
+      scrollbar,
+      shadows,
+      // Keep raw colors for backward compatibility
+      raw: { primary, background, text }
+    };
+  }
+
+  // Generate alert colors that blend with the theme
+  function generateAlertColors(background, darkMode) {
+    // Base alert hues
+    const alertHues = {
+      green: 145,
+      yellow: 45,
+      red: 0,
+      orange: 25,
+      purple: 270,
+      blue: 210
+    };
+
+    const result = {};
+
+    Object.entries(alertHues).forEach(([name, hue]) => {
+      if (darkMode) {
+        // Dark mode: desaturated dark backgrounds, bright text
+        result[name] = {
+          bg: hslToHex(hue, 35, 18),
+          text: hslToHex(hue, 75, 65),
+          border: hslToHex(hue, 50, 35)
+        };
+      } else {
+        // Light mode: tinted light backgrounds, dark vivid text
+        result[name] = {
+          bg: hslToHex(hue, 65, 95),
+          text: hslToHex(hue, 70, 40),
+          border: hslToHex(hue, 55, 75)
+        };
+      }
+    });
+
+    // Body text adapts to background
+    result.bodyText = darkMode ? '#e0e0e0' : '#374151';
+
+    return result;
+  }
+
+  // Inject theme CSS using the generated palette
   function injectThemeCSS() {
     if (styleElement) {
       styleElement.remove();
     }
 
+    // Use the pre-generated palette
+    const p = palette;
     const { primary, background, text } = currentColors;
 
-    // Generate border color that's slightly lighter/darker than background
-    const borderColor = getBorderColor(background);
-
-    // Generate lightened primary colors for selection states
-    const primaryLight30 = adjustBrightness(primary, 70);  // 30% lighter -> brightness +70
-    const primaryLight35 = adjustBrightness(primary, 65);  // 35% lighter -> brightness +65
-    const primaryLight40 = adjustBrightness(primary, 60);  // 40% lighter -> brightness +60
-    const primaryLight45 = adjustBrightness(primary, 55);  // 45% lighter -> brightness +55
-
-    // Generate subtle selection colors using rgba with low opacity for a faded effect
-    const hexToRgba = (hex, alpha) => {
-      const rgb = hexToRgb(hex);
-      return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : hex;
-    };
-    const primaryFaded15 = hexToRgba(primary, 0.15);  // 15% opacity for subtle highlight
-    const primaryFaded20 = hexToRgba(primary, 0.20);  // 20% opacity for hover state
-
-    // Blend primary color with background for solid sticky column colors (prevent see-through)
-    const blendColors = (foregroundHex, backgroundHex, alpha) => {
-      const fg = hexToRgb(foregroundHex);
-      const bg = hexToRgb(backgroundHex);
-      if (!fg || !bg) return backgroundHex;
-
-      const r = Math.round(bg.r * (1 - alpha) + fg.r * alpha);
-      const g = Math.round(bg.g * (1 - alpha) + fg.g * alpha);
-      const b = Math.round(bg.b * (1 - alpha) + fg.b * alpha);
-
-      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-    };
-    const primaryBlended15 = blendColors(primary, background, 0.15);  // Solid blend for sticky columns
-
-    // Subtle background shades for visual hierarchy
-    const backgroundSubtle = adjustBrightness(background, -5);   // 5% darker for bg-gray-50
-    const backgroundMuted = adjustBrightness(background, -10);   // 10% darker for bg-gray-100
-    const backgroundDark = adjustBrightness(background, -15);    // 15% darker for tooltips
-
-    // Get appropriate text color for primary background (auto white/black based on luminance)
-    // Uses WCAG 2.0 luminance calculation: luminance > 0.5 = black text, otherwise white text
-    const primaryText = getTextColor(primary);
+    // Get contrast text for primary color
+    const primaryText = getContrastText(primary);
 
     // Get appropriate text colors for standard color picker colors
-    // These ensure formatter toolbar color buttons have readable text on their background colors
-    const greenText = getTextColor('#10b981');   // green-500
-    const yellowText = getTextColor('#f59e0b');  // yellow-500
-    const blueText = getTextColor('#3b82f6');    // blue-500
-    const redText = getTextColor('#ef4444');     // red-500
-    const orangeText = getTextColor('#f97316');  // orange-500
-    const purpleText = getTextColor('#a855f7');  // purple-500
+    const greenText = getContrastText('#10b981');
+    const yellowText = getContrastText('#f59e0b');
+    const blueText = getContrastText('#3b82f6');
+    const redText = getContrastText('#ef4444');
+    const orangeText = getContrastText('#f97316');
+    const purpleText = getContrastText('#a855f7');
 
-    // Determine if background is light or dark for alert styling
-    const isLightBackground = getLuminance(background) > 0.5;
-
-    // Alert colors - adapt based on background luminance
-    const alertColors = isLightBackground ? {
-      // Light background: use light alert backgrounds with dark text
-      greenBg: '#f0fdf4',
-      yellowBg: '#fffbeb',
-      redBg: '#fef2f2',
-      orangeBg: '#fff7ed',
-      purpleBg: '#faf5ff',
-      greenText: '#10b981',
-      yellowText: '#f59e0b',
-      redText: '#ef4444',
-      orangeText: '#f97316',
-      purpleText: '#8b5cf6',
-      bodyText: '#374151'  // Dark gray for body text on light backgrounds
-    } : {
-      // Dark background: use dark alert backgrounds with light text
-      greenBg: '#1a3a2e',
-      yellowBg: '#4a3a1a',
-      redBg: '#4a1f1f',
-      orangeBg: '#4a2a1a',
-      purpleBg: '#3a2a4a',
-      greenText: '#34d399',
-      yellowText: '#fbbf24',
-      redText: '#f87171',
-      orangeText: '#fb923c',
-      purpleText: '#a78bfa',
-      bodyText: '#ffffff'  // White for body text on dark backgrounds
-    };
-
-    // Create CSS using user's chosen colors
+    // Create CSS using the rich palette
     const css = `
       /* === JT Power Tools - Custom Color Theme === */
-      /* Using user's chosen Primary, Background, and Text colors */
+      /* Rich palette generated from Primary, Background, and Text colors */
 
       /* === CSS Custom Properties for other features === */
       :root {
-        --jt-theme-primary: ${primary};
-        --jt-theme-background: ${background};
-        --jt-theme-text: ${text};
-        --jt-theme-border: ${borderColor};
+        --jt-theme-primary: ${p.primary.base};
+        --jt-theme-primary-hover: ${p.primary.hover};
+        --jt-theme-primary-active: ${p.primary.active};
+        --jt-theme-background: ${p.background.base};
+        --jt-theme-background-subtle: ${p.background.subtle};
+        --jt-theme-background-muted: ${p.background.muted};
+        --jt-theme-background-emphasis: ${p.background.emphasis};
+        --jt-theme-background-elevated: ${p.background.elevated};
+        --jt-theme-text: ${p.text.primary};
+        --jt-theme-text-secondary: ${p.text.secondary};
+        --jt-theme-text-muted: ${p.text.muted};
+        --jt-theme-border: ${p.border.default};
+        --jt-theme-border-subtle: ${p.border.subtle};
+        --jt-theme-border-strong: ${p.border.strong};
       }
 
       /* === Custom Scrollbar Styling === */
-      /* WebKit browsers (Chrome, Safari, Edge) */
       ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
       }
 
       ::-webkit-scrollbar-track {
-        background: ${background};
+        background: ${p.scrollbar.track};
         border-radius: 5px;
       }
 
       ::-webkit-scrollbar-thumb {
-        background: ${borderColor};
+        background: ${p.scrollbar.thumb};
         border-radius: 5px;
-        border: 2px solid ${background};
+        border: 2px solid ${p.background.base};
       }
 
       ::-webkit-scrollbar-thumb:hover {
-        background: ${primary};
+        background: ${p.scrollbar.thumbHover};
       }
 
       ::-webkit-scrollbar-corner {
-        background: ${background};
+        background: ${p.background.base};
       }
 
       /* Firefox */
       * {
         scrollbar-width: thin;
-        scrollbar-color: ${borderColor} ${background};
+        scrollbar-color: ${p.scrollbar.thumb} ${p.scrollbar.track};
       }
 
       /* === Logo Colors === */
-      /* Make JOBTREAD text use primary color (keep orange text as-is) */
       .text-gray-800 {
-        color: ${primary} !important;
+        color: ${p.primary.base} !important;
       }
 
       /* === Task Cards === */
-      /* Use theme background for cards, keep task type color in thick border */
       td div.cursor-pointer[style*="border-left"] {
-        background-color: ${background} !important;
-        color: ${text} !important;
+        background-color: ${p.background.elevated} !important;
+        color: ${p.text.primary} !important;
         border-left-width: 5px !important;
-        box-shadow: inset 4px 0 8px rgba(0, 0, 0, 0.1);
+        box-shadow: inset 4px 0 8px ${p.shadows.color};
       }
 
-      /* Ensure all text elements within task cards inherit the theme text color */
       td div.cursor-pointer[style*="border-left"] * {
         color: inherit !important;
       }
 
-      /* === General Styles === */
+      /* === General Border Colors === */
       *, ::backdrop, ::file-selector-button, :after, :before {
-        border-color: ${borderColor};
+        border-color: ${p.border.default};
       }
 
       .border-transparent {
         border-color: transparent !important;
       }
 
-      /* === Formatter Toolbar Theme === */
-      .jt-formatter-toolbar {
-        background: ${background} !important;
-        border-color: ${borderColor} !important;
-      }
-
-      .jt-formatter-toolbar button {
-        background: ${background} !important;
-        border: none !important;
-        color: ${text} !important;
-      }
-
-      .jt-formatter-toolbar button:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
-        border: none !important;
-      }
-
-      .jt-formatter-toolbar button:active {
-        background: ${background} !important;
-        filter: brightness(0.9);
-      }
-
-      /* Active buttons use primary color instead of blue */
-      .jt-formatter-toolbar button.active {
-        background: ${primary} !important;
-        color: ${primaryText} !important;
-        border-color: ${primary} !important;
-      }
-
-      .jt-formatter-toolbar button.active:hover {
-        background: ${primary} !important;
-        filter: brightness(0.9);
-      }
-
-      /* Color picker buttons - show "A" in the actual color */
-      .jt-formatter-toolbar button.jt-color-green {
-        color: #10b981 !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-yellow {
-        color: #f59e0b !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-blue {
-        color: #3b82f6 !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-red {
-        color: #ef4444 !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-orange {
-        color: #f97316 !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-purple {
-        color: #a855f7 !important;
-      }
-
-      /* Active color buttons keep their color but with filled background */
-      .jt-formatter-toolbar button.jt-color-green.active {
-        background: #10b981 !important;
-        color: ${greenText} !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-yellow.active {
-        background: #f59e0b !important;
-        color: ${yellowText} !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-blue.active {
-        background: #3b82f6 !important;
-        color: ${blueText} !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-red.active {
-        background: #ef4444 !important;
-        color: ${redText} !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-orange.active {
-        background: #f97316 !important;
-        color: ${orangeText} !important;
-      }
-
-      .jt-formatter-toolbar button.jt-color-purple.active {
-        background: #a855f7 !important;
-        color: ${purpleText} !important;
-      }
-
-      .jt-toolbar-divider {
-        background: ${borderColor} !important;
-      }
-
-      .jt-dropdown-menu {
-        background: ${background} !important;
-        border-color: ${borderColor} !important;
-      }
-
-      .jt-dropdown-menu button {
-        color: ${text} !important;
-      }
-
-      .jt-dropdown-menu button:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
-      }
-
-      .jt-dropdown-menu button.active {
-        background: ${primary} !important;
-        color: #ffffff !important;
-      }
-
       .border-white {
-        border-color: ${borderColor} !important;
+        border-color: ${p.border.subtle} !important;
       }
 
       input.border-transparent,
@@ -478,48 +536,113 @@ const CustomThemeFeature = (() => {
         border-color: transparent !important;
       }
 
-      /* === Background Colors === */
-      /* Note: .bg-yellow-100 is excluded to preserve edited cell highlighting */
-      /* Note: .bg-blue-50 and .bg-blue-100 are excluded - they're used for selection highlighting */
+      /* === Formatter Toolbar Theme === */
+      .jt-formatter-toolbar {
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.default} !important;
+        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
+      }
+
+      .jt-formatter-toolbar button {
+        background: transparent !important;
+        border: none !important;
+        color: ${p.text.primary} !important;
+      }
+
+      .jt-formatter-toolbar button:hover {
+        background: ${p.states.hover} !important;
+        border: none !important;
+      }
+
+      .jt-formatter-toolbar button:active {
+        background: ${p.states.active} !important;
+      }
+
+      .jt-formatter-toolbar button.active {
+        background: ${p.primary.base} !important;
+        color: ${primaryText} !important;
+        border-color: ${p.primary.base} !important;
+      }
+
+      .jt-formatter-toolbar button.active:hover {
+        background: ${p.primary.hover} !important;
+      }
+
+      /* Color picker buttons */
+      .jt-formatter-toolbar button.jt-color-green { color: #10b981 !important; }
+      .jt-formatter-toolbar button.jt-color-yellow { color: #f59e0b !important; }
+      .jt-formatter-toolbar button.jt-color-blue { color: #3b82f6 !important; }
+      .jt-formatter-toolbar button.jt-color-red { color: #ef4444 !important; }
+      .jt-formatter-toolbar button.jt-color-orange { color: #f97316 !important; }
+      .jt-formatter-toolbar button.jt-color-purple { color: #a855f7 !important; }
+
+      .jt-formatter-toolbar button.jt-color-green.active { background: #10b981 !important; color: ${greenText} !important; }
+      .jt-formatter-toolbar button.jt-color-yellow.active { background: #f59e0b !important; color: ${yellowText} !important; }
+      .jt-formatter-toolbar button.jt-color-blue.active { background: #3b82f6 !important; color: ${blueText} !important; }
+      .jt-formatter-toolbar button.jt-color-red.active { background: #ef4444 !important; color: ${redText} !important; }
+      .jt-formatter-toolbar button.jt-color-orange.active { background: #f97316 !important; color: ${orangeText} !important; }
+      .jt-formatter-toolbar button.jt-color-purple.active { background: #a855f7 !important; color: ${purpleText} !important; }
+
+      .jt-toolbar-divider {
+        background: ${p.border.default} !important;
+      }
+
+      .jt-dropdown-menu {
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.default} !important;
+        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
+      }
+
+      .jt-dropdown-menu button {
+        color: ${p.text.primary} !important;
+      }
+
+      .jt-dropdown-menu button:hover {
+        background: ${p.states.hover} !important;
+      }
+
+      .jt-dropdown-menu button.active {
+        background: ${p.primary.base} !important;
+        color: ${primaryText} !important;
+      }
+
+      /* === Background Color Hierarchy === */
       .bg-white,
       .bg-slate-50 {
-        background-color: ${background};
+        background-color: ${p.background.base};
       }
 
-      /* Subtle shade for slight contrast (hover states, badges) */
       .bg-gray-50 {
-        background-color: ${backgroundSubtle} !important;
+        background-color: ${p.background.subtle} !important;
       }
 
-      /* Muted shade for page backgrounds (messages, lists) */
-      .bg-gray-100,
+      .bg-gray-100 {
+        background-color: ${p.background.muted} !important;
+      }
+
       .bg-gray-200 {
-        background-color: ${backgroundMuted} !important;
+        background-color: ${p.background.emphasis} !important;
       }
 
-      /* Dark backgrounds get the darkest shade */
       .bg-gray-700 {
-        background-color: ${backgroundDark} !important;
+        background-color: ${p.background.strong} !important;
       }
 
-      /* === Budget Row Selection Highlighting === */
-      /* When budget rows are selected, they get bg-blue-50 or bg-blue-100 classes */
-      /* Use same subtle color for consistent highlighting across all selected cells */
+      /* === Selection Highlighting === */
       .bg-blue-50,
       .bg-blue-100 {
-        background-color: ${primaryFaded15} !important;
+        background-color: ${p.primary.selection} !important;
       }
 
-      /* Sticky columns need solid colors to prevent see-through when scrolling */
-      /* Use blended color: background + 15% primary = solid result */
+      /* Sticky columns - solid colors */
       .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {
-        background-color: ${primaryBlended15} !important;
+        background-color: ${p.primary.selection} !important;
       }
 
       .group\\/row:has(.bg-blue-50) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100),
       .group\\/row:has(.bg-blue-100) .sticky[style*="left"]:not(.bg-blue-50):not(.bg-blue-100) {
-        background-color: ${primaryBlended15} !important;
+        background-color: ${p.primary.selection} !important;
       }
 
       .sticky[style*="top: 0px"].bg-blue-50,
@@ -528,552 +651,473 @@ const CustomThemeFeature = (() => {
       .sticky[style*="top:0px"].bg-blue-100,
       .sticky[style*="top: 0"].bg-blue-50,
       .sticky[style*="top: 0"].bg-blue-100 {
-        background-color: ${primaryBlended15} !important;
+        background-color: ${p.primary.selection} !important;
       }
 
-      /* === Alert Background Colors === */
-      /* Backgrounds adapt based on theme luminance */
-      .bg-green-50 {
-        background-color: ${alertColors.greenBg} !important;
+      /* === Alert Colors (Theme-Harmonized) === */
+      .bg-green-50 { background-color: ${p.alerts.green.bg} !important; }
+      .bg-yellow-50 { background-color: ${p.alerts.yellow.bg} !important; }
+      .bg-red-50 { background-color: ${p.alerts.red.bg} !important; }
+      .bg-orange-50 { background-color: ${p.alerts.orange.bg} !important; }
+      .bg-purple-50 { background-color: ${p.alerts.purple.bg} !important; }
+
+      .text-green-500, .border-green-500 { color: ${p.alerts.green.text}; border-color: ${p.alerts.green.border}; }
+      .text-yellow-500, .border-yellow-500 { color: ${p.alerts.yellow.text}; border-color: ${p.alerts.yellow.border}; }
+      .text-red-500, .border-red-500 { color: ${p.alerts.red.text}; border-color: ${p.alerts.red.border}; }
+      .text-orange-500, .border-orange-500 { color: ${p.alerts.orange.text}; border-color: ${p.alerts.orange.border}; }
+      .text-purple-500, .border-purple-500 { color: ${p.alerts.purple.text}; border-color: ${p.alerts.purple.border}; }
+
+      /* Alert body text */
+      .bg-green-50, .bg-yellow-50, .bg-red-50, .bg-orange-50, .bg-purple-50 {
+        color: ${p.alerts.bodyText};
       }
 
-      .bg-yellow-50 {
-        background-color: ${alertColors.yellowBg} !important;
-      }
+      /* Keep header colored */
+      .bg-green-50 .text-green-500 { color: ${p.alerts.green.text} !important; }
+      .bg-yellow-50 .text-yellow-500 { color: ${p.alerts.yellow.text} !important; }
+      .bg-red-50 .text-red-500 { color: ${p.alerts.red.text} !important; }
+      .bg-orange-50 .text-orange-500 { color: ${p.alerts.orange.text} !important; }
+      .bg-purple-50 .text-purple-500 { color: ${p.alerts.purple.text} !important; }
 
-      .bg-red-50 {
-        background-color: ${alertColors.redBg} !important;
-      }
-
-      .bg-orange-50 {
-        background-color: ${alertColors.orangeBg} !important;
-      }
-
-      .bg-purple-50 {
-        background-color: ${alertColors.purpleBg} !important;
-      }
-
-      /* === Alert Text Colors === */
-      /* Text colors adapt based on theme luminance */
-      .text-green-500,
-      .border-green-500 {
-        color: ${alertColors.greenText};
-        border-color: ${alertColors.greenText};
-      }
-
-      .text-yellow-500,
-      .border-yellow-500 {
-        color: ${alertColors.yellowText};
-        border-color: ${alertColors.yellowText};
-      }
-
-      .text-red-500,
-      .border-red-500 {
-        color: ${alertColors.redText};
-        border-color: ${alertColors.redText};
-      }
-
-      .text-orange-500,
-      .border-orange-500 {
-        color: ${alertColors.orangeText};
-        border-color: ${alertColors.orangeText};
-      }
-
-      .text-purple-500,
-      .border-purple-500 {
-        color: ${alertColors.purpleText};
-        border-color: ${alertColors.purpleText};
-      }
-
-      /* Alert body text color adapts to background */
-      .bg-green-50,
-      .bg-yellow-50,
-      .bg-red-50,
-      .bg-orange-50,
-      .bg-purple-50 {
-        color: ${alertColors.bodyText};
-      }
-
-      /* Keep the header/title colored */
-      .bg-green-50 .text-green-500 {
-        color: ${alertColors.greenText} !important;
-      }
-
-      .bg-yellow-50 .text-yellow-500 {
-        color: ${alertColors.yellowText} !important;
-      }
-
-      .bg-red-50 .text-red-500 {
-        color: ${alertColors.redText} !important;
-      }
-
-      .bg-orange-50 .text-orange-500 {
-        color: ${alertColors.orangeText} !important;
-      }
-
-      .bg-purple-50 .text-purple-500 {
-        color: ${alertColors.purpleText} !important;
-      }
-
+      /* === Focus States (Real Colors, Not Filters!) === */
       .focus\\:bg-white:focus,
       .focus\\:bg-gray-100:focus {
-        background-color: ${background};
-        filter: brightness(0.95);
+        background-color: ${p.states.focus} !important;
       }
 
-      /* === Hover Background States === */
-      .hover\\:bg-gray-50:hover,
-      .hover\\:bg-gray-100:hover,
-      .hover\\:bg-gray-200:hover,
-      .hover\\:bg-slate-50:hover,
-      .hover\\:bg-white:hover {
-        background-color: ${background} !important;
-        filter: brightness(0.95);
-      }
-
-      /* === Active Background States === */
-      .active\\:bg-gray-100:active,
-      .active\\:bg-gray-200:active,
-      .active\\:bg-gray-300:active {
-        background-color: ${background} !important;
-        filter: brightness(0.9);
-      }
-
-      /* === Popups, Tooltips, and Modals === */
-      /* Exclude data-popper tooltips - they get primary color below */
-      [role="dialog"],
-      [role="tooltip"],
-      [role="menu"],
-      [role="listbox"],
-      .tooltip,
-      .popup,
-      .modal,
-      .dropdown,
-      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
-      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
-      div[class*="z-"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]) {
-        background-color: ${background} !important;
-        color: ${text} !important;
-      }
-
-      /* Modal/popup backdrop - solid background for RGB theme */
-      div.fixed.inset-0.bg-black,
-      div.fixed.inset-0.bg-gray-800,
-      div.fixed.inset-0.bg-gray-900,
-      div.absolute.inset-0.bg-black,
-      div.absolute.inset-0.bg-gray-800,
-      div.absolute.inset-0.bg-gray-900 {
-        background-color: ${background} !important;
-      }
-
-      /* === Black/Dark Background Overrides === */
-      /* Exclude backdrop elements (inset-0 = full screen overlay) */
-      .bg-black:not(.inset-0):not([data-popper-placement]),
-      .bg-gray-800:not(.inset-0):not([data-popper-placement]),
-      .bg-gray-900:not(.inset-0):not([data-popper-placement]) {
-        background-color: ${background} !important;
-      }
-
-      /* Opacity-based dark backgrounds - make solid for RGB theme */
-      [class*="bg-gray-800\\/"],
-      [class*="bg-gray-900\\/"],
-      [class*="bg-black\\/"] {
-        background-color: ${background} !important;
-      }
-
-      /* File/document viewer panels - solid background */
-      /* Targets panels with dark text (text-white) indicating dark background parent */
-      div.lg\\:grow.flex.flex-col.h-full,
-      div.relative.grow.min-w-0,
-      div.h-full.overflow-auto {
-        background-color: ${background} !important;
-      }
-
-      /* JobTread native tooltips (Popper.js) - use primary color */
-      div[data-popper-placement] {
-        background-color: ${primary} !important;
-        color: ${primaryText} !important;
-      }
-
-      /* === Text Colors === */
-      .text-gray-500,
-      .text-gray-600,
-      .text-gray-700,
-      .text-gray-800,
-      .text-gray-900,
-      .text-black,
-      .text-white {
-        color: ${text};
-      }
-
-      .text-gray-300 {
-        color: ${text};
-        opacity: 0.8;
-      }
-
-      /* === Shadow Styles === */
-      .shadow-line-right {
-        box-shadow: 1px 0 0 ${borderColor};
-      }
-
-      .shadow-line-left {
-        box-shadow: -1px 0 0 ${borderColor};
-      }
-
-      .shadow-line-bottom {
-        box-shadow: 0 1px 0 ${borderColor};
-      }
-
-      .shadow-sm {
-        border: solid 1px ${borderColor};
-      }
-
-      /* === Focus Styles === */
       .focus-within\\:bg-white {
-        background-color: ${background};
+        background-color: ${p.background.base};
       }
 
       .focus-within\\:bg-blue-50:focus-within {
-        background-color: ${primaryLight40} !important;
+        background-color: ${p.primary.selectionStrong} !important;
       }
 
-      /* === Hover Styles === */
-      .hover\\:bg-gray-50:hover,
-      .hover\\:bg-gray-100:hover,
-      .hover\\:bg-gray-200:hover,
+      /* === Hover States (Real Colors, Not Filters!) === */
+      .hover\\:bg-gray-50:hover {
+        background-color: ${p.states.hover} !important;
+      }
+
+      .hover\\:bg-gray-100:hover {
+        background-color: ${p.states.hover} !important;
+      }
+
+      .hover\\:bg-gray-200:hover {
+        background-color: ${p.states.active} !important;
+      }
+
+      .hover\\:bg-slate-50:hover {
+        background-color: ${p.states.hover} !important;
+      }
+
+      .hover\\:bg-white:hover {
+        background-color: ${p.states.hover} !important;
+      }
+
       .hover\\:bg-gray-800:hover,
       .hover\\:bg-gray-900:hover {
-        background-color: ${background};
-        filter: brightness(0.9);
+        background-color: ${p.states.active} !important;
       }
 
       .hover\\:bg-blue-50:hover,
       .hover\\:bg-blue-100:hover {
-        background-color: ${primaryFaded15} !important;
+        background-color: ${p.primary.selectionHover} !important;
+      }
+
+      /* === Active States === */
+      .active\\:bg-gray-100:active,
+      .active\\:bg-gray-200:active,
+      .active\\:bg-gray-300:active {
+        background-color: ${p.states.active} !important;
+      }
+
+      /* === Group Hover States === */
+      .group-hover\\/row\\:bg-gray-50 {
+        background-color: ${p.states.rowHover} !important;
+      }
+
+      .group-hover\\/row\\:bg-blue-100 {
+        background-color: ${p.primary.selectionHover} !important;
+      }
+
+      .group:hover .group-hover\\:text-gray-800 {
+        color: ${p.text.primary};
+      }
+
+      .group:hover .group-hover\\:bg-slate-50 {
+        background-color: ${p.states.rowHover} !important;
+      }
+
+      /* === Popups, Tooltips, and Modals (Elevated Surfaces) === */
+      [role="dialog"],
+      [role="menu"],
+      [role="listbox"],
+      .popup,
+      .modal,
+      .dropdown,
+      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
+      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]) {
+        background-color: ${p.background.elevated} !important;
+        color: ${p.text.primary} !important;
+        box-shadow: 0 8px 24px ${p.shadows.colorStrong} !important;
+      }
+
+      /* Modal backdrop */
+      div.fixed.inset-0.bg-black,
+      div.fixed.inset-0.bg-gray-800,
+      div.fixed.inset-0.bg-gray-900 {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+      }
+
+      /* Dark backgrounds */
+      .bg-black:not(.inset-0):not([data-popper-placement]),
+      .bg-gray-800:not(.inset-0):not([data-popper-placement]),
+      .bg-gray-900:not(.inset-0):not([data-popper-placement]) {
+        background-color: ${p.background.strong} !important;
+      }
+
+      [class*="bg-gray-800\\/"],
+      [class*="bg-gray-900\\/"],
+      [class*="bg-black\\/"] {
+        background-color: ${p.background.strong} !important;
+      }
+
+      /* File viewer panels */
+      div.lg\\:grow.flex.flex-col.h-full,
+      div.relative.grow.min-w-0,
+      div.h-full.overflow-auto {
+        background-color: ${p.background.base} !important;
+      }
+
+      /* Native tooltips - primary color */
+      div[data-popper-placement] {
+        background-color: ${p.primary.base} !important;
+        color: ${primaryText} !important;
+        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
+      }
+
+      /* === Text Color Hierarchy === */
+      .text-gray-900,
+      .text-gray-800,
+      .text-black {
+        color: ${p.text.primary};
+      }
+
+      .text-gray-700,
+      .text-gray-600 {
+        color: ${p.text.secondary};
+      }
+
+      .text-gray-500 {
+        color: ${p.text.muted};
+      }
+
+      .text-gray-400,
+      .text-gray-300 {
+        color: ${p.text.disabled};
+      }
+
+      .text-white {
+        color: ${p.text.primary};
       }
 
       .hover\\:text-gray-800:hover,
       .hover\\:text-gray-900:hover {
-        color: ${text};
+        color: ${p.text.primary};
       }
 
-      /* === Active Styles === */
-      .active\\:bg-gray-200:active {
-        background-color: ${background};
-        filter: brightness(0.85);
+      .group-hover\\:text-gray-500,
+      .group:hover .group-hover\\:text-gray-500 {
+        color: ${p.text.secondary} !important;
       }
 
-      /* === Group Hover Styles === */
-      .group-hover\\/row\\:bg-gray-50 {
-        background-color: ${background};
+      .placeholder-gray-400::placeholder,
+      .group-hover\\:placeholder-gray-500:hover::placeholder {
+        color: ${p.text.muted} !important;
       }
 
-      .group-hover\\/row\\:bg-blue-100 {
-        background-color: ${primaryFaded15} !important;
+      /* === Shadow Styles === */
+      .shadow-line-right {
+        box-shadow: 1px 0 0 ${p.border.subtle};
       }
 
-      .group:hover .group-hover\\:text-gray-800 {
-        color: ${text};
+      .shadow-line-left {
+        box-shadow: -1px 0 0 ${p.border.subtle};
       }
 
-      .group:hover .group-hover\\:bg-slate-50 {
-        background-color: ${background};
+      .shadow-line-bottom {
+        box-shadow: 0 1px 0 ${p.border.subtle};
       }
 
-      /* === Primary Color for Action Buttons === */
-      /* Only theme actual buttons, not all blue elements */
+      .shadow-sm {
+        border: solid 1px ${p.border.subtle};
+        box-shadow: 0 1px 2px ${p.shadows.color};
+      }
+
+      /* === Primary Buttons === */
       button.bg-blue-500,
       button.bg-blue-600,
       button[class*="bg-blue"] {
-        background-color: ${primary} !important;
+        background-color: ${p.primary.base} !important;
         color: ${primaryText} !important;
+        box-shadow: 0 2px 4px ${p.shadows.color};
       }
 
       button.hover\\:bg-blue-600:hover,
       button.hover\\:bg-blue-700:hover,
       button.hover\\:bg-blue-500:hover {
-        background-color: ${primary} !important;
-        filter: brightness(0.9);
+        background-color: ${p.primary.hover} !important;
       }
 
-      /* Purple buttons (Send button, etc.) */
       button.bg-purple-700,
       button.bg-purple-600,
       button[class*="bg-purple"] {
-        background-color: ${primary} !important;
-        border-color: ${primary} !important;
+        background-color: ${p.primary.base} !important;
+        border-color: ${p.primary.base} !important;
         color: ${primaryText} !important;
       }
 
       button.hover\\:bg-purple-800:hover,
       button.hover\\:bg-purple-700:hover {
-        background-color: ${primary} !important;
-        filter: brightness(0.9);
+        background-color: ${p.primary.hover} !important;
       }
 
-      /* === Selected Box Border (Orange -> Primary) === */
+      /* === Selected State === */
       .border-jtOrange {
-        border-color: ${primary} !important;
+        border-color: ${p.primary.base} !important;
       }
 
-      /* === Selected State Background (Primary Color) === */
-      /* When an element has both border-jtOrange and bg-gray-100, it's selected */
-      /* Give it a light version of the primary color for the background */
       .border-jtOrange.bg-gray-100 {
-        background-color: ${primaryLight40} !important;
+        background-color: ${p.primary.selectionStrong} !important;
       }
 
-      /* === Search Bar Hover State === */
-      /* Search bar should use shaded background, not primary color */
+      /* === Search Bar === */
       input[placeholder*="Search"].bg-transparent:hover,
       input[placeholder*="Search"].bg-transparent:focus,
       div:has(> input[placeholder*="Search"]):hover,
       div:has(> input[placeholder*="Search"]):focus-within {
-        background-color: ${background} !important;
-        filter: brightness(0.95);
+        background-color: ${p.states.focus} !important;
       }
 
-      /* === Search Bar and Gray Text Overrides === */
-      .text-gray-400 {
-        color: ${text} !important;
-        opacity: 0.7;
-      }
-
-      .group-hover\\:text-gray-500,
-      .group:hover .group-hover\\:text-gray-500 {
-        color: ${text} !important;
-        opacity: 0.85;
-      }
-
-      .placeholder-gray-400::placeholder,
-      .group-hover\\:placeholder-gray-500:hover::placeholder {
-        color: ${text} !important;
-        opacity: 0.5;
-      }
-
-      /* === Budget Group Level Row Shading === */
-      /* Ensure group level rows have consistent shading across ALL cells */
-      /* This makes sure row numbers and unit columns also get the group shade */
-      /* BUT preserve yellow highlighting for unsaved changes and blue for selection */
+      /* === Budget Group Level Rows === */
       [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
         background-color: inherit !important;
       }
 
-      /* Also apply to item-under-level rows */
       [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
         background-color: inherit !important;
       }
 
-      /* === Budget Table Frozen Column Highlighting === */
-      /* Only handle colors - no z-index or positioning changes */
-
       /* === Column Resize Handles === */
-      /* Reduce z-index so they don't appear over sticky headers when scrolling */
       .absolute.z-10.cursor-col-resize {
         z-index: 1 !important;
       }
 
       .absolute.z-10.cursor-col-resize:hover {
-        background-color: ${borderColor} !important;
-        filter: brightness(0.8);
+        background-color: ${p.border.strong} !important;
       }
 
-      /* === Quick Notes Button Theme === */
-      /* Quick Notes button active state uses primary color */
+      /* === Quick Notes === */
       .jt-quick-notes-btn.jt-notes-button-active {
-        background: ${primary} !important;
+        background: ${p.primary.base} !important;
         color: ${primaryText} !important;
       }
 
       .jt-quick-notes-btn.jt-notes-button-active:hover {
-        background: ${primary} !important;
-        filter: brightness(0.9);
+        background: ${p.primary.hover} !important;
       }
 
       .jt-quick-notes-floating-btn {
-        background: ${primary} !important;
+        background: ${p.primary.base} !important;
         color: ${primaryText} !important;
+        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
       }
 
       .jt-quick-notes-floating-btn:hover {
-        background: ${primary} !important;
-        filter: brightness(0.9);
+        background: ${p.primary.hover} !important;
       }
 
       .jt-quick-notes-floating-btn.jt-notes-button-active {
-        background: ${primary} !important;
-        filter: brightness(0.8);
+        background: ${p.primary.active} !important;
       }
 
-      /* Quick Notes Panel custom theme support */
       .jt-quick-notes-panel.custom-theme {
-        --jt-notes-bg: ${background};
-        --jt-notes-text: ${text};
-        --jt-notes-border: ${borderColor};
-        --jt-notes-primary: ${primary};
-        --jt-notes-input-bg: ${background};
+        --jt-notes-bg: ${p.background.elevated};
+        --jt-notes-text: ${p.text.primary};
+        --jt-notes-border: ${p.border.default};
+        --jt-notes-primary: ${p.primary.base};
+        --jt-notes-input-bg: ${p.background.muted};
       }
 
-      /* === Preview Button Theme === */
-      /* Preview button active state uses primary color */
+      /* === Preview Button === */
       .jt-preview-btn.active {
-        background: ${primary} !important;
+        background: ${p.primary.base} !important;
         color: ${primaryText} !important;
-        border-color: ${primary} !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        border-color: ${p.primary.base} !important;
+        box-shadow: 0 2px 8px ${p.shadows.colorStrong};
       }
 
       .jt-preview-btn {
-        background: ${background} !important;
-        color: ${text} !important;
-        border-color: ${borderColor} !important;
+        background: ${p.background.muted} !important;
+        color: ${p.text.primary} !important;
+        border-color: ${p.border.default} !important;
       }
 
       .jt-preview-btn:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
-        border-color: ${borderColor} !important;
+        background: ${p.states.hover} !important;
+        border-color: ${p.border.strong} !important;
       }
 
-      /* Preview Panel custom theme support */
       .jt-preview-panel.custom-theme {
-        --jt-preview-bg: ${background};
-        --jt-preview-text: ${text};
-        --jt-preview-border: ${borderColor};
-        --jt-preview-primary: ${primary};
-        --jt-preview-btn-bg: ${background};
-        --jt-preview-btn-text: ${text};
-        --jt-preview-btn-border: ${borderColor};
-        --jt-preview-btn-hover-bg: ${background};
-        --jt-preview-btn-hover-text: ${text};
-        --jt-preview-btn-hover-border: ${borderColor};
-        --jt-preview-text-muted: ${text};
-        --jt-preview-scrollbar-track: ${background};
-        --jt-preview-scrollbar-thumb: ${borderColor};
-        --jt-preview-scrollbar-thumb-hover: ${borderColor};
+        --jt-preview-bg: ${p.background.elevated};
+        --jt-preview-text: ${p.text.primary};
+        --jt-preview-border: ${p.border.default};
+        --jt-preview-primary: ${p.primary.base};
+        --jt-preview-btn-bg: ${p.background.muted};
+        --jt-preview-btn-text: ${p.text.primary};
+        --jt-preview-btn-border: ${p.border.default};
+        --jt-preview-btn-hover-bg: ${p.states.hover};
+        --jt-preview-btn-hover-text: ${p.text.primary};
+        --jt-preview-btn-hover-border: ${p.border.strong};
+        --jt-preview-text-muted: ${p.text.muted};
+        --jt-preview-scrollbar-track: ${p.scrollbar.track};
+        --jt-preview-scrollbar-thumb: ${p.scrollbar.thumb};
+        --jt-preview-scrollbar-thumb-hover: ${p.scrollbar.thumbHover};
       }
 
       .jt-preview-panel.custom-theme .jt-preview-header {
-        background: ${background} !important;
-        border-bottom-color: ${borderColor} !important;
-        color: ${text} !important;
+        background: ${p.background.elevated} !important;
+        border-bottom-color: ${p.border.default} !important;
+        color: ${p.text.primary} !important;
       }
 
       .jt-preview-panel.custom-theme .jt-preview-content {
-        background: ${background} !important;
-        color: ${text} !important;
+        background: ${p.background.base} !important;
+        color: ${p.text.primary} !important;
       }
 
-      /* === Alert Modal Theme === */
-      /* Alert modal integration with custom theme */
+      /* === Alert Modal === */
       .jt-alert-modal {
-        background: ${background} !important;
+        background: ${p.background.elevated} !important;
+        box-shadow: 0 8px 32px ${p.shadows.colorStrong} !important;
       }
 
       .jt-alert-modal-header {
-        background: ${background} !important;
-        border-bottom-color: ${borderColor} !important;
+        background: ${p.background.elevated} !important;
+        border-bottom-color: ${p.border.default} !important;
       }
 
       .jt-alert-modal-title {
-        color: ${primary} !important;
+        color: ${p.primary.base} !important;
       }
 
       .jt-alert-modal-close {
-        background: ${background} !important;
-        color: ${text} !important;
-        border-color: ${borderColor} !important;
+        background: ${p.background.muted} !important;
+        color: ${p.text.primary} !important;
+        border-color: ${p.border.default} !important;
       }
 
       .jt-alert-modal-close:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
+        background: ${p.states.hover} !important;
       }
 
       .jt-alert-modal-body {
-        background: ${background} !important;
+        background: ${p.background.elevated} !important;
       }
 
       .jt-alert-dropdown-button {
-        background: ${background} !important;
-        border-color: ${borderColor} !important;
-        color: ${text} !important;
+        background: ${p.background.muted} !important;
+        border-color: ${p.border.default} !important;
+        color: ${p.text.primary} !important;
       }
 
       .jt-alert-dropdown-button:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
+        background: ${p.states.hover} !important;
       }
 
       .jt-alert-dropdown-menu {
-        background: ${background} !important;
-        border-color: ${borderColor} !important;
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.default} !important;
+        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
       }
 
       .jt-alert-dropdown-item {
-        background: ${background} !important;
-        border-bottom-color: ${borderColor} !important;
-        color: ${text} !important;
+        background: transparent !important;
+        border-bottom-color: ${p.border.subtle} !important;
+        color: ${p.text.primary} !important;
       }
 
       .jt-alert-dropdown-item:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
+        background: ${p.states.hover} !important;
       }
 
       .jt-alert-dropdown-item.active {
-        background: ${primaryLight40} !important;
+        background: ${p.primary.selection} !important;
       }
 
       .jt-alert-subject {
-        background: ${background} !important;
-        border-color: ${borderColor} !important;
-        color: ${text} !important;
+        background: ${p.background.muted} !important;
+        border-color: ${p.border.default} !important;
+        color: ${p.text.primary} !important;
       }
 
       .jt-alert-subject:hover:not(:focus) {
-        background: ${background} !important;
-        filter: brightness(0.95);
-        border-color: ${borderColor} !important;
+        background: ${p.states.hover} !important;
+        border-color: ${p.border.strong} !important;
       }
 
       .jt-alert-subject:focus {
-        background: ${background} !important;
-        border-color: ${primary} !important;
+        background: ${p.background.muted} !important;
+        border-color: ${p.primary.base} !important;
+        box-shadow: 0 0 0 2px ${p.primary.selection} !important;
       }
 
       .jt-alert-message-container {
-        border-color: ${borderColor} !important;
+        border-color: ${p.border.default} !important;
       }
 
       .jt-alert-message {
-        background: ${background} !important;
-        color: ${text} !important;
+        background: ${p.background.muted} !important;
+        color: ${p.text.primary} !important;
       }
 
       .jt-alert-message:hover:not(:focus) {
-        background: ${background} !important;
-        filter: brightness(0.95);
+        background: ${p.states.hover} !important;
       }
 
       .jt-alert-message:focus {
-        background: ${background} !important;
+        background: ${p.background.muted} !important;
+        box-shadow: 0 0 0 2px ${p.primary.selection} !important;
       }
 
       .jt-alert-modal-footer {
-        background: ${background} !important;
-        border-top-color: ${borderColor} !important;
+        background: ${p.background.elevated} !important;
+        border-top-color: ${p.border.default} !important;
       }
 
       .jt-alert-btn-cancel {
-        background: ${background} !important;
-        color: ${text} !important;
-        border-color: ${borderColor} !important;
+        background: ${p.background.muted} !important;
+        color: ${p.text.primary} !important;
+        border-color: ${p.border.default} !important;
       }
 
       .jt-alert-btn-cancel:hover {
-        background: ${background} !important;
-        filter: brightness(0.95);
+        background: ${p.states.hover} !important;
+        border-color: ${p.border.strong} !important;
+      }
+
+      /* === Ring/Focus Ring Colors === */
+      .ring-gray-200 {
+        --tw-ring-color: ${p.border.default};
+      }
+
+      .focus-within\\:border-cyan-500:focus-within {
+        border-color: ${p.primary.base} !important;
+      }
+
+      /* === Caret Color === */
+      .caret-black {
+        caret-color: ${p.text.primary};
       }
     `;
 
@@ -1142,13 +1186,12 @@ const CustomThemeFeature = (() => {
     highlightCurrentDate();
   }
 
-  // Fix text contrast for a single element using custom text color
+  // Fix text contrast for a single element using palette text color
   function fixTextContrast(element) {
     const style = element.getAttribute('style');
     if (!style) return;
 
     // Skip tags - they should keep their original colors
-    // Tags have the rounded-sm class and px-2/py-1 padding
     if (element.classList.contains('rounded-sm') &&
         (element.classList.contains('px-2') || element.classList.contains('py-1'))) {
       return;
@@ -1166,12 +1209,11 @@ const CustomThemeFeature = (() => {
     if (bgColorMatch && textColorMatch) {
       // Get current computed color
       const currentColor = window.getComputedStyle(element).color;
-      const customTextColor = hexToRgb(currentColors.text);
-      const targetColor = `rgb(${customTextColor.r}, ${customTextColor.g}, ${customTextColor.b})`;
+      const textColor = hexToRgb(palette.text?.primary || currentColors.text);
+      const targetColor = `rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`;
 
       // Only update if different (prevents infinite loop)
       if (currentColor !== targetColor) {
-        // Override the color property with user's custom text color
         const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${targetColor}`);
         element.setAttribute('style', newStyle);
         element.style.color = targetColor;
@@ -1192,8 +1234,9 @@ const CustomThemeFeature = (() => {
         // Add custom class to prevent re-processing
         tdCell.classList.add('jt-current-date-enhanced');
 
-        // Fill entire cell background with primary color
-        const primaryRgb = hexToRgb(currentColors.primary);
+        // Fill entire cell background with primary color from palette
+        const primaryColor = palette.primary?.base || currentColors.primary;
+        const primaryRgb = hexToRgb(primaryColor);
         tdCell.style.backgroundColor = `rgb(${primaryRgb.r}, ${primaryRgb.g}, ${primaryRgb.b})`;
       }
     });
@@ -1205,6 +1248,7 @@ const CustomThemeFeature = (() => {
     cleanup,
     updateColors,
     getColors,
+    getPalette,
     isActive: () => isActive
   };
 })();
