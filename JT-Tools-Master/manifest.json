@@ -52,6 +52,7 @@
         "features/formatter.js",
         "features/preview-mode.js",
         "features/dark-mode.js",
+        "features/rgb-theme-modules/palette.js",
         "features/rgb-theme.js",
         "features/job-switcher.js",
         "features/budget-hierarchy.js",
