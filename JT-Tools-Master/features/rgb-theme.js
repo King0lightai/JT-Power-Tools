@@ -752,13 +752,25 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Popups, Tooltips, and Modals (Elevated Surfaces) === */
-      /* Only apply shadows to actual dialogs/menus, not all absolute positioned elements */
+      /* Apply to dialogs, menus, and popper-positioned dropdowns */
       [role="dialog"],
       [role="menu"],
-      [role="listbox"] {
+      [role="listbox"],
+      div[data-popper-placement] {
         background-color: ${p.background.elevated} !important;
         color: ${p.text.primary} !important;
         box-shadow: 0 8px 24px ${p.shadows.colorStrong} !important;
+      }
+
+      /* Dropdown menu items - ensure proper text color (but preserve text-white) */
+      div[data-popper-placement] div[role="button"]:not(.text-white),
+      div[data-popper-placement] [tabindex]:not(.text-white) {
+        color: ${p.text.primary} !important;
+      }
+
+      /* Dropdown dividers */
+      div[data-popper-placement] .divide-y > * + * {
+        border-color: ${p.border.subtle} !important;
       }
 
       /* Absolute/fixed positioned elements - theme colors but NO shadow */
@@ -784,13 +796,6 @@ const CustomThemeFeature = (() => {
       .bg-white [class*="bg-gray-900\\/"],
       .bg-white [class*="bg-black\\/"] {
         background-color: ${p.background.strong} !important;
-      }
-
-      /* Native tooltips - primary color */
-      div[data-popper-placement] {
-        background-color: ${p.primary.base} !important;
-        color: ${primaryText} !important;
-        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
       }
 
       /* === Text Color Hierarchy === */
@@ -879,6 +884,28 @@ const CustomThemeFeature = (() => {
         background-color: ${p.primary.hover} !important;
       }
 
+      /* === Primary colors on non-button elements (menu items, etc.) === */
+      .bg-blue-500:not(button),
+      .bg-blue-600:not(button) {
+        background-color: ${p.primary.base} !important;
+      }
+
+      /* Preserve text-white on blue backgrounds */
+      .bg-blue-500.text-white,
+      .bg-blue-600.text-white {
+        color: ${primaryText} !important;
+      }
+
+      /* Hover states for non-button elements */
+      .hover\\:bg-blue-500:hover:not(button),
+      .hover\\:bg-blue-600:hover:not(button) {
+        background-color: ${p.primary.base} !important;
+      }
+
+      .hover\\:text-white:hover {
+        color: ${primaryText} !important;
+      }
+
       /* === Selected State === */
       .border-jtOrange {
         border-color: ${p.primary.base} !important;
@@ -889,12 +916,8 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Search Bar === */
-      input[placeholder*="Search"].bg-transparent:hover,
-      input[placeholder*="Search"].bg-transparent:focus,
-      div:has(> input[placeholder*="Search"]):hover,
-      div:has(> input[placeholder*="Search"]):focus-within {
-        background-color: ${p.states.focus} !important;
-      }
+      /* Note: Search inputs with bg-transparent should stay transparent */
+      /* The outer container gets themed via .bg-white rules */
 
       /* === Budget Group Level Rows === */
       [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
