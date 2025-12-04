@@ -530,22 +530,19 @@ const CustomThemeFeature = (() => {
         color: ${p.text.primary} !important;
       }
 
-      /* Modal backdrop - keep semi-transparent */
+      /* Modal backdrop - preserve semi-transparent overlay */
+      /* Don't override - let Tailwind's opacity-based backgrounds work */
       div.fixed.inset-0.bg-black,
       div.fixed.inset-0.bg-gray-800,
-      div.fixed.inset-0.bg-gray-900 {
-        background-color: rgba(0, 0, 0, 0.5) !important;
+      div.fixed.inset-0.bg-gray-900,
+      div.absolute.inset-0[class*="bg-gray-800\\/"],
+      div.absolute.inset-0[class*="bg-gray-900\\/"],
+      div.absolute.inset-0[class*="bg-black\\/"] {
+        background-color: unset !important;
       }
 
       /* Note: .bg-gray-800, .bg-gray-900, .bg-black are NOT overridden */
       /* They're used intentionally for dark toolbars, file viewers, etc. */
-
-      /* Only override opacity-based backgrounds in themed content areas */
-      .bg-white [class*="bg-gray-800\\/"],
-      .bg-white [class*="bg-gray-900\\/"],
-      .bg-white [class*="bg-black\\/"] {
-        background-color: ${p.background.strong} !important;
-      }
 
       /* === Text Color Hierarchy === */
       /* Note: .text-white is NOT overridden - it's used intentionally on dark toolbars */
