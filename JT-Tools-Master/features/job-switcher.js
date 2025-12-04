@@ -232,27 +232,54 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    // First, check if there's a currently focused job button (from arrow key navigation)
-    const activeElement = document.activeElement;
     let selectedButton = null;
 
-    // Check if the active element is a job button in the sidebar (not the search input)
-    if (activeElement &&
-        sidebar.contains(activeElement) &&
-        activeElement.getAttribute('role') === 'button' &&
-        activeElement.tagName !== 'INPUT') {
-      const text = activeElement.textContent.trim();
-      // Make sure it's not the close button or header
-      if (!text.includes('Close') &&
-          !text.includes('×') &&
-          !text.includes('Job Switcher') &&
-          !activeElement.querySelector('path[d*="M18 6"]')) {
-        selectedButton = activeElement;
-        console.log(`QuickJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
+    // Strategy 1: Check for visually highlighted items (arrow key navigation often uses visual highlighting)
+    // Look for items with highlight classes like bg-blue-50, bg-blue-100, bg-gray-100, etc.
+    const highlightedItems = sidebar.querySelectorAll(
+      'div[role="button"][class*="bg-blue-"], ' +
+      'div[role="button"][class*="bg-gray-100"], ' +
+      'div[role="button"][aria-selected="true"], ' +
+      'div[role="button"][data-highlighted], ' +
+      'div[role="button"][data-selected], ' +
+      'div[role="button"].highlighted, ' +
+      'div[role="button"].selected'
+    );
+
+    for (const item of highlightedItems) {
+      const text = item.textContent.trim();
+      // Skip non-job items
+      if (text.includes('Close') || text.includes('×') || text.includes('Job Switcher') ||
+          item.querySelector('path[d*="M18 6"]')) {
+        continue;
+      }
+      selectedButton = item;
+      console.log(`QuickJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
+      break;
+    }
+
+    // Strategy 2: Check if there's a currently focused job button (from arrow key navigation)
+    if (!selectedButton) {
+      const activeElement = document.activeElement;
+
+      // Check if the active element is a job button in the sidebar (not the search input)
+      if (activeElement &&
+          sidebar.contains(activeElement) &&
+          activeElement.getAttribute('role') === 'button' &&
+          activeElement.tagName !== 'INPUT') {
+        const text = activeElement.textContent.trim();
+        // Make sure it's not the close button or header
+        if (!text.includes('Close') &&
+            !text.includes('×') &&
+            !text.includes('Job Switcher') &&
+            !activeElement.querySelector('path[d*="M18 6"]')) {
+          selectedButton = activeElement;
+          console.log(`QuickJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
+        }
       }
     }
 
-    // If no focused job, fall back to finding the top job
+    // Strategy 3: Fall back to finding the top job
     if (!selectedButton) {
       // Find all job buttons
       const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
@@ -274,7 +301,7 @@ const QuickJobSwitcherFeature = (() => {
 
         // This is the first job in the list
         selectedButton = button;
-        console.log(`QuickJobSwitcher: ✅ Top job: ${text.substring(0, 50)}`);
+        console.log(`QuickJobSwitcher: ✅ Top job (fallback): ${text.substring(0, 50)}`);
         break;
       }
     }
