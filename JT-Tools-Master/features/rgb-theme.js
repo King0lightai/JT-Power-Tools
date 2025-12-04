@@ -942,11 +942,12 @@ const CustomThemeFeature = (() => {
       /* The outer container gets themed via .bg-white rules */
 
       /* === Budget Group Level Rows === */
-      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
+      /* Exclude resize handles (.cursor-col-resize) from inheriting background */
+      [class*="jt-group-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
         background-color: inherit !important;
       }
 
-      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100) {
+      [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
         background-color: inherit !important;
       }
 
