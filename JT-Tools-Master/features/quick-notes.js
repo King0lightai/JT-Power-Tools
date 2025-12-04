@@ -8,6 +8,7 @@ const QuickNotesFeature = (() => {
   let notesPanel = null;
   let notesButton = null;
   let buttonObserver = null;
+  let periodicCheckInterval = null; // Track periodic check interval for cleanup
   let notes = [];
   let currentNoteId = null;
   let searchTerm = '';
@@ -1197,7 +1198,21 @@ const QuickNotesFeature = (() => {
     return div.innerHTML;
   }
 
-  // Apply formatting to contenteditable (WYSIWYG)
+  /**
+   * Apply formatting to contenteditable (WYSIWYG)
+   *
+   * @deprecated document.execCommand is deprecated and will be removed from browsers.
+   * TODO: Migrate to Selection and Range APIs or use a modern contenteditable library.
+   * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
+   *
+   * Migration path:
+   * 1. Use Selection API to get current selection
+   * 2. Wrap selected content with appropriate HTML tags
+   * 3. Use Range.surroundContents() or Range.insertNode()
+   *
+   * @param {HTMLElement} element - The contenteditable element
+   * @param {string} formatType - The type of formatting to apply
+   */
   function applyFormatting(element, formatType) {
     element.focus();
 
@@ -1208,20 +1223,26 @@ const QuickNotesFeature = (() => {
       saveToHistory(currentContent);
     }, 500);
 
+    // NOTE: execCommand is deprecated but still widely supported for contenteditable.
+    // This implementation should be migrated to modern Selection/Range APIs.
     switch (formatType) {
       case 'bold':
+        // DEPRECATED: Use Selection API with <strong> tags instead
         document.execCommand('bold', false, null);
         break;
 
       case 'italic':
+        // DEPRECATED: Use Selection API with <em> tags instead
         document.execCommand('italic', false, null);
         break;
 
       case 'underline':
+        // DEPRECATED: Use Selection API with <u> tags instead
         document.execCommand('underline', false, null);
         break;
 
       case 'strikethrough':
+        // DEPRECATED: Use Selection API with <s> or <del> tags instead
         document.execCommand('strikeThrough', false, null);
         break;
 
@@ -1728,7 +1749,8 @@ const QuickNotesFeature = (() => {
 
     // Periodic check to ensure button stays injected across page navigations
     // Check every 2 seconds if button is still present and action bar exists
-    setInterval(() => {
+    // Store interval ID for cleanup
+    periodicCheckInterval = setInterval(() => {
       if (isActive) {
         // Check if we're on a page that should have the button
         if (!shouldShowButton()) {
@@ -2080,6 +2102,12 @@ const QuickNotesFeature = (() => {
   // Cleanup feature
   function cleanup() {
     if (!isActive) return;
+
+    // Clear periodic check interval (fix memory leak)
+    if (periodicCheckInterval) {
+      clearInterval(periodicCheckInterval);
+      periodicCheckInterval = null;
+    }
 
     // Disconnect observer
     if (buttonObserver) {

@@ -26,6 +26,8 @@
     {
       "matches": ["https://*.jobtread.com/*"],
       "js": [
+        "utils/defaults.js",
+        "utils/logger.js",
         "utils/error-handler.js",
         "utils/storage-wrapper.js",
         "utils/dom-helpers.js",
