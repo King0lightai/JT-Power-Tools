@@ -678,6 +678,16 @@ const CustomThemeFeature = (() => {
         background-color: inherit !important;
       }
 
+      /* === Budget Edited Field (Yellow Highlight) === */
+      /* Ensure text is dark/readable on yellow background when field is being edited */
+      .bg-yellow-100,
+      .bg-yellow-100 textarea,
+      .bg-yellow-100 input,
+      .bg-yellow-100 div {
+        color: #1f2937 !important;
+        caret-color: #1f2937 !important;
+      }
+
       /* === Column Resize Handles === */
       .absolute.z-10.cursor-col-resize {
         z-index: 1 !important;
