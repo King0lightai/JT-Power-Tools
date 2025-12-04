@@ -752,17 +752,21 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Popups, Tooltips, and Modals (Elevated Surfaces) === */
+      /* Only apply shadows to actual dialogs/menus, not all absolute positioned elements */
       [role="dialog"],
       [role="menu"],
-      [role="listbox"],
-      .popup,
-      .modal,
-      .dropdown,
-      div[class*="absolute"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]),
-      div[class*="fixed"][class*="bg-"]:not(.inset-0):not([class*="opacity"]):not([data-popper-placement]) {
+      [role="listbox"] {
         background-color: ${p.background.elevated} !important;
         color: ${p.text.primary} !important;
         box-shadow: 0 8px 24px ${p.shadows.colorStrong} !important;
+      }
+
+      /* Absolute/fixed positioned elements - theme colors but NO shadow */
+      /* These are often content tiles, not popups */
+      div[class*="absolute"][class*="bg-white"]:not(.inset-0):not([data-popper-placement]),
+      div[class*="fixed"][class*="bg-white"]:not(.inset-0):not([data-popper-placement]) {
+        background-color: ${p.background.base} !important;
+        color: ${p.text.primary} !important;
       }
 
       /* Modal backdrop - keep semi-transparent */
