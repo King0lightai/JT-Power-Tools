@@ -1,10 +1,15 @@
 // JT Power Tools - Help Sidebar Support Feature
 // Adds a support section at the bottom of JobTread's help sidebar
+//
+// Dependencies: utils/color-utils.js (ColorUtils)
 
 const HelpSidebarSupportFeature = (() => {
   let isActive = false;
   let observer = null;
   let injectedElement = null;
+
+  // Use shared ColorUtils module
+  const { adjustBrightness } = window.ColorUtils || {};
 
   // Initialize the feature
   function init() {
@@ -81,30 +86,7 @@ const HelpSidebarSupportFeature = (() => {
     };
   }
 
-  // Helper function to adjust brightness
-  function adjustBrightness(hex, amount) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-
-    const adjust = (value) => Math.max(0, Math.min(255, value + amount));
-
-    return rgbToHex(adjust(rgb.r), adjust(rgb.g), adjust(rgb.b));
-  }
-
-  // Helper function to convert hex to RGB
-  function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  }
-
-  // Helper function to convert RGB to hex
-  function rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
+  // Color utility functions moved to utils/color-utils.js
 
   // Find the help sidebar
   function findHelpSidebar() {
