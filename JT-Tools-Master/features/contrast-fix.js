@@ -1,9 +1,10 @@
 // JobTread Schedule Contrast Fix Feature Module
 // Automatically adjusts text color for better readability
+// Dependencies: utils/debounce.js (TimingUtils)
 
 const ContrastFixFeature = (() => {
   let observer = null;
-  let debounceTimer = null;
+  let debouncedUpdate = null;
   let isActive = false;
 
   // Initialize the feature
@@ -19,38 +20,30 @@ const ContrastFixFeature = (() => {
     // Run initial fix
     fixAllScheduleItems();
 
+    // Create debounced update function using TimingUtils
+    debouncedUpdate = window.TimingUtils.debounce(() => {
+      // Temporarily disconnect observer to prevent infinite loop
+      observer.disconnect();
+
+      fixAllScheduleItems();
+
+      // Reconnect observer after a short delay
+      setTimeout(() => {
+        if (isActive) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+        }
+      }, 100);
+    }, 250);
+
     // Watch for DOM changes
     observer = new MutationObserver((mutations) => {
-      let shouldUpdate = false;
-
-      mutations.forEach(mutation => {
-        if (mutation.addedNodes.length > 0) {
-          shouldUpdate = true;
-        }
-      });
+      const shouldUpdate = mutations.some(mutation => mutation.addedNodes.length > 0);
 
       if (shouldUpdate) {
-        // Debounce to prevent excessive calls
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-
-        debounceTimer = setTimeout(() => {
-          // Temporarily disconnect observer to prevent infinite loop
-          observer.disconnect();
-
-          fixAllScheduleItems();
-
-          // Reconnect observer after a short delay
-          setTimeout(() => {
-            if (isActive) {
-              observer.observe(document.body, {
-                childList: true,
-                subtree: true
-              });
-            }
-          }, 100);
-        }, 250);
+        debouncedUpdate();
       }
     });
 
@@ -79,10 +72,10 @@ const ContrastFixFeature = (() => {
       observer = null;
     }
 
-    // Clear debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
+    // Cancel debounced function
+    if (debouncedUpdate) {
+      debouncedUpdate.cancel();
+      debouncedUpdate = null;
     }
 
     console.log('ContrastFix: Cleanup complete');

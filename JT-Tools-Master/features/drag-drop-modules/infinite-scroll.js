@@ -1,11 +1,13 @@
 /**
  * Infinite Calendar Scroll Module
  * Automatically loads next/previous month when scrolling to bottom/top
+ *
+ * Dependencies: utils/debounce.js (TimingUtils)
  */
 
 const InfiniteScroll = (() => {
   let isEnabled = false;
-  let scrollTimeout = null;
+  let debouncedScrollCheck = null;
   let isLoading = false;
   let lastScrollPosition = 0;
   let scrollContainer = null; // The actual element that scrolls
@@ -51,6 +53,9 @@ const InfiniteScroll = (() => {
     console.log('[InfiniteScroll] Initializing infinite calendar scroll');
     isEnabled = true;
 
+    // Create debounced scroll check function using TimingUtils
+    debouncedScrollCheck = window.TimingUtils.debounce(checkScrollPosition, DEBOUNCE_DELAY);
+
     // Find the scroll container
     scrollContainer = findScrollContainer();
 
@@ -88,15 +93,8 @@ const InfiniteScroll = (() => {
       return;
     }
 
-    // Clear existing timeout
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout);
-    }
-
-    // Debounce scroll events
-    scrollTimeout = setTimeout(() => {
-      checkScrollPosition();
-    }, DEBOUNCE_DELAY);
+    // Use debounced scroll check (via TimingUtils)
+    debouncedScrollCheck();
   }
 
   /**
@@ -375,10 +373,10 @@ const InfiniteScroll = (() => {
       scrollContainer = null;
     }
 
-    // Clear timeout
-    if (scrollTimeout) {
-      clearTimeout(scrollTimeout);
-      scrollTimeout = null;
+    // Cancel debounced function
+    if (debouncedScrollCheck) {
+      debouncedScrollCheck.cancel();
+      debouncedScrollCheck = null;
     }
 
     // Reset state
