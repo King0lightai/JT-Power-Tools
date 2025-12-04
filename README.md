@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.3.5%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.3.6%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
@@ -28,7 +28,14 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Works on both Schedule and Tasks/To-Dos pages
 - Real-time updates as filters are applied or content changes
 - Easy toggle on/off from the extension popup
-  
+
+### 📁 Auto Collapse Completed Groups
+- Automatically collapses schedule groups that are 100% complete on page load
+- Reduces clutter by hiding completed work while keeping active items visible
+- Works on Schedule views with grouped tasks
+- Groups expand normally when clicked to view completed items
+- Helps focus on remaining work without manual collapsing
+
 ### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability in schedule views
 - Works on Month, Week, and Day schedule views only
@@ -366,7 +373,28 @@ const featureModules = {
 
 **For detailed release notes and complete changelog, see the [Changelog](https://king0lightai.github.io/JT-Power-Tools/changelog.html)**
 
-### v3.3.3 (Current - Beta)
+### v3.3.6 (Current - Beta)
+- **New Feature: Auto Collapse Completed Groups**
+  - Automatically collapses schedule groups that are 100% complete on page load
+  - Reduces clutter by hiding completed work while keeping active items visible
+  - Works on Schedule views with grouped tasks
+  - Helps focus on remaining work without manual collapsing
+- **Custom Theme Improvements**
+  - Complete overhaul with HSL-based color palette generation
+  - Rich palette with multiple background, border, and text shades
+  - Distinct hover/focus/active state colors (not brightness filters)
+  - Theme-harmonized alert colors that adapt to light/dark backgrounds
+  - Better visual separation between UI layers
+  - Fixed dropdown menus and popper-positioned elements
+  - Fixed scrollbars only appearing on scrollable containers
+  - Clean lines in Gantt chart (removed unnecessary shadows)
+- **Bug Fixes**
+  - Fixed budget hierarchy resize handles getting shaded
+  - Fixed Quick Job Switcher to select highlighted item on Enter when using arrow keys
+  - Fixed dark toolbars and file viewers being incorrectly themed
+  - Fixed content tiles incorrectly getting popup shadows
+
+### v3.3.3
 - **Architecture & Stability**
   - **Most Stable Version Yet**: Comprehensive restructuring for enhanced reliability
   - Restructured color theme and dark mode systems for better performance
