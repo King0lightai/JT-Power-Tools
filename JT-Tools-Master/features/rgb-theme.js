@@ -1,6 +1,8 @@
 // JobTread Custom Theme Feature Module
 // Applies custom color theme to JobTread interface (PREMIUM FEATURE)
 // Generates a complete color palette from three base colors using HSL manipulation
+//
+// Dependencies: utils/color-utils.js (ColorUtils)
 
 const CustomThemeFeature = (() => {
   let isActive = false;
@@ -15,6 +17,23 @@ const CustomThemeFeature = (() => {
 
   // Generated palette (populated by generatePalette)
   let palette = {};
+
+  // Use shared ColorUtils module
+  const {
+    hexToRgb,
+    rgbToHex,
+    hexToHsl,
+    hslToHex,
+    hexToRgba,
+    getLuminance,
+    isDark,
+    getContrastText,
+    adjustLightness,
+    adjustSaturation,
+    setLightness,
+    setSaturation,
+    blendColors
+  } = window.ColorUtils || {};
 
   // Initialize the feature
   function init(colors = null) {
@@ -129,160 +148,8 @@ const CustomThemeFeature = (() => {
   }
 
   // ============================================================
-  // COLOR UTILITY FUNCTIONS - HSL-based for better color control
-  // ============================================================
-
-  // Helper function to convert hex to RGB
-  function hexToRgb(hex) {
-    if (!hex || typeof hex !== 'string') {
-      console.warn('CustomTheme: Invalid hex color input:', hex);
-      return null;
-    }
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  }
-
-  // Helper function to convert RGB to hex
-  function rgbToHex(r, g, b) {
-    const toHex = (n) => {
-      const clamped = Math.max(0, Math.min(255, Math.round(n)));
-      return clamped.toString(16).padStart(2, '0');
-    };
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
-
-  // Convert hex to HSL (returns {h: 0-360, s: 0-100, l: 0-100})
-  function hexToHsl(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return { h: 0, s: 0, l: 50 };
-
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const l = (max + min) / 2;
-    let h = 0;
-    let s = 0;
-
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-
-    return {
-      h: Math.round(h * 360),
-      s: Math.round(s * 100),
-      l: Math.round(l * 100)
-    };
-  }
-
-  // Convert HSL to hex
-  function hslToHex(h, s, l) {
-    h = ((h % 360) + 360) % 360; // Normalize hue to 0-360
-    s = Math.max(0, Math.min(100, s)) / 100;
-    l = Math.max(0, Math.min(100, l)) / 100;
-
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = l - c / 2;
-
-    let r = 0, g = 0, b = 0;
-
-    if (h < 60) { r = c; g = x; b = 0; }
-    else if (h < 120) { r = x; g = c; b = 0; }
-    else if (h < 180) { r = 0; g = c; b = x; }
-    else if (h < 240) { r = 0; g = x; b = c; }
-    else if (h < 300) { r = x; g = 0; b = c; }
-    else { r = c; g = 0; b = x; }
-
-    return rgbToHex(
-      Math.round((r + m) * 255),
-      Math.round((g + m) * 255),
-      Math.round((b + m) * 255)
-    );
-  }
-
-  // Calculate relative luminance (WCAG 2.0)
-  function getLuminance(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return 0;
-
-    const toLinear = (c) => {
-      const sRGB = c / 255;
-      return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4);
-    };
-
-    return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
-  }
-
-  // Check if background is dark
-  function isDark(hex) {
-    return getLuminance(hex) < 0.4;
-  }
-
-  // Get contrasting text color (white or black)
-  function getContrastText(backgroundColor) {
-    return isDark(backgroundColor) ? '#ffffff' : '#000000';
-  }
-
-  // Adjust lightness of a color (amount: -100 to +100)
-  function adjustLightness(hex, amount) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s, hsl.l + amount);
-  }
-
-  // Adjust saturation of a color (amount: -100 to +100)
-  function adjustSaturation(hex, amount) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s + amount, hsl.l);
-  }
-
-  // Set specific lightness value
-  function setLightness(hex, lightness) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s, lightness);
-  }
-
-  // Set specific saturation value
-  function setSaturation(hex, saturation) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, saturation, hsl.l);
-  }
-
-  // Blend two colors (0 = color1, 1 = color2)
-  function blendColors(hex1, hex2, ratio) {
-    const rgb1 = hexToRgb(hex1);
-    const rgb2 = hexToRgb(hex2);
-    if (!rgb1 || !rgb2) return hex1;
-
-    return rgbToHex(
-      rgb1.r + (rgb2.r - rgb1.r) * ratio,
-      rgb1.g + (rgb2.g - rgb1.g) * ratio,
-      rgb1.b + (rgb2.b - rgb1.b) * ratio
-    );
-  }
-
-  // Create rgba string from hex and alpha
-  function hexToRgba(hex, alpha) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-  }
-
-  // ============================================================
   // PALETTE GENERATION - Creates rich color system from 3 inputs
+  // (Color utility functions moved to utils/color-utils.js)
   // ============================================================
 
   function generatePalette(colors) {

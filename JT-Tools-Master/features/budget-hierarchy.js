@@ -1,6 +1,8 @@
 // JobTread Budget Group Hierarchy Shading Feature Module
 // Applies progressive shading to nested budget groups (up to 5 levels)
 // Level 1 (top) = Lightest, Level 5 (deepest) = Darkest
+//
+// Dependencies: utils/color-utils.js (ColorUtils)
 
 const BudgetHierarchyFeature = (() => {
   let isActive = false;
@@ -8,156 +10,12 @@ const BudgetHierarchyFeature = (() => {
   let observer = null;
   let clickController = null; // AbortController for click listener
 
-  // Helper function to convert hex to RGB
-  function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  }
-
-  // Helper function to convert RGB to hex
-  function rgbToHex(r, g, b) {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  }
-
-  // Helper function to convert hex to HSL
-  function hexToHsl(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return null;
-
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-
-    if (max === min) {
-      h = s = 0; // achromatic
-    } else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-
-    return { h: h * 360, s: s * 100, l: l * 100 };
-  }
-
-  // Helper function to convert HSL to hex
-  function hslToHex(h, s, l) {
-    h = h / 360;
-    s = s / 100;
-    l = l / 100;
-
-    let r, g, b;
-
-    if (s === 0) {
-      r = g = b = l; // achromatic
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-      };
-
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
-    }
-
-    return rgbToHex(
-      Math.round(r * 255),
-      Math.round(g * 255),
-      Math.round(b * 255)
-    );
-  }
-
-  // Adjust color lightness in HSL (preserves hue and saturation)
-  function adjustLightness(hex, amount) {
-    const hsl = hexToHsl(hex);
-    if (!hsl) return hex;
-
-    // Adjust lightness and clamp between 0 and 100
-    const newL = Math.max(0, Math.min(100, hsl.l + amount));
-
-    return hslToHex(hsl.h, hsl.s, newL);
-  }
-
-  // Calculate luminance to determine if color is light or dark
-  function getLuminance(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return 0.5;
-
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
-
-  // Adjust color brightness (amount: positive to lighten, negative to darken)
-  function adjustBrightness(hex, amount) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-
-    const adjust = (value) => {
-      const newValue = value + amount;
-      return Math.max(0, Math.min(255, newValue));
-    };
-
-    return rgbToHex(
-      adjust(rgb.r),
-      adjust(rgb.g),
-      adjust(rgb.b)
-    );
-  }
-
-  // Generate 5 shades from a base color
-  function generateShades(baseColor, isDarkMode = false) {
-    const hsl = hexToHsl(baseColor);
-    if (!hsl) return [baseColor, baseColor, baseColor, baseColor, baseColor];
-
-    const isDark = hsl.l < 50;
-
-    // Use smaller steps for more subtle shading
-    // In HSL, lightness ranges from 0-100, so we use percentage-based steps
-    const step = isDarkMode ? 2 : 3;
-
-    if (isDark) {
-      // For dark backgrounds, progressively lighten from darker to lighter
-      return [
-        adjustLightness(baseColor, step * 4),   // Level 1 (lightest)
-        adjustLightness(baseColor, step * 3),   // Level 2
-        adjustLightness(baseColor, step * 2),   // Level 3
-        adjustLightness(baseColor, step),       // Level 4
-        baseColor                               // Level 5: Base (darkest)
-      ];
-    } else {
-      // For light backgrounds, progressively darken from lighter to darker
-      return [
-        baseColor,                              // Level 1: Base (lightest)
-        adjustLightness(baseColor, -step),      // Level 2
-        adjustLightness(baseColor, -step * 2),  // Level 3
-        adjustLightness(baseColor, -step * 3),  // Level 4
-        adjustLightness(baseColor, -step * 4)   // Level 5 (darkest)
-      ];
-    }
-  }
+  // Use shared ColorUtils module
+  const {
+    hexToHsl,
+    adjustLightness,
+    generateShades
+  } = window.ColorUtils || {};
 
   // Check if dark mode styles are injected in DOM
   function isDarkModeActive() {
