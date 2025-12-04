@@ -1,9 +1,31 @@
-// JT Power Tools - Content Script Orchestrator
-// Manages loading and unloading of feature modules based on user settings
+/**
+ * JT Power Tools - Content Script Orchestrator
+ *
+ * This is the main entry point for the extension's content script.
+ * It manages the lifecycle of all feature modules, handling:
+ * - Loading user settings from Chrome storage
+ * - Initializing enabled features
+ * - Responding to settings changes from the popup
+ * - Coordinating feature cleanup on disable
+ *
+ * @module content
+ * @author JT Power Tools Team
+ * @version 3.3.6
+ */
 
 console.log('JT Power Tools: Content script loaded');
 
-// Feature module registry
+/**
+ * Feature module registry
+ * Maps feature keys to their configuration and window references
+ *
+ * Each feature must implement the standard interface:
+ * - init(): Initialize the feature
+ * - cleanup(): Clean up resources and remove UI
+ * - isActive(): Return boolean indicating if feature is active
+ *
+ * @type {Object.<string, {name: string, feature: Function, instance: Object|null}>}
+ */
 const featureModules = {
   dragDrop: {
     name: 'Drag & Drop',
@@ -77,29 +99,18 @@ const featureModules = {
   }
 };
 
-// Current settings
-let currentSettings = {
-  dragDrop: true,
-  contrastFix: true,
-  formatter: true,
-  previewMode: false,
-  darkMode: false,
-  rgbTheme: false,
-  quickJobSwitcher: true,
-  budgetHierarchy: false,
-  quickNotes: true,
-  helpSidebarSupport: true,
-  freezeHeader: false,
-  characterCounter: false,
-  kanbanTypeFilter: false,
-  autoCollapseGroups: false,
-  themeColors: {
-    primary: '#3B82F6',
-    background: '#F3E8FF',
-    text: '#1F1B29'
-  },
-  savedThemes: [null, null, null]
-};
+// Current settings - use shared defaults from JTDefaults
+let currentSettings = window.JTDefaults
+  ? window.JTDefaults.getDefaultSettings()
+  : {
+      // Inline fallback if JTDefaults not loaded (should not happen)
+      dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
+      darkMode: false, rgbTheme: false, quickJobSwitcher: true, budgetHierarchy: false,
+      quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
+      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
+      themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
+      savedThemes: [null, null, null]
+    };
 
 /**
  * Load settings from storage with error handling
@@ -280,16 +291,21 @@ async function handleSettingsChange(newSettings) {
     if (themeChanged && window.BudgetHierarchyFeature) {
       if (typeof window.BudgetHierarchyFeature.isActive === 'function' && window.BudgetHierarchyFeature.isActive()) {
         console.log('JT-Tools: Theme changed, refreshing budget hierarchy shading');
-        // Small delay to ensure theme is applied first
-        setTimeout(() => {
-          try {
-            if (typeof window.BudgetHierarchyFeature.refreshShading === 'function') {
-              window.BudgetHierarchyFeature.refreshShading();
+        // Use requestAnimationFrame to wait for the next paint cycle
+        // This is more deterministic than arbitrary setTimeout as it ensures
+        // the browser has processed the style changes before we refresh
+        requestAnimationFrame(() => {
+          // Double RAF ensures styles are computed after the paint
+          requestAnimationFrame(() => {
+            try {
+              if (typeof window.BudgetHierarchyFeature.refreshShading === 'function') {
+                window.BudgetHierarchyFeature.refreshShading();
+              }
+            } catch (error) {
+              console.error('JT-Tools: Error refreshing budget hierarchy:', error);
             }
-          } catch (error) {
-            console.error('JT-Tools: Error refreshing budget hierarchy:', error);
-          }
-        }, 100);
+          });
+        });
       }
     }
 
@@ -337,7 +353,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Wait for all features to be available on window
-async function waitForFeatures(maxAttempts = 100, delayMs = 150) {
+async function waitForFeatures(
+  maxAttempts = window.JTDefaults?.TIMING?.FEATURE_LOAD_MAX_ATTEMPTS || 100,
+  delayMs = window.JTDefaults?.TIMING?.FEATURE_LOAD_DELAY || 150
+) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const allAvailable = Object.values(featureModules).every(module => {
       const feature = module.feature();
