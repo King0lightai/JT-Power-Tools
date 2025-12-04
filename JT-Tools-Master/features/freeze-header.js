@@ -11,14 +11,9 @@ const FreezeHeaderFeature = (() => {
   const STICKY_STYLES = `
     /* Freeze Header Styles */
 
-    /* Top header bar - already sticky in JobTread, just ensure it stays */
-    /* Keep z-index low (41 is JobTread's default) so modals appear above */
-    .jt-freeze-header-active .jt-top-header {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 41 !important;
-      background-color: white !important;
-    }
+    /* Top header bar - already sticky in JobTread by default (z-[41], top: 0) */
+    /* We only mark it with .jt-top-header to measure its height for positioning other elements */
+    /* No CSS overrides needed - leave it as JobTread styled it */
 
     /* Tab navigation bar - stick below the top header */
     /* z-index 40 keeps it below header but above content, below modals */
@@ -141,7 +136,7 @@ const FreezeHeaderFeature = (() => {
 
     /* Dark mode compatibility - uses body.jt-dark-mode class added by dark-mode.js */
     /* Note: Both classes are on body, so use body.class1.class2 (no space) */
-    body.jt-dark-mode.jt-freeze-header-active .jt-top-header,
+    /* Note: .jt-top-header excluded - dark mode feature handles it directly */
     body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container,
     body.jt-dark-mode.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-dark-mode.jt-freeze-header-active .jt-action-toolbar,
@@ -173,7 +168,7 @@ const FreezeHeaderFeature = (() => {
 
     /* Custom theme compatibility - uses body.jt-custom-theme class added by rgb-theme.js */
     /* Note: Both classes are on body, so use body.class1.class2 (no space) */
-    body.jt-custom-theme.jt-freeze-header-active .jt-top-header,
+    /* Note: .jt-top-header excluded - custom theme feature handles it directly */
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container,
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b,
     body.jt-custom-theme.jt-freeze-header-active .jt-action-toolbar,
