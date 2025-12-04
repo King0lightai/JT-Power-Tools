@@ -94,6 +94,12 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
+    /* Schedule page sidebars need inner sticky content adjusted to match frozen toolbar */
+    /* This targets the scrollable container inside task/mass action sidebars */
+    body.jt-schedule-page.jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
@@ -791,6 +797,10 @@ const FreezeHeaderFeature = (() => {
    */
   function applyFreezeHeader() {
     document.body.classList.add('jt-freeze-header-active');
+    // Add page-specific classes for targeted CSS
+    if (isSchedulePage()) {
+      document.body.classList.add('jt-schedule-page');
+    }
     findAndMarkTopHeader();
     findAndMarkTabs();
     findAndMarkActionToolbar();
@@ -810,6 +820,7 @@ const FreezeHeaderFeature = (() => {
    */
   function removeFreezeHeader() {
     document.body.classList.remove('jt-freeze-header-active');
+    document.body.classList.remove('jt-schedule-page');
 
     // Remove marker classes
     document.querySelectorAll('.jt-top-header').forEach(el => {
@@ -925,6 +936,12 @@ const FreezeHeaderFeature = (() => {
       if (!isActiveState) return;
       if (location.href !== lastUrl) {
         lastUrl = location.href;
+        // Update page-specific classes
+        if (isSchedulePage()) {
+          document.body.classList.add('jt-schedule-page');
+        } else {
+          document.body.classList.remove('jt-schedule-page');
+        }
         // Remove old markings and re-apply
         document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar').forEach(el => {
           el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar');
