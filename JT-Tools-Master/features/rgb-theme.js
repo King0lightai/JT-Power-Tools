@@ -952,17 +952,18 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Column Resize Handles === */
-      /* These should be transparent by default, only show on hover */
-      /* Use multiple selectors and both background properties for maximum specificity */
+      /* Give resize handles a solid background matching page bg for clean visual separation */
+      /* Otherwise the themed column headers show through the transparent handles */
       .cursor-col-resize,
       .absolute.cursor-col-resize,
       .absolute.z-10.cursor-col-resize,
       div.cursor-col-resize,
       div.absolute.cursor-col-resize,
       [class*="jt-group-level"] .cursor-col-resize,
-      [class*="jt-item-under-level"] .cursor-col-resize {
-        background: transparent !important;
-        background-color: transparent !important;
+      [class*="jt-item-under-level"] .cursor-col-resize,
+      .absolute.z-10.-ml-1.inset-y-0.w-2.cursor-col-resize {
+        background: ${p.background.base} !important;
+        background-color: ${p.background.base} !important;
       }
 
       .cursor-col-resize:hover,
