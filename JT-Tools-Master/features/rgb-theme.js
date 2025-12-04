@@ -875,7 +875,7 @@ const CustomThemeFeature = (() => {
 
       .shadow-sm {
         border: solid 1px ${p.border.subtle};
-        box-shadow: 0 1px 2px ${p.shadows.color};
+        box-shadow: none;
       }
 
       /* === Primary Buttons === */
