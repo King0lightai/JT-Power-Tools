@@ -2,21 +2,27 @@
 // Applies custom color theme to JobTread interface (PREMIUM FEATURE)
 // Generates a complete color palette from three base colors using HSL manipulation
 //
-// Dependencies: utils/color-utils.js (ColorUtils)
+// Dependencies:
+// - utils/color-utils.js (ColorUtils)
+// - utils/debounce.js (TimingUtils)
+// - rgb-theme-modules/palette.js (ThemePalette)
 
 const CustomThemeFeature = (() => {
   let isActive = false;
   let styleElement = null;
   let observer = null;
-  let debounceTimer = null;
+  let debouncedContrastFix = null;
   let currentColors = {
     primary: '#3B82F6',
     background: '#F3E8FF',
     text: '#1F1B29'
   };
 
-  // Generated palette (populated by generatePalette)
+  // Generated palette (populated by ThemePalette.generatePalette)
   let palette = {};
+
+  // Module references
+  const Palette = () => window.ThemePalette || {};
 
   // Use shared ColorUtils module
   const {
@@ -57,8 +63,8 @@ const CustomThemeFeature = (() => {
       };
     }
 
-    // Generate the full color palette from base colors
-    palette = generatePalette(currentColors);
+    // Generate the full color palette from base colors (using Palette module)
+    palette = Palette().generatePalette(currentColors);
 
     // Inject custom theme CSS
     injectThemeCSS();
@@ -91,10 +97,10 @@ const CustomThemeFeature = (() => {
       observer = null;
     }
 
-    // Clear debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
+    // Cancel debounced function
+    if (debouncedContrastFix) {
+      debouncedContrastFix.cancel();
+      debouncedContrastFix = null;
     }
 
     // Remove injected CSS
@@ -121,8 +127,8 @@ const CustomThemeFeature = (() => {
     }
 
     if (isActive) {
-      // Regenerate the full palette with new colors
-      palette = generatePalette(currentColors);
+      // Regenerate the full palette with new colors (using Palette module)
+      palette = Palette().generatePalette(currentColors);
 
       // Re-inject CSS with new colors
       if (styleElement) {
@@ -145,152 +151,6 @@ const CustomThemeFeature = (() => {
   // Get the generated palette
   function getPalette() {
     return { ...palette };
-  }
-
-  // ============================================================
-  // PALETTE GENERATION - Creates rich color system from 3 inputs
-  // (Color utility functions moved to utils/color-utils.js)
-  // ============================================================
-
-  function generatePalette(colors) {
-    const { primary, background, text } = colors;
-    const bgHsl = hexToHsl(background);
-    const primaryHsl = hexToHsl(primary);
-    const darkMode = isDark(background);
-
-    // Calculate contrast direction (positive = lighten, negative = darken for contrast)
-    const contrastDir = darkMode ? 1 : -1;
-
-    // ---- BACKGROUND SHADES ----
-    // Create 5 distinct background levels for visual hierarchy
-    const bgShades = {
-      // Level 0: Base background (cards, main content)
-      base: background,
-      // Level 1: Subtle shade (slight contrast for sections)
-      subtle: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 3)),
-      // Level 2: Muted (input backgrounds, list items)
-      muted: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 6)),
-      // Level 3: Emphasis (active states, hover)
-      emphasis: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 10)),
-      // Level 4: Strong (tooltips, overlays)
-      strong: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 15)),
-      // Level 5: Elevated (modals, dropdowns - opposite direction for depth)
-      elevated: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * -2))
-    };
-
-    // ---- BORDER COLORS ----
-    // Create distinct border shades for depth perception
-    const borderShades = {
-      // Subtle border for cards and sections
-      subtle: hslToHex(bgHsl.h, Math.min(bgHsl.s + 5, 30), bgHsl.l + (contrastDir * 12)),
-      // Default border for inputs and dividers
-      default: hslToHex(bgHsl.h, Math.min(bgHsl.s + 8, 35), bgHsl.l + (contrastDir * 18)),
-      // Strong border for focus states
-      strong: hslToHex(bgHsl.h, Math.min(bgHsl.s + 10, 40), bgHsl.l + (contrastDir * 25))
-    };
-
-    // ---- TEXT COLORS ----
-    // Create text hierarchy
-    const textShades = {
-      primary: text,
-      secondary: blendColors(text, background, 0.25),
-      muted: blendColors(text, background, 0.45),
-      disabled: blendColors(text, background, 0.6)
-    };
-
-    // ---- PRIMARY COLOR VARIATIONS ----
-    // Create primary color palette for interactive elements
-    const primaryShades = {
-      base: primary,
-      hover: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 8 : -8)),
-      active: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 12 : -12)),
-      // Light versions for backgrounds
-      light: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 20, 20), darkMode ? 25 : 92),
-      lighter: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 30, 15), darkMode ? 20 : 95),
-      // For selection highlighting - blend with background
-      selection: blendColors(background, primary, 0.15),
-      selectionHover: blendColors(background, primary, 0.25),
-      selectionStrong: blendColors(background, primary, 0.35)
-    };
-
-    // ---- HOVER/FOCUS/ACTIVE STATES ----
-    // Distinct colors for interactive states (not just brightness filters!)
-    const states = {
-      hover: hslToHex(bgHsl.h, bgHsl.s + 2, bgHsl.l + (contrastDir * 5)),
-      focus: blendColors(background, primary, 0.1),
-      active: hslToHex(bgHsl.h, bgHsl.s + 3, bgHsl.l + (contrastDir * 8)),
-      // Row hover - subtle but noticeable
-      rowHover: hslToHex(bgHsl.h, bgHsl.s + 1, bgHsl.l + (contrastDir * 3))
-    };
-
-    // ---- ALERT COLORS ----
-    // Generate alert colors that harmonize with the theme
-    const alerts = generateAlertColors(background, darkMode);
-
-    // ---- SCROLLBAR COLORS ----
-    const scrollbar = {
-      track: bgShades.muted,
-      thumb: borderShades.default,
-      thumbHover: primary
-    };
-
-    // ---- SHADOW COLORS ----
-    const shadows = {
-      color: darkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)',
-      colorStrong: darkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.2)'
-    };
-
-    return {
-      isDark: darkMode,
-      background: bgShades,
-      border: borderShades,
-      text: textShades,
-      primary: primaryShades,
-      states,
-      alerts,
-      scrollbar,
-      shadows,
-      // Keep raw colors for backward compatibility
-      raw: { primary, background, text }
-    };
-  }
-
-  // Generate alert colors that blend with the theme
-  function generateAlertColors(background, darkMode) {
-    // Base alert hues
-    const alertHues = {
-      green: 145,
-      yellow: 45,
-      red: 0,
-      orange: 25,
-      purple: 270,
-      blue: 210
-    };
-
-    const result = {};
-
-    Object.entries(alertHues).forEach(([name, hue]) => {
-      if (darkMode) {
-        // Dark mode: desaturated dark backgrounds, bright text
-        result[name] = {
-          bg: hslToHex(hue, 35, 18),
-          text: hslToHex(hue, 75, 65),
-          border: hslToHex(hue, 50, 35)
-        };
-      } else {
-        // Light mode: tinted light backgrounds, dark vivid text
-        result[name] = {
-          bg: hslToHex(hue, 65, 95),
-          text: hslToHex(hue, 70, 40),
-          border: hslToHex(hue, 55, 75)
-        };
-      }
-    });
-
-    // Body text adapts to background
-    result.bodyText = darkMode ? '#e0e0e0' : '#374151';
-
-    return result;
   }
 
   // Inject theme CSS using the generated palette
@@ -1039,37 +899,29 @@ const CustomThemeFeature = (() => {
 
   // Start observing DOM changes for contrast fixes
   function startObserver() {
-    observer = new MutationObserver((mutations) => {
-      let shouldUpdate = false;
+    // Create debounced contrast fix function using TimingUtils
+    debouncedContrastFix = window.TimingUtils.debounce(() => {
+      // Temporarily disconnect observer to prevent infinite loop
+      observer.disconnect();
 
-      mutations.forEach(mutation => {
-        if (mutation.addedNodes.length > 0) {
-          shouldUpdate = true;
+      applyContrastFixes();
+
+      // Reconnect observer after a short delay
+      setTimeout(() => {
+        if (isActive) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
         }
-      });
+      }, 100);
+    }, 250);
+
+    observer = new MutationObserver((mutations) => {
+      const shouldUpdate = mutations.some(mutation => mutation.addedNodes.length > 0);
 
       if (shouldUpdate) {
-        // Debounce to prevent excessive calls
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-
-        debounceTimer = setTimeout(() => {
-          // Temporarily disconnect observer to prevent infinite loop
-          observer.disconnect();
-
-          applyContrastFixes();
-
-          // Reconnect observer after a short delay
-          setTimeout(() => {
-            if (isActive) {
-              observer.observe(document.body, {
-                childList: true,
-                subtree: true
-              });
-            }
-          }, 100);
-        }, 250);
+        debouncedContrastFix();
       }
     });
 
