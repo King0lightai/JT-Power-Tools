@@ -87,9 +87,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Note: Right-side sidebars (Time Clock, Task Details, etc.) with */
-    /* data-is-drag-scroll-boundary="true" are already properly positioned */
-    /* by JobTread - we don't override them */
+    /* Right-side sidebars (Time Clock, Daily Log, Task Details, etc.) */
+    /* Boost z-index so they appear above frozen tabs (z-index 40) */
+    /* Don't change positioning - JobTread handles that correctly */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
+      z-index: 42 !important;
+    }
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
