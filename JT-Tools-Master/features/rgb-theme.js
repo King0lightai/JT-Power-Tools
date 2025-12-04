@@ -951,11 +951,15 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Column Resize Handles === */
+      /* These should be transparent by default, only show on hover */
+      .cursor-col-resize,
       .absolute.z-10.cursor-col-resize {
+        background-color: transparent !important;
         z-index: 1 !important;
       }
 
-      .absolute.z-10.cursor-col-resize:hover {
+      .absolute.z-10.cursor-col-resize:hover,
+      .cursor-col-resize:hover {
         background-color: ${p.border.strong} !important;
       }
 
