@@ -812,12 +812,10 @@ const PreviewModeFeature = (() => {
     const processedBody = processInlineFormatting(body);
 
     return `<div class="border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
-  <div class="${colors.text}">
-    <div class="font-bold text-base">
-      <div>${escapeHTML(subject)}</div>
-    </div>
+  <div class="font-bold text-base ${colors.text}">
+    <div>${escapeHTML(subject)}</div>
   </div>
-  ${processedBody}
+  <div class="text-gray-900 dark:text-gray-100">${processedBody}</div>
 </div>`;
   }
 
