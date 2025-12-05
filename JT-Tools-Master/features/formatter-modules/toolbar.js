@@ -480,7 +480,8 @@ const FormatterToolbar = (() => {
     clearHideTimeout();
     hideTimeout = setTimeout(() => {
       const newFocus = document.activeElement;
-      if (!newFocus?.closest('.jt-formatter-toolbar') && !newFocus?.matches('textarea[placeholder="Description"]')) {
+      // Keep toolbar open if focus is on toolbar or any formatter-enabled textarea
+      if (!newFocus?.closest('.jt-formatter-toolbar') && !newFocus?.dataset?.formatterReady) {
         hideToolbar();
       }
       hideTimeout = null;
