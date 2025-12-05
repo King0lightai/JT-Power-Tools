@@ -88,10 +88,18 @@ const FreezeHeaderFeature = (() => {
       z-index: 41 !important;
     }
 
-    /* Job Switcher - reset to default z-index (below top header) */
-    /* Job switcher has shadow-line-left and should NOT be boosted */
+    /* Sidebar inner sticky content - position below frozen toolbar */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
+    /* Job Switcher - reset z-index and keep at top header level */
+    /* Job switcher has shadow-line-left and should NOT be boosted or repositioned */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"]:has(.shadow-line-left) {
       z-index: 30 !important;
+    }
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"]:has(.shadow-line-left) .overflow-y-auto.overscroll-contain.sticky {
+      top: 48px !important;
     }
 
     /* The inner flex container with the actual tabs */
