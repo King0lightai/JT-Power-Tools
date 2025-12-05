@@ -100,7 +100,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Note: Job Switcher (shadow-line-left) is NOT overridden - JobTread handles it correctly */
+    /* Job Switcher (shadow-line-left) - reset to JobTread's default 48px positioning */
+    /* Higher specificity to override schedule sidebar rule */
+    body.jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky,
+    body.jt-schedule-page.jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
+      top: 48px !important;
+    }
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
