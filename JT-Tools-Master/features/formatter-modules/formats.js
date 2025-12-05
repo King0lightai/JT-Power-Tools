@@ -255,7 +255,7 @@ const FormatterFormats = (() => {
       return;
     }
 
-    const replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
+    const replacement = `> [!color:${alertData.alertColor}] ### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
     const cursorPos = start + replacement.length;
 
     // Update field value using native setter to avoid React state issues

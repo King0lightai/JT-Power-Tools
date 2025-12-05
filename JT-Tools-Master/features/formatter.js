@@ -204,6 +204,22 @@ const FormatterFeature = (() => {
       }
     });
 
+    // 5. Modal/form textareas with min-height styling (alert builder, etc.)
+    const modalTextareas = document.querySelectorAll('textarea.min-h-\\[3\\.75rem\\]');
+    modalTextareas.forEach(textarea => {
+      if (!fields.includes(textarea)) {
+        fields.push(textarea);
+      }
+    });
+
+    // 6. Textareas with caret-black class (common in JobTread forms)
+    const caretBlackTextareas = document.querySelectorAll('textarea.caret-black');
+    caretBlackTextareas.forEach(textarea => {
+      if (!fields.includes(textarea)) {
+        fields.push(textarea);
+      }
+    });
+
     // Filter out time entry notes fields, Time Clock notes fields, and subtask fields
     const filteredFields = fields.filter(field => {
       const placeholder = field.getAttribute('placeholder');
@@ -251,7 +267,7 @@ const FormatterFeature = (() => {
       return !Detection().hasNativeFormatter(field);
     });
 
-    console.log('Formatter: Found', filteredFields.length, 'fields (Budget Description + Daily Log + Todo + Task + Edit)');
+    console.log('Formatter: Found', filteredFields.length, 'fields (Budget Description + Daily Log + Todo + Task + Edit + Modal)');
 
     filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
