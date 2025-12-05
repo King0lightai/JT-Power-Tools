@@ -24,17 +24,25 @@ const FormatterFormats = (() => {
   }
 
   /**
-   * Collect alert data from user with proper prompt locking
-   * @returns {Object|null} Alert data or null if cancelled
+   * Collect alert data from user using the alert modal
+   * @param {HTMLTextAreaElement} field - The textarea field to restore focus to
+   * @returns {Promise<Object|null>} Alert data or null if cancelled
    */
-  function collectAlertData() {
+  async function collectAlertData(field) {
     isPromptingUser = true;
 
     try {
-      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'red');
+      // Use the AlertModal if available, fallback to prompts
+      if (window.AlertModal && window.AlertModal.show) {
+        const result = await window.AlertModal.show();
+        return result;
+      }
+
+      // Fallback to prompts if modal not available
+      const alertColor = prompt('Alert color (red, yellow, blue, green, orange, purple):', 'blue');
       if (!alertColor) return null;
 
-      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'octogonAlert');
+      const alertIcon = prompt('Alert icon (octogonAlert, exclamationTriangle, infoCircle, checkCircle):', 'infoCircle');
       if (!alertIcon) return null;
 
       const alertSubject = prompt('Alert subject:', 'Important');
@@ -218,6 +226,47 @@ const FormatterFormats = (() => {
 
     // Dispatch events immediately - React will clear value if we delay
     dispatchReactSafeEventImmediate(field, newCursorPos);
+  }
+
+  /**
+   * Handle alert format insertion (async due to modal)
+   * @param {HTMLTextAreaElement} field - The textarea field
+   * @param {number} start - Selection start
+   * @param {number} end - Selection end
+   * @param {string} text - Full text content
+   * @param {string} before - Text before selection
+   * @param {string} after - Text after selection
+   */
+  async function handleAlertFormat(field, start, end, text, before, after) {
+    const alertData = await collectAlertData(field);
+    if (!alertData) {
+      // User cancelled - restore focus
+      if (field && document.body.contains(field)) {
+        field.focus();
+      }
+      return;
+    }
+
+    // Restore focus after modal closes
+    if (field && document.body.contains(field)) {
+      field.focus();
+    } else {
+      console.error('Formatter: Field is not in DOM after alert modal!');
+      return;
+    }
+
+    const replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
+    const cursorPos = start + replacement.length;
+
+    // Update field value using native setter to avoid React state issues
+    isInsertingText = true;
+
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    const newValue = before + replacement + after;
+    nativeInputValueSetter.call(field, newValue);
+
+    // Dispatch events IMMEDIATELY - React will clear value if we delay!
+    dispatchReactSafeEventImmediate(field, cursorPos);
   }
 
   /**
@@ -476,22 +525,9 @@ const FormatterFormats = (() => {
         break;
 
       case 'alert':
-        const alertData = collectAlertData();
-        if (!alertData) {
-          return;
-        }
-
-        // Restore focus immediately after prompts complete
-        if (field && document.body.contains(field)) {
-          field.focus();
-        } else {
-          console.error('Formatter: Field is not in DOM after alert prompts!');
-          return;
-        }
-
-        replacement = `> [!color:${alertData.alertColor}] #### [!icon:${alertData.alertIcon}] ${alertData.alertSubject}\n> ${alertData.alertBody}`;
-        cursorPos = start + replacement.length;
-        break;
+        // Alert uses async modal - handle separately
+        handleAlertFormat(field, start, end, text, before, after);
+        return; // Exit early - handleAlertFormat will complete the operation
 
       case 'hr':
         replacement = '\n---\n';
