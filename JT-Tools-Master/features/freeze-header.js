@@ -100,11 +100,7 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Job Switcher sidebar - keep positioned below top header only */
-    /* It overlays the page content, so just needs to be below the top header bar */
-    .jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
-      top: var(--jt-header-height, 48px) !important;
-    }
+    /* Note: Job Switcher (shadow-line-left) is NOT overridden - JobTread handles it correctly */
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
