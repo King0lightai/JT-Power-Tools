@@ -83,23 +83,17 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Right-side sidebars (Daily Log, Task Details, etc.) - boost above frozen tabs */
+    /* Right-side sidebars (Daily Log, Task Details, Job Switcher, etc.) */
+    /* All sidebars get z-index 41 to appear above frozen tabs (40) and toolbar (39) */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
       z-index: 41 !important;
     }
 
-    /* Sidebar inner sticky content - position below frozen toolbar */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky {
+    /* Sidebar inner sticky elements - position below frozen toolbar */
+    /* This catches ALL sticky elements inside sidebars regardless of their class combination */
+    /* JobTread defaults these to small values like top:10px which slides under our frozen toolbar */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky {
       top: var(--jt-toolbar-bottom, 138px) !important;
-    }
-
-    /* Job Switcher - reset z-index and keep at top header level */
-    /* Job switcher has shadow-line-left and should NOT be boosted or repositioned */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"]:has(.shadow-line-left) {
-      z-index: 30 !important;
-    }
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"]:has(.shadow-line-left) .overflow-y-auto.overscroll-contain.sticky {
-      top: 48px !important;
     }
 
     /* The inner flex container with the actual tabs */
