@@ -99,7 +99,8 @@ const FreezeHeaderFeature = (() => {
 
     /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
     /* These are headers like "Update Task" that should stick at the top of their scrollable parent */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky .sticky {
+    /* Note: Repeated attribute selector boosts specificity to beat the :not() selectors above */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"][data-is-drag-scroll-boundary="true"][data-is-drag-scroll-boundary="true"] .sticky .sticky {
       top: 0px !important;
     }
 
