@@ -12,8 +12,19 @@ const LicenseService = (() => {
   // Re-validation interval (24 hours)
   const REVALIDATION_INTERVAL = 24 * 60 * 60 * 1000;
 
-  // Simple encryption key derived from extension ID
-  const ENCRYPTION_KEY = 'jt-power-tools-v1';
+  /**
+   * SECURITY NOTE: This is NOT cryptographic encryption.
+   * XOR with a static key provides only basic obfuscation to prevent casual inspection.
+   * The actual security comes from server-side validation via the license proxy.
+   * This obfuscation is used to:
+   * 1. Prevent license data from being trivially readable in Chrome storage
+   * 2. Deter casual tampering (though not prevent determined attackers)
+   *
+   * True security is enforced by:
+   * - Server-side license validation every 24 hours
+   * - License revocation capabilities on the server
+   */
+  const OBFUSCATION_KEY = 'jt-power-tools-v1';
 
   // Revalidation lock to prevent concurrent revalidation attempts (fix race condition)
   let revalidationInProgress = false;
@@ -131,59 +142,76 @@ const LicenseService = (() => {
     }
   }
 
-  // Simple XOR encryption for license data
-  function encrypt(text) {
+  /**
+   * Obfuscate license data using XOR
+   * NOTE: This is NOT secure encryption - see SECURITY NOTE above
+   * @param {string} text - Plain text to obfuscate
+   * @returns {string} Base64-encoded obfuscated string
+   */
+  function obfuscate(text) {
     try {
       const textBytes = new TextEncoder().encode(text);
-      const keyBytes = new TextEncoder().encode(ENCRYPTION_KEY);
-      const encrypted = new Uint8Array(textBytes.length);
+      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
+      const obfuscated = new Uint8Array(textBytes.length);
 
       for (let i = 0; i < textBytes.length; i++) {
-        encrypted[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
+        obfuscated[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
       }
 
       // Convert to base64
-      return btoa(String.fromCharCode(...encrypted));
+      return btoa(String.fromCharCode(...obfuscated));
     } catch (error) {
-      console.error('License: Encryption error:', error);
-      return text; // Fallback to plaintext if encryption fails
+      console.error('License: Obfuscation error:', error);
+      return text; // Fallback to plaintext if obfuscation fails
     }
   }
 
-  function decrypt(encryptedText) {
+  /**
+   * Deobfuscate license data
+   * NOTE: This is NOT secure decryption - see SECURITY NOTE above
+   * @param {string} obfuscatedText - Base64-encoded obfuscated string
+   * @returns {string|null} Original plain text or null on error
+   */
+  function deobfuscate(obfuscatedText) {
     try {
       // Decode from base64
-      const encrypted = Uint8Array.from(atob(encryptedText), c => c.charCodeAt(0));
-      const keyBytes = new TextEncoder().encode(ENCRYPTION_KEY);
-      const decrypted = new Uint8Array(encrypted.length);
+      const obfuscated = Uint8Array.from(atob(obfuscatedText), c => c.charCodeAt(0));
+      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
+      const original = new Uint8Array(obfuscated.length);
 
-      for (let i = 0; i < encrypted.length; i++) {
-        decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+      for (let i = 0; i < obfuscated.length; i++) {
+        original[i] = obfuscated[i] ^ keyBytes[i % keyBytes.length];
       }
 
-      return new TextDecoder().decode(decrypted);
+      return new TextDecoder().decode(original);
     } catch (error) {
-      console.error('License: Decryption error:', error);
+      console.error('License: Deobfuscation error:', error);
       return null;
     }
   }
 
-  // Save license data to storage (encrypted)
+  /**
+   * Save license data to storage (obfuscated)
+   * @param {Object} licenseData - License data object to save
+   */
   async function saveLicenseData(licenseData) {
     try {
-      // Encrypt sensitive data
-      const encrypted = encrypt(JSON.stringify(licenseData));
+      // Obfuscate sensitive data before storing
+      const obfuscated = obfuscate(JSON.stringify(licenseData));
       await chrome.storage.sync.set({
-        jtToolsLicense: encrypted,
-        jtToolsLicenseVersion: 2 // Version flag for encrypted format
+        jtToolsLicense: obfuscated,
+        jtToolsLicenseVersion: 2 // Version flag for obfuscated format
       });
-      console.log('License: Encrypted license data saved');
+      console.log('License: License data saved');
     } catch (error) {
       console.error('License: Error saving license data:', error);
     }
   }
 
-  // Get stored license data (decrypt if needed)
+  /**
+   * Get stored license data (deobfuscate if needed)
+   * @returns {Promise<Object|null>} License data object or null
+   */
   async function getLicenseData() {
     try {
       const result = await chrome.storage.sync.get(['jtToolsLicense', 'jtToolsLicenseVersion']);
@@ -192,15 +220,15 @@ const LicenseService = (() => {
         return null;
       }
 
-      // Handle encrypted data (v2)
+      // Handle obfuscated data (v2)
       if (result.jtToolsLicenseVersion === 2) {
-        const decrypted = decrypt(result.jtToolsLicense);
-        return decrypted ? JSON.parse(decrypted) : null;
+        const deobfuscated = deobfuscate(result.jtToolsLicense);
+        return deobfuscated ? JSON.parse(deobfuscated) : null;
       }
 
-      // Handle legacy unencrypted data (v1) - migrate it
+      // Handle legacy plaintext data (v1) - migrate it to obfuscated format
       if (typeof result.jtToolsLicense === 'object') {
-        console.log('License: Migrating legacy license data to encrypted format');
+        console.log('License: Migrating legacy license data to obfuscated format');
         await saveLicenseData(result.jtToolsLicense);
         return result.jtToolsLicense;
       }

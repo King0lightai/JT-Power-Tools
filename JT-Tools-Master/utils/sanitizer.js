@@ -228,7 +228,63 @@ const Sanitizer = (() => {
   }
 
   /**
-   * Strip all HTML tags from a string
+   * Sanitize HTML by removing dangerous elements and attributes
+   * Keeps only safe tags for display purposes
+   * @param {string} html - HTML string to sanitize
+   * @param {string[]} allowedTags - Array of allowed tag names (lowercase)
+   * @returns {string} Sanitized HTML
+   */
+  function sanitizeHTML(html, allowedTags = ['b', 'strong', 'i', 'em', 'u', 's', 'del', 'br', 'p', 'span']) {
+    try {
+      if (!html || typeof html !== 'string') {
+        return '';
+      }
+
+      // Use DOMParser to safely parse the HTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Recursively clean nodes
+      function cleanNode(node) {
+        const children = Array.from(node.childNodes);
+
+        for (const child of children) {
+          if (child.nodeType === Node.ELEMENT_NODE) {
+            const tagName = child.tagName.toLowerCase();
+
+            // Remove disallowed tags but keep their text content
+            if (!allowedTags.includes(tagName)) {
+              const textContent = child.textContent;
+              const textNode = document.createTextNode(textContent);
+              node.replaceChild(textNode, child);
+            } else {
+              // Remove all attributes except safe ones
+              const safeAttrs = ['class'];
+              const attrs = Array.from(child.attributes);
+              for (const attr of attrs) {
+                if (!safeAttrs.includes(attr.name.toLowerCase())) {
+                  child.removeAttribute(attr.name);
+                }
+              }
+              // Recursively clean children
+              cleanNode(child);
+            }
+          }
+        }
+      }
+
+      cleanNode(doc.body);
+      return doc.body.innerHTML;
+    } catch (error) {
+      console.error('Sanitizer: sanitizeHTML error:', error);
+      // Fallback to escaping
+      return escapeHTML(html);
+    }
+  }
+
+  /**
+   * Strip all HTML tags from a string safely
+   * Uses DOMParser to avoid XSS vulnerabilities that can occur with innerHTML
    * @param {string} html - HTML string
    * @returns {string} Plain text
    */
@@ -238,9 +294,11 @@ const Sanitizer = (() => {
         return '';
       }
 
-      const div = document.createElement('div');
-      div.innerHTML = html;
-      return div.textContent || div.innerText || '';
+      // Use DOMParser which is safer than innerHTML as it doesn't execute scripts
+      // The 'text/html' MIME type creates an inert document
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      return doc.body.textContent || '';
     } catch (error) {
       console.error('Sanitizer: stripHTML error:', error);
       return '';
@@ -251,6 +309,7 @@ const Sanitizer = (() => {
     sanitizeHexColor,
     sanitizeCSSValue,
     escapeHTML,
+    sanitizeHTML,
     sanitizeURL,
     isValidLicenseKeyFormat,
     sanitizeStorageKey,

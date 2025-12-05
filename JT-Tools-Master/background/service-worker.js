@@ -3,24 +3,26 @@
  * Handles settings persistence, syncing, and tab communication
  */
 
-// Default settings
-const defaultSettings = {
-  dragDrop: true,
-  contrastFix: true,
-  formatter: true,
-  previewMode: false,
-  darkMode: false,
-  rgbTheme: false,
-  quickJobSwitcher: true,
-  budgetHierarchy: false,
-  quickNotes: true,
-  themeColors: {
-    primary: '#3B82F6',
-    background: '#F3E8FF',
-    text: '#1F1B29'
-  },
-  savedThemes: [null, null, null]
-};
+// Import shared defaults
+// Note: Service workers use importScripts instead of ES modules
+try {
+  importScripts('../utils/defaults.js');
+} catch (e) {
+  console.warn('JT Power Tools: Could not import defaults.js, using inline fallback');
+}
+
+// Get default settings from shared module or use inline fallback
+const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefaultSettings)
+  ? JTDefaults.getDefaultSettings()
+  : {
+      // Inline fallback - should rarely be used
+      dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
+      darkMode: false, rgbTheme: false, quickJobSwitcher: true, budgetHierarchy: false,
+      quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
+      characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
+      themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
+      savedThemes: [null, null, null]
+    };
 
 /**
  * Safe Chrome storage wrapper for service worker context
@@ -209,7 +211,12 @@ async function getSettings() {
       return defaultSettings;
     }
 
-    // Merge with defaults to ensure all keys exist
+    // Use JTDefaults.mergeWithDefaults if available for proper deep merge
+    if (typeof JTDefaults !== 'undefined' && JTDefaults.mergeWithDefaults) {
+      return JTDefaults.mergeWithDefaults(settings);
+    }
+
+    // Fallback to shallow merge
     return { ...defaultSettings, ...settings };
   } catch (error) {
     console.error('JT Power Tools: Error in getSettings:', error);
