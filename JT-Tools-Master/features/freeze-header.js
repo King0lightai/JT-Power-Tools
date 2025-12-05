@@ -16,24 +16,20 @@ const FreezeHeaderFeature = (() => {
     /* No CSS overrides needed - leave it as JobTread styled it */
 
     /* Tab navigation bar - stick below the top header */
-    /* z-index 29 keeps it below sidebars (30) so they appear above */
     .jt-freeze-header-active .jt-job-tabs-container {
       position: sticky !important;
       top: var(--jt-header-height, 50px) !important;
-      z-index: 29 !important;
+      z-index: 40 !important;
       background-color: white !important;
-      /* Extend background slightly to cover any subpixel gaps */
       box-shadow: 0 1px 0 0 white !important;
     }
 
     /* Action toolbar bar - stick below the tabs (filters, search, view controls) */
-    /* z-index 28 keeps it below tabs and sidebars */
     .jt-freeze-header-active .jt-action-toolbar {
       position: sticky !important;
       top: var(--jt-tabs-bottom, 90px) !important;
-      z-index: 28 !important;
+      z-index: 39 !important;
       background-color: white !important;
-      /* Extend background slightly to cover any subpixel gaps */
       box-shadow: 0 1px 0 0 white !important;
     }
 
@@ -52,7 +48,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-schedule-header-container {
       position: sticky !important;
       top: var(--jt-toolbar-bottom, 138px) !important;
-      z-index: 27 !important;
+      z-index: 30 !important;
       background-color: white !important;
     }
 
@@ -65,7 +61,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-files-folder-bar {
       position: sticky !important;
       top: var(--jt-toolbar-bottom, 138px) !important;
-      z-index: 27 !important;
+      z-index: 38 !important;
       background-color: white !important;
     }
 
@@ -73,7 +69,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-files-list-header {
       position: sticky !important;
       top: var(--jt-files-folder-bottom, 170px) !important;
-      z-index: 26 !important;
+      z-index: 37 !important;
       background-color: white !important;
     }
 
@@ -87,9 +83,7 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Note: Right-side sidebars (Time Clock, Job Switcher, Task Details, etc.) */
-    /* are NOT modified - JobTread handles them correctly at z-index 30 */
-    /* Our frozen elements use z-index 29 and below so sidebars appear above them */
+    /* Note: Right-side sidebars are not modified - some may appear behind frozen elements */
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
