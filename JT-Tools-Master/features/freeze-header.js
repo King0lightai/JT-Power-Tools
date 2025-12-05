@@ -96,6 +96,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
+    /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
+    /* These are headers like "Update Task" that should stick at the top of their scrollable parent */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky .sticky {
+      top: 0px !important;
+    }
+
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
       background-color: white !important;
