@@ -49,6 +49,7 @@
         "features/formatter-modules/detection.js",
         "features/formatter-modules/formats.js",
         "features/formatter-modules/toolbar.js",
+        "features/formatter-modules/alert-modal.js",
         "features/formatter.js",
         "features/preview-mode.js",
         "features/dark-mode.js",
