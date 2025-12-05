@@ -1,84 +1,64 @@
 /**
  * Quick Notes Feature
  * Provides a persistent notepad accessible from any Jobtread page
+ *
+ * Dependencies:
+ * - features/quick-notes-modules/storage.js (QuickNotesStorage)
+ * - features/quick-notes-modules/markdown.js (QuickNotesMarkdown)
+ * - features/quick-notes-modules/editor.js (QuickNotesEditor)
  */
 
 const QuickNotesFeature = (() => {
+  // State variables
   let isActive = false;
   let notesPanel = null;
   let notesButton = null;
   let buttonObserver = null;
+  let periodicCheckInterval = null;
   let notes = [];
   let currentNoteId = null;
   let searchTerm = '';
-  const STORAGE_KEY = 'jtToolsQuickNotes';
-  const WIDTH_STORAGE_KEY = 'jtToolsQuickNotesWidth';
-  const MIN_WIDTH = 320;
-  const MAX_WIDTH = 1200;
   let isResizing = false;
 
-  // Store resize event handlers for cleanup (fix memory leak)
+  // Store resize event handlers for cleanup
   let resizeHandlers = {
     mouseMove: null,
     mouseUp: null
   };
 
-  // Undo/redo history management
-  let undoHistory = [];
-  let redoHistory = [];
-  let lastSavedContent = '';
-  let historyTimeout = null;
+  // Module references (loaded after DOM ready)
+  const getStorage = () => window.QuickNotesStorage || {};
+  const getMarkdown = () => window.QuickNotesMarkdown || {};
+  const getEditor = () => window.QuickNotesEditor || {};
 
-  // Generate unique ID
-  function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
+  // Constants from storage module (with fallbacks)
+  const MIN_WIDTH = 320;
+  const MAX_WIDTH = 1200;
 
-  // Load notes from storage
+  // Helper to load notes using storage module
   async function loadNotes() {
-    return new Promise((resolve) => {
-      try {
-        chrome.storage.sync.get([STORAGE_KEY], (result) => {
-          if (chrome.runtime.lastError) {
-            console.error('Quick Notes: Error loading notes:', chrome.runtime.lastError.message);
-            notes = [];
-            resolve([]);
-            return;
-          }
-          notes = result[STORAGE_KEY] || [];
-          resolve(notes);
-        });
-      } catch (error) {
-        console.error('Quick Notes: Unexpected error loading notes:', error);
-        notes = [];
-        resolve([]);
-      }
-    });
+    const storage = getStorage();
+    if (storage.loadNotes) {
+      notes = await storage.loadNotes();
+      return notes;
+    }
+    return [];
   }
 
-  // Save notes to storage
+  // Helper to save notes using storage module
   async function saveNotes() {
-    return new Promise((resolve) => {
-      try {
-        chrome.storage.sync.set({ [STORAGE_KEY]: notes }, () => {
-          if (chrome.runtime.lastError) {
-            console.error('Quick Notes: Error saving notes:', chrome.runtime.lastError.message);
-            resolve(false);
-            return;
-          }
-          resolve(true);
-        });
-      } catch (error) {
-        console.error('Quick Notes: Unexpected error saving notes:', error);
-        resolve(false);
-      }
-    });
+    const storage = getStorage();
+    if (storage.saveNotes) {
+      return await storage.saveNotes(notes);
+    }
+    return false;
   }
 
   // Create a new note
   function createNote() {
+    const storage = getStorage();
     const note = {
-      id: generateId(),
+      id: storage.generateId ? storage.generateId() : Date.now().toString(36),
       title: 'Untitled Note',
       content: '',
       createdAt: Date.now(),
@@ -106,108 +86,35 @@ const QuickNotesFeature = (() => {
     }
   }
 
-  // Export notes as JSON file
+  // Export notes as JSON file (uses storage module)
   function exportNotes() {
-    if (notes.length === 0) {
-      alert('No notes to export. Create some notes first!');
-      return;
+    const storage = getStorage();
+    if (storage.exportNotes) {
+      storage.exportNotes(notes);
     }
-
-    const exportData = {
-      version: '1.0',
-      exportedAt: Date.now(),
-      exportedAtFormatted: new Date().toLocaleString(),
-      notesCount: notes.length,
-      notes: notes
-    };
-
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-
-    // Create filename with timestamp
-    const timestamp = new Date().toISOString().slice(0, 10);
-    link.download = `jt-power-tools-notes-${timestamp}.json`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    console.log(`Exported ${notes.length} notes`);
   }
 
-  // Import notes from JSON file
+  // Import notes from JSON file (uses storage module)
   function importNotes() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json,.json';
+    const storage = getStorage();
+    if (storage.importNotes) {
+      storage.importNotes(notes, async (importedNotes, mode, count) => {
+        notes = importedNotes;
+        await saveNotes();
+        await loadNotes();
 
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const importData = JSON.parse(text);
-
-        // Validate import data
-        if (!importData.notes || !Array.isArray(importData.notes)) {
-          alert('Invalid notes file. Please select a valid JT Power Tools notes export.');
-          return;
-        }
-
-        // Ask user if they want to merge or replace
-        const action = confirm(
-          `Found ${importData.notes.length} note(s) in file.\n\n` +
-          `Click OK to MERGE with existing notes (${notes.length})\n` +
-          `Click Cancel to REPLACE all existing notes`
-        );
-
-        if (action) {
-          // Merge: Add imported notes that don't already exist
-          const existingIds = new Set(notes.map(n => n.id));
-          const newNotes = importData.notes.filter(n => !existingIds.has(n.id));
-
-          notes = [...notes, ...newNotes];
-          await saveNotes();
-
-          // Reload notes from storage to ensure consistency
-          await loadNotes();
-
-          alert(`Successfully imported ${newNotes.length} new note(s)!\n${notes.length} total notes.`);
+        if (mode === 'merge') {
+          alert(`Successfully imported ${count} new note(s)!\n${notes.length} total notes.`);
         } else {
-          // Replace: Replace all notes with imported ones
-          if (confirm('Are you sure? This will DELETE all existing notes and replace them with imported notes.')) {
-            notes = importData.notes;
-            await saveNotes();
-
-            // Reload notes from storage to ensure consistency
-            await loadNotes();
-
-            alert(`Successfully replaced notes!\n${notes.length} note(s) imported.`);
-          } else {
-            // User cancelled the replace operation
-            return;
-          }
+          alert(`Successfully replaced notes!\n${notes.length} note(s) imported.`);
         }
 
         // Reset current note and re-render
         currentNoteId = notes.length > 0 ? notes[0].id : null;
         renderNotesList();
         renderNoteEditor();
-
-        console.log(`Imported notes: ${importData.notes.length} from file, ${notes.length} total`);
-      } catch (error) {
-        console.error('Import error:', error);
-        alert('Failed to import notes. Please make sure the file is a valid JT Power Tools notes export.');
-      }
-    };
-
-    input.click();
+      });
+    }
   }
 
   // Update note content
@@ -248,6 +155,8 @@ const QuickNotesFeature = (() => {
     const notesList = notesPanel.querySelector('.jt-notes-list');
     if (!notesList) return;
 
+    const markdown = getMarkdown();
+
     const filteredNotes = notes.filter(note => {
       if (!searchTerm) return true;
       const search = searchTerm.toLowerCase();
@@ -266,16 +175,18 @@ const QuickNotesFeature = (() => {
 
     notesList.innerHTML = filteredNotes.map(note => {
       const previewContent = note.content.slice(0, 150);
-      const parsedPreview = parseMarkdown(previewContent)
+      const parsedPreview = (markdown.parseMarkdown ? markdown.parseMarkdown(previewContent) : previewContent)
         .replace(/<div[^>]*>/g, ' ')
         .replace(/<\/div>/g, ' ')
         .replace(/\n/g, ' ')
         .trim();
 
+      const escapedTitle = markdown.escapeHtml ? markdown.escapeHtml(note.title) : note.title;
+
       return `
         <div class="jt-note-item ${currentNoteId === note.id ? 'active' : ''}" data-note-id="${note.id}">
           <div class="jt-note-item-header">
-            <div class="jt-note-item-title">${escapeHtml(note.title)}</div>
+            <div class="jt-note-item-title">${escapedTitle}</div>
             <button class="jt-note-delete" data-note-id="${note.id}" title="Delete note">×</button>
           </div>
           <div class="jt-note-item-preview">${parsedPreview}</div>
@@ -310,6 +221,8 @@ const QuickNotesFeature = (() => {
     const editorContainer = notesPanel.querySelector('.jt-notes-editor');
     if (!editorContainer) return;
 
+    const markdown = getMarkdown();
+    const editor = getEditor();
     const currentNote = notes.find(n => n.id === currentNoteId);
 
     if (!currentNote) {
@@ -334,12 +247,16 @@ const QuickNotesFeature = (() => {
       return;
     }
 
+    const escapedTitle = markdown.escapeHtml ? markdown.escapeHtml(currentNote.title) : currentNote.title;
+    const parsedContent = markdown.parseMarkdownForEditor ? markdown.parseMarkdownForEditor(currentNote.content) : currentNote.content;
+    const wordCount = editor.countWords ? editor.countWords(currentNote.content) : 0;
+
     editorContainer.innerHTML = `
       <div class="jt-notes-editor-header">
         <input
           type="text"
           class="jt-notes-title-input"
-          value="${escapeHtml(currentNote.title)}"
+          value="${escapedTitle}"
           placeholder="Note title..."
         />
         <button class="jt-notes-close-button" title="Close (Esc)"></button>
@@ -398,9 +315,9 @@ const QuickNotesFeature = (() => {
         class="jt-notes-content-input"
         contenteditable="true"
         data-placeholder="Start typing your note... Rich text formatting supported"
-      >${parseMarkdownForEditor(currentNote.content)}</div>
+      >${parsedContent}</div>
       <div class="jt-notes-editor-footer">
-        <span class="jt-notes-word-count">${countWords(currentNote.content)} words</span>
+        <span class="jt-notes-word-count">${wordCount} words</span>
         <span class="jt-notes-updated">Updated ${formatDate(currentNote.updatedAt)}</span>
       </div>
     `;
@@ -416,9 +333,10 @@ const QuickNotesFeature = (() => {
       saveTimeout = setTimeout(() => {
         updateNote(currentNoteId, { [field]: value });
         if (field === 'content') {
-          const wordCount = editorContainer.querySelector('.jt-notes-word-count');
-          if (wordCount) {
-            wordCount.textContent = `${countWords(value)} words`;
+          const wordCountEl = editorContainer.querySelector('.jt-notes-word-count');
+          if (wordCountEl) {
+            const count = editor.countWords ? editor.countWords(value) : 0;
+            wordCountEl.textContent = `${count} words`;
           }
         }
       }, 500);
@@ -429,14 +347,21 @@ const QuickNotesFeature = (() => {
     });
 
     contentInput.addEventListener('input', (e) => {
-      const markdown = htmlToMarkdown(contentInput);
-      debouncedSave('content', markdown);
-      updateFormattingButtons(contentInput);
+      const markdownContent = markdown.htmlToMarkdown ? markdown.htmlToMarkdown(contentInput) : '';
+      debouncedSave('content', markdownContent);
+      if (editor.updateFormattingButtons) {
+        editor.updateFormattingButtons(contentInput);
+      }
     });
 
     // Update button states on selection change
-    contentInput.addEventListener('mouseup', () => updateFormattingButtons(contentInput));
-    contentInput.addEventListener('keyup', () => updateFormattingButtons(contentInput));
+    const updateButtons = () => {
+      if (editor.updateFormattingButtons) {
+        editor.updateFormattingButtons(contentInput);
+      }
+    };
+    contentInput.addEventListener('mouseup', updateButtons);
+    contentInput.addEventListener('keyup', updateButtons);
 
     // Improved paste handling to preserve basic formatting
     contentInput.addEventListener('paste', (e) => {
@@ -447,54 +372,12 @@ const QuickNotesFeature = (() => {
       let pastedHTML = clipboardData.getData('text/html');
       const pastedText = clipboardData.getData('text/plain');
 
-      if (pastedHTML) {
-        // Create a temporary div to parse HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = pastedHTML;
-
-        // Clean up the HTML - keep only allowed tags
-        const allowedTags = ['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'del', 'code', 'a', 'br'];
-        const cleanHTML = (element) => {
-          const clone = element.cloneNode(false);
-          for (const child of element.childNodes) {
-            if (child.nodeType === Node.TEXT_NODE) {
-              clone.appendChild(child.cloneNode(true));
-            } else if (child.nodeType === Node.ELEMENT_NODE) {
-              const tagName = child.tagName.toLowerCase();
-              if (allowedTags.includes(tagName)) {
-                const cleanChild = cleanHTML(child);
-                // Preserve href for links
-                if (tagName === 'a' && child.hasAttribute('href')) {
-                  cleanChild.setAttribute('href', child.getAttribute('href'));
-                  cleanChild.setAttribute('target', '_blank');
-                  cleanChild.setAttribute('rel', 'noopener noreferrer');
-                }
-                clone.appendChild(cleanChild);
-              } else {
-                // Skip the tag but keep its children
-                for (const grandChild of child.childNodes) {
-                  const processedChild = grandChild.nodeType === Node.ELEMENT_NODE
-                    ? cleanHTML(grandChild)
-                    : grandChild.cloneNode(true);
-                  clone.appendChild(processedChild);
-                }
-              }
-            }
-          }
-          return clone;
-        };
-
-        const cleanedContent = cleanHTML(tempDiv);
+      if (pastedHTML && editor.cleanPastedHtml) {
+        const fragment = editor.cleanPastedHtml(pastedHTML);
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           range.deleteContents();
-
-          // Insert cleaned content
-          const fragment = document.createDocumentFragment();
-          while (cleanedContent.firstChild) {
-            fragment.appendChild(cleanedContent.firstChild);
-          }
           range.insertNode(fragment);
 
           // Move cursor to end of pasted content
@@ -534,14 +417,27 @@ const QuickNotesFeature = (() => {
       closeEditor();
     });
 
-    // Add formatting button handlers
+    // Add formatting button handlers (using editor module)
     const formatButtons = editorContainer.querySelectorAll('.jt-notes-format-btn');
     formatButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const formatType = btn.dataset.format;
-        applyFormatting(contentInput, formatType);
+        if (editor.applyFormatting) {
+          editor.applyFormatting(contentInput, formatType, (content) => {
+            updateNote(currentNoteId, { content });
+          });
+        }
       });
     });
+
+    // Helper for keyboard shortcuts to apply formatting
+    const applyFormat = (formatType) => {
+      if (editor.applyFormatting) {
+        editor.applyFormatting(contentInput, formatType, (content) => {
+          updateNote(currentNoteId, { content });
+        });
+      }
+    };
 
     // Add keyboard shortcuts for formatting and list management
     contentInput.addEventListener('keydown', (e) => {
@@ -602,37 +498,37 @@ const QuickNotesFeature = (() => {
       // Ctrl/Cmd + B for bold
       if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
         e.preventDefault();
-        applyFormatting(contentInput, 'bold');
+        applyFormat('bold');
       }
       // Ctrl/Cmd + I for italic
       if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
         e.preventDefault();
-        applyFormatting(contentInput, 'italic');
+        applyFormat('italic');
       }
       // Ctrl/Cmd + U for underline
       if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
         e.preventDefault();
-        applyFormatting(contentInput, 'underline');
+        applyFormat('underline');
       }
       // Ctrl/Cmd + Shift + X for strikethrough
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'x') {
         e.preventDefault();
-        applyFormatting(contentInput, 'strikethrough');
+        applyFormat('strikethrough');
       }
       // Ctrl/Cmd + K for link
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        applyFormatting(contentInput, 'link');
+        applyFormat('link');
       }
       // Ctrl/Cmd + Z for undo
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
         e.preventDefault();
-        applyFormatting(contentInput, 'undo');
+        applyFormat('undo');
       }
       // Ctrl/Cmd + Y or Ctrl/Cmd + Shift + Z for redo
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
         e.preventDefault();
-        applyFormatting(contentInput, 'redo');
+        applyFormat('redo');
       }
 
       // Enter key: create new bullet/checkbox
@@ -897,13 +793,17 @@ const QuickNotesFeature = (() => {
       }
     });
 
-    // Initialize undo/redo history for this note
-    undoHistory = [];
-    redoHistory = [];
-    lastSavedContent = currentNote.content;
+    // Initialize undo/redo history for this note (using editor module)
+    if (editor.resetHistory) {
+      editor.resetHistory(currentNote.content);
+    }
 
-    // Update formatting buttons on initial load
-    setTimeout(() => updateFormattingButtons(contentInput), 100);
+    // Update formatting buttons on initial load (using editor module)
+    setTimeout(() => {
+      if (editor.updateFormattingButtons) {
+        editor.updateFormattingButtons(contentInput);
+      }
+    }, 100);
 
     // Focus on content if title is already set
     if (currentNote.title !== 'Untitled Note') {
@@ -914,468 +814,13 @@ const QuickNotesFeature = (() => {
     }
   }
 
-  // Count words
-  function countWords(text) {
-    return text.trim().split(/\s+/).filter(w => w.length > 0).length;
-  }
-
-  // Add content to undo history
-  function saveToHistory(content) {
-    if (content !== lastSavedContent) {
-      undoHistory.push(lastSavedContent);
-      // Limit history to 50 entries
-      if (undoHistory.length > 50) {
-        undoHistory.shift();
-      }
-      redoHistory = []; // Clear redo history on new change
-      lastSavedContent = content;
-    }
-  }
-
-  // Undo last change
-  function undo(contentInput) {
-    if (undoHistory.length > 0) {
-      const previousContent = undoHistory.pop();
-      redoHistory.push(lastSavedContent);
-      lastSavedContent = previousContent;
-
-      // Restore content
-      contentInput.innerHTML = parseMarkdownForEditor(previousContent);
-
-      // Update the note
-      const markdown = htmlToMarkdown(contentInput);
-      updateNote(currentNoteId, { content: markdown });
-
-      // Update UI state
-      updateFormattingButtons(contentInput);
-      return true;
-    }
-    return false;
-  }
-
-  // Redo last undone change
-  function redo(contentInput) {
-    if (redoHistory.length > 0) {
-      const nextContent = redoHistory.pop();
-      undoHistory.push(lastSavedContent);
-      lastSavedContent = nextContent;
-
-      // Restore content
-      contentInput.innerHTML = parseMarkdownForEditor(nextContent);
-
-      // Update the note
-      const markdown = htmlToMarkdown(contentInput);
-      updateNote(currentNoteId, { content: markdown });
-
-      // Update UI state
-      updateFormattingButtons(contentInput);
-      return true;
-    }
-    return false;
-  }
-
-  // Update formatting button states based on selection
-  function updateFormattingButtons(contentInput) {
-    if (!contentInput) return;
-
-    const formatButtons = document.querySelectorAll('.jt-notes-format-btn');
-    formatButtons.forEach(btn => btn.classList.remove('active'));
-
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    let node = selection.anchorNode;
-    if (!node) return;
-
-    // Traverse up the DOM tree to check for formatting
-    while (node && node !== contentInput) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const tagName = node.tagName?.toLowerCase();
-
-        if (tagName === 'strong' || tagName === 'b') {
-          const boldBtn = document.querySelector('[data-format="bold"]');
-          if (boldBtn) boldBtn.classList.add('active');
-        }
-        if (tagName === 'em' || tagName === 'i') {
-          const italicBtn = document.querySelector('[data-format="italic"]');
-          if (italicBtn) italicBtn.classList.add('active');
-        }
-        if (tagName === 'u') {
-          const underlineBtn = document.querySelector('[data-format="underline"]');
-          if (underlineBtn) underlineBtn.classList.add('active');
-        }
-        if (tagName === 's' || tagName === 'del' || tagName === 'strike') {
-          const strikeBtn = document.querySelector('[data-format="strikethrough"]');
-          if (strikeBtn) strikeBtn.classList.add('active');
-        }
-        if (tagName === 'a') {
-          const linkBtn = document.querySelector('[data-format="link"]');
-          if (linkBtn) linkBtn.classList.add('active');
-        }
-      }
-      node = node.parentNode;
-    }
-  }
-
-  // Parse markdown to HTML for contenteditable editor (WYSIWYG)
-  function parseMarkdownForEditor(text) {
-    if (!text) return '<div><br></div>';
-
-    const lines = text.split('\n');
-    const htmlLines = lines.map(line => {
-      // Checkbox lists
-      if (line.match(/^- \[x\]/i)) {
-        const content = line.replace(/^- \[x\]\s*/i, '');
-        return `<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
-      }
-      if (line.match(/^- \[ \]/)) {
-        const content = line.replace(/^- \[ \]\s*/, '');
-        return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
-      }
-      // Bullet lists with indentation support
-      if (line.match(/^(\s*)- /)) {
-        const match = line.match(/^(\s*)- (.*)$/);
-        const indent = Math.floor(match[1].length / 2); // 2 spaces = 1 indent level
-        const content = match[2];
-        const indentAttr = indent > 0 ? ` data-indent="${indent}"` : '';
-        return `<div class="jt-note-bullet"${indentAttr}>• ${processInlineFormatting(content)}</div>`;
-      }
-      // Regular text with inline formatting
-      return `<div>${processInlineFormatting(line) || '<br>'}</div>`;
-    });
-
-    return htmlLines.join('');
-  }
-
-  // Process inline formatting (bold, italic, underline, strikethrough, code, links)
-  function processInlineFormatting(text) {
-    if (!text) return '';
-
-    let html = escapeHtml(text);
-
-    // Parse links [text](url)
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-    // Parse inline code `code`
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-
-    // Parse bold **text** or *text*
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
-
-    // Parse italic _text_
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-    // Parse strikethrough ~~text~~
-    html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
-
-    // Parse underline __text__
-    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
-
-    return html;
-  }
-
-  // Convert contenteditable HTML back to markdown
-  function htmlToMarkdown(element) {
-    let markdown = '';
-    const children = element.childNodes;
-
-    for (let node of children) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const tag = node.tagName.toLowerCase();
-
-        if (node.classList.contains('jt-note-checkbox')) {
-          const checkbox = node.querySelector('input[type="checkbox"]');
-          const span = node.querySelector('span');
-          const checked = checkbox && checkbox.checked;
-          const text = span ? extractInlineMarkdown(span) : '';
-          markdown += `- [${checked ? 'x' : ' '}] ${text}\n`;
-        } else if (node.classList.contains('jt-note-bullet')) {
-          const text = node.textContent.replace(/^•\s*/, '');
-          const indent = parseInt(node.getAttribute('data-indent') || '0');
-          const indentSpaces = '  '.repeat(indent); // 2 spaces per indent level
-          markdown += `${indentSpaces}- ${extractInlineMarkdown(node)}\n`;
-        } else if (tag === 'div') {
-          const content = extractInlineMarkdown(node);
-          if (content) markdown += content + '\n';
-        }
-      } else if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent;
-        if (text.trim()) markdown += text;
-      }
-    }
-
-    return markdown.trim();
-  }
-
-  // Extract inline markdown from formatted HTML
-  function extractInlineMarkdown(element) {
-    let text = '';
-    const children = element.childNodes;
-
-    for (let node of children) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        text += node.textContent;
-      } else if (node.nodeType === Node.ELEMENT_NODE) {
-        const tag = node.tagName.toLowerCase();
-        const content = node.textContent;
-
-        if (tag === 'strong' || tag === 'b') {
-          text += `**${content}**`;
-        } else if (tag === 'em' || tag === 'i') {
-          text += `_${content}_`;
-        } else if (tag === 'u') {
-          text += `__${content}__`;
-        } else if (tag === 's' || tag === 'del' || tag === 'strike') {
-          text += `~~${content}~~`;
-        } else if (tag === 'code') {
-          text += `\`${content}\``;
-        } else if (tag === 'a') {
-          const href = node.getAttribute('href') || '#';
-          text += `[${content}](${href})`;
-        } else if (tag === 'br') {
-          // Skip br tags
-        } else {
-          text += extractInlineMarkdown(node);
-        }
-      }
-    }
-
-    return text.replace(/^•\s*/, '');
-  }
-
-  // Parse markdown to HTML (for preview in sidebar)
-  function parseMarkdown(text) {
-    if (!text) return '';
-
-    // Escape HTML first
-    let html = escapeHtml(text);
-
-    // Parse links [text](url)
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-
-    // Parse inline code `code`
-    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-
-    // Parse bold **text** or *text*
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
-
-    // Parse italic _text_
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-    // Parse strikethrough ~~text~~
-    html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
-
-    // Parse underline __text__
-    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
-
-    // Parse line by line for lists and checkboxes
-    const lines = html.split('\n');
-    const parsedLines = lines.map(line => {
-      // Checkbox lists
-      if (line.match(/^- \[x\]/i)) {
-        return line.replace(/^- \[x\]\s*/i, '<div class="jt-note-checkbox checked"><input type="checkbox" checked disabled><span>') + '</span></div>';
-      }
-      if (line.match(/^- \[ \]/)) {
-        return line.replace(/^- \[ \]\s*/, '<div class="jt-note-checkbox"><input type="checkbox" disabled><span>') + '</span></div>';
-      }
-      // Bullet lists
-      if (line.match(/^- /)) {
-        return line.replace(/^- /, '<div class="jt-note-bullet">• ') + '</div>';
-      }
-      return line;
-    });
-
-    return parsedLines.join('\n');
-  }
-
-  // Escape HTML
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
-  // Apply formatting to contenteditable (WYSIWYG)
-  function applyFormatting(element, formatType) {
-    element.focus();
-
-    // Save to history before making changes
-    const currentContent = htmlToMarkdown(element);
-    clearTimeout(historyTimeout);
-    historyTimeout = setTimeout(() => {
-      saveToHistory(currentContent);
-    }, 500);
-
-    switch (formatType) {
-      case 'bold':
-        document.execCommand('bold', false, null);
-        break;
-
-      case 'italic':
-        document.execCommand('italic', false, null);
-        break;
-
-      case 'underline':
-        document.execCommand('underline', false, null);
-        break;
-
-      case 'strikethrough':
-        document.execCommand('strikeThrough', false, null);
-        break;
-
-      case 'link': {
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const selectedText = range.toString();
-
-          // Check if we're already in a link
-          let linkElement = null;
-          let node = selection.anchorNode;
-          while (node && node !== element) {
-            if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
-              linkElement = node;
-              break;
-            }
-            node = node.parentNode;
-          }
-
-          if (linkElement) {
-            // Edit existing link
-            const currentUrl = linkElement.getAttribute('href') || '';
-            const newUrl = prompt('Edit link URL:', currentUrl);
-
-            if (newUrl !== null) {
-              if (newUrl.trim() === '') {
-                // Remove link
-                const parent = linkElement.parentNode;
-                while (linkElement.firstChild) {
-                  parent.insertBefore(linkElement.firstChild, linkElement);
-                }
-                parent.removeChild(linkElement);
-              } else {
-                // Update link
-                linkElement.setAttribute('href', newUrl);
-              }
-            }
-          } else if (selectedText) {
-            // Create new link
-            const url = prompt('Enter link URL:', 'https://');
-
-            if (url && url.trim() !== '' && url !== 'https://') {
-              const linkEl = document.createElement('a');
-              linkEl.href = url;
-              linkEl.target = '_blank';
-              linkEl.rel = 'noopener noreferrer';
-              linkEl.textContent = selectedText;
-
-              range.deleteContents();
-              range.insertNode(linkEl);
-
-              // Move cursor after the link
-              range.setStartAfter(linkEl);
-              range.setEndAfter(linkEl);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          } else {
-            // No selection, prompt for both text and URL
-            const linkText = prompt('Enter link text:');
-            if (linkText && linkText.trim() !== '') {
-              const url = prompt('Enter link URL:', 'https://');
-              if (url && url.trim() !== '' && url !== 'https://') {
-                const linkEl = document.createElement('a');
-                linkEl.href = url;
-                linkEl.target = '_blank';
-                linkEl.rel = 'noopener noreferrer';
-                linkEl.textContent = linkText;
-
-                range.insertNode(linkEl);
-
-                // Move cursor after the link
-                range.setStartAfter(linkEl);
-                range.setEndAfter(linkEl);
-                selection.removeAllRanges();
-                selection.addRange(range);
-              }
-            }
-          }
-        }
-        break;
-      }
-
-      case 'undo':
-        undo(element);
-        return; // Don't trigger input event
-
-      case 'redo':
-        redo(element);
-        return; // Don't trigger input event
-
-      case 'bullet':
-        // Insert a bullet list item
-        const bulletDiv = document.createElement('div');
-        bulletDiv.className = 'jt-note-bullet';
-        bulletDiv.textContent = '• ';
-
-        const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(bulletDiv);
-
-          // Place cursor at the end of the bullet text (after "• ")
-          const newRange = document.createRange();
-          const textNode = bulletDiv.firstChild;
-          if (textNode) {
-            newRange.setStart(textNode, textNode.length);
-            newRange.setEnd(textNode, textNode.length);
-            selection.removeAllRanges();
-            selection.addRange(newRange);
-          }
-        }
-        break;
-
-      case 'checkbox':
-        // Insert a checkbox item
-        const checkboxDiv = document.createElement('div');
-        checkboxDiv.className = 'jt-note-checkbox';
-        checkboxDiv.setAttribute('contenteditable', 'false');
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-
-        const span = document.createElement('span');
-        span.setAttribute('contenteditable', 'true');
-        span.textContent = ''; // Empty text node for cursor visibility
-
-        checkboxDiv.appendChild(checkbox);
-        checkboxDiv.appendChild(span);
-
-        const selection2 = window.getSelection();
-        if (selection2.rangeCount > 0) {
-          const range = selection2.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(checkboxDiv);
-
-          // Place cursor inside the span with proper focus
-          setTimeout(() => {
-            span.focus();
-            const newRange = document.createRange();
-            newRange.selectNodeContents(span);
-            newRange.collapse(true);
-            selection2.removeAllRanges();
-            selection2.addRange(newRange);
-          }, 0);
-        }
-        break;
-    }
-
-    // Trigger input event to save changes
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-  }
+  // ============================================================
+  // NOTE: The following functions have been moved to modules:
+  // - countWords, saveToHistory, undo, redo, updateFormattingButtons,
+  //   applyFormatting → quick-notes-modules/editor.js
+  // - parseMarkdownForEditor, processInlineFormatting, htmlToMarkdown,
+  //   extractInlineMarkdown, parseMarkdown, escapeHtml → quick-notes-modules/markdown.js
+  // ============================================================
 
   // Detect and apply theme
   function detectAndApplyTheme() {
@@ -1728,7 +1173,8 @@ const QuickNotesFeature = (() => {
 
     // Periodic check to ensure button stays injected across page navigations
     // Check every 2 seconds if button is still present and action bar exists
-    setInterval(() => {
+    // Store interval ID for cleanup
+    periodicCheckInterval = setInterval(() => {
       if (isActive) {
         // Check if we're on a page that should have the button
         if (!shouldShowButton()) {
@@ -2080,6 +1526,12 @@ const QuickNotesFeature = (() => {
   // Cleanup feature
   function cleanup() {
     if (!isActive) return;
+
+    // Clear periodic check interval (fix memory leak)
+    if (periodicCheckInterval) {
+      clearInterval(periodicCheckInterval);
+      periodicCheckInterval = null;
+    }
 
     // Disconnect observer
     if (buttonObserver) {

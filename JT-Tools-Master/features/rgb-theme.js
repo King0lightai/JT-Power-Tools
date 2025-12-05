@@ -1,20 +1,45 @@
 // JobTread Custom Theme Feature Module
 // Applies custom color theme to JobTread interface (PREMIUM FEATURE)
 // Generates a complete color palette from three base colors using HSL manipulation
+//
+// Dependencies:
+// - utils/color-utils.js (ColorUtils)
+// - utils/debounce.js (TimingUtils)
+// - rgb-theme-modules/palette.js (ThemePalette)
 
 const CustomThemeFeature = (() => {
   let isActive = false;
   let styleElement = null;
   let observer = null;
-  let debounceTimer = null;
+  let debouncedContrastFix = null;
   let currentColors = {
     primary: '#3B82F6',
     background: '#F3E8FF',
     text: '#1F1B29'
   };
 
-  // Generated palette (populated by generatePalette)
+  // Generated palette (populated by ThemePalette.generatePalette)
   let palette = {};
+
+  // Module references
+  const Palette = () => window.ThemePalette || {};
+
+  // Use shared ColorUtils module
+  const {
+    hexToRgb,
+    rgbToHex,
+    hexToHsl,
+    hslToHex,
+    hexToRgba,
+    getLuminance,
+    isDark,
+    getContrastText,
+    adjustLightness,
+    adjustSaturation,
+    setLightness,
+    setSaturation,
+    blendColors
+  } = window.ColorUtils || {};
 
   // Initialize the feature
   function init(colors = null) {
@@ -38,8 +63,8 @@ const CustomThemeFeature = (() => {
       };
     }
 
-    // Generate the full color palette from base colors
-    palette = generatePalette(currentColors);
+    // Generate the full color palette from base colors (using Palette module)
+    palette = Palette().generatePalette(currentColors);
 
     // Inject custom theme CSS
     injectThemeCSS();
@@ -72,10 +97,10 @@ const CustomThemeFeature = (() => {
       observer = null;
     }
 
-    // Clear debounce timer
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
+    // Cancel debounced function
+    if (debouncedContrastFix) {
+      debouncedContrastFix.cancel();
+      debouncedContrastFix = null;
     }
 
     // Remove injected CSS
@@ -102,8 +127,8 @@ const CustomThemeFeature = (() => {
     }
 
     if (isActive) {
-      // Regenerate the full palette with new colors
-      palette = generatePalette(currentColors);
+      // Regenerate the full palette with new colors (using Palette module)
+      palette = Palette().generatePalette(currentColors);
 
       // Re-inject CSS with new colors
       if (styleElement) {
@@ -126,304 +151,6 @@ const CustomThemeFeature = (() => {
   // Get the generated palette
   function getPalette() {
     return { ...palette };
-  }
-
-  // ============================================================
-  // COLOR UTILITY FUNCTIONS - HSL-based for better color control
-  // ============================================================
-
-  // Helper function to convert hex to RGB
-  function hexToRgb(hex) {
-    if (!hex || typeof hex !== 'string') {
-      console.warn('CustomTheme: Invalid hex color input:', hex);
-      return null;
-    }
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16)
-    } : null;
-  }
-
-  // Helper function to convert RGB to hex
-  function rgbToHex(r, g, b) {
-    const toHex = (n) => {
-      const clamped = Math.max(0, Math.min(255, Math.round(n)));
-      return clamped.toString(16).padStart(2, '0');
-    };
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-  }
-
-  // Convert hex to HSL (returns {h: 0-360, s: 0-100, l: 0-100})
-  function hexToHsl(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return { h: 0, s: 0, l: 50 };
-
-    const r = rgb.r / 255;
-    const g = rgb.g / 255;
-    const b = rgb.b / 255;
-
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const l = (max + min) / 2;
-    let h = 0;
-    let s = 0;
-
-    if (max !== min) {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-
-    return {
-      h: Math.round(h * 360),
-      s: Math.round(s * 100),
-      l: Math.round(l * 100)
-    };
-  }
-
-  // Convert HSL to hex
-  function hslToHex(h, s, l) {
-    h = ((h % 360) + 360) % 360; // Normalize hue to 0-360
-    s = Math.max(0, Math.min(100, s)) / 100;
-    l = Math.max(0, Math.min(100, l)) / 100;
-
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = l - c / 2;
-
-    let r = 0, g = 0, b = 0;
-
-    if (h < 60) { r = c; g = x; b = 0; }
-    else if (h < 120) { r = x; g = c; b = 0; }
-    else if (h < 180) { r = 0; g = c; b = x; }
-    else if (h < 240) { r = 0; g = x; b = c; }
-    else if (h < 300) { r = x; g = 0; b = c; }
-    else { r = c; g = 0; b = x; }
-
-    return rgbToHex(
-      Math.round((r + m) * 255),
-      Math.round((g + m) * 255),
-      Math.round((b + m) * 255)
-    );
-  }
-
-  // Calculate relative luminance (WCAG 2.0)
-  function getLuminance(hex) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return 0;
-
-    const toLinear = (c) => {
-      const sRGB = c / 255;
-      return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4);
-    };
-
-    return 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
-  }
-
-  // Check if background is dark
-  function isDark(hex) {
-    return getLuminance(hex) < 0.4;
-  }
-
-  // Get contrasting text color (white or black)
-  function getContrastText(backgroundColor) {
-    return isDark(backgroundColor) ? '#ffffff' : '#000000';
-  }
-
-  // Adjust lightness of a color (amount: -100 to +100)
-  function adjustLightness(hex, amount) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s, hsl.l + amount);
-  }
-
-  // Adjust saturation of a color (amount: -100 to +100)
-  function adjustSaturation(hex, amount) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s + amount, hsl.l);
-  }
-
-  // Set specific lightness value
-  function setLightness(hex, lightness) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, hsl.s, lightness);
-  }
-
-  // Set specific saturation value
-  function setSaturation(hex, saturation) {
-    const hsl = hexToHsl(hex);
-    return hslToHex(hsl.h, saturation, hsl.l);
-  }
-
-  // Blend two colors (0 = color1, 1 = color2)
-  function blendColors(hex1, hex2, ratio) {
-    const rgb1 = hexToRgb(hex1);
-    const rgb2 = hexToRgb(hex2);
-    if (!rgb1 || !rgb2) return hex1;
-
-    return rgbToHex(
-      rgb1.r + (rgb2.r - rgb1.r) * ratio,
-      rgb1.g + (rgb2.g - rgb1.g) * ratio,
-      rgb1.b + (rgb2.b - rgb1.b) * ratio
-    );
-  }
-
-  // Create rgba string from hex and alpha
-  function hexToRgba(hex, alpha) {
-    const rgb = hexToRgb(hex);
-    if (!rgb) return hex;
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
-  }
-
-  // ============================================================
-  // PALETTE GENERATION - Creates rich color system from 3 inputs
-  // ============================================================
-
-  function generatePalette(colors) {
-    const { primary, background, text } = colors;
-    const bgHsl = hexToHsl(background);
-    const primaryHsl = hexToHsl(primary);
-    const darkMode = isDark(background);
-
-    // Calculate contrast direction (positive = lighten, negative = darken for contrast)
-    const contrastDir = darkMode ? 1 : -1;
-
-    // ---- BACKGROUND SHADES ----
-    // Create 5 distinct background levels for visual hierarchy
-    const bgShades = {
-      // Level 0: Base background (cards, main content)
-      base: background,
-      // Level 1: Subtle shade (slight contrast for sections)
-      subtle: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 3)),
-      // Level 2: Muted (input backgrounds, list items)
-      muted: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 6)),
-      // Level 3: Emphasis (active states, hover)
-      emphasis: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 10)),
-      // Level 4: Strong (tooltips, overlays)
-      strong: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * 15)),
-      // Level 5: Elevated (modals, dropdowns - opposite direction for depth)
-      elevated: hslToHex(bgHsl.h, bgHsl.s, bgHsl.l + (contrastDir * -2))
-    };
-
-    // ---- BORDER COLORS ----
-    // Create distinct border shades for depth perception
-    const borderShades = {
-      // Subtle border for cards and sections
-      subtle: hslToHex(bgHsl.h, Math.min(bgHsl.s + 5, 30), bgHsl.l + (contrastDir * 12)),
-      // Default border for inputs and dividers
-      default: hslToHex(bgHsl.h, Math.min(bgHsl.s + 8, 35), bgHsl.l + (contrastDir * 18)),
-      // Strong border for focus states
-      strong: hslToHex(bgHsl.h, Math.min(bgHsl.s + 10, 40), bgHsl.l + (contrastDir * 25))
-    };
-
-    // ---- TEXT COLORS ----
-    // Create text hierarchy
-    const textShades = {
-      primary: text,
-      secondary: blendColors(text, background, 0.25),
-      muted: blendColors(text, background, 0.45),
-      disabled: blendColors(text, background, 0.6)
-    };
-
-    // ---- PRIMARY COLOR VARIATIONS ----
-    // Create primary color palette for interactive elements
-    const primaryShades = {
-      base: primary,
-      hover: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 8 : -8)),
-      active: hslToHex(primaryHsl.h, primaryHsl.s, primaryHsl.l + (darkMode ? 12 : -12)),
-      // Light versions for backgrounds
-      light: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 20, 20), darkMode ? 25 : 92),
-      lighter: hslToHex(primaryHsl.h, Math.max(primaryHsl.s - 30, 15), darkMode ? 20 : 95),
-      // For selection highlighting - blend with background
-      selection: blendColors(background, primary, 0.15),
-      selectionHover: blendColors(background, primary, 0.25),
-      selectionStrong: blendColors(background, primary, 0.35)
-    };
-
-    // ---- HOVER/FOCUS/ACTIVE STATES ----
-    // Distinct colors for interactive states (not just brightness filters!)
-    const states = {
-      hover: hslToHex(bgHsl.h, bgHsl.s + 2, bgHsl.l + (contrastDir * 5)),
-      focus: blendColors(background, primary, 0.1),
-      active: hslToHex(bgHsl.h, bgHsl.s + 3, bgHsl.l + (contrastDir * 8)),
-      // Row hover - subtle but noticeable
-      rowHover: hslToHex(bgHsl.h, bgHsl.s + 1, bgHsl.l + (contrastDir * 3))
-    };
-
-    // ---- ALERT COLORS ----
-    // Generate alert colors that harmonize with the theme
-    const alerts = generateAlertColors(background, darkMode);
-
-    // ---- SCROLLBAR COLORS ----
-    const scrollbar = {
-      track: bgShades.muted,
-      thumb: borderShades.default,
-      thumbHover: primary
-    };
-
-    // ---- SHADOW COLORS ----
-    const shadows = {
-      color: darkMode ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)',
-      colorStrong: darkMode ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.2)'
-    };
-
-    return {
-      isDark: darkMode,
-      background: bgShades,
-      border: borderShades,
-      text: textShades,
-      primary: primaryShades,
-      states,
-      alerts,
-      scrollbar,
-      shadows,
-      // Keep raw colors for backward compatibility
-      raw: { primary, background, text }
-    };
-  }
-
-  // Generate alert colors that blend with the theme
-  function generateAlertColors(background, darkMode) {
-    // Base alert hues
-    const alertHues = {
-      green: 145,
-      yellow: 45,
-      red: 0,
-      orange: 25,
-      purple: 270,
-      blue: 210
-    };
-
-    const result = {};
-
-    Object.entries(alertHues).forEach(([name, hue]) => {
-      if (darkMode) {
-        // Dark mode: desaturated dark backgrounds, bright text
-        result[name] = {
-          bg: hslToHex(hue, 35, 18),
-          text: hslToHex(hue, 75, 65),
-          border: hslToHex(hue, 50, 35)
-        };
-      } else {
-        // Light mode: tinted light backgrounds, dark vivid text
-        result[name] = {
-          bg: hslToHex(hue, 65, 95),
-          text: hslToHex(hue, 70, 40),
-          border: hslToHex(hue, 55, 75)
-        };
-      }
-    });
-
-    // Body text adapts to background
-    result.bodyText = darkMode ? '#e0e0e0' : '#374151';
-
-    return result;
   }
 
   // Inject theme CSS using the generated palette
@@ -803,22 +530,18 @@ const CustomThemeFeature = (() => {
         color: ${p.text.primary} !important;
       }
 
-      /* Modal backdrop - keep semi-transparent */
+      /* Modal backdrop - darker overlay to make popups stand out */
       div.fixed.inset-0.bg-black,
       div.fixed.inset-0.bg-gray-800,
-      div.fixed.inset-0.bg-gray-900 {
-        background-color: rgba(0, 0, 0, 0.5) !important;
+      div.fixed.inset-0.bg-gray-900,
+      div.absolute.inset-0[class*="bg-gray-800\\/"],
+      div.absolute.inset-0[class*="bg-gray-900\\/"],
+      div.absolute.inset-0[class*="bg-black\\/"] {
+        background-color: rgba(0, 0, 0, 0.7) !important;
       }
 
       /* Note: .bg-gray-800, .bg-gray-900, .bg-black are NOT overridden */
       /* They're used intentionally for dark toolbars, file viewers, etc. */
-
-      /* Only override opacity-based backgrounds in themed content areas */
-      .bg-white [class*="bg-gray-800\\/"],
-      .bg-white [class*="bg-gray-900\\/"],
-      .bg-white [class*="bg-black\\/"] {
-        background-color: ${p.background.strong} !important;
-      }
 
       /* === Text Color Hierarchy === */
       /* Note: .text-white is NOT overridden - it's used intentionally on dark toolbars */
@@ -907,20 +630,21 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Primary colors on non-button elements (menu items, etc.) === */
-      .bg-blue-500:not(button),
-      .bg-blue-600:not(button) {
+      /* Exclude elements with inline background-color (task type colors on schedule) */
+      .bg-blue-500:not(button):not([style*="background-color"]),
+      .bg-blue-600:not(button):not([style*="background-color"]) {
         background-color: ${p.primary.base} !important;
       }
 
       /* Preserve text-white on blue backgrounds */
-      .bg-blue-500.text-white,
-      .bg-blue-600.text-white {
+      .bg-blue-500.text-white:not([style*="background-color"]),
+      .bg-blue-600.text-white:not([style*="background-color"]) {
         color: ${primaryText} !important;
       }
 
       /* Hover states for non-button elements */
-      .hover\\:bg-blue-500:hover:not(button),
-      .hover\\:bg-blue-600:hover:not(button) {
+      .hover\\:bg-blue-500:hover:not(button):not([style*="background-color"]),
+      .hover\\:bg-blue-600:hover:not(button):not([style*="background-color"]) {
         background-color: ${p.primary.base} !important;
       }
 
@@ -949,6 +673,16 @@ const CustomThemeFeature = (() => {
 
       [class*="jt-item-under-level"] > div:not([class*="bg-yellow"]):not([class*="bg-blue"]):not(.bg-gray-50):not(.bg-gray-100):not(.cursor-col-resize) {
         background-color: inherit !important;
+      }
+
+      /* === Budget Edited Field (Yellow Highlight) === */
+      /* Ensure text is dark/readable on yellow background when field is being edited */
+      .bg-yellow-100,
+      .bg-yellow-100 textarea,
+      .bg-yellow-100 input,
+      .bg-yellow-100 div {
+        color: #1f2937 !important;
+        caret-color: #1f2937 !important;
       }
 
       /* === Column Resize Handles === */
@@ -1172,37 +906,29 @@ const CustomThemeFeature = (() => {
 
   // Start observing DOM changes for contrast fixes
   function startObserver() {
-    observer = new MutationObserver((mutations) => {
-      let shouldUpdate = false;
+    // Create debounced contrast fix function using TimingUtils
+    debouncedContrastFix = window.TimingUtils.debounce(() => {
+      // Temporarily disconnect observer to prevent infinite loop
+      observer.disconnect();
 
-      mutations.forEach(mutation => {
-        if (mutation.addedNodes.length > 0) {
-          shouldUpdate = true;
+      applyContrastFixes();
+
+      // Reconnect observer after a short delay
+      setTimeout(() => {
+        if (isActive) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
         }
-      });
+      }, 100);
+    }, 250);
+
+    observer = new MutationObserver((mutations) => {
+      const shouldUpdate = mutations.some(mutation => mutation.addedNodes.length > 0);
 
       if (shouldUpdate) {
-        // Debounce to prevent excessive calls
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
-        }
-
-        debounceTimer = setTimeout(() => {
-          // Temporarily disconnect observer to prevent infinite loop
-          observer.disconnect();
-
-          applyContrastFixes();
-
-          // Reconnect observer after a short delay
-          setTimeout(() => {
-            if (isActive) {
-              observer.observe(document.body, {
-                childList: true,
-                subtree: true
-              });
-            }
-          }, 100);
-        }, 250);
+        debouncedContrastFix();
       }
     });
 
