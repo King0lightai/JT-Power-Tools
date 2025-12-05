@@ -738,8 +738,8 @@ const PreviewModeFeature = (() => {
     while (i < lines.length) {
       const line = lines[i].trim();
 
-      // Check if this line starts an alert: > [!color:xxx] ### [!icon:xxx] Subject
-      const alertMatch = line.match(/^>\s*\[!color:(\w+)\]\s*###\s*\[!icon:\s*(\w+)\]\s*(.+)$/);
+      // Check if this line starts an alert: > [!color:xxx] ### [!icon:xxx] Subject (supports ### or ####)
+      const alertMatch = line.match(/^>\s*\[!color:(\w+)\]\s*#{3,4}\s*\[!icon:\s*(\w+)\]\s*(.+)$/);
 
       if (alertMatch) {
         const color = alertMatch[1];
@@ -811,10 +811,9 @@ const PreviewModeFeature = (() => {
     // Process body inline formatting
     const processedBody = processInlineFormatting(body);
 
-    return `<div class="jt-alert border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
+    return `<div class="border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
   <div class="${colors.text}">
-    <div class="font-bold text-base flex items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block" style="width: 1em; height: 1em;" viewBox="0 0 24 24">${iconSVG}</svg>
+    <div class="font-bold text-base">
       <div>${escapeHTML(subject)}</div>
     </div>
   </div>
