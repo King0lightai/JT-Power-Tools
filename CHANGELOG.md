@@ -5,6 +5,38 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.6] - 2025-12-XX (Beta)
+
+### Added
+
+#### New Feature: Auto Collapse Completed Groups
+- Automatically collapses schedule groups that are 100% complete on page load
+- Reduces clutter by hiding completed work while keeping active items visible
+- Works on Schedule views with grouped tasks
+- Groups expand normally when clicked to view completed items
+- Helps focus on remaining work without manual collapsing
+
+### Improved
+
+#### Custom Theme Overhaul
+- Complete overhaul with HSL-based color palette generation
+- Rich palette with multiple background, border, and text shades
+- Distinct hover/focus/active state colors (not brightness filters)
+- Theme-harmonized alert colors that adapt to light/dark backgrounds
+- Better visual separation between UI layers
+- Fixed dropdown menus and popper-positioned elements
+- Fixed scrollbars only appearing on scrollable containers
+- Clean lines in Gantt chart (removed unnecessary shadows)
+
+### Fixed
+- Fixed budget hierarchy resize handles getting shaded
+- Fixed Quick Job Switcher to select highlighted item on Enter when using arrow keys
+- Fixed dark toolbars and file viewers being incorrectly themed
+- Fixed content tiles incorrectly getting popup shadows
+- Fixed native formatter detection for custom fields in labels
+
+---
+
 ## [3.3.4] - 2025-01-XX (Beta)
 
 ### Added
@@ -310,6 +342,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
+[3.3.6]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.6
 [3.3.4]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.4
 [3.3.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.3
 [3.3.2]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.2
