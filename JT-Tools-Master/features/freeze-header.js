@@ -83,7 +83,16 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Note: Right-side sidebars are not modified - some may appear behind frozen elements */
+    /* Right-side sidebars (Daily Log, Task Details, etc.) - boost above frozen tabs */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
+      z-index: 41 !important;
+    }
+
+    /* Job Switcher - reset to default z-index (below top header) */
+    /* Job switcher has shadow-line-left and should NOT be boosted */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"]:has(.shadow-line-left) {
+      z-index: 30 !important;
+    }
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
