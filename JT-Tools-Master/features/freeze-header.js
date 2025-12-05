@@ -88,10 +88,10 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* Right-side sidebars (Time Clock, Daily Log, Task Details, etc.) */
-    /* Boost z-index so they appear above frozen tabs (z-index 40) */
-    /* Don't change positioning - JobTread handles that correctly */
+    /* Boost z-index to 41 - same as top header, above frozen tabs (40) */
+    /* Don't use 42+ or sidebars will cover the top header */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
-      z-index: 42 !important;
+      z-index: 41 !important;
     }
 
     /* Schedule page sidebars need inner sticky content adjusted to match frozen toolbar */
