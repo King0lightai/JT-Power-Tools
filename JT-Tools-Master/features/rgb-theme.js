@@ -530,15 +530,14 @@ const CustomThemeFeature = (() => {
         color: ${p.text.primary} !important;
       }
 
-      /* Modal backdrop - preserve semi-transparent overlay */
-      /* Don't override - let Tailwind's opacity-based backgrounds work */
+      /* Modal backdrop - darker overlay to make popups stand out */
       div.fixed.inset-0.bg-black,
       div.fixed.inset-0.bg-gray-800,
       div.fixed.inset-0.bg-gray-900,
       div.absolute.inset-0[class*="bg-gray-800\\/"],
       div.absolute.inset-0[class*="bg-gray-900\\/"],
       div.absolute.inset-0[class*="bg-black\\/"] {
-        background-color: unset !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
       }
 
       /* Note: .bg-gray-800, .bg-gray-900, .bg-black are NOT overridden */
