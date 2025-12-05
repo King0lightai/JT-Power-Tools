@@ -13,41 +13,30 @@ const FormatterDetection = (() => {
     // Look for JobTread's native formatter toolbar in parent containers
     // Their toolbar has: sticky z-[1] p-1 flex gap-1 bg-white shadow-line-bottom
     // The toolbar is typically a sibling to the textarea's parent container
+    // Structure: <div class="rounded-sm border"> contains both toolbar and textarea container
 
-    const container = textarea.closest('div');
-    if (!container) return false;
+    // Find the textarea's immediate container (the relative div)
+    const relativeContainer = textarea.closest('div.relative');
+    if (!relativeContainer) return false;
 
-    // Strategy 1: Check if the parent container has a sibling with the toolbar
-    if (container.parentElement) {
-      const parentContainer = container.parentElement;
-
-      // Look for sticky toolbar as a sibling to the field container
-      const siblings = parentContainer.querySelectorAll('.sticky.shadow-line-bottom');
-      for (const toolbar of siblings) {
-        // Verify it's actually a formatter toolbar by checking for button elements
-        const buttons = toolbar.querySelectorAll('div[role="button"]');
-        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
-          return true;
-        }
-      }
+    // Check if this textarea is inside a label - if so, it's a custom field without native formatter
+    if (textarea.closest('label')) {
+      return false;
     }
 
-    // Strategy 2: Check parent containers (in case structure varies)
-    let current = container;
-    for (let i = 0; i < 5; i++) { // Check up to 5 levels up
-      if (!current) break;
+    // The native formatter structure has the toolbar and textarea container as siblings
+    // inside a "rounded-sm border" container
+    const borderContainer = relativeContainer.parentElement;
+    if (!borderContainer) return false;
 
-      // Look for the sticky toolbar as a child of ancestor
-      const toolbar = current.querySelector('.sticky.shadow-line-bottom');
-      if (toolbar) {
-        // Verify it's actually a formatter toolbar by checking for button elements
-        const buttons = toolbar.querySelectorAll('div[role="button"]');
-        if (buttons.length > 3) { // JobTread's formatter has multiple buttons
-          return true;
-        }
+    // Check if there's a sticky toolbar as a direct child of the same parent
+    const toolbar = borderContainer.querySelector(':scope > .sticky.shadow-line-bottom');
+    if (toolbar) {
+      // Verify it's actually a formatter toolbar by checking for button elements
+      const buttons = toolbar.querySelectorAll('div[role="button"]');
+      if (buttons.length > 3) { // JobTread's formatter has multiple buttons
+        return true;
       }
-
-      current = current.parentElement;
     }
 
     return false;
