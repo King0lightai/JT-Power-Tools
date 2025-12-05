@@ -16,22 +16,22 @@ const FreezeHeaderFeature = (() => {
     /* No CSS overrides needed - leave it as JobTread styled it */
 
     /* Tab navigation bar - stick below the top header */
-    /* z-index 40 keeps it below header but above content, below modals */
+    /* z-index 29 keeps it below sidebars (30) so they appear above */
     .jt-freeze-header-active .jt-job-tabs-container {
       position: sticky !important;
       top: var(--jt-header-height, 50px) !important;
-      z-index: 40 !important;
+      z-index: 29 !important;
       background-color: white !important;
       /* Extend background slightly to cover any subpixel gaps */
       box-shadow: 0 1px 0 0 white !important;
     }
 
     /* Action toolbar bar - stick below the tabs (filters, search, view controls) */
-    /* z-index 39 keeps it below tabs, below modals */
+    /* z-index 28 keeps it below tabs and sidebars */
     .jt-freeze-header-active .jt-action-toolbar {
       position: sticky !important;
       top: var(--jt-tabs-bottom, 90px) !important;
-      z-index: 39 !important;
+      z-index: 28 !important;
       background-color: white !important;
       /* Extend background slightly to cover any subpixel gaps */
       box-shadow: 0 1px 0 0 white !important;
@@ -52,7 +52,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-schedule-header-container {
       position: sticky !important;
       top: var(--jt-toolbar-bottom, 138px) !important;
-      z-index: 30 !important;
+      z-index: 27 !important;
       background-color: white !important;
     }
 
@@ -65,7 +65,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-files-folder-bar {
       position: sticky !important;
       top: var(--jt-toolbar-bottom, 138px) !important;
-      z-index: 38 !important;
+      z-index: 27 !important;
       background-color: white !important;
     }
 
@@ -73,7 +73,7 @@ const FreezeHeaderFeature = (() => {
     .jt-freeze-header-active .jt-files-list-header {
       position: sticky !important;
       top: var(--jt-files-folder-bottom, 170px) !important;
-      z-index: 37 !important;
+      z-index: 26 !important;
       background-color: white !important;
     }
 
@@ -87,25 +87,9 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
-    /* Right-side sidebars (Time Clock, Daily Log, Task Details, etc.) */
-    /* Boost z-index to 41 - same as top header, above frozen tabs (40) */
-    /* Don't use 42+ or sidebars will cover the top header */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
-      z-index: 41 !important;
-    }
-
-    /* Schedule page sidebars need inner sticky content adjusted to match frozen toolbar */
-    /* This targets the scrollable container inside task/mass action sidebars */
-    body.jt-schedule-page.jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky {
-      top: var(--jt-toolbar-bottom, 138px) !important;
-    }
-
-    /* Job Switcher (shadow-line-left) - reset to JobTread's default 48px positioning */
-    /* Higher specificity to override schedule sidebar rule */
-    body.jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky,
-    body.jt-schedule-page.jt-freeze-header-active div.absolute.inset-0.bg-white.shadow-line-left > div.overflow-y-auto.overscroll-contain.sticky {
-      top: 48px !important;
-    }
+    /* Note: Right-side sidebars (Time Clock, Job Switcher, Task Details, etc.) */
+    /* are NOT modified - JobTread handles them correctly at z-index 30 */
+    /* Our frozen elements use z-index 29 and below so sidebars appear above them */
 
     /* The inner flex container with the actual tabs */
     .jt-freeze-header-active .jt-job-tabs-container > .flex.overflow-auto.border-b {
@@ -804,10 +788,6 @@ const FreezeHeaderFeature = (() => {
    */
   function applyFreezeHeader() {
     document.body.classList.add('jt-freeze-header-active');
-    // Add page-specific classes for targeted CSS
-    if (isSchedulePage()) {
-      document.body.classList.add('jt-schedule-page');
-    }
     findAndMarkTopHeader();
     findAndMarkTabs();
     findAndMarkActionToolbar();
@@ -827,7 +807,6 @@ const FreezeHeaderFeature = (() => {
    */
   function removeFreezeHeader() {
     document.body.classList.remove('jt-freeze-header-active');
-    document.body.classList.remove('jt-schedule-page');
 
     // Remove marker classes
     document.querySelectorAll('.jt-top-header').forEach(el => {
@@ -943,12 +922,6 @@ const FreezeHeaderFeature = (() => {
       if (!isActiveState) return;
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        // Update page-specific classes
-        if (isSchedulePage()) {
-          document.body.classList.add('jt-schedule-page');
-        } else {
-          document.body.classList.remove('jt-schedule-page');
-        }
         // Remove old markings and re-apply
         document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar').forEach(el => {
           el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar');
