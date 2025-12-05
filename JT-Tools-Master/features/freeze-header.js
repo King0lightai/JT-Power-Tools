@@ -90,9 +90,10 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* Sidebar inner sticky elements - position below frozen toolbar */
-    /* This catches ALL sticky elements inside sidebars regardless of their class combination */
-    /* JobTread defaults these to small values like top:10px which slides under our frozen toolbar */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky {
+    /* Only apply to job-page sidebars, NOT global overlays like Time Clock */
+    /* Global sidebars have top: ~48px (just below header), job sidebars have top: ~100px+ (below tabs) */
+    /* We exclude sidebars with top: 48-50px as these are global overlays that should stay at header level */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]) {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
