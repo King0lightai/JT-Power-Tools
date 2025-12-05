@@ -7,16 +7,16 @@
 
 **JT Power Tools** - Professional productivity enhancement suite for JobTread construction management software.
 
-✨ **LATEST IMPROVEMENTS (v3.3.4 Beta)**
-• **NEW: Freeze Headers** - Keep column and row headers visible while scrolling through large tables
-• **NEW: Message Character Counter** - Real-time character count display for message fields
-• Works seamlessly with budget tables and other data views
-• Helps stay within character limits when composing messages
+✨ **LATEST IMPROVEMENTS (v3.3.6 Beta)**
+• **NEW: Auto Collapse Completed Groups** - Automatically collapses schedule groups that are 100% complete on page load
+• Reduces clutter by hiding completed work while keeping active items visible
+• **Custom Theme Overhaul** - Complete overhaul with HSL-based color palette generation
+• Rich palette with multiple background, border, and text shades
+• Theme-harmonized alert colors that adapt to light/dark backgrounds
 
-Previous highlights (v3.3.3):
-• Most Stable Version Yet: Comprehensive restructuring for enhanced reliability
-• Complete restructuring of color theme and dark mode systems
-• More robust formatting rendering and detection
+Previous highlights (v3.3.5):
+• Kanban Type Filter - Automatically hides empty columns when in Kanban view grouped by type
+• Various Dark Mode and Text Formatter bug fixes
 
 🚀 **FEATURES**
 
