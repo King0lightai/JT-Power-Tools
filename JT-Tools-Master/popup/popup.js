@@ -24,18 +24,21 @@ function applyPopupTheme(isDark) {
 
   if (isDark) {
     body.classList.add('dark-theme');
-    headerIcon.src = '../icons/icon16-dark.png';
+    headerIcon.src = '../icons/icon48-dark.png';
   } else {
     body.classList.remove('dark-theme');
-    headerIcon.src = '../icons/icon16-light.png';
+    headerIcon.src = '../icons/icon48-light.png';
   }
 
   // Update toolbar icon via service worker
+  console.log('Sending UPDATE_TOOLBAR_ICON message, isDark:', isDark);
   chrome.runtime.sendMessage({
     type: 'UPDATE_TOOLBAR_ICON',
     isDark: isDark
-  }).catch(() => {
-    // Silently fail if service worker not ready
+  }).then((response) => {
+    console.log('Toolbar icon update response:', response);
+  }).catch((error) => {
+    console.error('Failed to update toolbar icon:', error);
   });
 }
 
