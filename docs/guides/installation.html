@@ -34,9 +34,9 @@
 
         <div class="guide-content">
             <h2>Quick Start</h2>
-            <p>Installing JT Power Tools is simple. Choose your preferred method and follow the steps below.</p>
+            <p>Installing JT Power Tools is simple. Follow the steps below to get started.</p>
 
-            <h2>⭐ Method 1: Chrome Web Store (Recommended for All Users)</h2>
+            <h2>Install from Chrome Web Store</h2>
             <p><strong><a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank">Install from Chrome Web Store</a></strong></p>
 
             <ol class="steps">
@@ -58,83 +58,10 @@
                 </li>
             </ol>
 
-            <div class="info-box warning">
-                <strong>Important: Premium Features</strong>
-                <p>Premium features (Schedule Drag & Drop, Custom Theme) ONLY work with the Chrome Web Store version due to additional security features. GitHub/unpacked versions cannot activate premium licenses.</p>
-                <p><strong>Company Licensing:</strong> Licenses are designed for company-wide use. Purchase one license per company and share it with all employees who need access.</p>
+            <div class="info-box tip">
+                <strong>Company Licensing</strong>
+                <p>Premium licenses are designed for company-wide use. Purchase one license per company and share it with all employees who need access.</p>
             </div>
-
-            <h2>Method 2: Load Unpacked (For Developers Only)</h2>
-            <p><strong>Note:</strong> This method is for development only. Premium features will not work.</p>
-
-            <h3>Step 1: Download the Extension</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Visit GitHub Repository</strong><br>
-                    Go to <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">https://github.com/King0lightai/JT-Power-Tools</a>
-                </li>
-                <li>
-                    <strong>Download ZIP</strong><br>
-                    Click the green "Code" button, then select "Download ZIP"
-                </li>
-                <li>
-                    <strong>Extract Files</strong><br>
-                    Extract the ZIP file to a permanent location on your computer (don't use your Downloads folder - the extension needs to stay there)
-                </li>
-            </ol>
-
-            <div class="info-box warning">
-                <strong>Important</strong>
-                <p>Don't delete or move the extracted folder after installation. Chrome needs access to these files to run the extension.</p>
-            </div>
-
-            <h3>Step 2: Enable Developer Mode in Chrome</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Open Extensions Page</strong><br>
-                    In Chrome, navigate to <code>chrome://extensions</code> (or Menu → Extensions → Manage Extensions)
-                </li>
-                <li>
-                    <strong>Toggle Developer Mode</strong><br>
-                    Look for the "Developer mode" toggle in the top-right corner and turn it ON
-                </li>
-                <li>
-                    <strong>Verify Toggle</strong><br>
-                    You should now see new buttons appear: "Load unpacked", "Pack extension", and "Update"
-                </li>
-            </ol>
-
-            <h3>Step 3: Load the Extension</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Click "Load unpacked"</strong><br>
-                    Click the "Load unpacked" button that appeared when you enabled Developer mode
-                </li>
-                <li>
-                    <strong>Select Folder</strong><br>
-                    Navigate to and select the <code>JT-Tools-Master</code> folder (inside the extracted ZIP)
-                </li>
-                <li>
-                    <strong>Confirm Installation</strong><br>
-                    The extension should now appear in your extensions list with the JT Power Tools icon
-                </li>
-            </ol>
-
-            <h3>Step 4: Pin the Extension</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Open Extensions Menu</strong><br>
-                    Click the puzzle piece icon in Chrome's toolbar (next to your profile icon)
-                </li>
-                <li>
-                    <strong>Pin JT Power Tools</strong><br>
-                    Find "JT Power Tools" in the list and click the pin icon next to it
-                </li>
-                <li>
-                    <strong>Verify Pinned</strong><br>
-                    The JT Power Tools icon should now be visible in your Chrome toolbar
-                </li>
-            </ol>
 
             <h2>First-Time Configuration</h2>
 
@@ -239,48 +166,9 @@
             </div>
 
             <h2>Updating the Extension</h2>
-
-            <h3>Manual Updates (Load Unpacked)</h3>
-            <ol class="steps">
-                <li>
-                    <strong>Download Latest Version</strong><br>
-                    Download the latest ZIP from GitHub
-                </li>
-                <li>
-                    <strong>Extract to Same Location</strong><br>
-                    Overwrite the existing folder with new files
-                </li>
-                <li>
-                    <strong>Reload Extension</strong><br>
-                    Go to <code>chrome://extensions</code> and click the reload icon on JT Power Tools
-                </li>
-                <li>
-                    <strong>Verify Update</strong><br>
-                    Open the popup - version number should match latest release
-                </li>
-            </ol>
-
-            <h3>Automatic Updates (Chrome Web Store)</h3>
             <p>When installed from the <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank">Chrome Web Store</a>, updates are automatic. You'll receive the latest version within 24-48 hours of release.</p>
 
-            <h2>Troubleshooting Installation</h2>
-
-            <h3>Extension Doesn't Appear After Installation</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Verify you selected the correct folder (JT-Tools-Master, not the parent folder)</li>
-                <li>Check for errors in the extensions page</li>
-                <li>Try removing and re-installing</li>
-                <li>Restart Chrome</li>
-            </ul>
-
-            <h3>"Manifest file is missing or unreadable"</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Make sure you selected the JT-Tools-Master folder that contains manifest.json</li>
-                <li>Check that the ZIP extracted completely</li>
-                <li>Re-download the ZIP file</li>
-            </ul>
+            <h2>Troubleshooting</h2>
 
             <h3>Features Don't Work on JobTread</h3>
             <p><strong>Solution:</strong></p>
@@ -288,15 +176,8 @@
                 <li>Verify you're on app.jobtread.com (not other JobTread domains)</li>
                 <li>Check that features are toggled ON in popup</li>
                 <li>Refresh the JobTread page</li>
-                <li>Check browser console (F12) for errors</li>
-            </ul>
-
-            <h3>Extension Disappeared After Restart</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>If you moved or deleted the extension folder, it will disappear</li>
-                <li>Re-install to a permanent location</li>
-                <li>Don't use temporary folders like Downloads</li>
+                <li>Try removing and re-installing the extension</li>
+                <li>Restart Chrome</li>
             </ul>
 
             <h2>Uninstalling</h2>
