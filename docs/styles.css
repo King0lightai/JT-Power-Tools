@@ -80,7 +80,11 @@ a:hover {
 
 .nav-brand h1 img {
     height: 28px;
-    width: auto;
+    width: 28px;
+    max-width: 28px;
+    max-height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .nav-brand h1 span {
