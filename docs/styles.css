@@ -768,6 +768,12 @@ footer {
 
     .nav-links {
         justify-content: center;
+        gap: 12px;
+    }
+
+    .nav-links a {
+        padding: 6px 10px;
+        font-size: 14px;
     }
 
     .guide-header {
@@ -786,6 +792,15 @@ footer {
 
     .guide-content h2 {
         font-size: 24px;
+    }
+
+    .guide-content h3 {
+        font-size: 18px;
+    }
+
+    .guide-content p,
+    .guide-content li {
+        font-size: 15px;
     }
 
     .hero h1 {
@@ -815,9 +830,35 @@ footer {
         align-items: flex-start;
         gap: 12px;
     }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 12px 8px;
+    }
+
+    .info-box {
+        padding: 16px;
+    }
 }
 
 @media (max-width: 480px) {
+    .nav-brand h1 {
+        font-size: 20px;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .nav-links a {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
     .guide-container {
         padding: 20px 16px;
     }
@@ -825,6 +866,10 @@ footer {
     .guide-header,
     .guide-content {
         padding: 20px;
+    }
+
+    .guide-header h1 {
+        font-size: 28px;
     }
 
     .changelog-container {
@@ -835,6 +880,10 @@ footer {
         padding: 20px;
     }
 
+    .version-number {
+        font-size: 28px;
+    }
+
     section h2 {
         font-size: 26px;
     }
@@ -842,5 +891,12 @@ footer {
     .footer-links {
         flex-direction: column;
         gap: 16px;
+    }
+
+    /* Table horizontal scroll on very small screens */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
 }
