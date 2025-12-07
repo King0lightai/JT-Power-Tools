@@ -4,9 +4,9 @@
   "version": "3.3.6",
   "description": "Supercharge JobTread with drag & drop scheduling, dark mode, text formatting, and 12+ productivity features for contractors.",
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/icon16-light.png",
+    "48": "icons/icon48-light.png",
+    "128": "icons/icon128-light.png"
   },
   "permissions": [
     "storage",
@@ -17,7 +17,12 @@
     "https://*.workers.dev/*"
   ],
   "action": {
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16-light.png",
+      "48": "icons/icon48-light.png",
+      "128": "icons/icon128-light.png"
+    }
   },
   "background": {
     "service_worker": "background/service-worker.js"
