@@ -40,43 +40,20 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="home-nav">
+    <nav class="navbar">
         <div class="nav-container">
-            <div class="logo">
-                <span class="bolt">⚡</span> JT <span>POWER TOOLS</span>
+            <div class="nav-brand">
+                <h1>⚡ JT <span>POWER TOOLS</span></h1>
             </div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#features" onclick="closeMenu()">Features</a></li>
-                <li><a href="#how-it-works" onclick="closeMenu()">How It Works</a></li>
-                <li><a href="#pricing" onclick="closeMenu()">Pricing</a></li>
-                <li><a href="guides/installation.html">Docs</a></li>
-                <li><a href="changelog.html">Changelog</a></li>
-            </ul>
-            <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button" target="_blank">Install Free</a>
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="guides/installation.html">Installation</a>
+                <a href="guides/premium.html">Premium</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
         </div>
     </nav>
-
-    <script>
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const navLinks = document.getElementById('navLinks');
-
-        mobileMenuToggle.addEventListener('click', () => {
-            mobileMenuToggle.classList.toggle('active');
-            navLinks.classList.toggle('active');
-            document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
-        });
-
-        function closeMenu() {
-            mobileMenuToggle.classList.remove('active');
-            navLinks.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    </script>
 
     <!-- Hero -->
     <section class="home-hero">
