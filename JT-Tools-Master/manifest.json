@@ -82,7 +82,8 @@
         "styles/formatter-toolbar.css",
         "styles/dark-mode.css",
         "styles/quick-notes.css",
-        "styles/preview-mode.css"
+        "styles/preview-mode.css",
+        "icons/*.png"
       ],
       "matches": ["https://*.jobtread.com/*"]
     }

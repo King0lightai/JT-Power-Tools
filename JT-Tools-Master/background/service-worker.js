@@ -235,25 +235,29 @@ async function getSettings() {
  * Theme-aware icon management
  * Switches extension icon based on browser's color scheme
  */
-const iconSets = {
-  light: {
-    "16": "icons/icon16-light.png",
-    "48": "icons/icon48-light.png",
-    "128": "icons/icon128-light.png"
-  },
-  dark: {
-    "16": "icons/icon16-dark.png",
-    "48": "icons/icon48-dark.png",
-    "128": "icons/icon128-dark.png"
-  }
-};
+function getIconSets() {
+  return {
+    light: {
+      "16": chrome.runtime.getURL("icons/icon16-light.png"),
+      "48": chrome.runtime.getURL("icons/icon48-light.png"),
+      "128": chrome.runtime.getURL("icons/icon128-light.png")
+    },
+    dark: {
+      "16": chrome.runtime.getURL("icons/icon16-dark.png"),
+      "48": chrome.runtime.getURL("icons/icon48-dark.png"),
+      "128": chrome.runtime.getURL("icons/icon128-dark.png")
+    }
+  };
+}
 
 /**
  * Update extension icon based on system color scheme
  * @param {boolean} isDark - Whether system is in dark mode
  */
 function updateIconForTheme(isDark) {
+  const iconSets = getIconSets();
   const iconSet = isDark ? iconSets.dark : iconSets.light;
+  console.log('JT Power Tools: Setting icon paths:', iconSet);
   chrome.action.setIcon({ path: iconSet })
     .then(() => {
       console.log('JT Power Tools: Icon updated for', isDark ? 'dark' : 'light', 'theme');
