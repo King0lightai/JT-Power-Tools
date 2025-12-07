@@ -363,9 +363,30 @@
             border: 1px solid var(--dark-border);
             border-radius: 16px;
             padding: 32px;
-            transition: transform 0.3s, border-color 0.3s;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
             position: relative;
             overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            cursor: pointer;
+        }
+
+        a.feature-card {
+            cursor: pointer;
+        }
+
+        a.feature-card h3,
+        a.feature-card p {
+            color: inherit;
+        }
+
+        a.feature-card p {
+            color: var(--gray);
+        }
+
+        a.feature-card h3 {
+            color: var(--light);
         }
 
         .feature-card:hover {
@@ -814,8 +835,9 @@
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#reviews">Reviews</a></li>
                 <li><a href="#pricing">Pricing</a></li>
+                <li><a href="guides/installation.html">Docs</a></li>
+                <li><a href="changelog.html">Changelog</a></li>
             </ul>
             <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button" target="_blank">Install Free</a>
         </div>
@@ -875,46 +897,46 @@
                 <h2 class="section-title">EVERYTHING YOU NEED TO WORK FASTER</h2>
             </div>
             <div class="features-grid">
-                <div class="feature-card premium">
+                <a href="guides/drag-drop.html" class="feature-card premium">
                     <div class="feature-icon">📅</div>
                     <h3>SCHEDULE DRAG & DROP</h3>
                     <p>Drag schedule items between dates seamlessly with full year boundary support. Works across month and year transitions with automatic date updates and visual feedback. Hold Shift for weekends, Alt to change end dates.</p>
-                </div>
-                <div class="feature-card">
+                </a>
+                <a href="guides/dark-mode.html" class="feature-card">
                     <div class="feature-icon">🌙</div>
                     <h3>DARK MODE</h3>
                     <p>Beautiful dark theme for JobTread that reduces eye strain during long work sessions. Customized specifically for construction management workflows. Syncs automatically across all your devices.</p>
-                </div>
-                <div class="feature-card">
+                </a>
+                <a href="guides/text-formatter.html" class="feature-card">
                     <div class="feature-icon">📝</div>
                     <h3>TEXT FORMATTER</h3>
                     <p>Rich text formatting toolbar for budget descriptions and notes. Bold, italic, headings, lists, tables, colors, and more. Full keyboard shortcuts support (Ctrl/Cmd + B/I/U).</p>
-                </div>
-                <div class="feature-card premium">
+                </a>
+                <a href="guides/preview-mode.html" class="feature-card premium">
                     <div class="feature-icon">👁️</div>
                     <h3>PREVIEW MODE</h3>
                     <p>Live preview of formatted text with a floating preview panel. See how your markdown renders in real-time as you type. Works on budget descriptions and daily log fields.</p>
-                </div>
-                <div class="feature-card">
+                </a>
+                <a href="guides/job-switcher.html" class="feature-card">
                     <div class="feature-icon">⚡</div>
                     <h3>QUICK JOB SWITCHER</h3>
                     <p>Press J+S or Alt+J to instantly open the job switcher from anywhere. Type to search and filter jobs in real-time. Press Enter to navigate, Escape to cancel. Fully keyboard-driven.</p>
-                </div>
+                </a>
                 <div class="feature-card">
                     <div class="feature-icon">📒</div>
                     <h3>QUICK NOTES</h3>
                     <p>Persistent notepad accessible from any JobTread page. Create, edit, search, and organize multiple notes with rich markdown formatting. Syncs across devices via Chrome storage.</p>
                 </div>
-                <div class="feature-card">
+                <a href="guides/budget-hierarchy.html" class="feature-card">
                     <div class="feature-icon">📊</div>
                     <h3>BUDGET HIERARCHY SHADING</h3>
                     <p>Progressive visual shading for nested budget groups up to 5 levels deep. Instantly identify group hierarchy and relationships at a glance. Line items auto-inherit parent shading.</p>
-                </div>
-                <div class="feature-card">
+                </a>
+                <a href="guides/contrast-fix.html" class="feature-card">
                     <div class="feature-icon">🎨</div>
                     <h3>CONTRAST FIX</h3>
                     <p>Automatically adjusts text colors for better readability in schedule views using WCAG contrast formulas. Highlights the current date. Real-time updates as content changes.</p>
-                </div>
+                </a>
                 <div class="feature-card">
                     <div class="feature-icon">📌</div>
                     <h3>FREEZE HEADER</h3>
@@ -925,11 +947,11 @@
                     <h3>AUTO COLLAPSE COMPLETED</h3>
                     <p>Automatically collapses schedule groups that are 100% complete on page load. Reduces clutter while keeping active items visible. Groups expand normally when clicked.</p>
                 </div>
-                <div class="feature-card premium">
+                <a href="guides/custom-theme.html" class="feature-card premium">
                     <div class="feature-icon">🎨</div>
                     <h3>CUSTOM THEME</h3>
                     <p>Personalize JobTread with your own color palette. Choose primary, background, and text colors. Save up to 3 custom themes for quick switching. Preserves task type colors.</p>
-                </div>
+                </a>
                 <div class="feature-card">
                     <div class="feature-icon">🔢</div>
                     <h3>MESSAGE CHARACTER COUNTER</h3>
