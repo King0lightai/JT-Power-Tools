@@ -905,70 +905,12 @@ footer {
    HOMEPAGE SPECIFIC STYLES
    =========================================== */
 
-/* Homepage Navigation (fixed position) */
-.home-nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    padding: 20px 0;
-    background: rgba(13, 13, 13, 0.9);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--dark-border);
-}
-
-.home-nav .nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 2px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--light);
-}
-
-.logo span {
-    color: var(--yellow);
-}
-
-.logo .bolt {
-    font-size: 24px;
-}
-
-.home-nav .nav-links {
-    display: flex;
-    gap: 32px;
-    list-style: none;
-}
-
-.home-nav .nav-links a {
-    color: var(--gray);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s;
-    padding: 0;
-    background: none;
-    border-radius: 0;
-}
-
-.home-nav .nav-links a:hover {
-    color: var(--yellow);
-    background: none;
-}
-
 /* Homepage Hero */
 .home-hero {
-    min-height: 100vh;
+    min-height: 80vh;
     display: flex;
     align-items: center;
-    padding-top: 100px;
+    padding: 60px 0;
     position: relative;
     overflow: hidden;
 }
@@ -1549,37 +1491,6 @@ a.feature-card h3 {
     color: var(--dark);
 }
 
-/* Mobile Menu Toggle */
-.mobile-menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1001;
-}
-
-.mobile-menu-toggle span {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: var(--light);
-    margin: 6px 0;
-    transition: all 0.3s;
-}
-
-.mobile-menu-toggle.active span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
-}
-
-.mobile-menu-toggle.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.mobile-menu-toggle.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
-}
-
 /* Homepage Responsive Styles */
 @media (max-width: 900px) {
     .hero-content {
@@ -1606,39 +1517,6 @@ a.feature-card h3 {
 
     .home-steps {
         grid-template-columns: 1fr 1fr;
-    }
-
-    .mobile-menu-toggle {
-        display: block;
-    }
-
-    .home-nav .nav-links {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(13, 13, 13, 0.98);
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 32px;
-        display: none;
-        z-index: 1000;
-    }
-
-    .home-nav .nav-links.active {
-        display: flex;
-    }
-
-    .home-nav .nav-links li a {
-        font-size: 24px;
-        font-family: 'Bebas Neue', sans-serif;
-        letter-spacing: 2px;
-    }
-
-    .home-nav .cta-button {
-        display: none;
     }
 
     .reviews-grid {
