@@ -208,6 +208,8 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            color: transparent;
+            display: inline;
         }
 
         .hero-text .tagline {
@@ -375,6 +377,12 @@
             border-color: rgba(255, 140, 66, 0.3);
         }
 
+        .feature-card.premium:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: var(--orange);
+            box-shadow: 0 20px 60px rgba(255, 140, 66, 0.25), 0 0 30px rgba(255, 217, 61, 0.15);
+        }
+
         .feature-card.premium::before {
             content: 'PREMIUM';
             position: absolute;
@@ -425,17 +433,6 @@
             position: relative;
         }
 
-        .step:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 32px;
-            right: -16px;
-            width: calc(100% - 64px);
-            height: 2px;
-            background: linear-gradient(90deg, var(--yellow), transparent);
-            transform: translateX(100%);
-        }
-
         .step-number {
             width: 64px;
             height: 64px;
@@ -468,10 +465,20 @@
             padding: 120px 0;
         }
 
+        .section-subtitle {
+            color: var(--gray);
+            margin-top: 12px;
+        }
+
         .reviews-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .reviews-cta {
+            text-align: center;
+            margin-top: 48px;
         }
 
         .review-card {
@@ -628,6 +635,16 @@
             border-bottom: none;
         }
 
+        .pricing-features li.highlight {
+            background: rgba(255, 217, 61, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            border-bottom: none;
+            font-weight: 600;
+            color: var(--yellow);
+        }
+
         .pricing-features .check {
             color: var(--yellow);
         }
@@ -695,19 +712,40 @@
 
         /* Footer */
         footer {
-            padding: 40px 0;
+            padding: 48px 0;
             border-top: 1px solid var(--dark-border);
             text-align: center;
+            background: var(--dark-card);
         }
 
         footer p {
             color: var(--gray);
             font-size: 14px;
+            margin-bottom: 8px;
         }
 
-        footer a {
-            color: var(--yellow);
+        footer .disclaimer {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--gray);
             text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--yellow);
         }
 
         /* Responsive */
@@ -939,6 +977,7 @@
             <div class="section-header">
                 <p class="section-label">REVIEWS</p>
                 <h2 class="section-title">WHAT CONTRACTORS ARE SAYING</h2>
+                <p class="section-subtitle">Real feedback from the Chrome Web Store</p>
             </div>
             <div class="reviews-grid">
                 <div class="review-card">
@@ -963,6 +1002,9 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="reviews-cta">
+                <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="cta-button secondary">See All Reviews on Chrome Web Store →</a>
             </div>
         </div>
     </section>
@@ -994,8 +1036,8 @@
                 </div>
                 <div class="pricing-card featured">
                     <div class="pricing-tier">PREMIUM</div>
-                    <div class="pricing-price">$49<span>/year</span></div>
-                    <p class="pricing-desc">Unlock the full power toolkit</p>
+                    <div class="pricing-price">$20<span>/month</span></div>
+                    <p class="pricing-desc">or $200/year (save $40)</p>
                     <ul class="pricing-features">
                         <li><span class="check">✓</span> Everything in Free</li>
                         <li><span class="check">✓</span> Schedule Drag & Drop</li>
@@ -1003,13 +1045,14 @@
                         <li><span class="check">✓</span> Custom Themes (3 slots)</li>
                         <li><span class="check">✓</span> Priority Support</li>
                         <li><span class="check">✓</span> Early Access to New Features</li>
+                        <li class="highlight"><span class="check">✓</span> For your entire company — not per user</li>
                     </ul>
                     <a href="https://lightking7.gumroad.com/l/jtpowertools" class="cta-button" target="_blank">Get Premium License</a>
                 </div>
             </div>
             <div class="company-note">
                 <h4>💼 COMPANY-WIDE LICENSING</h4>
-                <p>Licenses are designed for company-wide use. Purchase one license per company and share it with all employees. No need to buy individual licenses for each team member!</p>
+                <p>One license covers your entire company. Share with all employees who need access — no per-user fees!</p>
             </div>
         </div>
     </section>
@@ -1026,5 +1069,16 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-            <p>⚡ JT Power Tools — Built for contractors, by contractors. <a href="/cdn-cgi/l/email-protection#62111712120d101622071a030f120e074c010d0f">Contact Support</a></p>
+            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="guides/installation.html">Documentation</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools" target="_blank">GitHub</a>
+                <a href="https://github.com/King0lightai/JT-Power-Tools/issues" target="_blank">Support</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
    
