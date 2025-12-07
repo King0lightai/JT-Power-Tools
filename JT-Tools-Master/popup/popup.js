@@ -1,3 +1,59 @@
+// Popup theme management
+const POPUP_THEME_KEY = 'jtPopupTheme';
+
+/**
+ * Initialize popup theme based on saved preference
+ */
+async function initPopupTheme() {
+  try {
+    const result = await chrome.storage.local.get([POPUP_THEME_KEY]);
+    const isDark = result[POPUP_THEME_KEY] === 'dark';
+    applyPopupTheme(isDark);
+  } catch (error) {
+    console.error('Error loading popup theme:', error);
+  }
+}
+
+/**
+ * Apply popup theme and update header icon
+ * @param {boolean} isDark - Whether to use dark theme
+ */
+function applyPopupTheme(isDark) {
+  const body = document.body;
+  const headerIcon = document.getElementById('headerIcon');
+
+  if (isDark) {
+    body.classList.add('dark-theme');
+    headerIcon.src = '../icons/icon16-dark.png';
+  } else {
+    body.classList.remove('dark-theme');
+    headerIcon.src = '../icons/icon16-light.png';
+  }
+
+  // Update toolbar icon via service worker
+  chrome.runtime.sendMessage({
+    type: 'UPDATE_TOOLBAR_ICON',
+    isDark: isDark
+  }).catch(() => {
+    // Silently fail if service worker not ready
+  });
+}
+
+/**
+ * Toggle popup theme
+ */
+async function togglePopupTheme() {
+  const isDark = !document.body.classList.contains('dark-theme');
+  applyPopupTheme(isDark);
+
+  // Save preference
+  try {
+    await chrome.storage.local.set({ [POPUP_THEME_KEY]: isDark ? 'dark' : 'light' });
+  } catch (error) {
+    console.error('Error saving popup theme:', error);
+  }
+}
+
 // Default settings
 const defaultSettings = {
   dragDrop: true,
@@ -496,6 +552,12 @@ function initializeCategories() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
+
+  // Initialize popup theme first (before any other UI updates)
+  await initPopupTheme();
+
+  // Setup theme toggle button
+  document.getElementById('popupThemeToggle').addEventListener('click', togglePopupTheme);
 
   // Check license status first (just UI, don't modify settings)
   const hasLicense = await checkLicenseStatus();
