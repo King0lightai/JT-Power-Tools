@@ -122,7 +122,7 @@ https://github.com/King0lightai/JT-Tools
 
 For privacy questions or concerns:
 - GitHub Issues: https://github.com/King0lightai/JT-Tools/issues
-- Gumroad: https://lightking7.gumroad.com/l/jtpowertools
+- Premium: https://premium.jtpowertools.com
 
 ## Legal Disclaimer
 
