@@ -141,6 +141,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       case 'UPDATE_TOOLBAR_ICON':
         // Update toolbar icon based on popup theme toggle
+        console.log('Received UPDATE_TOOLBAR_ICON, isDark:', message.isDark);
         updateIconForTheme(message.isDark);
         sendResponse({ success: true });
         return false;
