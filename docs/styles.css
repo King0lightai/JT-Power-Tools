@@ -1,9 +1,9 @@
 /* JT Power Tools - Unified Dark Theme Stylesheet */
 
 :root {
-    --yellow: #FFD93D;
-    --yellow-dark: #E6C235;
-    --orange: #FF8C42;
+    --yellow: #FE4C0D;
+    --yellow-dark: #D94000;
+    --orange: #FF6B35;
     --dark: #0D0D0D;
     --dark-card: #1A1A1A;
     --dark-border: #2A2A2A;
@@ -11,7 +11,7 @@
     --gray: #888;
     --gray-light: #aaa;
     --light: #F5F5F5;
-    --premium-gradient: linear-gradient(135deg, #FFD93D 0%, #FF8C42 100%);
+    --premium-gradient: linear-gradient(135deg, #FE4C0D 0%, #FF6B35 100%);
 }
 
 * {
@@ -73,6 +73,14 @@ a:hover {
     font-size: 24px;
     letter-spacing: 2px;
     color: var(--light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-brand h1 img {
+    height: 28px;
+    width: auto;
 }
 
 .nav-brand h1 span {
@@ -955,7 +963,7 @@ footer {
 }
 
 .hero-text h1 span {
-    background-image: linear-gradient(135deg, #FFD93D 0%, #FF8C42 100%);
+    background-image: linear-gradient(135deg, #FE4C0D 0%, #FF6B35 100%);
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
     background-clip: text !important;
