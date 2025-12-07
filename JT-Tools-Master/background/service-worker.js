@@ -224,4 +224,66 @@ async function getSettings() {
   }
 }
 
+/**
+ * Theme-aware icon management
+ * Switches extension icon based on browser's color scheme
+ */
+const iconSets = {
+  light: {
+    "16": "icons/icon16-light.png",
+    "48": "icons/icon48-light.png",
+    "128": "icons/icon128-light.png"
+  },
+  dark: {
+    "16": "icons/icon16-dark.png",
+    "48": "icons/icon48-dark.png",
+    "128": "icons/icon128-dark.png"
+  }
+};
+
+/**
+ * Update extension icon based on system color scheme
+ * @param {boolean} isDark - Whether system is in dark mode
+ */
+function updateIconForTheme(isDark) {
+  const iconSet = isDark ? iconSets.dark : iconSets.light;
+  chrome.action.setIcon({ path: iconSet })
+    .then(() => {
+      console.log('JT Power Tools: Icon updated for', isDark ? 'dark' : 'light', 'theme');
+    })
+    .catch((error) => {
+      console.error('JT Power Tools: Failed to update icon:', error);
+    });
+}
+
+/**
+ * Initialize theme-aware icons
+ * Uses matchMedia to detect and respond to system theme changes
+ */
+function initThemeAwareIcons() {
+  try {
+    // Check if matchMedia is available (it should be in service workers)
+    if (typeof matchMedia !== 'undefined') {
+      const darkModeQuery = matchMedia('(prefers-color-scheme: dark)');
+
+      // Set initial icon based on current theme
+      updateIconForTheme(darkModeQuery.matches);
+
+      // Listen for theme changes
+      darkModeQuery.addEventListener('change', (e) => {
+        updateIconForTheme(e.matches);
+      });
+
+      console.log('JT Power Tools: Theme-aware icons initialized');
+    } else {
+      console.warn('JT Power Tools: matchMedia not available, using default icons');
+    }
+  } catch (error) {
+    console.error('JT Power Tools: Error initializing theme-aware icons:', error);
+  }
+}
+
+// Initialize theme-aware icons when service worker starts
+initThemeAwareIcons();
+
 console.log('JT Power Tools background service worker loaded');
