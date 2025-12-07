@@ -139,6 +139,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         return true; // Keep channel open for async response
 
+      case 'UPDATE_TOOLBAR_ICON':
+        // Update toolbar icon based on popup theme toggle
+        updateIconForTheme(message.isDark);
+        sendResponse({ success: true });
+        return false;
+
       default:
         console.warn('Unknown message type:', message.type);
         sendResponse({ success: false, error: 'Unknown message type' });
@@ -258,23 +264,33 @@ function updateIconForTheme(isDark) {
 
 /**
  * Initialize theme-aware icons
- * Uses matchMedia to detect and respond to system theme changes
+ * Loads saved popup theme preference or falls back to system preference
  */
-function initThemeAwareIcons() {
+async function initThemeAwareIcons() {
   try {
-    // Check if matchMedia is available (it should be in service workers)
-    if (typeof matchMedia !== 'undefined') {
-      const darkModeQuery = matchMedia('(prefers-color-scheme: dark)');
+    // First, check if user has a saved popup theme preference
+    const result = await chrome.storage.local.get(['jtPopupTheme']);
 
-      // Set initial icon based on current theme
+    if (result.jtPopupTheme) {
+      // Use saved preference
+      const isDark = result.jtPopupTheme === 'dark';
+      updateIconForTheme(isDark);
+      console.log('JT Power Tools: Icon set from saved preference:', isDark ? 'dark' : 'light');
+    } else if (typeof matchMedia !== 'undefined') {
+      // Fall back to system preference
+      const darkModeQuery = matchMedia('(prefers-color-scheme: dark)');
       updateIconForTheme(darkModeQuery.matches);
 
-      // Listen for theme changes
-      darkModeQuery.addEventListener('change', (e) => {
-        updateIconForTheme(e.matches);
+      // Listen for system theme changes (only if no saved preference)
+      darkModeQuery.addEventListener('change', async (e) => {
+        // Check if user has set a preference
+        const saved = await chrome.storage.local.get(['jtPopupTheme']);
+        if (!saved.jtPopupTheme) {
+          updateIconForTheme(e.matches);
+        }
       });
 
-      console.log('JT Power Tools: Theme-aware icons initialized');
+      console.log('JT Power Tools: Theme-aware icons initialized (system preference)');
     } else {
       console.warn('JT Power Tools: matchMedia not available, using default icons');
     }
