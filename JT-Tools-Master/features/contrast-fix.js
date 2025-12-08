@@ -81,27 +81,70 @@ const ContrastFixFeature = (() => {
     console.log('ContrastFix: Cleanup complete');
   }
 
-  // Calculate relative luminance and return appropriate text color
-  function getContrastColor(rgbString) {
+  // Parse RGB string to values
+  function parseRgb(rgbString) {
     const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
     if (!match) return null;
+    return { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]) };
+  }
 
-    const [, r, g, b] = match.map(Number);
-
-    // Calculate relative luminance using WCAG formula
+  // Calculate relative luminance (WCAG formula)
+  function getLuminance(r, g, b) {
     const [rNorm, gNorm, bNorm] = [r, g, b].map(val => {
       val = val / 255;
       return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
     });
+    return 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
+  }
 
-    const luminance = 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
+  // Calculate relative luminance and return appropriate text color
+  function getContrastColor(rgbString) {
+    const rgb = parseRgb(rgbString);
+    if (!rgb) return null;
+
+    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
 
     // Return white for dark backgrounds, black for light backgrounds
     return luminance > 0.5 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
   }
 
+  // Check if a background color is "light" (unselected task state)
+  // Light backgrounds have high luminance (pastel colors like rgb(230, 244, 247))
+  // Selected tasks have saturated/darker backgrounds matching their task type color
+  function isLightBackground(rgbString) {
+    const rgb = parseRgb(rgbString);
+    if (!rgb) return false;
+
+    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
+
+    // Luminance > 0.7 indicates a light/pastel background (unselected state)
+    // Selected tasks typically have luminance < 0.5
+    return luminance > 0.7;
+  }
+
+  // Get the appropriate background color for unselected tasks based on theme
+  function getThemeBackgroundColor() {
+    if (isCustomThemeActive()) {
+      // Try to get the custom theme's elevated background color from CSS variable
+      const elevated = getComputedStyle(document.documentElement).getPropertyValue('--jt-theme-background-elevated').trim();
+      if (elevated) {
+        // Convert hex to rgb if needed
+        if (elevated.startsWith('#')) {
+          const r = parseInt(elevated.slice(1, 3), 16);
+          const g = parseInt(elevated.slice(3, 5), 16);
+          const b = parseInt(elevated.slice(5, 7), 16);
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+        return elevated;
+      }
+    }
+    // Default dark mode background
+    return 'rgb(58, 58, 58)'; // #3a3a3a
+  }
+
   // Fix text contrast for a single element
-  function fixTextContrast(element) {
+  // In dark mode/custom theme, also handles background color for unselected tasks
+  function fixTextContrast(element, isDarkOrCustomTheme = false) {
     const style = element.getAttribute('style');
     if (!style) return;
 
@@ -118,19 +161,31 @@ const ContrastFixFeature = (() => {
 
     if (bgColorMatch && textColorMatch) {
       const backgroundColor = bgColorMatch[0].split(':')[1].trim().replace(';', '');
-      const contrastColor = getContrastColor(backgroundColor);
+      let newStyle = style;
+      let newBgColor = backgroundColor;
+      let needsUpdate = false;
+
+      // In dark mode/custom theme, handle background colors intelligently
+      if (isDarkOrCustomTheme) {
+        if (isLightBackground(backgroundColor)) {
+          // Light background = unselected task, override to theme background
+          newBgColor = getThemeBackgroundColor();
+          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
+          needsUpdate = true;
+        }
+        // If NOT light background = selected task, preserve the original colored background
+      }
+
+      // Calculate contrast color based on the (potentially modified) background
+      const contrastColor = getContrastColor(newBgColor);
 
       if (contrastColor) {
-        // Get current color
         const currentColor = window.getComputedStyle(element).color;
 
-        // Only update if the color is different (prevents infinite loop)
-        if (currentColor !== contrastColor) {
-          // Override the color property
-          const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
+        // Update if color is different or background was changed
+        if (currentColor !== contrastColor || needsUpdate) {
+          newStyle = newStyle.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
           element.setAttribute('style', newStyle);
-
-          // Also ensure child text elements inherit this color
           element.style.color = contrastColor;
         }
       }
@@ -170,17 +225,8 @@ const ContrastFixFeature = (() => {
 
   // Process all schedule items
   function fixAllScheduleItems() {
-    // Skip contrast fix if dark mode is active (dark mode handles colors)
-    if (isDarkModeActive()) {
-      console.log('ContrastFix: Dark mode active, skipping contrast adjustments');
-      return;
-    }
-
-    // Skip contrast fix if custom theme is active (custom theme handles colors)
-    if (isCustomThemeActive()) {
-      console.log('ContrastFix: Custom theme active, skipping contrast adjustments');
-      return;
-    }
+    // Check if dark mode or custom theme is active
+    const isDarkOrCustomTheme = isDarkModeActive() || isCustomThemeActive();
 
     // Target the specific divs in schedule/calendar view that have inline background-color and color
     const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
@@ -188,7 +234,7 @@ const ContrastFixFeature = (() => {
     scheduleItems.forEach(item => {
       // Make sure we're only targeting the calendar/schedule items (they have the cursor-pointer class)
       if (item.classList.contains('cursor-pointer')) {
-        fixTextContrast(item);
+        fixTextContrast(item, isDarkOrCustomTheme);
       }
     });
 
