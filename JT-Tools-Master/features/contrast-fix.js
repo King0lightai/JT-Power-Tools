@@ -117,29 +117,21 @@ const ContrastFixFeature = (() => {
 
     const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
 
-    // Luminance > 0.7 indicates a light/pastel background (unselected state)
+    // Luminance > 0.6 indicates a light/pastel background (unselected state)
     // Selected tasks typically have luminance < 0.5
-    return luminance > 0.7;
+    return luminance > 0.6;
   }
 
-  // Get the appropriate background color for unselected tasks based on theme
-  function getThemeBackgroundColor() {
-    if (isCustomThemeActive()) {
-      // Try to get the custom theme's elevated background color from CSS variable
-      const elevated = getComputedStyle(document.documentElement).getPropertyValue('--jt-theme-background-elevated').trim();
-      if (elevated) {
-        // Convert hex to rgb if needed
-        if (elevated.startsWith('#')) {
-          const r = parseInt(elevated.slice(1, 3), 16);
-          const g = parseInt(elevated.slice(3, 5), 16);
-          const b = parseInt(elevated.slice(5, 7), 16);
-          return `rgb(${r}, ${g}, ${b})`;
-        }
-        return elevated;
-      }
-    }
-    // Default dark mode background
-    return 'rgb(58, 58, 58)'; // #3a3a3a
+  // Extract border-left color from style string (this is the task type color)
+  function getBorderLeftColor(styleString) {
+    const match = styleString.match(/border-left:\s*[^;]*solid\s+(rgb\([^)]+\))/);
+    if (match) return match[1];
+
+    // Try alternative format
+    const altMatch = styleString.match(/border-left-color:\s*(rgb\([^)]+\))/);
+    if (altMatch) return altMatch[1];
+
+    return null;
   }
 
   // Fix text contrast for a single element
@@ -168,10 +160,14 @@ const ContrastFixFeature = (() => {
       // In dark mode/custom theme, handle background colors intelligently
       if (isDarkOrCustomTheme) {
         if (isLightBackground(backgroundColor)) {
-          // Light background = unselected task, override to theme background
-          newBgColor = getThemeBackgroundColor();
-          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
-          needsUpdate = true;
+          // Light background = unselected task
+          // Use the task type color (from border-left) as the background
+          const taskTypeColor = getBorderLeftColor(style);
+          if (taskTypeColor) {
+            newBgColor = taskTypeColor;
+            newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
+            needsUpdate = true;
+          }
         }
         // If NOT light background = selected task, preserve the original colored background
       }
