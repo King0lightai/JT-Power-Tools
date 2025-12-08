@@ -89,6 +89,18 @@ const FreezeHeaderFeature = (() => {
       z-index: 41 !important;
     }
 
+    /* Main content area should have lower z-index than sidebars */
+    /* Target the container that holds both content and sidebars */
+    .jt-freeze-header-active .relative.grow.min-w-0.flex.flex-col {
+      z-index: 0;
+    }
+
+    /* Ensure sidebars within this container still have high z-index */
+    .jt-freeze-header-active .relative.grow.min-w-0.flex.flex-col > [data-is-drag-scroll-boundary="true"],
+    .jt-freeze-header-active .relative.grow.min-w-0.flex.flex-col > .z-30.absolute {
+      z-index: 41 !important;
+    }
+
     /* Sidebar inner sticky elements - position below frozen toolbar */
     /* Only apply to job-page sidebars, NOT global overlays like Time Clock */
     /* Global sidebars have top: ~48px (just below header), job sidebars have top: ~100px+ (below tabs) */
