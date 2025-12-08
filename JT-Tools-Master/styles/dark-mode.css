@@ -28,38 +28,22 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
 }
 
 /* === Schedule Card Overrides (Inline Styles) === */
-/* Target schedule cards in month view that have inline color/background styles */
-td div.cursor-pointer[style*="background-color"] {
-    background-color: #3a3a3a !important;
-}
-
-td div.cursor-pointer[style*="color"] {
-    color: #f5f5f5 !important;
-}
-
-/* Ensure all text inside schedule cards is white */
-td div.cursor-pointer[style*="background-color"] * {
-    color: #f5f5f5 !important;
-}
+/* Note: Schedule card background/text colors are now handled by contrast-fix.js */
+/* This allows proper detection of selected vs unselected tasks */
 
 /* Avatar circles inside schedule cards - darken the background */
 td div.cursor-pointer div.rounded-full[style*="background-color"] {
     filter: brightness(0.7) !important;
 }
 
-/* Keep colored left border visible */
-td div.cursor-pointer[style*="border-left"] {
-    /* Border color is preserved from inline style */
-}
-
 /* === Week/Day View Schedule Cards === */
 /* Week/day view uses grid-based layout instead of table cells */
-/* Target the grid column containers */
+/* Target the grid column containers (calendar cell backgrounds, not task cards) */
 div.border-l[style*="grid-column"] {
     background-color: #2c2c2c !important;
 }
 
-/* Target all week/day view card wrappers */
+/* Target all week/day view card wrappers (calendar cell backgrounds) */
 div.select-none.break-inside-avoid.p-0.align-top {
     background-color: #2c2c2c !important;
 }
@@ -69,24 +53,7 @@ div.border-l div.select-none.break-inside-avoid {
     background-color: #2c2c2c !important;
 }
 
-/* Week/day view schedule cards - override inline background-color to dark */
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
-    background-color: #3a3a3a !important;
-}
-
-/* Week/day view card text should be white/light */
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
-    color: #f5f5f5 !important;
-}
-
-div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] * {
-    color: #f5f5f5 !important;
-}
-
-/* Keep colored left border visible on week/day cards */
-div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
-    /* Border color is preserved from inline style */
-}
+/* Note: Task card backgrounds/text are handled by contrast-fix.js to preserve selected state */
 
 /* === General Styles === */
 /* Global border color */
