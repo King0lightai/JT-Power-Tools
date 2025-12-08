@@ -108,35 +108,9 @@ const ContrastFixFeature = (() => {
     return luminance > 0.5 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
   }
 
-  // Check if a background color is "light" (unselected task state)
-  // Light backgrounds have high luminance (pastel colors like rgb(230, 244, 247))
-  // Selected tasks have saturated/darker backgrounds matching their task type color
-  function isLightBackground(rgbString) {
-    const rgb = parseRgb(rgbString);
-    if (!rgb) return false;
-
-    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
-
-    // Luminance > 0.6 indicates a light/pastel background (unselected state)
-    // Selected tasks typically have luminance < 0.5
-    return luminance > 0.6;
-  }
-
-  // Extract border-left color from style string (this is the task type color)
-  function getBorderLeftColor(styleString) {
-    const match = styleString.match(/border-left:\s*[^;]*solid\s+(rgb\([^)]+\))/);
-    if (match) return match[1];
-
-    // Try alternative format
-    const altMatch = styleString.match(/border-left-color:\s*(rgb\([^)]+\))/);
-    if (altMatch) return altMatch[1];
-
-    return null;
-  }
-
   // Fix text contrast for a single element
-  // In dark mode/custom theme, also handles background color for unselected tasks
-  function fixTextContrast(element, isDarkOrCustomTheme = false) {
+  // Only adjusts text color for readability - does NOT modify backgrounds
+  function fixTextContrast(element) {
     const style = element.getAttribute('style');
     if (!style) return;
 
@@ -153,34 +127,14 @@ const ContrastFixFeature = (() => {
 
     if (bgColorMatch && textColorMatch) {
       const backgroundColor = bgColorMatch[0].split(':')[1].trim().replace(';', '');
-      let newStyle = style;
-      let newBgColor = backgroundColor;
-      let needsUpdate = false;
-
-      // In dark mode/custom theme, handle background colors intelligently
-      if (isDarkOrCustomTheme) {
-        if (isLightBackground(backgroundColor)) {
-          // Light background = unselected task
-          // Use the task type color (from border-left) as the background
-          const taskTypeColor = getBorderLeftColor(style);
-          if (taskTypeColor) {
-            newBgColor = taskTypeColor;
-            newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
-            needsUpdate = true;
-          }
-        }
-        // If NOT light background = selected task, preserve the original colored background
-      }
-
-      // Calculate contrast color based on the (potentially modified) background
-      const contrastColor = getContrastColor(newBgColor);
+      const contrastColor = getContrastColor(backgroundColor);
 
       if (contrastColor) {
         const currentColor = window.getComputedStyle(element).color;
 
-        // Update if color is different or background was changed
-        if (currentColor !== contrastColor || needsUpdate) {
-          newStyle = newStyle.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
+        // Only update if the color is different (prevents infinite loop)
+        if (currentColor !== contrastColor) {
+          const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
           element.setAttribute('style', newStyle);
           element.style.color = contrastColor;
         }
@@ -207,30 +161,15 @@ const ContrastFixFeature = (() => {
     });
   }
 
-  // Check if dark mode is currently active
-  function isDarkModeActive() {
-    // Check if dark mode CSS is injected
-    return document.getElementById('jt-dark-mode-styles') !== null;
-  }
-
-  // Check if custom theme is currently active
-  function isCustomThemeActive() {
-    // Check if custom theme CSS is injected
-    return document.getElementById('jt-custom-theme-styles') !== null;
-  }
-
   // Process all schedule items
   function fixAllScheduleItems() {
-    // Check if dark mode or custom theme is active
-    const isDarkOrCustomTheme = isDarkModeActive() || isCustomThemeActive();
-
     // Target the specific divs in schedule/calendar view that have inline background-color and color
     const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
 
     scheduleItems.forEach(item => {
       // Make sure we're only targeting the calendar/schedule items (they have the cursor-pointer class)
       if (item.classList.contains('cursor-pointer')) {
-        fixTextContrast(item, isDarkOrCustomTheme);
+        fixTextContrast(item);
       }
     });
 
