@@ -112,11 +112,6 @@ const ContrastFixFeature = (() => {
       return;
     }
 
-    // Also skip draggable elements (alternative tag format)
-    if (element.getAttribute('draggable') === 'true') {
-      return;
-    }
-
     // Check if element has both background-color and color in inline styles
     const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
     const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
