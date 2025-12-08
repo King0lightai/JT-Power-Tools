@@ -198,10 +198,23 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Z-Index Fixes for Sidebars === */
-      /* Ensure sidebar panels (z-30) appear above the job tabs bar when scrolling */
+      /* Ensure sidebar panels appear above job tabs and content bars when scrolling */
       .jt-job-tabs-container {
         position: relative;
         z-index: 20 !important;
+      }
+
+      /* Sidebar panels (Daily Log, etc.) need higher z-index to stay above page content */
+      /* Target the absolute positioned sidebars on the right side */
+      .absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"],
+      div.z-30.absolute.top-0.bottom-0.right-0 {
+        z-index: 35 !important;
+      }
+
+      /* Ensure the inner content of sidebars also has proper stacking */
+      .absolute.top-0.bottom-0.right-0[data-is-drag-scroll-boundary="true"] > .absolute.inset-0,
+      div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
+        z-index: inherit;
       }
 
       /* === Custom Scrollbar Styling === */
