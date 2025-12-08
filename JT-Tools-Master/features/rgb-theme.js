@@ -197,6 +197,13 @@ const CustomThemeFeature = (() => {
         --jt-theme-border-strong: ${p.border.strong};
       }
 
+      /* === Z-Index Fixes for Sidebars === */
+      /* Ensure sidebar panels (z-30) appear above the job tabs bar when scrolling */
+      .jt-job-tabs-container {
+        position: relative;
+        z-index: 20 !important;
+      }
+
       /* === Custom Scrollbar Styling === */
       /* Only style scrollbars on scrollable containers, not all elements */
       html::-webkit-scrollbar,
