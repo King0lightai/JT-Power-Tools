@@ -1,6 +1,13 @@
 /* === JT Power Tools - Dark Mode Theme === */
 /* Custom dark theme for JobTread interface */
 
+/* === Z-Index Fixes for Sidebars === */
+/* Ensure sidebar panels (z-30) appear above the job tabs bar when scrolling */
+.jt-job-tabs-container {
+    position: relative;
+    z-index: 20 !important;
+}
+
 /* === Logo Colors === */
 /* Make the JOBTREAD text white in dark mode, but keep orange elements orange */
 .text-gray-800 {
