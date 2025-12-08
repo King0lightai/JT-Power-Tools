@@ -84,6 +84,7 @@ a:hover {
     max-width: 28px;
     max-height: 28px;
     object-fit: contain;
+    object-position: left;
     flex-shrink: 0;
 }
 
