@@ -136,32 +136,6 @@ const FreezeHeaderFeature = (() => {
       top: 0px !important;
     }
 
-    /* Fullscreen popup - cover entire viewport including header and sidebar */
-    .jt-fullscreen-popup {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: 100vw !important;
-      max-height: 100vh !important;
-      margin: 0 !important;
-      z-index: 9999 !important;
-      border-radius: 0 !important;
-    }
-
-    /* Ensure fullscreen popup's parent overlay also covers everything */
-    .jt-fullscreen-popup-overlay {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      z-index: 9998 !important;
-    }
-
     /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
     /* These are headers like "Update Task" that should stick at the top of their scrollable parent */
     /* Note: Repeated attribute selector boosts specificity to beat the :not() selectors above */
@@ -864,7 +838,7 @@ const FreezeHeaderFeature = (() => {
   /**
    * Check if freeze header should be temporarily disabled
    * Disable when: Preview Document popup is open OR any popup is in fullscreen mode
-   * Also apply fullscreen styling to popups when fullscreen mode is active
+   * This allows JobTread's native fullscreen behavior to work properly
    */
   let freezeHeaderSuspended = false;
 
@@ -875,7 +849,6 @@ const FreezeHeaderFeature = (() => {
     // Check for "Exit Fullscreen" button to detect fullscreen mode
     // The exit fullscreen SVG has path: M8 3v3a2 2 0 0 1-2 2H3...
     let isInFullscreenMode = false;
-    let fullscreenPopup = null;
 
     const allButtons = document.querySelectorAll('[role="button"]');
     for (const button of allButtons) {
@@ -884,45 +857,19 @@ const FreezeHeaderFeature = (() => {
 
       const pathData = svg.querySelector('path')?.getAttribute('d') || '';
       // Exit fullscreen icon path (arrows pointing inward)
-      if (pathData.includes('M8 3v3a2 2 0 0 1-2 2H3') ||
-          pathData.includes('M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3')) {
+      if (pathData.includes('M8 3v3a2 2 0 0 1-2 2H3')) {
         isInFullscreenMode = true;
-        // Find the parent popup
-        fullscreenPopup = button.closest('.shadow-lg.rounded-sm') ||
-                          button.closest('[class*="max-w-lg"]') ||
-                          button.closest('[class*="max-w-screen"]');
         break;
       }
-    }
-
-    // Apply fullscreen class to popup when in fullscreen mode
-    if (isInFullscreenMode && fullscreenPopup) {
-      if (!fullscreenPopup.classList.contains('jt-fullscreen-popup')) {
-        fullscreenPopup.classList.add('jt-fullscreen-popup');
-        // Also mark the overlay (parent with fixed/absolute positioning)
-        const overlay = fullscreenPopup.closest('.fixed, .absolute');
-        if (overlay && overlay !== fullscreenPopup) {
-          overlay.classList.add('jt-fullscreen-popup-overlay');
-        }
-        console.log('FreezeHeader: Applied fullscreen styling to popup');
-      }
-    } else {
-      // Remove fullscreen class from all popups
-      document.querySelectorAll('.jt-fullscreen-popup').forEach(el => {
-        el.classList.remove('jt-fullscreen-popup');
-      });
-      document.querySelectorAll('.jt-fullscreen-popup-overlay').forEach(el => {
-        el.classList.remove('jt-fullscreen-popup-overlay');
-      });
     }
 
     const shouldSuspend = previewPopup !== null || isInFullscreenMode;
 
     if (shouldSuspend && !freezeHeaderSuspended) {
-      // Suspend freeze header
+      // Suspend freeze header to allow JobTread's native fullscreen to work
       document.body.classList.remove('jt-freeze-header-active');
       freezeHeaderSuspended = true;
-      console.log('FreezeHeader: Suspended due to', previewPopup ? 'Preview Document popup' : 'fullscreen popup');
+      console.log('FreezeHeader: Suspended due to', isInFullscreenMode ? 'fullscreen mode' : 'Preview Document popup');
     } else if (!shouldSuspend && freezeHeaderSuspended) {
       // Resume freeze header
       document.body.classList.add('jt-freeze-header-active');
