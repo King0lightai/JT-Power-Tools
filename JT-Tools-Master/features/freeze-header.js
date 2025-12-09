@@ -132,13 +132,34 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* When a popup is in fullscreen mode, ensure its sticky elements stay at top: 0 */
-    .jt-freeze-header-active .jt-fullscreen-popup .sticky {
+    .jt-fullscreen-popup .sticky {
       top: 0px !important;
     }
 
-    /* Fullscreen popup container should not be affected by freeze header */
-    .jt-freeze-header-active .jt-fullscreen-popup {
-      z-index: 50 !important;
+    /* Fullscreen popup - cover entire viewport including header and sidebar */
+    .jt-fullscreen-popup {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      margin: 0 !important;
+      z-index: 9999 !important;
+      border-radius: 0 !important;
+    }
+
+    /* Ensure fullscreen popup's parent overlay also covers everything */
+    .jt-fullscreen-popup-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      z-index: 9998 !important;
     }
 
     /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
@@ -843,6 +864,7 @@ const FreezeHeaderFeature = (() => {
   /**
    * Check if freeze header should be temporarily disabled
    * Disable when: Preview Document popup is open OR any popup is in fullscreen mode
+   * Also apply fullscreen styling to popups when fullscreen mode is active
    */
   let freezeHeaderSuspended = false;
 
@@ -850,30 +872,51 @@ const FreezeHeaderFeature = (() => {
     // Check for Preview Document popup (uses max-w-screen-lg class)
     const previewPopup = document.querySelector('.max-w-screen-lg.shadow-lg.rounded-sm');
 
-    // Check for any popup in fullscreen mode (taking >90% of viewport)
+    // Check for "Exit Fullscreen" button to detect fullscreen mode
+    // The exit fullscreen SVG has path: M8 3v3a2 2 0 0 1-2 2H3...
+    let isInFullscreenMode = false;
     let fullscreenPopup = null;
-    const popupSelectors = [
-      '.shadow-lg.rounded-sm.bg-white',
-      '.shadow-lg.m-auto',
-      '[class*="max-w-lg"].shadow-lg',
-      '[class*="max-w-screen"].shadow-lg'
-    ];
 
-    for (const selector of popupSelectors) {
-      const popups = document.querySelectorAll(selector);
-      for (const popup of popups) {
-        const rect = popup.getBoundingClientRect();
-        const isFullscreen = rect.width > window.innerWidth * 0.9 &&
-                            rect.height > window.innerHeight * 0.9;
-        if (isFullscreen) {
-          fullscreenPopup = popup;
-          break;
-        }
+    const allButtons = document.querySelectorAll('[role="button"]');
+    for (const button of allButtons) {
+      const svg = button.querySelector('svg');
+      if (!svg) continue;
+
+      const pathData = svg.querySelector('path')?.getAttribute('d') || '';
+      // Exit fullscreen icon path (arrows pointing inward)
+      if (pathData.includes('M8 3v3a2 2 0 0 1-2 2H3') ||
+          pathData.includes('M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3')) {
+        isInFullscreenMode = true;
+        // Find the parent popup
+        fullscreenPopup = button.closest('.shadow-lg.rounded-sm') ||
+                          button.closest('[class*="max-w-lg"]') ||
+                          button.closest('[class*="max-w-screen"]');
+        break;
       }
-      if (fullscreenPopup) break;
     }
 
-    const shouldSuspend = previewPopup !== null || fullscreenPopup !== null;
+    // Apply fullscreen class to popup when in fullscreen mode
+    if (isInFullscreenMode && fullscreenPopup) {
+      if (!fullscreenPopup.classList.contains('jt-fullscreen-popup')) {
+        fullscreenPopup.classList.add('jt-fullscreen-popup');
+        // Also mark the overlay (parent with fixed/absolute positioning)
+        const overlay = fullscreenPopup.closest('.fixed, .absolute');
+        if (overlay && overlay !== fullscreenPopup) {
+          overlay.classList.add('jt-fullscreen-popup-overlay');
+        }
+        console.log('FreezeHeader: Applied fullscreen styling to popup');
+      }
+    } else {
+      // Remove fullscreen class from all popups
+      document.querySelectorAll('.jt-fullscreen-popup').forEach(el => {
+        el.classList.remove('jt-fullscreen-popup');
+      });
+      document.querySelectorAll('.jt-fullscreen-popup-overlay').forEach(el => {
+        el.classList.remove('jt-fullscreen-popup-overlay');
+      });
+    }
+
+    const shouldSuspend = previewPopup !== null || isInFullscreenMode;
 
     if (shouldSuspend && !freezeHeaderSuspended) {
       // Suspend freeze header
@@ -901,13 +944,19 @@ const FreezeHeaderFeature = (() => {
     if (!svg) return;
 
     const pathData = svg.querySelector('path')?.getAttribute('d') || '';
-    const isExpandIcon = pathData.includes('M8 3H5') || pathData.includes('M 8 3') ||
-                         pathData.includes('m14 10') || pathData.includes('M15 3h6');
 
-    if (!isExpandIcon) return;
+    // Enter fullscreen icon (arrows pointing outward from corners)
+    const isEnterFullscreenIcon = pathData.includes('M8 3H5') || pathData.includes('M 8 3') ||
+                                   pathData.includes('m14 10') || pathData.includes('M15 3h6');
+
+    // Exit fullscreen icon (arrows pointing inward to corners)
+    const isExitFullscreenIcon = pathData.includes('M8 3v3a2 2 0 0 1-2 2H3');
+
+    if (!isEnterFullscreenIcon && !isExitFullscreenIcon) return;
 
     // Check freeze header suspension after popup resizes
-    setTimeout(checkAndSuspendFreezeHeader, 150);
+    // Use longer delay for fullscreen transitions
+    setTimeout(checkAndSuspendFreezeHeader, 200);
   }
 
   /**
