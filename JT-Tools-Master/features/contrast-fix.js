@@ -101,19 +101,15 @@ const ContrastFixFeature = (() => {
            document.body.classList.contains('jt-custom-theme');
   }
 
-  // Darken an RGB color for dark mode (reduce brightness significantly)
-  function darkenColor(rgb) {
-    // Reduce each channel to ~30% of original to create dark version
-    return {
-      r: Math.round(rgb.r * 0.3),
-      g: Math.round(rgb.g * 0.3),
-      b: Math.round(rgb.b * 0.3)
-    };
-  }
-
   // Fix text contrast for a single element
-  // In dark mode/custom theme, also darkens bright backgrounds
+  // Only adjusts text color for readability in light mode
+  // Dark mode/custom theme styling is handled by CSS
   function fixTextContrast(element) {
+    // Skip if dark mode or custom theme - CSS handles styling
+    if (isDarkOrCustomTheme()) {
+      return;
+    }
+
     const style = element.getAttribute('style');
     if (!style) return;
 
@@ -125,32 +121,18 @@ const ContrastFixFeature = (() => {
 
     // Check if element has both background-color and color in inline styles
     const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\))/);
-    const textColorMatch = style.match(/(?<![a-z-])color:\s*rgb\([^)]+\)/);
+    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
 
     if (bgColorMatch && textColorMatch) {
-      let backgroundColor = bgColorMatch[1];
-      let newStyle = style;
-      const bgRgb = parseRgb(backgroundColor);
-
-      // In dark mode/custom theme, darken bright backgrounds
-      if (isDarkOrCustomTheme() && bgRgb) {
-        const luminance = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
-
-        // If background is bright (luminance > 0.5), darken it
-        if (luminance > 0.5) {
-          const darkBg = darkenColor(bgRgb);
-          backgroundColor = `rgb(${darkBg.r}, ${darkBg.g}, ${darkBg.b})`;
-          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${backgroundColor}`);
-        }
-      }
-
+      const backgroundColor = bgColorMatch[1];
       const contrastColor = getContrastColor(backgroundColor);
 
       if (contrastColor) {
-        newStyle = newStyle.replace(/(?<![a-z-])color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
+        const currentColor = window.getComputedStyle(element).color;
 
-        // Only update if style actually changed
-        if (newStyle !== style) {
+        // Only update if the color is different
+        if (currentColor !== contrastColor) {
+          const newStyle = style.replace(/(^|[^-])color:\s*rgb\([^)]+\)/, `$1color: ${contrastColor}`);
           element.setAttribute('style', newStyle);
         }
       }
