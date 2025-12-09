@@ -276,19 +276,42 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Override task card backgrounds with theme-appropriate colors */
-      td div.cursor-pointer[style*="background-color"] {
-        background-color: ${p.background.emphasis} !important;
+      /* Overlay on task cards to blend with theme while preserving selection state */
+      /* Covers both month view (td) and week/day view (div.select-none) */
+      td div.cursor-pointer[style*="background-color"],
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
+        position: relative !important;
+      }
+
+      td div.cursor-pointer[style*="background-color"]::before,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before {
+        content: '' !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background: ${p.background.emphasis} !important;
+        opacity: 0.85 !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+      }
+
+      /* Ensure text and content stays above the overlay */
+      td div.cursor-pointer[style*="background-color"] > *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > * {
+        position: relative !important;
+        z-index: 1 !important;
       }
 
       /* Force readable text on task cards */
       td div.cursor-pointer[style*="background-color"],
-      td div.cursor-pointer[style*="background-color"] * {
+      td div.cursor-pointer[style*="background-color"] *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] * {
         color: ${p.text.primary} !important;
       }
 
       /* Keep the left border visible (task type indicator) */
-      td div.cursor-pointer[style*="border-left"] {
+      td div.cursor-pointer[style*="border-left"],
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
       }
 
