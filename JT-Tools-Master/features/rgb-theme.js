@@ -276,9 +276,25 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Override task card backgrounds with theme-appropriate colors */
+      /* Overlay on task cards to blend with theme while preserving selection state */
       td div.cursor-pointer[style*="background-color"] {
-        background-color: ${p.background.emphasis} !important;
+        position: relative !important;
+      }
+
+      td div.cursor-pointer[style*="background-color"]::before {
+        content: '' !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background: ${p.background.emphasis} !important;
+        opacity: 0.85 !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+      }
+
+      /* Ensure text and content stays above the overlay */
+      td div.cursor-pointer[style*="background-color"] > * {
+        position: relative !important;
+        z-index: 1 !important;
       }
 
       /* Force readable text on task cards */
