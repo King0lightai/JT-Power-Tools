@@ -29,11 +29,14 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
 
 /* === Schedule Card Overrides (Inline Styles) === */
 /* Dark overlay on task cards to darken bright backgrounds */
-td div.cursor-pointer[style*="background-color"] {
+/* Covers both month view (td) and week/day view (div.select-none) */
+td div.cursor-pointer[style*="background-color"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
     position: relative !important;
 }
 
-td div.cursor-pointer[style*="background-color"]::before {
+td div.cursor-pointer[style*="background-color"]::before,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before {
     content: '' !important;
     position: absolute !important;
     inset: 0 !important;
@@ -43,19 +46,23 @@ td div.cursor-pointer[style*="background-color"]::before {
 }
 
 /* Ensure text and content stays above the overlay */
-td div.cursor-pointer[style*="background-color"] > * {
+td div.cursor-pointer[style*="background-color"] > *,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > * {
     position: relative !important;
     z-index: 1 !important;
 }
 
 /* Force white text on darkened task cards */
 td div.cursor-pointer[style*="background-color"],
-td div.cursor-pointer[style*="background-color"] * {
+td div.cursor-pointer[style*="background-color"] *,
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] * {
     color: white !important;
 }
 
 /* Keep the left border visible (task type indicator) */
-td div.cursor-pointer[style*="border-left"] {
+td div.cursor-pointer[style*="border-left"],
+div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
     border-left-width: 4px !important;
 }
 
