@@ -108,29 +108,43 @@ const ContrastFixFeature = (() => {
     return luminance > 0.5 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
   }
 
-  // Check if dark mode or custom theme is active
-  function isDarkOrCustomTheme() {
-    return document.body.classList.contains('jt-dark-mode') ||
-           document.body.classList.contains('jt-custom-theme');
+  // Check if a background color is "light" (unselected task state)
+  // Light backgrounds have high luminance (pastel colors like rgb(230, 244, 247))
+  // Selected tasks have saturated/darker backgrounds matching their task type color
+  function isLightBackground(rgbString) {
+    const rgb = parseRgb(rgbString);
+    if (!rgb) return false;
+
+    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
+
+    // Luminance > 0.7 indicates a light/pastel background (unselected state)
+    // Selected tasks typically have luminance < 0.5
+    return luminance > 0.7;
   }
 
-  // Extract border-left color from style (task type color)
-  // Format: "border-left: 5px solid rgb(R, G, B)" or "border-left-color: rgb(...)"
-  function extractBorderLeftColor(styleString) {
-    // Try format: border-left: Xpx solid rgb(...)
-    const solidMatch = styleString.match(/border-left:\s*\d+px\s+solid\s+(rgb\([^)]+\))/);
-    if (solidMatch) return solidMatch[1];
-
-    // Try format: border-left-color: rgb(...)
-    const colorMatch = styleString.match(/border-left-color:\s*(rgb\([^)]+\))/);
-    if (colorMatch) return colorMatch[1];
-
-    return null;
+  // Get the appropriate background color for unselected tasks based on theme
+  function getThemeBackgroundColor() {
+    if (isCustomThemeActive()) {
+      // Try to get the custom theme's elevated background color from CSS variable
+      const elevated = getComputedStyle(document.documentElement).getPropertyValue('--jt-theme-background-elevated').trim();
+      if (elevated) {
+        // Convert hex to rgb if needed
+        if (elevated.startsWith('#')) {
+          const r = parseInt(elevated.slice(1, 3), 16);
+          const g = parseInt(elevated.slice(3, 5), 16);
+          const b = parseInt(elevated.slice(5, 7), 16);
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+        return elevated;
+      }
+    }
+    // Default dark mode background
+    return 'rgb(58, 58, 58)'; // #3a3a3a
   }
 
   // Fix text contrast for a single element
-  // In dark mode/custom theme, also changes background to task type color
-  function fixTextContrast(element) {
+  // In dark mode/custom theme, also handles background color for unselected tasks
+  function fixTextContrast(element, isDarkOrCustomTheme = false) {
     const style = element.getAttribute('style');
     if (!style) return;
 
@@ -142,55 +156,38 @@ const ContrastFixFeature = (() => {
     }
 
     // Check if element has both background-color and color in inline styles
-    const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\))/);
-    const textColorMatch = style.match(/(?<![a-z-])color:\s*(rgb\([^)]+\))/);
+    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
+    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
 
-    if (!bgColorMatch || !textColorMatch) return;
-
-    const currentBgColor = bgColorMatch[1];
-    let newBgColor = currentBgColor;
-    let newTextColor;
-
-    // Check if we should apply dark/custom theme styling
-    if (isDarkOrCustomTheme()) {
-      // Get task type color from border-left
-      const taskTypeColor = extractBorderLeftColor(style);
-
-      if (taskTypeColor) {
-        // Check if this looks like an unselected task (pastel/light background)
-        const bgRgb = parseRgb(currentBgColor);
-        if (bgRgb) {
-          const bgLuminance = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
-
-          // Light backgrounds (luminance > 0.6) are unselected tasks
-          // Use task type color as background for better dark mode appearance
-          if (bgLuminance > 0.6) {
-            newBgColor = taskTypeColor;
-          }
-          // If background is darker but not the task type color, it might be completed
-          // Keep it slightly darkened
-        }
-      }
-    }
-
-    // Calculate appropriate text color for the background
-    newTextColor = getContrastColor(newBgColor);
-
-    if (newTextColor) {
-      // Build new style string
+    if (bgColorMatch && textColorMatch) {
+      const backgroundColor = bgColorMatch[0].split(':')[1].trim().replace(';', '');
       let newStyle = style;
+      let newBgColor = backgroundColor;
+      let needsUpdate = false;
 
-      // Update background if changed
-      if (newBgColor !== currentBgColor) {
-        newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
+      // In dark mode/custom theme, handle background colors intelligently
+      if (isDarkOrCustomTheme) {
+        if (isLightBackground(backgroundColor)) {
+          // Light background = unselected task, override to theme background
+          newBgColor = getThemeBackgroundColor();
+          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
+          needsUpdate = true;
+        }
+        // If NOT light background = selected task, preserve the original colored background
       }
 
-      // Update text color
-      newStyle = newStyle.replace(/(?<![a-z-])color:\s*rgb\([^)]+\)/, `color: ${newTextColor}`);
+      // Calculate contrast color based on the (potentially modified) background
+      const contrastColor = getContrastColor(newBgColor);
 
-      // Only apply if something changed
-      if (newStyle !== style) {
-        element.setAttribute('style', newStyle);
+      if (contrastColor) {
+        const currentColor = window.getComputedStyle(element).color;
+
+        // Update if color is different or background was changed
+        if (currentColor !== contrastColor || needsUpdate) {
+          newStyle = newStyle.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
+          element.setAttribute('style', newStyle);
+          element.style.color = contrastColor;
+        }
       }
     }
   }
@@ -214,15 +211,30 @@ const ContrastFixFeature = (() => {
     });
   }
 
+  // Check if dark mode is currently active
+  function isDarkModeActive() {
+    // Check if dark mode CSS is injected
+    return document.getElementById('jt-dark-mode-styles') !== null;
+  }
+
+  // Check if custom theme is currently active
+  function isCustomThemeActive() {
+    // Check if custom theme CSS is injected
+    return document.getElementById('jt-custom-theme-styles') !== null;
+  }
+
   // Process all schedule items
   function fixAllScheduleItems() {
+    // Check if dark mode or custom theme is active
+    const isDarkOrCustomTheme = isDarkModeActive() || isCustomThemeActive();
+
     // Target the specific divs in schedule/calendar view that have inline background-color and color
     const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
 
     scheduleItems.forEach(item => {
       // Make sure we're only targeting the calendar/schedule items (they have the cursor-pointer class)
       if (item.classList.contains('cursor-pointer')) {
-        fixTextContrast(item);
+        fixTextContrast(item, isDarkOrCustomTheme);
       }
     });
 
