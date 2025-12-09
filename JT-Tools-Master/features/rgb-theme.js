@@ -276,9 +276,24 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Darken bright task card backgrounds for custom theme */
+      /* Dark overlay on task cards to darken bright backgrounds */
       td div.cursor-pointer[style*="background-color"] {
-        filter: brightness(0.5) saturate(1.3) !important;
+        position: relative !important;
+      }
+
+      td div.cursor-pointer[style*="background-color"]::before {
+        content: '' !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background: rgba(0, 0, 0, 0.55) !important;
+        pointer-events: none !important;
+        z-index: 0 !important;
+      }
+
+      /* Ensure text and content stays above the overlay */
+      td div.cursor-pointer[style*="background-color"] > * {
+        position: relative !important;
+        z-index: 1 !important;
       }
 
       /* Force readable text on darkened task cards */
@@ -291,11 +306,6 @@ const CustomThemeFeature = (() => {
       td div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px ${p.shadows.color};
-      }
-
-      /* Avatar circles - keep their original brightness */
-      td div.cursor-pointer div.rounded-full[style*="background-color"] {
-        filter: brightness(1) !important;
       }
 
       /* === General Border Colors === */
