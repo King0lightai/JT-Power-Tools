@@ -22,35 +22,53 @@ const ContrastFixFeature = (() => {
 
     // Create debounced update function using TimingUtils
     debouncedUpdate = window.TimingUtils.debounce(() => {
-      // Temporarily disconnect observer to prevent infinite loop
-      observer.disconnect();
-
       fixAllScheduleItems();
+    }, 100);
 
-      // Reconnect observer after a short delay
-      setTimeout(() => {
-        if (isActive) {
-          observer.observe(document.body, {
-            childList: true,
-            subtree: true
-          });
-        }
-      }, 100);
-    }, 250);
-
-    // Watch for DOM changes
+    // Watch for DOM changes - both new nodes AND style attribute changes
     observer = new MutationObserver((mutations) => {
-      const shouldUpdate = mutations.some(mutation => mutation.addedNodes.length > 0);
+      let shouldUpdate = false;
+
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+          shouldUpdate = true;
+          break;
+        }
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          // Check if this is a schedule item that JobTread modified (not us)
+          const target = mutation.target;
+          if (target.classList && target.classList.contains('cursor-pointer')) {
+            // Check if the background changed from what we set
+            const expectedBg = target.dataset.jtExpectedBg;
+            if (expectedBg) {
+              const currentStyle = target.getAttribute('style') || '';
+              const bgMatch = currentStyle.match(/background-color:\s*(rgb\([^)]+\))/);
+              const currentBg = bgMatch ? bgMatch[1] : null;
+              // If background changed from what we set, JobTread updated it
+              if (currentBg && currentBg !== expectedBg) {
+                shouldUpdate = true;
+                break;
+              }
+            } else {
+              // No expected bg tracked, needs processing
+              shouldUpdate = true;
+              break;
+            }
+          }
+        }
+      }
 
       if (shouldUpdate) {
         debouncedUpdate();
       }
     });
 
-    // Start observing
+    // Start observing - watch for both added nodes and style changes
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style']
     });
 
     console.log('ContrastFix: Feature loaded');
@@ -156,14 +174,20 @@ const ContrastFixFeature = (() => {
     }
 
     // Check if element has both background-color and color in inline styles
-    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
+    const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\))/);
     const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
 
     if (bgColorMatch && textColorMatch) {
-      const backgroundColor = bgColorMatch[0].split(':')[1].trim().replace(';', '');
+      const backgroundColor = bgColorMatch[1];
       let newStyle = style;
       let newBgColor = backgroundColor;
       let needsUpdate = false;
+
+      // Clear expected background if it doesn't match current (JobTread changed it)
+      const expectedBg = element.dataset.jtExpectedBg;
+      if (expectedBg && expectedBg !== backgroundColor) {
+        delete element.dataset.jtExpectedBg;
+      }
 
       // In dark mode/custom theme, handle background colors intelligently
       if (isDarkOrCustomTheme) {
@@ -187,6 +211,8 @@ const ContrastFixFeature = (() => {
           newStyle = newStyle.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
           element.setAttribute('style', newStyle);
           element.style.color = contrastColor;
+          // Track the expected background so we can detect when JobTread changes it
+          element.dataset.jtExpectedBg = newBgColor;
         }
       }
     }
