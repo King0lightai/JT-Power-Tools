@@ -276,11 +276,26 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Task card text colors are handled by contrast-fix.js for readability */
-      /* Only enhance border styling here - do not override backgrounds */
+      /* Darken bright task card backgrounds for custom theme */
+      td div.cursor-pointer[style*="background-color"] {
+        filter: brightness(0.5) saturate(1.3) !important;
+      }
+
+      /* Force readable text on darkened task cards */
+      td div.cursor-pointer[style*="background-color"],
+      td div.cursor-pointer[style*="background-color"] * {
+        color: ${p.text.primary} !important;
+      }
+
+      /* Keep the left border visible (task type indicator) */
       td div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px ${p.shadows.color};
+      }
+
+      /* Avatar circles - keep their original brightness */
+      td div.cursor-pointer div.rounded-full[style*="background-color"] {
+        filter: brightness(1) !important;
       }
 
       /* === General Border Colors === */

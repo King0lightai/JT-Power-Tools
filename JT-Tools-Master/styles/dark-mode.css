@@ -28,12 +28,25 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
 }
 
 /* === Schedule Card Overrides (Inline Styles) === */
-/* Schedule card text colors are handled by contrast-fix.js for readability */
-/* Task card backgrounds are preserved - only text contrast is adjusted */
+/* Darken bright task card backgrounds and ensure readable text */
+td div.cursor-pointer[style*="background-color"] {
+    filter: brightness(0.4) saturate(1.2) !important;
+}
 
-/* Avatar circles inside schedule cards - darken the background */
+/* Force white text on darkened task cards */
+td div.cursor-pointer[style*="background-color"],
+td div.cursor-pointer[style*="background-color"] * {
+    color: white !important;
+}
+
+/* Keep the left border visible (task type indicator) */
+td div.cursor-pointer[style*="border-left"] {
+    border-left-width: 4px !important;
+}
+
+/* Avatar circles inside schedule cards - keep their original brightness */
 td div.cursor-pointer div.rounded-full[style*="background-color"] {
-    filter: brightness(0.7) !important;
+    filter: brightness(1) !important;
 }
 
 /* === Week/Day View Schedule Cards === */
