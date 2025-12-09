@@ -956,24 +956,22 @@ const CustomThemeFeature = (() => {
     });
   }
 
-  // Apply custom text color and current date highlighting
+  // Apply custom theme styling to schedule cards and current date
   function applyContrastFixes() {
-    // Apply custom text color to schedule items
-    const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
+    // Apply custom theme styling to schedule cards
+    // Target schedule cards - they have cursor-pointer class and border-left style
+    const scheduleCards = document.querySelectorAll('td div.cursor-pointer[style*="border-left"]');
 
-    scheduleItems.forEach(item => {
-      // Target calendar/schedule items (they have cursor-pointer class)
-      if (item.classList.contains('cursor-pointer')) {
-        fixTextContrast(item);
-      }
+    scheduleCards.forEach(card => {
+      styleScheduleCard(card);
     });
 
     // Highlight current date with primary color
     highlightCurrentDate();
   }
 
-  // Fix text contrast for a single element using palette text color
-  function fixTextContrast(element) {
+  // Style a single schedule card with task type color as background
+  function styleScheduleCard(element) {
     const style = element.getAttribute('style');
     if (!style) return;
 
@@ -983,22 +981,76 @@ const CustomThemeFeature = (() => {
       return;
     }
 
-    // Check if element has both background-color and color in inline styles
-    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
-    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
+    // Skip if already processed
+    if (element.dataset.jtCustomThemeStyled === 'true') {
+      return;
+    }
 
-    if (bgColorMatch && textColorMatch) {
-      // Get current computed color
-      const currentColor = window.getComputedStyle(element).color;
-      const textColor = hexToRgb(palette.text?.primary || currentColors.text);
-      const targetColor = `rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`;
+    // Check if this is a selected task (has ring/outline classes indicating selection)
+    const isSelected = element.classList.contains('ring-2') ||
+                       element.classList.contains('outline') ||
+                       element.closest('[class*="ring-"]');
 
-      // Only update if different (prevents infinite loop)
-      if (currentColor !== targetColor) {
-        const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${targetColor}`);
-        element.setAttribute('style', newStyle);
-        element.style.color = targetColor;
+    // For selected tasks, don't override - let the selection highlight show
+    if (isSelected) {
+      return;
+    }
+
+    // Extract border-left color (task type color)
+    const borderLeftMatch = style.match(/border-left(?:-color)?:\s*(rgb\([^)]+\)|#[a-fA-F0-9]+)/);
+    if (!borderLeftMatch) return;
+
+    let taskTypeColor = borderLeftMatch[1];
+
+    // Convert rgb to hex if needed for ColorUtils
+    if (taskTypeColor.startsWith('rgb')) {
+      const rgbMatch = taskTypeColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (rgbMatch) {
+        const r = parseInt(rgbMatch[1]);
+        const g = parseInt(rgbMatch[2]);
+        const b = parseInt(rgbMatch[3]);
+        taskTypeColor = rgbToHex(r, g, b);
       }
+    }
+
+    // Get contrast text color (white or black)
+    const contrastText = getContrastText(taskTypeColor);
+
+    // Check if task is completed (has darkened/muted appearance)
+    const bgColorMatch = style.match(/background-color:\s*rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    let backgroundColor = taskTypeColor;
+
+    if (bgColorMatch) {
+      const currentR = parseInt(bgColorMatch[1]);
+      const currentG = parseInt(bgColorMatch[2]);
+      const currentB = parseInt(bgColorMatch[3]);
+      const currentHex = rgbToHex(currentR, currentG, currentB);
+      const currentLuminance = getLuminance(currentHex);
+
+      // If current background is very light (pastel), it's an unselected/active task
+      // If it's darker than the task type color, it might be completed
+      const taskTypeLuminance = getLuminance(taskTypeColor);
+
+      if (currentLuminance < taskTypeLuminance * 0.7) {
+        // Task appears completed/darkened - darken the task type color
+        backgroundColor = adjustLightness(taskTypeColor, -20);
+      }
+    }
+
+    // Apply the new background and text colors
+    const bgRgb = hexToRgb(backgroundColor);
+    const textRgb = hexToRgb(contrastText);
+
+    if (bgRgb && textRgb) {
+      // Update inline style - replace background-color and color
+      let newStyle = style;
+      newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: rgb(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b})`);
+      newStyle = newStyle.replace(/(?<![a-z-])color:\s*rgb\([^)]+\)/, `color: rgb(${textRgb.r}, ${textRgb.g}, ${textRgb.b})`);
+
+      element.setAttribute('style', newStyle);
+
+      // Mark as processed to avoid re-processing
+      element.dataset.jtCustomThemeStyled = 'true';
     }
   }
 
