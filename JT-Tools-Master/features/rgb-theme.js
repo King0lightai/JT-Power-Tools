@@ -276,9 +276,9 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Task card background/text colors are handled by contrast-fix.js */
-      /* In custom theme, unselected tasks get task type color as background with contrast text */
-      /* Only apply border styling enhancements here */
+      /* Note: Task card background/text colors are handled by contrast-fix.js */
+      /* This allows proper detection of selected vs unselected tasks */
+      /* Only apply border styling, not background/color overrides */
       td div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px ${p.shadows.color};
@@ -956,10 +956,50 @@ const CustomThemeFeature = (() => {
     });
   }
 
-  // Apply custom theme current date highlighting
+  // Apply custom text color and current date highlighting
   function applyContrastFixes() {
+    // Apply custom text color to schedule items
+    const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
+
+    scheduleItems.forEach(item => {
+      // Target calendar/schedule items (they have cursor-pointer class)
+      if (item.classList.contains('cursor-pointer')) {
+        fixTextContrast(item);
+      }
+    });
+
     // Highlight current date with primary color
     highlightCurrentDate();
+  }
+
+  // Fix text contrast for a single element using palette text color
+  function fixTextContrast(element) {
+    const style = element.getAttribute('style');
+    if (!style) return;
+
+    // Skip tags - they should keep their original colors
+    if (element.classList.contains('rounded-sm') &&
+        (element.classList.contains('px-2') || element.classList.contains('py-1'))) {
+      return;
+    }
+
+    // Check if element has both background-color and color in inline styles
+    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
+    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
+
+    if (bgColorMatch && textColorMatch) {
+      // Get current computed color
+      const currentColor = window.getComputedStyle(element).color;
+      const textColor = hexToRgb(palette.text?.primary || currentColors.text);
+      const targetColor = `rgb(${textColor.r}, ${textColor.g}, ${textColor.b})`;
+
+      // Only update if different (prevents infinite loop)
+      if (currentColor !== targetColor) {
+        const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${targetColor}`);
+        element.setAttribute('style', newStyle);
+        element.style.color = targetColor;
+      }
+    }
   }
 
   // Highlight current date with primary color
