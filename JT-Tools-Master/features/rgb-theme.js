@@ -276,9 +276,8 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Note: Task card background/text colors are handled by contrast-fix.js */
-      /* This allows proper detection of selected vs unselected tasks */
-      /* Only apply border styling, not background/color overrides */
+      /* Task card text colors are handled by contrast-fix.js for readability */
+      /* Only enhance border styling here - do not override backgrounds */
       td div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
         box-shadow: inset 4px 0 8px ${p.shadows.color};

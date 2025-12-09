@@ -28,8 +28,8 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
 }
 
 /* === Schedule Card Overrides (Inline Styles) === */
-/* Note: Schedule card background/text colors are now handled by contrast-fix.js */
-/* This allows proper detection of selected vs unselected tasks */
+/* Schedule card text colors are handled by contrast-fix.js for readability */
+/* Task card backgrounds are preserved - only text contrast is adjusted */
 
 /* Avatar circles inside schedule cards - darken the background */
 td div.cursor-pointer div.rounded-full[style*="background-color"] {
