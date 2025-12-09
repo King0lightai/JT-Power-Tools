@@ -841,12 +841,17 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Find and mark popup containers to exclude them from freeze header effects
-   * Popups are identified by their characteristic classes: shadow-lg, rounded-sm, max-w-*, m-auto
-   * Also detects fullscreen mode based on viewport-filling size
+   * Check if freeze header should be temporarily disabled
+   * Disable when: Preview Document popup is open OR any popup is in fullscreen mode
    */
-  function findAndMarkPopups() {
-    // Find popup containers by their characteristic classes
+  let freezeHeaderSuspended = false;
+
+  function checkAndSuspendFreezeHeader() {
+    // Check for Preview Document popup (uses max-w-screen-lg class)
+    const previewPopup = document.querySelector('.max-w-screen-lg.shadow-lg.rounded-sm');
+
+    // Check for any popup in fullscreen mode (taking >90% of viewport)
+    let fullscreenPopup = null;
     const popupSelectors = [
       '.shadow-lg.rounded-sm.bg-white',
       '.shadow-lg.m-auto',
@@ -854,33 +859,33 @@ const FreezeHeaderFeature = (() => {
       '[class*="max-w-screen"].shadow-lg'
     ];
 
-    popupSelectors.forEach(selector => {
-      document.querySelectorAll(selector).forEach(popup => {
-        if (!popup.classList.contains('jt-popup-container')) {
-          popup.classList.add('jt-popup-container');
-
-          // Check if popup has a header with border-t-jtOrange (JobTread popup signature)
-          const hasJtHeader = popup.querySelector('.border-t-jtOrange') ||
-                              popup.querySelector('[class*="border-t-jtOrange"]');
-          if (hasJtHeader) {
-            console.log('FreezeHeader: Found and marked JobTread popup container');
-          }
-        }
-
-        // Check if popup is in fullscreen mode (takes most of viewport)
+    for (const selector of popupSelectors) {
+      const popups = document.querySelectorAll(selector);
+      for (const popup of popups) {
         const rect = popup.getBoundingClientRect();
         const isFullscreen = rect.width > window.innerWidth * 0.9 &&
                             rect.height > window.innerHeight * 0.9;
-
-        if (isFullscreen && !popup.classList.contains('jt-fullscreen-popup')) {
-          popup.classList.add('jt-fullscreen-popup');
-          console.log('FreezeHeader: Popup entered fullscreen mode');
-        } else if (!isFullscreen && popup.classList.contains('jt-fullscreen-popup')) {
-          popup.classList.remove('jt-fullscreen-popup');
-          console.log('FreezeHeader: Popup exited fullscreen mode');
+        if (isFullscreen) {
+          fullscreenPopup = popup;
+          break;
         }
-      });
-    });
+      }
+      if (fullscreenPopup) break;
+    }
+
+    const shouldSuspend = previewPopup !== null || fullscreenPopup !== null;
+
+    if (shouldSuspend && !freezeHeaderSuspended) {
+      // Suspend freeze header
+      document.body.classList.remove('jt-freeze-header-active');
+      freezeHeaderSuspended = true;
+      console.log('FreezeHeader: Suspended due to', previewPopup ? 'Preview Document popup' : 'fullscreen popup');
+    } else if (!shouldSuspend && freezeHeaderSuspended) {
+      // Resume freeze header
+      document.body.classList.add('jt-freeze-header-active');
+      freezeHeaderSuspended = false;
+      console.log('FreezeHeader: Resumed');
+    }
   }
 
   /**
@@ -892,8 +897,6 @@ const FreezeHeaderFeature = (() => {
     if (!button) return;
 
     // Check if this button contains a fullscreen/expand icon
-    // Expand icon path: M8 3H5a2 2 0 0 0-2 2v3...
-    // Shrink icon path: m14 10 7-7... or M15 3h6v6...
     const svg = button.querySelector('svg');
     if (!svg) return;
 
@@ -903,45 +906,48 @@ const FreezeHeaderFeature = (() => {
 
     if (!isExpandIcon) return;
 
-    // Find the parent popup container
-    const popup = button.closest('.shadow-lg.rounded-sm') ||
-                  button.closest('[class*="max-w-lg"]') ||
-                  button.closest('[class*="max-w-screen"]') ||
-                  button.closest('.jt-popup-container');
-
-    if (popup) {
-      // Toggle fullscreen state after a short delay (wait for popup to resize)
-      setTimeout(() => {
-        findAndMarkPopups();
-      }, 100);
-    }
+    // Check freeze header suspension after popup resizes
+    setTimeout(checkAndSuspendFreezeHeader, 150);
   }
 
   /**
-   * Set up observer to watch for popup containers and fullscreen mode changes
+   * Set up observer to watch for popup containers and suspend freeze header when needed
    */
   function setupPopupObserver() {
     if (popupObserver) {
       popupObserver.disconnect();
     }
 
-    // Initial scan for popups
-    findAndMarkPopups();
+    // Initial check for popups
+    checkAndSuspendFreezeHeader();
 
     // Listen for fullscreen button clicks
     document.addEventListener('click', handleFullscreenButtonClick, true);
 
-    // Watch for new popups being added to the DOM
+    // Watch for popups being added/removed from the DOM
     popupObserver = new MutationObserver((mutations) => {
       let shouldCheck = false;
 
       for (const mutation of mutations) {
+        // Check added nodes for popups
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if the added node is or contains a popup
             if (node.classList?.contains('shadow-lg') ||
                 node.classList?.contains('rounded-sm') ||
-                node.querySelector?.('.shadow-lg.rounded-sm')) {
+                node.classList?.contains('max-w-screen-lg') ||
+                node.querySelector?.('.shadow-lg.rounded-sm') ||
+                node.querySelector?.('.max-w-screen-lg')) {
+              shouldCheck = true;
+              break;
+            }
+          }
+        }
+        // Check removed nodes (popup closed)
+        for (const node of mutation.removedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.classList?.contains('shadow-lg') ||
+                node.classList?.contains('rounded-sm') ||
+                node.classList?.contains('max-w-screen-lg')) {
               shouldCheck = true;
               break;
             }
@@ -952,7 +958,7 @@ const FreezeHeaderFeature = (() => {
 
       if (shouldCheck) {
         // Debounce popup detection
-        setTimeout(findAndMarkPopups, 50);
+        setTimeout(checkAndSuspendFreezeHeader, 50);
       }
     });
 
@@ -972,13 +978,8 @@ const FreezeHeaderFeature = (() => {
     }
     document.removeEventListener('click', handleFullscreenButtonClick, true);
 
-    // Remove popup marker classes
-    document.querySelectorAll('.jt-popup-container').forEach(el => {
-      el.classList.remove('jt-popup-container');
-    });
-    document.querySelectorAll('.jt-fullscreen-popup').forEach(el => {
-      el.classList.remove('jt-fullscreen-popup');
-    });
+    // Reset suspension state
+    freezeHeaderSuspended = false;
   }
 
   /**
