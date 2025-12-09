@@ -108,8 +108,28 @@ const ContrastFixFeature = (() => {
     return luminance > 0.5 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
   }
 
+  // Check if dark mode or custom theme is active
+  function isDarkOrCustomTheme() {
+    return document.body.classList.contains('jt-dark-mode') ||
+           document.body.classList.contains('jt-custom-theme');
+  }
+
+  // Extract border-left color from style (task type color)
+  // Format: "border-left: 5px solid rgb(R, G, B)" or "border-left-color: rgb(...)"
+  function extractBorderLeftColor(styleString) {
+    // Try format: border-left: Xpx solid rgb(...)
+    const solidMatch = styleString.match(/border-left:\s*\d+px\s+solid\s+(rgb\([^)]+\))/);
+    if (solidMatch) return solidMatch[1];
+
+    // Try format: border-left-color: rgb(...)
+    const colorMatch = styleString.match(/border-left-color:\s*(rgb\([^)]+\))/);
+    if (colorMatch) return colorMatch[1];
+
+    return null;
+  }
+
   // Fix text contrast for a single element
-  // Only adjusts text color for readability - does NOT modify backgrounds
+  // In dark mode/custom theme, also changes background to task type color
   function fixTextContrast(element) {
     const style = element.getAttribute('style');
     if (!style) return;
@@ -122,22 +142,55 @@ const ContrastFixFeature = (() => {
     }
 
     // Check if element has both background-color and color in inline styles
-    const bgColorMatch = style.match(/background-color:\s*rgb\([^)]+\)/);
-    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
+    const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\))/);
+    const textColorMatch = style.match(/(?<![a-z-])color:\s*(rgb\([^)]+\))/);
 
-    if (bgColorMatch && textColorMatch) {
-      const backgroundColor = bgColorMatch[0].split(':')[1].trim().replace(';', '');
-      const contrastColor = getContrastColor(backgroundColor);
+    if (!bgColorMatch || !textColorMatch) return;
 
-      if (contrastColor) {
-        const currentColor = window.getComputedStyle(element).color;
+    const currentBgColor = bgColorMatch[1];
+    let newBgColor = currentBgColor;
+    let newTextColor;
 
-        // Only update if the color is different (prevents infinite loop)
-        if (currentColor !== contrastColor) {
-          const newStyle = style.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
-          element.setAttribute('style', newStyle);
-          element.style.color = contrastColor;
+    // Check if we should apply dark/custom theme styling
+    if (isDarkOrCustomTheme()) {
+      // Get task type color from border-left
+      const taskTypeColor = extractBorderLeftColor(style);
+
+      if (taskTypeColor) {
+        // Check if this looks like an unselected task (pastel/light background)
+        const bgRgb = parseRgb(currentBgColor);
+        if (bgRgb) {
+          const bgLuminance = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
+
+          // Light backgrounds (luminance > 0.6) are unselected tasks
+          // Use task type color as background for better dark mode appearance
+          if (bgLuminance > 0.6) {
+            newBgColor = taskTypeColor;
+          }
+          // If background is darker but not the task type color, it might be completed
+          // Keep it slightly darkened
         }
+      }
+    }
+
+    // Calculate appropriate text color for the background
+    newTextColor = getContrastColor(newBgColor);
+
+    if (newTextColor) {
+      // Build new style string
+      let newStyle = style;
+
+      // Update background if changed
+      if (newBgColor !== currentBgColor) {
+        newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
+      }
+
+      // Update text color
+      newStyle = newStyle.replace(/(?<![a-z-])color:\s*rgb\([^)]+\)/, `color: ${newTextColor}`);
+
+      // Only apply if something changed
+      if (newStyle !== style) {
+        element.setAttribute('style', newStyle);
       }
     }
   }
