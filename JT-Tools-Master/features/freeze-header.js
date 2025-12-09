@@ -6,6 +6,7 @@ const FreezeHeaderFeature = (() => {
   let observer = null;
   let styleElement = null;
   let debounceTimer = null;
+  let popupObserver = null;
 
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
@@ -105,8 +106,39 @@ const FreezeHeaderFeature = (() => {
     /* Only apply to job-page sidebars, NOT global overlays like Time Clock */
     /* Global sidebars have top: ~48px (just below header), job sidebars have top: ~100px+ (below tabs) */
     /* We exclude sidebars with top: 48-50px as these are global overlays that should stay at header level */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]) {
+    /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky) {
       top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
+    /* Exclude popup/modal sticky elements from freeze header positioning */
+    /* Popups have characteristic classes: shadow-lg, max-w-*, m-auto, rounded-sm, border-t-jtOrange */
+    .jt-freeze-header-active .shadow-lg.rounded-sm .sticky,
+    .jt-freeze-header-active .max-w-lg .sticky,
+    .jt-freeze-header-active .max-w-screen-lg .sticky,
+    .jt-freeze-header-active .max-w-screen-xl .sticky,
+    .jt-freeze-header-active .max-w-screen-2xl .sticky,
+    .jt-freeze-header-active [class*="m-auto"][class*="shadow-lg"] .sticky,
+    .jt-freeze-header-active .border-t-jtOrange ~ * .sticky,
+    .jt-freeze-header-active .jt-popup-container .sticky {
+      top: 0px !important;
+    }
+
+    /* Popup sticky elements with bottom positioning should also be preserved */
+    .jt-freeze-header-active .shadow-lg.rounded-sm .sticky[style*="bottom"],
+    .jt-freeze-header-active [class*="max-w-"] .sticky[style*="bottom"] {
+      bottom: 0px !important;
+      top: unset !important;
+    }
+
+    /* When a popup is in fullscreen mode, ensure its sticky elements stay at top: 0 */
+    .jt-freeze-header-active .jt-fullscreen-popup .sticky {
+      top: 0px !important;
+    }
+
+    /* Fullscreen popup container should not be affected by freeze header */
+    .jt-freeze-header-active .jt-fullscreen-popup {
+      z-index: 50 !important;
     }
 
     /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
@@ -809,6 +841,147 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark popup containers to exclude them from freeze header effects
+   * Popups are identified by their characteristic classes: shadow-lg, rounded-sm, max-w-*, m-auto
+   * Also detects fullscreen mode based on viewport-filling size
+   */
+  function findAndMarkPopups() {
+    // Find popup containers by their characteristic classes
+    const popupSelectors = [
+      '.shadow-lg.rounded-sm.bg-white',
+      '.shadow-lg.m-auto',
+      '[class*="max-w-lg"].shadow-lg',
+      '[class*="max-w-screen"].shadow-lg'
+    ];
+
+    popupSelectors.forEach(selector => {
+      document.querySelectorAll(selector).forEach(popup => {
+        if (!popup.classList.contains('jt-popup-container')) {
+          popup.classList.add('jt-popup-container');
+
+          // Check if popup has a header with border-t-jtOrange (JobTread popup signature)
+          const hasJtHeader = popup.querySelector('.border-t-jtOrange') ||
+                              popup.querySelector('[class*="border-t-jtOrange"]');
+          if (hasJtHeader) {
+            console.log('FreezeHeader: Found and marked JobTread popup container');
+          }
+        }
+
+        // Check if popup is in fullscreen mode (takes most of viewport)
+        const rect = popup.getBoundingClientRect();
+        const isFullscreen = rect.width > window.innerWidth * 0.9 &&
+                            rect.height > window.innerHeight * 0.9;
+
+        if (isFullscreen && !popup.classList.contains('jt-fullscreen-popup')) {
+          popup.classList.add('jt-fullscreen-popup');
+          console.log('FreezeHeader: Popup entered fullscreen mode');
+        } else if (!isFullscreen && popup.classList.contains('jt-fullscreen-popup')) {
+          popup.classList.remove('jt-fullscreen-popup');
+          console.log('FreezeHeader: Popup exited fullscreen mode');
+        }
+      });
+    });
+  }
+
+  /**
+   * Handle clicks on fullscreen/expand buttons in popups
+   * Fullscreen buttons are identified by their expand icon SVG paths
+   */
+  function handleFullscreenButtonClick(event) {
+    const button = event.target.closest('[role="button"]');
+    if (!button) return;
+
+    // Check if this button contains a fullscreen/expand icon
+    // Expand icon path: M8 3H5a2 2 0 0 0-2 2v3...
+    // Shrink icon path: m14 10 7-7... or M15 3h6v6...
+    const svg = button.querySelector('svg');
+    if (!svg) return;
+
+    const pathData = svg.querySelector('path')?.getAttribute('d') || '';
+    const isExpandIcon = pathData.includes('M8 3H5') || pathData.includes('M 8 3') ||
+                         pathData.includes('m14 10') || pathData.includes('M15 3h6');
+
+    if (!isExpandIcon) return;
+
+    // Find the parent popup container
+    const popup = button.closest('.shadow-lg.rounded-sm') ||
+                  button.closest('[class*="max-w-lg"]') ||
+                  button.closest('[class*="max-w-screen"]') ||
+                  button.closest('.jt-popup-container');
+
+    if (popup) {
+      // Toggle fullscreen state after a short delay (wait for popup to resize)
+      setTimeout(() => {
+        findAndMarkPopups();
+      }, 100);
+    }
+  }
+
+  /**
+   * Set up observer to watch for popup containers and fullscreen mode changes
+   */
+  function setupPopupObserver() {
+    if (popupObserver) {
+      popupObserver.disconnect();
+    }
+
+    // Initial scan for popups
+    findAndMarkPopups();
+
+    // Listen for fullscreen button clicks
+    document.addEventListener('click', handleFullscreenButtonClick, true);
+
+    // Watch for new popups being added to the DOM
+    popupObserver = new MutationObserver((mutations) => {
+      let shouldCheck = false;
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if the added node is or contains a popup
+            if (node.classList?.contains('shadow-lg') ||
+                node.classList?.contains('rounded-sm') ||
+                node.querySelector?.('.shadow-lg.rounded-sm')) {
+              shouldCheck = true;
+              break;
+            }
+          }
+        }
+        if (shouldCheck) break;
+      }
+
+      if (shouldCheck) {
+        // Debounce popup detection
+        setTimeout(findAndMarkPopups, 50);
+      }
+    });
+
+    popupObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  /**
+   * Clean up popup observer
+   */
+  function cleanupPopupObserver() {
+    if (popupObserver) {
+      popupObserver.disconnect();
+      popupObserver = null;
+    }
+    document.removeEventListener('click', handleFullscreenButtonClick, true);
+
+    // Remove popup marker classes
+    document.querySelectorAll('.jt-popup-container').forEach(el => {
+      el.classList.remove('jt-popup-container');
+    });
+    document.querySelectorAll('.jt-fullscreen-popup').forEach(el => {
+      el.classList.remove('jt-fullscreen-popup');
+    });
+  }
+
+  /**
    * Apply sticky behavior to the page
    */
   function applyFreezeHeader() {
@@ -885,6 +1058,9 @@ const FreezeHeaderFeature = (() => {
 
     // Apply sticky header
     applyFreezeHeader();
+
+    // Set up popup detection to exclude popups from freeze header effects
+    setupPopupObserver();
 
     // Watch for DOM changes (SPA navigation)
     observer = new MutationObserver((mutations) => {
@@ -998,6 +1174,9 @@ const FreezeHeaderFeature = (() => {
       clearTimeout(debounceTimer);
       debounceTimer = null;
     }
+
+    // Clean up popup observer
+    cleanupPopupObserver();
 
     // Remove styles and applied classes
     removeStyles();
