@@ -23,52 +23,21 @@ const ContrastFixFeature = (() => {
     // Create debounced update function using TimingUtils
     debouncedUpdate = window.TimingUtils.debounce(() => {
       fixAllScheduleItems();
-    }, 100);
+    }, 150);
 
-    // Watch for DOM changes - both new nodes AND style attribute changes
+    // Watch for DOM changes
     observer = new MutationObserver((mutations) => {
-      let shouldUpdate = false;
-
-      for (const mutation of mutations) {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          shouldUpdate = true;
-          break;
-        }
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          // Check if this is a schedule item that JobTread modified (not us)
-          const target = mutation.target;
-          if (target.classList && target.classList.contains('cursor-pointer')) {
-            // Check if the background changed from what we set
-            const expectedBg = target.dataset.jtExpectedBg;
-            if (expectedBg) {
-              const currentStyle = target.getAttribute('style') || '';
-              const bgMatch = currentStyle.match(/background-color:\s*(rgb\([^)]+\))/);
-              const currentBg = bgMatch ? bgMatch[1] : null;
-              // If background changed from what we set, JobTread updated it
-              if (currentBg && currentBg !== expectedBg) {
-                shouldUpdate = true;
-                break;
-              }
-            } else {
-              // No expected bg tracked, needs processing
-              shouldUpdate = true;
-              break;
-            }
-          }
-        }
-      }
+      const shouldUpdate = mutations.some(mutation => mutation.addedNodes.length > 0);
 
       if (shouldUpdate) {
         debouncedUpdate();
       }
     });
 
-    // Start observing - watch for both added nodes and style changes
+    // Start observing
     observer.observe(document.body, {
       childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['style']
+      subtree: true
     });
 
     console.log('ContrastFix: Feature loaded');
@@ -115,7 +84,7 @@ const ContrastFixFeature = (() => {
     return 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
   }
 
-  // Calculate relative luminance and return appropriate text color
+  // Get appropriate text color based on background luminance
   function getContrastColor(rgbString) {
     const rgb = parseRgb(rgbString);
     if (!rgb) return null;
@@ -126,48 +95,29 @@ const ContrastFixFeature = (() => {
     return luminance > 0.5 ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)';
   }
 
-  // Check if a background color is "light" (unselected task state)
-  // Light backgrounds have high luminance (pastel colors like rgb(230, 244, 247))
-  // Selected tasks have saturated/darker backgrounds matching their task type color
-  function isLightBackground(rgbString) {
-    const rgb = parseRgb(rgbString);
-    if (!rgb) return false;
-
-    const luminance = getLuminance(rgb.r, rgb.g, rgb.b);
-
-    // Luminance > 0.7 indicates a light/pastel background (unselected state)
-    // Selected tasks typically have luminance < 0.5
-    return luminance > 0.7;
+  // Check if dark mode or custom theme is active
+  function isDarkOrCustomTheme() {
+    return document.body.classList.contains('jt-dark-mode') ||
+           document.body.classList.contains('jt-custom-theme');
   }
 
-  // Get the appropriate background color for unselected tasks based on theme
-  function getThemeBackgroundColor() {
-    if (isCustomThemeActive()) {
-      // Try to get the custom theme's elevated background color from CSS variable
-      const elevated = getComputedStyle(document.documentElement).getPropertyValue('--jt-theme-background-elevated').trim();
-      if (elevated) {
-        // Convert hex to rgb if needed
-        if (elevated.startsWith('#')) {
-          const r = parseInt(elevated.slice(1, 3), 16);
-          const g = parseInt(elevated.slice(3, 5), 16);
-          const b = parseInt(elevated.slice(5, 7), 16);
-          return `rgb(${r}, ${g}, ${b})`;
-        }
-        return elevated;
-      }
-    }
-    // Default dark mode background
-    return 'rgb(58, 58, 58)'; // #3a3a3a
+  // Darken an RGB color for dark mode (reduce brightness significantly)
+  function darkenColor(rgb) {
+    // Reduce each channel to ~30% of original to create dark version
+    return {
+      r: Math.round(rgb.r * 0.3),
+      g: Math.round(rgb.g * 0.3),
+      b: Math.round(rgb.b * 0.3)
+    };
   }
 
   // Fix text contrast for a single element
-  // In dark mode/custom theme, also handles background color for unselected tasks
-  function fixTextContrast(element, isDarkOrCustomTheme = false) {
+  // In dark mode/custom theme, also darkens bright backgrounds
+  function fixTextContrast(element) {
     const style = element.getAttribute('style');
     if (!style) return;
 
     // Skip tags - they should keep their original colors
-    // Tags have the rounded-sm class and px-2/py-1 padding
     if (element.classList.contains('rounded-sm') &&
         (element.classList.contains('px-2') || element.classList.contains('py-1'))) {
       return;
@@ -175,44 +125,33 @@ const ContrastFixFeature = (() => {
 
     // Check if element has both background-color and color in inline styles
     const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\))/);
-    const textColorMatch = style.match(/color:\s*rgb\([^)]+\)/);
+    const textColorMatch = style.match(/(?<![a-z-])color:\s*rgb\([^)]+\)/);
 
     if (bgColorMatch && textColorMatch) {
-      const backgroundColor = bgColorMatch[1];
+      let backgroundColor = bgColorMatch[1];
       let newStyle = style;
-      let newBgColor = backgroundColor;
-      let needsUpdate = false;
+      const bgRgb = parseRgb(backgroundColor);
 
-      // Clear expected background if it doesn't match current (JobTread changed it)
-      const expectedBg = element.dataset.jtExpectedBg;
-      if (expectedBg && expectedBg !== backgroundColor) {
-        delete element.dataset.jtExpectedBg;
-      }
+      // In dark mode/custom theme, darken bright backgrounds
+      if (isDarkOrCustomTheme() && bgRgb) {
+        const luminance = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
 
-      // In dark mode/custom theme, handle background colors intelligently
-      if (isDarkOrCustomTheme) {
-        if (isLightBackground(backgroundColor)) {
-          // Light background = unselected task, override to theme background
-          newBgColor = getThemeBackgroundColor();
-          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${newBgColor}`);
-          needsUpdate = true;
+        // If background is bright (luminance > 0.5), darken it
+        if (luminance > 0.5) {
+          const darkBg = darkenColor(bgRgb);
+          backgroundColor = `rgb(${darkBg.r}, ${darkBg.g}, ${darkBg.b})`;
+          newStyle = newStyle.replace(/background-color:\s*rgb\([^)]+\)/, `background-color: ${backgroundColor}`);
         }
-        // If NOT light background = selected task, preserve the original colored background
       }
 
-      // Calculate contrast color based on the (potentially modified) background
-      const contrastColor = getContrastColor(newBgColor);
+      const contrastColor = getContrastColor(backgroundColor);
 
       if (contrastColor) {
-        const currentColor = window.getComputedStyle(element).color;
+        newStyle = newStyle.replace(/(?<![a-z-])color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
 
-        // Update if color is different or background was changed
-        if (currentColor !== contrastColor || needsUpdate) {
-          newStyle = newStyle.replace(/color:\s*rgb\([^)]+\)/, `color: ${contrastColor}`);
+        // Only update if style actually changed
+        if (newStyle !== style) {
           element.setAttribute('style', newStyle);
-          element.style.color = contrastColor;
-          // Track the expected background so we can detect when JobTread changes it
-          element.dataset.jtExpectedBg = newBgColor;
         }
       }
     }
@@ -220,47 +159,27 @@ const ContrastFixFeature = (() => {
 
   // Highlight current date with blue background
   function highlightCurrentDate() {
-    // Find all date cells with the blue background (current date indicator)
     const currentDateDivs = document.querySelectorAll('div.bg-blue-500.text-white');
 
     currentDateDivs.forEach(dateDiv => {
-      // Find the parent td cell
       let tdCell = dateDiv.closest('td');
 
       if (tdCell && !tdCell.classList.contains('jt-current-date-enhanced')) {
-        // Add a custom class to prevent re-processing
         tdCell.classList.add('jt-current-date-enhanced');
-
-        // Fill the entire cell background with blue
         tdCell.style.backgroundColor = 'rgb(59, 130, 246)';
       }
     });
   }
 
-  // Check if dark mode is currently active
-  function isDarkModeActive() {
-    // Check if dark mode CSS is injected
-    return document.getElementById('jt-dark-mode-styles') !== null;
-  }
-
-  // Check if custom theme is currently active
-  function isCustomThemeActive() {
-    // Check if custom theme CSS is injected
-    return document.getElementById('jt-custom-theme-styles') !== null;
-  }
-
   // Process all schedule items
   function fixAllScheduleItems() {
-    // Check if dark mode or custom theme is active
-    const isDarkOrCustomTheme = isDarkModeActive() || isCustomThemeActive();
-
-    // Target the specific divs in schedule/calendar view that have inline background-color and color
+    // Target schedule items with inline background-color and color
     const scheduleItems = document.querySelectorAll('div[style*="background-color"][style*="color"]');
 
     scheduleItems.forEach(item => {
-      // Make sure we're only targeting the calendar/schedule items (they have the cursor-pointer class)
+      // Only target calendar/schedule items (they have cursor-pointer class)
       if (item.classList.contains('cursor-pointer')) {
-        fixTextContrast(item, isDarkOrCustomTheme);
+        fixTextContrast(item);
       }
     });
 
