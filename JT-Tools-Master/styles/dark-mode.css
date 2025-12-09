@@ -28,9 +28,24 @@ div.z-30.absolute.top-0.bottom-0.right-0 > .absolute.inset-0 {
 }
 
 /* === Schedule Card Overrides (Inline Styles) === */
-/* Darken bright task card backgrounds and ensure readable text */
+/* Dark overlay on task cards to darken bright backgrounds */
 td div.cursor-pointer[style*="background-color"] {
-    filter: brightness(0.4) saturate(1.2) !important;
+    position: relative !important;
+}
+
+td div.cursor-pointer[style*="background-color"]::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+/* Ensure text and content stays above the overlay */
+td div.cursor-pointer[style*="background-color"] > * {
+    position: relative !important;
+    z-index: 1 !important;
 }
 
 /* Force white text on darkened task cards */
@@ -42,11 +57,6 @@ td div.cursor-pointer[style*="background-color"] * {
 /* Keep the left border visible (task type indicator) */
 td div.cursor-pointer[style*="border-left"] {
     border-left-width: 4px !important;
-}
-
-/* Avatar circles inside schedule cards - keep their original brightness */
-td div.cursor-pointer div.rounded-full[style*="background-color"] {
-    filter: brightness(1) !important;
 }
 
 /* === Week/Day View Schedule Cards === */
