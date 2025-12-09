@@ -290,7 +290,6 @@ const CustomThemeFeature = (() => {
       /* Keep the left border visible (task type indicator) */
       td div.cursor-pointer[style*="border-left"] {
         border-left-width: 5px !important;
-        box-shadow: inset 4px 0 8px ${p.shadows.color};
       }
 
       /* === General Border Colors === */
