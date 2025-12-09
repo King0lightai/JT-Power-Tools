@@ -276,27 +276,12 @@ const CustomThemeFeature = (() => {
       }
 
       /* === Task Cards === */
-      /* Dark overlay on task cards to darken bright backgrounds */
+      /* Override task card backgrounds with theme-appropriate colors */
       td div.cursor-pointer[style*="background-color"] {
-        position: relative !important;
+        background-color: ${p.background.emphasis} !important;
       }
 
-      td div.cursor-pointer[style*="background-color"]::before {
-        content: '' !important;
-        position: absolute !important;
-        inset: 0 !important;
-        background: rgba(0, 0, 0, 0.55) !important;
-        pointer-events: none !important;
-        z-index: 0 !important;
-      }
-
-      /* Ensure text and content stays above the overlay */
-      td div.cursor-pointer[style*="background-color"] > * {
-        position: relative !important;
-        z-index: 1 !important;
-      }
-
-      /* Force readable text on darkened task cards */
+      /* Force readable text on task cards */
       td div.cursor-pointer[style*="background-color"],
       td div.cursor-pointer[style*="background-color"] * {
         color: ${p.text.primary} !important;
