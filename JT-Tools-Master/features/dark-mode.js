@@ -4,6 +4,7 @@
 const DarkModeFeature = (() => {
   let isActive = false;
   let styleElement = null;
+  let observer = null;
 
   // Initialize the feature
   function init() {
@@ -21,6 +22,12 @@ const DarkModeFeature = (() => {
     // Inject dark mode CSS
     injectDarkModeCSS();
 
+    // Highlight current date
+    highlightCurrentDate();
+
+    // Watch for DOM changes to highlight new date cells
+    startObserver();
+
     console.log('DarkMode: Dark theme applied');
   }
 
@@ -36,6 +43,12 @@ const DarkModeFeature = (() => {
 
     // Remove dark mode class from body
     document.body.classList.remove('jt-dark-mode');
+
+    // Disconnect observer
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
 
     // Remove injected CSS
     if (styleElement) {
@@ -55,6 +68,35 @@ const DarkModeFeature = (() => {
     styleElement.href = chrome.runtime.getURL('styles/dark-mode.css');
     styleElement.id = 'jt-dark-mode-styles';
     document.head.appendChild(styleElement);
+  }
+
+  // Watch for DOM changes
+  function startObserver() {
+    observer = new MutationObserver((mutations) => {
+      const hasNewNodes = mutations.some(m => m.addedNodes.length > 0);
+      if (hasNewNodes) {
+        highlightCurrentDate();
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  // Highlight current date with blue background
+  function highlightCurrentDate() {
+    const currentDateDivs = document.querySelectorAll('div.bg-blue-500.text-white');
+
+    currentDateDivs.forEach(dateDiv => {
+      const tdCell = dateDiv.closest('td');
+
+      if (tdCell && !tdCell.classList.contains('jt-dark-mode-date-enhanced')) {
+        tdCell.classList.add('jt-dark-mode-date-enhanced');
+        tdCell.style.backgroundColor = 'rgb(59, 130, 246)';
+      }
+    });
   }
 
   // Public API
