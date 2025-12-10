@@ -90,36 +90,60 @@ async function checkApiStatus() {
   const apiStatus = document.getElementById('apiStatus');
   const statusText = apiStatus.querySelector('.status-text');
   const apiKeyInput = document.getElementById('apiKey');
+  const orgIdInput = document.getElementById('orgId');
 
-  const isConfigured = await JobTreadAPI.isConfigured();
+  const isFullyConfigured = await JobTreadAPI.isFullyConfigured();
+  const storedOrgId = await JobTreadAPI.getOrgId();
 
-  if (isConfigured) {
+  if (isFullyConfigured) {
     apiStatus.className = 'api-status active';
-    statusText.textContent = 'API key configured';
-    apiKeyInput.placeholder = '••••••••••••••••';
+    statusText.textContent = 'API configured';
+    apiKeyInput.placeholder = '••••••••••••';
+    orgIdInput.placeholder = storedOrgId || 'Org ID';
   } else {
     apiStatus.className = 'api-status inactive';
-    statusText.textContent = 'No API key configured';
-    apiKeyInput.placeholder = 'Enter JobTread API key';
+    statusText.textContent = 'API not configured';
+    apiKeyInput.placeholder = 'Grant Key';
+    orgIdInput.placeholder = 'Org ID';
   }
 }
 
-// Test and save API key
+// Test and save API credentials
 async function testApiKey() {
   const apiKeyInput = document.getElementById('apiKey');
+  const orgIdInput = document.getElementById('orgId');
   const testBtn = document.getElementById('testApiBtn');
-  const apiKey = apiKeyInput.value.trim();
 
-  // If no new key entered, test existing key
-  if (!apiKey) {
-    const isConfigured = await JobTreadAPI.isConfigured();
-    if (!isConfigured) {
-      showStatus('Please enter an API key', 'error');
-      return;
-    }
-  } else {
-    // Save the new API key first
+  const apiKey = apiKeyInput.value.trim();
+  const orgId = orgIdInput.value.trim();
+
+  // If no new values entered, use existing
+  let useApiKey = apiKey;
+  let useOrgId = orgId;
+
+  if (!useApiKey) {
+    useApiKey = await JobTreadAPI.getApiKey();
+  }
+  if (!useOrgId) {
+    useOrgId = await JobTreadAPI.getOrgId();
+  }
+
+  // Validate we have both
+  if (!useApiKey) {
+    showStatus('Grant Key is required', 'error');
+    return;
+  }
+  if (!useOrgId) {
+    showStatus('Org ID is required', 'error');
+    return;
+  }
+
+  // Save credentials before testing
+  if (apiKey) {
     await JobTreadAPI.setApiKey(apiKey);
+  }
+  if (orgId) {
+    await JobTreadAPI.setOrgId(orgId);
   }
 
   // Disable button during test
@@ -127,12 +151,13 @@ async function testApiKey() {
   testBtn.textContent = 'Testing...';
 
   try {
-    const result = await JobTreadAPI.testConnection();
+    const result = await JobTreadAPI.testConnection(useOrgId);
 
     if (result.success) {
-      const orgName = result.user?.orgName || 'Unknown';
+      const orgName = result.organization?.name || 'Unknown';
       showStatus(`Connected to ${orgName}!`, 'success');
       apiKeyInput.value = '';
+      orgIdInput.value = '';
       await checkApiStatus();
 
       // Try to fetch custom fields for debugging
@@ -145,9 +170,9 @@ async function testApiKey() {
       }
     } else {
       showStatus(result.message || 'API connection failed', 'error');
-      // If test failed and we just set a new key, clear it
-      if (apiKey) {
-        await chrome.storage.sync.remove(JobTreadAPI.STORAGE_KEYS.API_KEY);
+      // If test failed and we just set new credentials, clear them
+      if (apiKey || orgId) {
+        await JobTreadAPI.clearConfig();
         await checkApiStatus();
       }
     }
@@ -667,8 +692,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Listen for API key test
   document.getElementById('testApiBtn').addEventListener('click', testApiKey);
 
-  // Allow Enter key in API key input
+  // Allow Enter key in API inputs
   document.getElementById('apiKey').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      testApiKey();
+    }
+  });
+  document.getElementById('orgId').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       testApiKey();
     }
