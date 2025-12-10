@@ -150,6 +150,11 @@ async function testApiKey() {
       showStatus(`Connected to ${orgName}!`, 'success');
       apiKeyInput.value = '';
       orgIdInput.value = '';
+
+      // Clear old cache data when API is reconnected
+      await JobTreadAPI.clearCache();
+      console.log('JobTreadAPI: Cache cleared after successful connection');
+
       await checkApiStatus();
 
       // Try to fetch custom fields for debugging
