@@ -420,12 +420,10 @@ const JobTreadAPI = (() => {
    * @param {Object} options - Query options
    * @param {number} options.limit - Max number of jobs to fetch (default 100)
    * @param {string} options.status - Filter by job status
-   * @param {string} options.customFieldName - Custom field name to filter by
-   * @param {string} options.customFieldValue - Custom field value to filter by
    * @returns {Promise<Array>} List of jobs with custom fields
    */
   async function fetchJobs(options = {}) {
-    const { limit = 100, status = null, customFieldName = null, customFieldValue = null } = options;
+    const { limit = 100, status = null } = options;
 
     let orgId = await getOrgId();
     if (!orgId) {
@@ -443,29 +441,7 @@ const JobTreadAPI = (() => {
       queryParams.where = ['status', '=', status];
     }
 
-    // Add custom field filter using the "with" pattern from JT docs
-    if (customFieldName && customFieldValue) {
-      queryParams.with = {
-        cf: {
-          _: 'customFieldValues',
-          $: {
-            where: [['customField', 'name'], '=', customFieldName]
-          },
-          values: {
-            $: { field: 'value' }
-          }
-        }
-      };
-      // Combine with existing where clause if present
-      const cfWhere = [['cf', 'values'], '=', customFieldValue];
-      if (queryParams.where) {
-        queryParams.where = ['and', queryParams.where, cfWhere];
-      } else {
-        queryParams.where = cfWhere;
-      }
-    }
-
-    // Pave query for jobs
+    // Pave query for jobs with their custom field values
     const query = {
       organization: {
         $: { id: orgId },
@@ -504,6 +480,29 @@ const JobTreadAPI = (() => {
       console.error('JobTreadAPI: Failed to fetch jobs:', error);
       throw error;
     }
+  }
+
+  /**
+   * Fetch jobs filtered by custom field value (client-side filtering)
+   * @param {string} fieldId - Custom field ID to filter by
+   * @param {string} fieldValue - Value to match
+   * @param {number} limit - Max jobs to fetch before filtering
+   * @returns {Promise<Array>} Filtered list of jobs
+   */
+  async function fetchJobsByCustomField(fieldId, fieldValue, limit = 500) {
+    const jobs = await fetchJobs({ limit });
+
+    // Filter client-side by custom field value
+    const filteredJobs = jobs.filter(job => {
+      const cfValues = job.customFieldValues?.nodes || [];
+      return cfValues.some(cfv =>
+        cfv.customField?.id === fieldId &&
+        cfv.value === fieldValue
+      );
+    });
+
+    console.log('JobTreadAPI: Filtered to', filteredJobs.length, 'jobs with', fieldId, '=', fieldValue);
+    return filteredJobs;
   }
 
   /**
@@ -659,6 +658,7 @@ const JobTreadAPI = (() => {
     // Data fetching
     fetchCustomFieldDefinitions,
     fetchJobs,
+    fetchJobsByCustomField,
     getCustomFieldValues,
 
     // Raw query access
