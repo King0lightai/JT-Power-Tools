@@ -242,8 +242,8 @@ const JobTreadAPI = (() => {
     const result = await paveQuery(query);
     console.log('JobTreadAPI: discoverOrganization full result:', JSON.stringify(result, null, 2));
 
-    // Response is wrapped in "query" key
-    const memberships = result.query?.currentGrant?.user?.memberships?.nodes || [];
+    // Response comes back WITHOUT the "query" wrapper - data is at root level
+    const memberships = result.currentGrant?.user?.memberships?.nodes || [];
     console.log('JobTreadAPI: memberships found:', memberships.length, memberships);
 
     if (memberships.length > 0) {
@@ -306,8 +306,8 @@ const JobTreadAPI = (() => {
 
       const result = await paveQuery(query);
 
-      // Response is wrapped in "query" key
-      if (result.query?.organization) {
+      // Response comes back WITHOUT the "query" wrapper
+      if (result.organization) {
         // Save the org ID since it worked
         await setOrgId(orgId);
 
@@ -315,8 +315,8 @@ const JobTreadAPI = (() => {
           success: true,
           message: 'API connection successful',
           organization: {
-            id: result.query.organization.id,
-            name: result.query.organization.name
+            id: result.organization.id,
+            name: result.organization.name
           }
         };
       }
@@ -396,7 +396,8 @@ const JobTreadAPI = (() => {
 
     try {
       const result = await paveQuery(query);
-      const allDefinitions = result.query?.organization?.customFields?.nodes || [];
+      // Response comes back WITHOUT the "query" wrapper
+      const allDefinitions = result.organization?.customFields?.nodes || [];
 
       // Filter for job custom fields only
       const jobDefinitions = allDefinitions.filter(cf => cf.targetType === 'job');
@@ -496,7 +497,8 @@ const JobTreadAPI = (() => {
 
     try {
       const result = await paveQuery(query);
-      const jobs = result.query?.organization?.jobs?.nodes || [];
+      // Response comes back WITHOUT the "query" wrapper
+      const jobs = result.organization?.jobs?.nodes || [];
       console.log('JobTreadAPI: Fetched jobs:', jobs.length);
       return jobs;
     } catch (error) {
