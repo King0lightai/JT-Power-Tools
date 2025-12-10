@@ -206,15 +206,24 @@ const QuickJobSwitcherFeature = (() => {
    * Inject custom field filter UI after the search input
    */
   async function injectFilterUI(searchInput) {
+    console.log('QuickJobSwitcher: injectFilterUI called');
+
     // Check if JobTreadAPI is available and configured
     if (typeof JobTreadAPI === 'undefined') {
       console.log('QuickJobSwitcher: JobTreadAPI not available, skipping filter UI');
       return;
     }
+    console.log('QuickJobSwitcher: JobTreadAPI is available');
 
     const isConfigured = await JobTreadAPI.isFullyConfigured();
+    console.log('QuickJobSwitcher: isFullyConfigured =', isConfigured);
+
     if (!isConfigured) {
       console.log('QuickJobSwitcher: API not configured, skipping filter UI');
+      // Log what's missing
+      const hasKey = await JobTreadAPI.isConfigured();
+      const orgId = await JobTreadAPI.getOrgId();
+      console.log('QuickJobSwitcher: hasApiKey =', hasKey, ', orgId =', orgId);
       return;
     }
 
@@ -227,8 +236,12 @@ const QuickJobSwitcherFeature = (() => {
 
     // Find the search input container (parent div with p-2 class)
     const searchContainer = searchInput.closest('div.p-2');
+    console.log('QuickJobSwitcher: searchContainer =', searchContainer);
+
     if (!searchContainer) {
       console.log('QuickJobSwitcher: Could not find search container');
+      // Try alternative: find parent containers
+      console.log('QuickJobSwitcher: searchInput parents:', searchInput.parentElement, searchInput.parentElement?.parentElement);
       return;
     }
 
