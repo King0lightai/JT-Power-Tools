@@ -48,10 +48,12 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Find the height of sticky headers at the top of the viewport
-   * @returns {number} The total height of sticky elements at top
+   * Find the bottom edge of sticky headers that are above the field
+   * @param {HTMLTextAreaElement} field - The field we're positioning toolbar for
+   * @returns {number} The bottom edge of the lowest sticky header above the field (in viewport coords)
    */
-  function getStickyHeaderOffset() {
+  function getStickyHeaderOffset(field) {
+    const fieldRect = field.getBoundingClientRect();
     let maxOffset = 0;
 
     // Check semantic header/nav elements
@@ -63,17 +65,16 @@ const FormatterToolbar = (() => {
 
       if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 20) {
         const rect = el.getBoundingClientRect();
-        if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
-          const bottomEdge = rect.bottom;
-          if (bottomEdge > maxOffset && bottomEdge < 200) {
-            maxOffset = bottomEdge;
+        // Element should be above the field and reasonably sized
+        if (rect.bottom < fieldRect.top + 50 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
           }
         }
       }
     });
 
-    // Check elements with sticky class (JobTread budget table headers)
-    // Look for elements that have position: sticky in computed style
+    // Check elements with sticky class (JobTread budget table headers, sidebar headers)
     const stickyClassElements = document.querySelectorAll('.sticky');
     stickyClassElements.forEach(el => {
       const style = window.getComputedStyle(el);
@@ -81,29 +82,26 @@ const FormatterToolbar = (() => {
 
       if (position === 'sticky') {
         const rect = el.getBoundingClientRect();
-        // Only consider elements at the top of viewport, reasonably sized
-        if (rect.top >= -5 && rect.top < 50 && rect.height > 20 && rect.height < 150) {
-          const bottomEdge = rect.bottom;
-          if (bottomEdge > maxOffset && bottomEdge < 200) {
-            maxOffset = bottomEdge;
+        // Element should be above or overlapping the field's top area, and reasonably sized
+        if (rect.bottom <= fieldRect.top + 50 && rect.height > 15 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
           }
         }
       }
     });
 
     // Also check parent rows of sticky elements (for table header rows like JobTread budget)
-    // The sticky cells are inside a parent row that defines the header height
     stickyClassElements.forEach(el => {
       const style = window.getComputedStyle(el);
       if (style.position === 'sticky') {
         const parent = el.parentElement;
         if (parent) {
           const parentRect = parent.getBoundingClientRect();
-          // Check if this parent row is at the top and looks like a header row
-          if (parentRect.top >= -5 && parentRect.top < 50 && parentRect.height > 20 && parentRect.height < 100) {
-            const bottomEdge = parentRect.bottom;
-            if (bottomEdge > maxOffset && bottomEdge < 200) {
-              maxOffset = bottomEdge;
+          // Parent row should be above the field and look like a header row
+          if (parentRect.bottom <= fieldRect.top + 50 && parentRect.height > 15 && parentRect.height < 100) {
+            if (parentRect.bottom > maxOffset) {
+              maxOffset = parentRect.bottom;
             }
           }
         }
@@ -123,7 +121,7 @@ const FormatterToolbar = (() => {
     const toolbarHeight = 44;
     const padding = 8;
     const viewportHeight = window.innerHeight;
-    const stickyHeaderOffset = getStickyHeaderOffset();
+    const stickyHeaderOffset = getStickyHeaderOffset(field);
 
     // Calculate usable viewport area (accounting for sticky headers)
     const viewportTop = stickyHeaderOffset || 0;
