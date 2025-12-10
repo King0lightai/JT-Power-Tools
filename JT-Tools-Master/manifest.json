@@ -14,6 +14,7 @@
   ],
   "host_permissions": [
     "https://*.jobtread.com/*",
+    "https://api.jobtread.com/*",
     "https://*.workers.dev/*"
   ],
   "action": {
@@ -39,6 +40,7 @@
         "utils/sanitizer.js",
         "utils/color-utils.js",
         "utils/debounce.js",
+        "services/jobtread-api.js",
         "features/drag-drop-modules/view-detector.js",
         "features/drag-drop-modules/date-utils.js",
         "features/drag-drop-modules/weekend-utils.js",
