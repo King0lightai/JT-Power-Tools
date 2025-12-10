@@ -1,10 +1,14 @@
 // JobTread Quick Job Switcher Feature
 // Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
+// Enhanced with custom field filtering via JobTread API
 
 const QuickJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
   let jKeyPressed = false;
+  let customFieldDefinitions = null;
+  let filterContainer = null;
+  let activeFilters = {};
 
   /**
    * Initialize the feature
@@ -187,12 +191,326 @@ const QuickJobSwitcherFeature = (() => {
       if (searchInput) {
         searchInput.focus();
         console.log('QuickJobSwitcher: ✅ Search input focused');
+
+        // Inject custom field filter UI if API is configured
+        injectFilterUI(searchInput);
       } else {
         console.log('QuickJobSwitcher: ⚠️ Could not find search input to focus');
       }
     }, 150);
 
     console.log('QuickJobSwitcher: ✅ Sidebar opened');
+  }
+
+  /**
+   * Inject custom field filter UI after the search input
+   */
+  async function injectFilterUI(searchInput) {
+    // Check if JobTreadAPI is available and configured
+    if (typeof JobTreadAPI === 'undefined') {
+      console.log('QuickJobSwitcher: JobTreadAPI not available, skipping filter UI');
+      return;
+    }
+
+    const isConfigured = await JobTreadAPI.isFullyConfigured();
+    if (!isConfigured) {
+      console.log('QuickJobSwitcher: API not configured, skipping filter UI');
+      return;
+    }
+
+    // Check if we already injected the filter UI
+    const existing = document.getElementById('jt-custom-field-filter');
+    if (existing) {
+      console.log('QuickJobSwitcher: Filter UI already exists');
+      return;
+    }
+
+    // Find the search input container (parent div with p-2 class)
+    const searchContainer = searchInput.closest('div.p-2');
+    if (!searchContainer) {
+      console.log('QuickJobSwitcher: Could not find search container');
+      return;
+    }
+
+    console.log('QuickJobSwitcher: Injecting filter UI...');
+
+    // Create filter container
+    filterContainer = document.createElement('div');
+    filterContainer.id = 'jt-custom-field-filter';
+    filterContainer.className = 'p-2 pt-0';
+    filterContainer.innerHTML = `
+      <div class="flex items-center gap-2">
+        <select id="jt-cf-field-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0;">
+          <option value="">Filter by Custom Field...</option>
+        </select>
+        <select id="jt-cf-value-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0; display: none;">
+          <option value="">Select value...</option>
+        </select>
+        <button id="jt-cf-clear-btn" class="rounded-sm border p-1 text-sm bg-white hover:bg-gray-50 text-gray-500" style="display: none;" title="Clear filter">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="h-4 w-4" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div id="jt-cf-status" class="text-xs text-gray-500 mt-1" style="display: none;"></div>
+    `;
+
+    // Insert after search container
+    searchContainer.after(filterContainer);
+
+    // Load custom field definitions
+    await loadCustomFieldDefinitions();
+
+    // Set up event listeners
+    setupFilterEventListeners();
+  }
+
+  /**
+   * Load custom field definitions from API
+   */
+  async function loadCustomFieldDefinitions() {
+    const fieldSelect = document.getElementById('jt-cf-field-select');
+    if (!fieldSelect) return;
+
+    try {
+      console.log('QuickJobSwitcher: Loading custom field definitions...');
+      customFieldDefinitions = await JobTreadAPI.fetchCustomFieldDefinitions();
+
+      // Populate dropdown
+      customFieldDefinitions.forEach(field => {
+        const option = document.createElement('option');
+        option.value = field.id;
+        option.textContent = field.name;
+        option.dataset.type = field.type;
+        option.dataset.options = JSON.stringify(field.options || []);
+        fieldSelect.appendChild(option);
+      });
+
+      console.log('QuickJobSwitcher: Loaded', customFieldDefinitions.length, 'custom field definitions');
+    } catch (error) {
+      console.error('QuickJobSwitcher: Failed to load custom fields:', error);
+      const statusDiv = document.getElementById('jt-cf-status');
+      if (statusDiv) {
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = 'Failed to load custom fields';
+        statusDiv.style.color = '#ef4444';
+      }
+    }
+  }
+
+  /**
+   * Set up event listeners for filter controls
+   */
+  function setupFilterEventListeners() {
+    const fieldSelect = document.getElementById('jt-cf-field-select');
+    const valueSelect = document.getElementById('jt-cf-value-select');
+    const clearBtn = document.getElementById('jt-cf-clear-btn');
+
+    if (fieldSelect) {
+      fieldSelect.addEventListener('change', async (e) => {
+        const fieldId = e.target.value;
+        const selectedOption = e.target.selectedOptions[0];
+
+        if (!fieldId) {
+          valueSelect.style.display = 'none';
+          clearBtn.style.display = 'none';
+          clearFilter();
+          return;
+        }
+
+        // Show value select and populate based on field type
+        valueSelect.style.display = 'block';
+        valueSelect.innerHTML = '<option value="">Loading values...</option>';
+
+        const fieldType = selectedOption.dataset.type;
+        const fieldOptions = JSON.parse(selectedOption.dataset.options || '[]');
+        const fieldName = selectedOption.textContent;
+
+        // For fields with predefined options (select, radio, etc.)
+        if (fieldOptions && fieldOptions.length > 0) {
+          valueSelect.innerHTML = '<option value="">Select value...</option>';
+          fieldOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            valueSelect.appendChild(option);
+          });
+        } else {
+          // For other fields, try to get unique values from jobs
+          try {
+            const values = await JobTreadAPI.getCustomFieldValues(fieldId);
+            valueSelect.innerHTML = '<option value="">Select value...</option>';
+            values.forEach(val => {
+              const option = document.createElement('option');
+              option.value = val;
+              option.textContent = val;
+              valueSelect.appendChild(option);
+            });
+
+            if (values.length === 0) {
+              valueSelect.innerHTML = '<option value="">No values found</option>';
+            }
+          } catch (error) {
+            console.error('QuickJobSwitcher: Failed to get field values:', error);
+            valueSelect.innerHTML = '<option value="">Error loading values</option>';
+          }
+        }
+
+        // Store the selected field name for filtering
+        activeFilters.fieldName = fieldName;
+        activeFilters.fieldId = fieldId;
+      });
+    }
+
+    if (valueSelect) {
+      valueSelect.addEventListener('change', async (e) => {
+        const value = e.target.value;
+        if (!value) {
+          clearFilter();
+          return;
+        }
+
+        activeFilters.value = value;
+        clearBtn.style.display = 'block';
+
+        // Apply filter
+        await applyFilter();
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        clearFilter();
+        fieldSelect.value = '';
+        valueSelect.style.display = 'none';
+        valueSelect.innerHTML = '<option value="">Select value...</option>';
+        clearBtn.style.display = 'none';
+      });
+    }
+  }
+
+  /**
+   * Apply the current filter
+   */
+  async function applyFilter() {
+    const statusDiv = document.getElementById('jt-cf-status');
+
+    if (!activeFilters.fieldName || !activeFilters.value) {
+      return;
+    }
+
+    console.log('QuickJobSwitcher: Applying filter:', activeFilters.fieldName, '=', activeFilters.value);
+
+    if (statusDiv) {
+      statusDiv.style.display = 'block';
+      statusDiv.textContent = 'Filtering...';
+      statusDiv.style.color = '#6b7280';
+    }
+
+    try {
+      // Fetch filtered jobs from API
+      const jobs = await JobTreadAPI.fetchJobs({
+        customFieldName: activeFilters.fieldName,
+        customFieldValue: activeFilters.value,
+        limit: 50
+      });
+
+      console.log('QuickJobSwitcher: Found', jobs.length, 'matching jobs');
+
+      if (statusDiv) {
+        statusDiv.textContent = `Found ${jobs.length} matching job${jobs.length !== 1 ? 's' : ''}`;
+        statusDiv.style.color = '#10b981';
+      }
+
+      // Update the job list display
+      updateJobListDisplay(jobs);
+    } catch (error) {
+      console.error('QuickJobSwitcher: Filter error:', error);
+      if (statusDiv) {
+        statusDiv.textContent = 'Filter error: ' + error.message;
+        statusDiv.style.color = '#ef4444';
+      }
+    }
+  }
+
+  /**
+   * Clear the current filter
+   */
+  function clearFilter() {
+    activeFilters = {};
+
+    const statusDiv = document.getElementById('jt-cf-status');
+    if (statusDiv) {
+      statusDiv.style.display = 'none';
+    }
+
+    // Restore original job list
+    restoreJobListDisplay();
+  }
+
+  /**
+   * Update the job list to show filtered results
+   */
+  function updateJobListDisplay(jobs) {
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (!sidebar) return;
+
+    // Find the job list container (the scrollable area with job items)
+    const jobListContainer = sidebar.querySelector('div[style*="padding-top: 0px"]');
+    if (!jobListContainer) {
+      console.log('QuickJobSwitcher: Could not find job list container');
+      return;
+    }
+
+    // Store original content if not already stored
+    if (!jobListContainer.dataset.originalHtml) {
+      jobListContainer.dataset.originalHtml = jobListContainer.innerHTML;
+    }
+
+    // Create filtered job items HTML
+    if (jobs.length === 0) {
+      jobListContainer.innerHTML = `
+        <div class="p-4 text-center text-gray-500">
+          No jobs match the selected filter
+        </div>
+      `;
+      return;
+    }
+
+    const jobItemsHtml = jobs.map(job => `
+      <div role="button" tabindex="0" class="relative cursor-pointer p-2 flex items-center gap-2 border-t hover:bg-gray-50" data-job-id="${job.id}">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] shrink-0 text-xl text-green-500 invisible" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
+        <div class="grow min-w-0">
+          <div class="text-cyan-500 text-xs font-bold uppercase">${job.number || ''}</div>
+          <div class="flex gap-2">
+            <div class="grow min-w-0 font-bold">${job.name || 'Unnamed Job'}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    jobListContainer.innerHTML = jobItemsHtml;
+
+    // Add click handlers to navigate to jobs
+    jobListContainer.querySelectorAll('[data-job-id]').forEach(item => {
+      item.addEventListener('click', () => {
+        const jobId = item.dataset.jobId;
+        // Navigate to job page
+        window.location.href = `/jobs/${jobId}`;
+      });
+    });
+  }
+
+  /**
+   * Restore the original job list display
+   */
+  function restoreJobListDisplay() {
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (!sidebar) return;
+
+    const jobListContainer = sidebar.querySelector('div[style*="padding-top: 0px"]');
+    if (!jobListContainer || !jobListContainer.dataset.originalHtml) return;
+
+    jobListContainer.innerHTML = jobListContainer.dataset.originalHtml;
+    delete jobListContainer.dataset.originalHtml;
   }
 
   /**
