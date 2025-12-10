@@ -130,17 +130,18 @@ async function testApiKey() {
     const result = await JobTreadAPI.testConnection();
 
     if (result.success) {
-      showStatus('API connection successful!', 'success');
+      const orgName = result.user?.orgName || 'Unknown';
+      showStatus(`Connected to ${orgName}!`, 'success');
       apiKeyInput.value = '';
       await checkApiStatus();
 
-      // Try to discover available queries for debugging
-      console.log('JobTreadAPI: Discovering schema...');
+      // Try to fetch custom fields for debugging
+      console.log('JobTreadAPI: Fetching custom fields...');
       try {
-        const queries = await JobTreadAPI.getAvailableQueries();
-        console.log('JobTreadAPI: Available queries:', queries);
-      } catch (schemaError) {
-        console.log('JobTreadAPI: Schema discovery failed (introspection may be disabled):', schemaError.message);
+        const customFields = await JobTreadAPI.fetchCustomFieldDefinitions();
+        console.log('JobTreadAPI: Custom field definitions:', customFields);
+      } catch (cfError) {
+        console.log('JobTreadAPI: Custom fields fetch failed:', cfError.message);
       }
     } else {
       showStatus(result.message || 'API connection failed', 'error');

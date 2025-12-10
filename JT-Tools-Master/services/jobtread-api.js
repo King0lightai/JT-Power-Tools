@@ -1,16 +1,18 @@
 // JobTread API Client Service
-// Handles GraphQL API calls for fetching jobs, custom fields, and other data
+// Handles Pave API calls for fetching jobs, custom fields, and other data
 
 const JobTreadAPI = (() => {
-  // API Configuration
-  const API_URL = 'https://api.jobtread.com/graphql';
+  // API Configuration - JobTread uses Pave query language
+  const API_URL = 'https://api.jobtread.com/pave';
 
   // Storage keys
   const STORAGE_KEYS = {
     API_KEY: 'jtToolsApiKey',
+    ORG_ID: 'jtToolsOrgId',
     JOBS_CACHE: 'jtToolsJobsCache',
     CUSTOM_FIELDS_CACHE: 'jtToolsCustomFieldsCache',
-    CACHE_TIMESTAMP: 'jtToolsCacheTimestamp'
+    CUSTOM_FIELDS_TIMESTAMP: 'jtToolsCustomFieldsTimestamp',
+    JOBS_TIMESTAMP: 'jtToolsJobsTimestamp'
   };
 
   // Cache duration (5 minutes for jobs, 1 hour for custom field definitions)
@@ -48,7 +50,37 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Check if API is configured
+   * Get the stored organization ID
+   * @returns {Promise<string|null>}
+   */
+  async function getOrgId() {
+    try {
+      const result = await chrome.storage.sync.get(STORAGE_KEYS.ORG_ID);
+      return result[STORAGE_KEYS.ORG_ID] || null;
+    } catch (error) {
+      console.error('JobTreadAPI: Error getting org ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save organization ID to storage
+   * @param {string} orgId
+   * @returns {Promise<boolean>}
+   */
+  async function setOrgId(orgId) {
+    try {
+      await chrome.storage.sync.set({ [STORAGE_KEYS.ORG_ID]: orgId });
+      console.log('JobTreadAPI: Org ID saved');
+      return true;
+    } catch (error) {
+      console.error('JobTreadAPI: Error saving org ID:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if API is configured (has both API key and org ID)
    * @returns {Promise<boolean>}
    */
   async function isConfigured() {
@@ -57,12 +89,22 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Execute a GraphQL query
-   * @param {string} query - GraphQL query string
-   * @param {Object} variables - Query variables
+   * Check if fully configured (has org ID too)
+   * @returns {Promise<boolean>}
+   */
+  async function isFullyConfigured() {
+    const apiKey = await getApiKey();
+    const orgId = await getOrgId();
+    return !!(apiKey && orgId);
+  }
+
+  /**
+   * Execute a Pave query
+   * JobTread uses Pave query language - a JSON-based query format
+   * @param {Object} query - Pave query object
    * @returns {Promise<Object>} Response data
    */
-  async function graphqlQuery(query, variables = {}) {
+  async function paveQuery(query) {
     const apiKey = await getApiKey();
 
     if (!apiKey) {
@@ -70,31 +112,33 @@ const JobTreadAPI = (() => {
     }
 
     try {
+      console.log('JobTreadAPI: Executing Pave query:', JSON.stringify(query, null, 2));
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({
-          query,
-          variables
-        })
+        body: JSON.stringify(query)
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('JobTreadAPI: API Error:', response.status, errorText);
         throw new Error(`API Error ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
+      console.log('JobTreadAPI: Query result:', result);
 
+      // Check for errors in the response
       if (result.errors && result.errors.length > 0) {
-        console.error('JobTreadAPI: GraphQL errors:', result.errors);
-        throw new Error(result.errors[0].message);
+        console.error('JobTreadAPI: Pave errors:', result.errors);
+        throw new Error(result.errors[0].message || 'Query failed');
       }
 
-      return result.data;
+      return result;
     } catch (error) {
       console.error('JobTreadAPI: Query failed:', error);
       throw error;
@@ -102,171 +146,65 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Introspect the GraphQL schema to discover available types and fields
-   * @returns {Promise<Object>} Schema information
+   * Fetch the current user's organization info
+   * Used to discover the organization ID
+   * @returns {Promise<Object>} User and organization info
    */
-  async function introspectSchema() {
-    const introspectionQuery = `
-      query IntrospectionQuery {
-        __schema {
-          queryType {
-            name
-            fields {
-              name
-              description
-              args {
-                name
-                type {
-                  name
-                  kind
-                }
-              }
-              type {
-                name
-                kind
-                ofType {
-                  name
-                  kind
-                }
-              }
-            }
-          }
-          types {
-            name
-            kind
-            description
-            fields {
-              name
-              description
-              type {
-                name
-                kind
-                ofType {
-                  name
-                  kind
-                }
-              }
-            }
+  async function fetchCurrentUser() {
+    const query = {
+      viewer: {
+        id: {},
+        email: {},
+        name: {},
+        organizations: {
+          nodes: {
+            id: {},
+            name: {}
           }
         }
       }
-    `;
+    };
 
-    return await graphqlQuery(introspectionQuery);
+    const result = await paveQuery(query);
+    return result.viewer;
   }
 
   /**
-   * Get a simplified list of available query types
-   * @returns {Promise<Array>} List of query field names and descriptions
+   * Auto-discover and save organization ID from current user
+   * @returns {Promise<string|null>} Organization ID or null
    */
-  async function getAvailableQueries() {
+  async function discoverOrgId() {
     try {
-      const schema = await introspectSchema();
-      const queryFields = schema.__schema?.queryType?.fields || [];
+      const user = await fetchCurrentUser();
 
-      return queryFields.map(field => ({
-        name: field.name,
-        description: field.description,
-        args: field.args?.map(arg => arg.name) || [],
-        returnType: field.type?.name || field.type?.ofType?.name
-      }));
-    } catch (error) {
-      console.error('JobTreadAPI: Failed to get available queries:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get type details from schema
-   * @param {string} typeName - Name of the type to inspect
-   * @returns {Promise<Object>} Type fields and information
-   */
-  async function getTypeDetails(typeName) {
-    const typeQuery = `
-      query TypeDetails {
-        __type(name: "${typeName}") {
-          name
-          kind
-          description
-          fields {
-            name
-            description
-            type {
-              name
-              kind
-              ofType {
-                name
-                kind
-              }
-            }
-          }
-        }
+      if (user?.organizations?.nodes?.length > 0) {
+        const orgId = user.organizations.nodes[0].id;
+        await setOrgId(orgId);
+        console.log('JobTreadAPI: Discovered org ID:', orgId);
+        return orgId;
       }
-    `;
 
-    const result = await graphqlQuery(typeQuery);
-    return result.__type;
-  }
-
-  /**
-   * Fetch jobs with custom fields
-   * This query structure will be refined once we discover the actual schema
-   * @param {Object} options - Query options (pagination, filters)
-   * @returns {Promise<Array>} List of jobs
-   */
-  async function fetchJobs(options = {}) {
-    const { limit = 100, offset = 0, search = '' } = options;
-
-    // This is a tentative query structure - will be updated based on actual schema
-    const jobsQuery = `
-      query GetJobs($limit: Int, $offset: Int, $search: String) {
-        jobs(limit: $limit, offset: $offset, search: $search) {
-          nodes {
-            id
-            name
-            number
-            status
-            customFields {
-              id
-              name
-              value
-              fieldDefinition {
-                id
-                name
-                type
-              }
-            }
-          }
-          totalCount
-          pageInfo {
-            hasNextPage
-          }
-        }
-      }
-    `;
-
-    try {
-      const data = await graphqlQuery(jobsQuery, { limit, offset, search });
-      return data.jobs;
+      return null;
     } catch (error) {
-      console.error('JobTreadAPI: Failed to fetch jobs:', error);
+      console.error('JobTreadAPI: Failed to discover org ID:', error);
       throw error;
     }
   }
 
   /**
    * Fetch custom field definitions for jobs
+   * @param {string} orgId - Organization ID (optional, will use stored if not provided)
    * @returns {Promise<Array>} List of custom field definitions
    */
-  async function fetchCustomFieldDefinitions() {
+  async function fetchCustomFieldDefinitions(orgId = null) {
     // Check cache first
     try {
       const cached = await chrome.storage.local.get([
         STORAGE_KEYS.CUSTOM_FIELDS_CACHE,
-        STORAGE_KEYS.CACHE_TIMESTAMP
+        STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP
       ]);
 
-      const cacheAge = Date.now() - (cached[STORAGE_KEYS.CACHE_TIMESTAMP] || 0);
+      const cacheAge = Date.now() - (cached[STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP] || 0);
 
       if (cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE] && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
         console.log('JobTreadAPI: Using cached custom fields');
@@ -276,31 +214,49 @@ const JobTreadAPI = (() => {
       // Cache read failed, continue to fetch
     }
 
-    // Tentative query - will be updated based on actual schema
-    const customFieldsQuery = `
-      query GetCustomFieldDefinitions {
-        customFieldDefinitions(objectType: JOB) {
-          nodes {
-            id
-            name
-            type
-            options
-            required
+    // Get org ID if not provided
+    if (!orgId) {
+      orgId = await getOrgId();
+      if (!orgId) {
+        // Try to discover it
+        orgId = await discoverOrgId();
+        if (!orgId) {
+          throw new Error('Organization ID not configured');
+        }
+      }
+    }
+
+    // Pave query for custom fields targeting jobs
+    const query = {
+      organization: {
+        $: { id: orgId },
+        customFields: {
+          $: {
+            where: ['targetType', '=', 'job'],
+            sortBy: [{ field: 'position' }]
+          },
+          nodes: {
+            id: {},
+            name: {},
+            type: {},
+            targetType: {},
+            options: {}
           }
         }
       }
-    `;
+    };
 
     try {
-      const data = await graphqlQuery(customFieldsQuery);
-      const definitions = data.customFieldDefinitions?.nodes || [];
+      const result = await paveQuery(query);
+      const definitions = result.organization?.customFields?.nodes || [];
 
       // Cache the results
       await chrome.storage.local.set({
         [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: definitions,
-        [STORAGE_KEYS.CACHE_TIMESTAMP]: Date.now()
+        [STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP]: Date.now()
       });
 
+      console.log('JobTreadAPI: Fetched custom field definitions:', definitions);
       return definitions;
     } catch (error) {
       console.error('JobTreadAPI: Failed to fetch custom field definitions:', error);
@@ -309,38 +265,151 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Fetch jobs filtered by custom field value
-   * @param {string} fieldId - Custom field definition ID
-   * @param {string} value - Value to filter by
-   * @returns {Promise<Array>} Filtered jobs
+   * Fetch jobs with their custom field values
+   * @param {Object} options - Query options
+   * @returns {Promise<Array>} List of jobs with custom fields
    */
-  async function fetchJobsByCustomField(fieldId, value) {
-    // This query structure will be refined based on actual API capabilities
-    const filterQuery = `
-      query GetJobsByCustomField($fieldId: ID!, $value: String!) {
-        jobs(customFieldFilter: { fieldId: $fieldId, value: $value }) {
-          nodes {
-            id
-            name
-            number
-            status
-            customFields {
-              id
-              name
-              value
+  async function fetchJobs(options = {}) {
+    const { limit = 100, search = '', status = null } = options;
+
+    let orgId = await getOrgId();
+    if (!orgId) {
+      orgId = await discoverOrgId();
+      if (!orgId) {
+        throw new Error('Organization ID not configured');
+      }
+    }
+
+    // Build where clause
+    const whereConditions = [];
+    if (status) {
+      whereConditions.push(['status', '=', status]);
+    }
+
+    // Pave query for jobs
+    const query = {
+      organization: {
+        $: { id: orgId },
+        jobs: {
+          $: {
+            first: limit,
+            ...(whereConditions.length > 0 && { where: whereConditions }),
+            sortBy: [{ field: 'createdAt', direction: 'DESC' }]
+          },
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            createdAt: {},
+            customFieldValues: {
+              nodes: {
+                id: {},
+                value: {},
+                customField: {
+                  id: {},
+                  name: {},
+                  type: {}
+                }
+              }
             }
           }
         }
       }
-    `;
+    };
 
     try {
-      const data = await graphqlQuery(filterQuery, { fieldId, value });
-      return data.jobs?.nodes || [];
+      const result = await paveQuery(query);
+      const jobs = result.organization?.jobs?.nodes || [];
+      console.log('JobTreadAPI: Fetched jobs:', jobs.length);
+      return jobs;
+    } catch (error) {
+      console.error('JobTreadAPI: Failed to fetch jobs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch jobs filtered by a specific custom field value
+   * @param {string} customFieldId - Custom field ID
+   * @param {string} value - Value to filter by
+   * @returns {Promise<Array>} Filtered jobs
+   */
+  async function fetchJobsByCustomField(customFieldId, value) {
+    let orgId = await getOrgId();
+    if (!orgId) {
+      orgId = await discoverOrgId();
+      if (!orgId) {
+        throw new Error('Organization ID not configured');
+      }
+    }
+
+    // Pave query for jobs filtered by custom field
+    // Note: The exact filter syntax may need adjustment based on API capabilities
+    const query = {
+      organization: {
+        $: { id: orgId },
+        jobs: {
+          $: {
+            first: 100,
+            where: [
+              ['customFieldValues', 'some', [
+                ['customField', 'id', '=', customFieldId],
+                ['value', '=', value]
+              ]]
+            ],
+            sortBy: [{ field: 'number', direction: 'DESC' }]
+          },
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            customFieldValues: {
+              nodes: {
+                id: {},
+                value: {},
+                customField: {
+                  id: {},
+                  name: {}
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    try {
+      const result = await paveQuery(query);
+      return result.organization?.jobs?.nodes || [];
     } catch (error) {
       console.error('JobTreadAPI: Failed to fetch filtered jobs:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get unique values for a custom field across all jobs
+   * Useful for building filter dropdowns
+   * @param {string} customFieldId - Custom field ID
+   * @returns {Promise<Array>} Unique values
+   */
+  async function getCustomFieldValues(customFieldId) {
+    // Fetch all jobs and extract unique values for the field
+    const jobs = await fetchJobs({ limit: 500 });
+
+    const values = new Set();
+    jobs.forEach(job => {
+      const fieldValues = job.customFieldValues?.nodes || [];
+      fieldValues.forEach(fv => {
+        if (fv.customField?.id === customFieldId && fv.value) {
+          values.add(fv.value);
+        }
+      });
+    });
+
+    return Array.from(values).sort();
   }
 
   /**
@@ -349,15 +418,29 @@ const JobTreadAPI = (() => {
    */
   async function testConnection() {
     try {
-      // Try a simple query to test the connection
-      const testQuery = `
-        query TestConnection {
-          __typename
-        }
-      `;
+      // Try to fetch current user to test the connection
+      const user = await fetchCurrentUser();
 
-      await graphqlQuery(testQuery);
-      return { success: true, message: 'API connection successful' };
+      if (user) {
+        // Auto-discover org ID while we're at it
+        if (user.organizations?.nodes?.length > 0) {
+          const orgId = user.organizations.nodes[0].id;
+          await setOrgId(orgId);
+        }
+
+        return {
+          success: true,
+          message: 'API connection successful',
+          user: {
+            email: user.email,
+            name: user.name,
+            orgId: user.organizations?.nodes?.[0]?.id,
+            orgName: user.organizations?.nodes?.[0]?.name
+          }
+        };
+      }
+
+      return { success: false, message: 'No user data returned' };
     } catch (error) {
       return {
         success: false,
@@ -376,11 +459,29 @@ const JobTreadAPI = (() => {
       await chrome.storage.local.remove([
         STORAGE_KEYS.JOBS_CACHE,
         STORAGE_KEYS.CUSTOM_FIELDS_CACHE,
-        STORAGE_KEYS.CACHE_TIMESTAMP
+        STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP,
+        STORAGE_KEYS.JOBS_TIMESTAMP
       ]);
       console.log('JobTreadAPI: Cache cleared');
     } catch (error) {
       console.error('JobTreadAPI: Error clearing cache:', error);
+    }
+  }
+
+  /**
+   * Remove API configuration (logout)
+   * @returns {Promise<void>}
+   */
+  async function clearConfig() {
+    try {
+      await chrome.storage.sync.remove([
+        STORAGE_KEYS.API_KEY,
+        STORAGE_KEYS.ORG_ID
+      ]);
+      await clearCache();
+      console.log('JobTreadAPI: Configuration cleared');
+    } catch (error) {
+      console.error('JobTreadAPI: Error clearing config:', error);
     }
   }
 
@@ -389,21 +490,23 @@ const JobTreadAPI = (() => {
     // Configuration
     getApiKey,
     setApiKey,
+    getOrgId,
+    setOrgId,
     isConfigured,
+    isFullyConfigured,
     testConnection,
-
-    // Schema discovery
-    introspectSchema,
-    getAvailableQueries,
-    getTypeDetails,
+    clearConfig,
 
     // Data fetching
-    fetchJobs,
+    fetchCurrentUser,
+    discoverOrgId,
     fetchCustomFieldDefinitions,
+    fetchJobs,
     fetchJobsByCustomField,
+    getCustomFieldValues,
 
     // Raw query access
-    graphqlQuery,
+    paveQuery,
 
     // Cache management
     clearCache,
