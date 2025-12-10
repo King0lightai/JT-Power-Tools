@@ -132,51 +132,33 @@ const FormatterToolbar = (() => {
     const fieldVisibleBottom = Math.min(rect.bottom, viewportBottom);
     const fieldVisibleHeight = fieldVisibleBottom - fieldVisibleTop;
 
-    // Default: prefer positioning above the field
-    let preferAbove = rect.top > toolbarHeight + padding + viewportTop + 10;
     let topPosition;
     let isSticky = false;
 
-    if (preferAbove) {
-      // Normal position: above the field
-      const normalTop = rect.top + window.scrollY - toolbarHeight - padding;
-      const normalTopViewport = rect.top - toolbarHeight - padding;
+    // Always favor positioning above/at the top of the field
+    // Calculate where the toolbar would be if placed above the field
+    const normalTopAbove = rect.top + window.scrollY - toolbarHeight - padding;
+    const normalTopAboveViewport = rect.top - toolbarHeight - padding;
 
-      // Check if this position would be above the viewport (hidden by scroll or sticky header)
-      if (normalTopViewport < viewportTop) {
-        // Toolbar would be hidden - make it sticky
-        isSticky = true;
-        // Position toolbar at the top of the visible area, just below sticky headers
-        topPosition = viewportTop + window.scrollY + padding;
+    // Check if there's room above the field (between sticky header and field top)
+    const roomAbove = rect.top - viewportTop;
 
-        // But don't position it below the field
-        const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
-        if (topPosition > maxTop) {
-          topPosition = maxTop;
-        }
-      } else {
-        topPosition = normalTop;
+    if (roomAbove >= toolbarHeight + padding) {
+      // Enough room above - place toolbar above the field
+      topPosition = normalTopAbove;
+    } else if (normalTopAboveViewport < viewportTop) {
+      // Not enough room above - make toolbar sticky at top of visible area
+      isSticky = true;
+      topPosition = viewportTop + window.scrollY + padding;
+
+      // But don't position it past the bottom of the field
+      const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
+      if (topPosition > maxTop) {
+        topPosition = maxTop;
       }
     } else {
-      // Normal position: below the field
-      const normalTop = rect.bottom + window.scrollY + padding;
-      const normalBottomViewport = rect.bottom + toolbarHeight + padding;
-
-      // Check if this position would be below the viewport (hidden by scroll)
-      if (normalBottomViewport > viewportBottom) {
-        // Toolbar would be hidden - make it sticky
-        isSticky = true;
-        // Position toolbar at the bottom of the visible area
-        topPosition = viewportBottom + window.scrollY - toolbarHeight - padding;
-
-        // But don't position it above the field
-        const minTop = rect.top + window.scrollY + padding;
-        if (topPosition < minTop) {
-          topPosition = minTop;
-        }
-      } else {
-        topPosition = normalTop;
-      }
+      // Edge case: place above
+      topPosition = normalTopAbove;
     }
 
     // Hide toolbar if field is not visible enough (less than 30px visible)
