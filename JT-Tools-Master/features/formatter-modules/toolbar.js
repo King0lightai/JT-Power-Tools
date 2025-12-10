@@ -54,18 +54,15 @@ const FormatterToolbar = (() => {
   function getStickyHeaderOffset() {
     let maxOffset = 0;
 
-    // Only check semantic header/nav elements (not classes that might contain "header")
-    const potentialHeaders = document.querySelectorAll('header, nav');
-
-    potentialHeaders.forEach(el => {
+    // Check semantic header/nav elements
+    const semanticHeaders = document.querySelectorAll('header, nav');
+    semanticHeaders.forEach(el => {
       const style = window.getComputedStyle(el);
       const position = style.position;
       const top = parseFloat(style.top) || 0;
 
-      // Check if it's a sticky/fixed element anchored at the top
       if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 20) {
         const rect = el.getBoundingClientRect();
-        // Only consider elements that are actually at the top of viewport
         if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
           const bottomEdge = rect.bottom;
           if (bottomEdge > maxOffset && bottomEdge < 200) {
@@ -75,15 +72,40 @@ const FormatterToolbar = (() => {
       }
     });
 
-    // Also check for inline sticky styles, but be conservative
-    const jtStickyElements = document.querySelectorAll('[style*="position: sticky"], [style*="position:sticky"]');
-    jtStickyElements.forEach(el => {
-      const rect = el.getBoundingClientRect();
-      // Only consider if actually at top and reasonably sized (like a header bar)
-      if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
-        const bottomEdge = rect.bottom;
-        if (bottomEdge > maxOffset && bottomEdge < 200) {
-          maxOffset = bottomEdge;
+    // Check elements with sticky class (JobTread budget table headers)
+    // Look for elements that have position: sticky in computed style
+    const stickyClassElements = document.querySelectorAll('.sticky');
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      const position = style.position;
+
+      if (position === 'sticky') {
+        const rect = el.getBoundingClientRect();
+        // Only consider elements at the top of viewport, reasonably sized
+        if (rect.top >= -5 && rect.top < 50 && rect.height > 20 && rect.height < 150) {
+          const bottomEdge = rect.bottom;
+          if (bottomEdge > maxOffset && bottomEdge < 200) {
+            maxOffset = bottomEdge;
+          }
+        }
+      }
+    });
+
+    // Also check parent rows of sticky elements (for table header rows like JobTread budget)
+    // The sticky cells are inside a parent row that defines the header height
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (style.position === 'sticky') {
+        const parent = el.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          // Check if this parent row is at the top and looks like a header row
+          if (parentRect.top >= -5 && parentRect.top < 50 && parentRect.height > 20 && parentRect.height < 100) {
+            const bottomEdge = parentRect.bottom;
+            if (bottomEdge > maxOffset && bottomEdge < 200) {
+              maxOffset = bottomEdge;
+            }
+          }
         }
       }
     });
