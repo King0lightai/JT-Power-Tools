@@ -132,13 +132,8 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* When a popup is in fullscreen mode, ensure its sticky elements stay at top: 0 */
-    .jt-freeze-header-active .jt-fullscreen-popup .sticky {
+    .jt-fullscreen-popup .sticky {
       top: 0px !important;
-    }
-
-    /* Fullscreen popup container should not be affected by freeze header */
-    .jt-freeze-header-active .jt-fullscreen-popup {
-      z-index: 50 !important;
     }
 
     /* Reset nested sticky headers inside sidebar scroll containers to top: 0 */
@@ -843,6 +838,7 @@ const FreezeHeaderFeature = (() => {
   /**
    * Check if freeze header should be temporarily disabled
    * Disable when: Preview Document popup is open OR any popup is in fullscreen mode
+   * This allows JobTread's native fullscreen behavior to work properly
    */
   let freezeHeaderSuspended = false;
 
@@ -850,36 +846,30 @@ const FreezeHeaderFeature = (() => {
     // Check for Preview Document popup (uses max-w-screen-lg class)
     const previewPopup = document.querySelector('.max-w-screen-lg.shadow-lg.rounded-sm');
 
-    // Check for any popup in fullscreen mode (taking >90% of viewport)
-    let fullscreenPopup = null;
-    const popupSelectors = [
-      '.shadow-lg.rounded-sm.bg-white',
-      '.shadow-lg.m-auto',
-      '[class*="max-w-lg"].shadow-lg',
-      '[class*="max-w-screen"].shadow-lg'
-    ];
+    // Check for "Exit Fullscreen" button to detect fullscreen mode
+    // The exit fullscreen SVG has path: M8 3v3a2 2 0 0 1-2 2H3...
+    let isInFullscreenMode = false;
 
-    for (const selector of popupSelectors) {
-      const popups = document.querySelectorAll(selector);
-      for (const popup of popups) {
-        const rect = popup.getBoundingClientRect();
-        const isFullscreen = rect.width > window.innerWidth * 0.9 &&
-                            rect.height > window.innerHeight * 0.9;
-        if (isFullscreen) {
-          fullscreenPopup = popup;
-          break;
-        }
+    const allButtons = document.querySelectorAll('[role="button"]');
+    for (const button of allButtons) {
+      const svg = button.querySelector('svg');
+      if (!svg) continue;
+
+      const pathData = svg.querySelector('path')?.getAttribute('d') || '';
+      // Exit fullscreen icon path (arrows pointing inward)
+      if (pathData.includes('M8 3v3a2 2 0 0 1-2 2H3')) {
+        isInFullscreenMode = true;
+        break;
       }
-      if (fullscreenPopup) break;
     }
 
-    const shouldSuspend = previewPopup !== null || fullscreenPopup !== null;
+    const shouldSuspend = previewPopup !== null || isInFullscreenMode;
 
     if (shouldSuspend && !freezeHeaderSuspended) {
-      // Suspend freeze header
+      // Suspend freeze header to allow JobTread's native fullscreen to work
       document.body.classList.remove('jt-freeze-header-active');
       freezeHeaderSuspended = true;
-      console.log('FreezeHeader: Suspended due to', previewPopup ? 'Preview Document popup' : 'fullscreen popup');
+      console.log('FreezeHeader: Suspended due to', isInFullscreenMode ? 'fullscreen mode' : 'Preview Document popup');
     } else if (!shouldSuspend && freezeHeaderSuspended) {
       // Resume freeze header
       document.body.classList.add('jt-freeze-header-active');
@@ -901,13 +891,19 @@ const FreezeHeaderFeature = (() => {
     if (!svg) return;
 
     const pathData = svg.querySelector('path')?.getAttribute('d') || '';
-    const isExpandIcon = pathData.includes('M8 3H5') || pathData.includes('M 8 3') ||
-                         pathData.includes('m14 10') || pathData.includes('M15 3h6');
 
-    if (!isExpandIcon) return;
+    // Enter fullscreen icon (arrows pointing outward from corners)
+    const isEnterFullscreenIcon = pathData.includes('M8 3H5') || pathData.includes('M 8 3') ||
+                                   pathData.includes('m14 10') || pathData.includes('M15 3h6');
+
+    // Exit fullscreen icon (arrows pointing inward to corners)
+    const isExitFullscreenIcon = pathData.includes('M8 3v3a2 2 0 0 1-2 2H3');
+
+    if (!isEnterFullscreenIcon && !isExitFullscreenIcon) return;
 
     // Check freeze header suspension after popup resizes
-    setTimeout(checkAndSuspendFreezeHeader, 150);
+    // Use longer delay for fullscreen transitions
+    setTimeout(checkAndSuspendFreezeHeader, 200);
   }
 
   /**
