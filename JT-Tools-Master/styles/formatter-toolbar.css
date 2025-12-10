@@ -11,6 +11,13 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   visibility: visible !important;
   opacity: 1 !important;
+  transition: top 0.1s ease-out, opacity 0.15s ease, visibility 0.15s ease;
+}
+
+/* Sticky toolbar state - slightly enhanced shadow for visibility */
+.jt-formatter-toolbar.jt-toolbar-sticky {
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.12);
+  border-color: #bfdbfe; /* Light blue border when sticky */
 }
 
 .jt-toolbar-group {

@@ -48,7 +48,50 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Position toolbar relative to field
+   * Find the height of sticky headers at the top of the viewport
+   * @returns {number} The total height of sticky elements at top
+   */
+  function getStickyHeaderOffset() {
+    let maxOffset = 0;
+
+    // Find elements with position: sticky or position: fixed at the top
+    const potentialHeaders = document.querySelectorAll('header, nav, [class*="header"], [class*="nav"], [class*="sticky"], [class*="fixed"]');
+
+    potentialHeaders.forEach(el => {
+      const style = window.getComputedStyle(el);
+      const position = style.position;
+      const top = parseFloat(style.top) || 0;
+
+      // Check if it's a sticky/fixed element at the top
+      if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 100) {
+        const rect = el.getBoundingClientRect();
+        // Only consider elements that are actually visible at the top
+        if (rect.top >= -5 && rect.top < 100) {
+          const bottomEdge = rect.bottom;
+          if (bottomEdge > maxOffset) {
+            maxOffset = bottomEdge;
+          }
+        }
+      }
+    });
+
+    // Also check for common JobTread sticky elements
+    const jtStickyElements = document.querySelectorAll('[style*="position: sticky"], [style*="position:sticky"]');
+    jtStickyElements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top >= -5 && rect.top < 100) {
+        const bottomEdge = rect.bottom;
+        if (bottomEdge > maxOffset) {
+          maxOffset = bottomEdge;
+        }
+      }
+    });
+
+    return maxOffset;
+  }
+
+  /**
+   * Position toolbar relative to field with sticky behavior
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
    */
@@ -56,14 +99,80 @@ const FormatterToolbar = (() => {
     const rect = field.getBoundingClientRect();
     const toolbarHeight = 44;
     const padding = 8;
+    const viewportHeight = window.innerHeight;
+    const stickyHeaderOffset = getStickyHeaderOffset();
 
-    if (rect.top > toolbarHeight + padding + 10) {
-      toolbar.style.top = `${rect.top + window.scrollY - toolbarHeight - padding}px`;
+    // Calculate usable viewport area (accounting for sticky headers)
+    const viewportTop = stickyHeaderOffset || 0;
+    const viewportBottom = viewportHeight - padding;
+
+    // Determine if field is partially or fully visible
+    const fieldVisibleTop = Math.max(rect.top, viewportTop);
+    const fieldVisibleBottom = Math.min(rect.bottom, viewportBottom);
+    const fieldVisibleHeight = fieldVisibleBottom - fieldVisibleTop;
+
+    // Default: prefer positioning above the field
+    let preferAbove = rect.top > toolbarHeight + padding + viewportTop + 10;
+    let topPosition;
+    let isSticky = false;
+
+    if (preferAbove) {
+      // Normal position: above the field
+      const normalTop = rect.top + window.scrollY - toolbarHeight - padding;
+      const normalTopViewport = rect.top - toolbarHeight - padding;
+
+      // Check if this position would be above the viewport (hidden by scroll or sticky header)
+      if (normalTopViewport < viewportTop) {
+        // Toolbar would be hidden - make it sticky
+        isSticky = true;
+        // Position toolbar at the top of the visible area, just below sticky headers
+        topPosition = viewportTop + window.scrollY + padding;
+
+        // But don't position it below the field
+        const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
+        if (topPosition > maxTop) {
+          topPosition = maxTop;
+        }
+      } else {
+        topPosition = normalTop;
+      }
     } else {
-      toolbar.style.top = `${rect.bottom + window.scrollY + padding}px`;
+      // Normal position: below the field
+      const normalTop = rect.bottom + window.scrollY + padding;
+      const normalBottomViewport = rect.bottom + toolbarHeight + padding;
+
+      // Check if this position would be below the viewport (hidden by scroll)
+      if (normalBottomViewport > viewportBottom) {
+        // Toolbar would be hidden - make it sticky
+        isSticky = true;
+        // Position toolbar at the bottom of the visible area
+        topPosition = viewportBottom + window.scrollY - toolbarHeight - padding;
+
+        // But don't position it above the field
+        const minTop = rect.top + window.scrollY + padding;
+        if (topPosition < minTop) {
+          topPosition = minTop;
+        }
+      } else {
+        topPosition = normalTop;
+      }
     }
 
+    // Hide toolbar if field is not visible enough (less than 30px visible)
+    if (fieldVisibleHeight < 30) {
+      toolbar.style.visibility = 'hidden';
+      toolbar.style.opacity = '0';
+      return;
+    } else {
+      toolbar.style.visibility = 'visible';
+      toolbar.style.opacity = '1';
+    }
+
+    toolbar.style.top = `${topPosition}px`;
     toolbar.style.width = `auto`;
+
+    // Toggle sticky class for potential styling differences
+    toolbar.classList.toggle('jt-toolbar-sticky', isSticky);
 
     // Calculate left position with right-side overflow prevention
     let leftPosition = rect.left + window.scrollX;
