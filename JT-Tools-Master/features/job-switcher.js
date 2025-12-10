@@ -300,17 +300,86 @@ const QuickJobSwitcherFeature = (() => {
       console.log('QuickJobSwitcher: Loading custom field definitions...');
       customFieldDefinitions = await JobTreadAPI.fetchCustomFieldDefinitions();
 
-      // Populate dropdown
+      // Group by targetType
+      const groupedFields = {};
       customFieldDefinitions.forEach(field => {
-        const option = document.createElement('option');
-        option.value = field.id;
-        option.textContent = field.name;
-        option.dataset.type = field.type;
-        option.dataset.options = JSON.stringify(field.options || []);
-        fieldSelect.appendChild(option);
+        const targetType = (field.targetType || 'Other').toLowerCase();
+        if (!groupedFields[targetType]) {
+          groupedFields[targetType] = [];
+        }
+        groupedFields[targetType].push(field);
       });
 
-      console.log('QuickJobSwitcher: Loaded', customFieldDefinitions.length, 'custom field definitions');
+      console.log('QuickJobSwitcher: Grouped custom fields:', Object.keys(groupedFields));
+
+      // Populate dropdown with optgroups for each targetType
+      // Job fields first (these work best for job filtering)
+      const typeOrder = ['job', 'budget', 'contact', 'vendor', 'account', 'other'];
+
+      typeOrder.forEach(targetType => {
+        if (!groupedFields[targetType] || groupedFields[targetType].length === 0) return;
+
+        const optgroup = document.createElement('optgroup');
+        const typeLabel = targetType.charAt(0).toUpperCase() + targetType.slice(1);
+        const isJobType = targetType === 'job';
+        optgroup.label = `${typeLabel} Fields${isJobType ? ' ✓' : ''}`;
+
+        groupedFields[targetType].forEach(field => {
+          const option = document.createElement('option');
+          option.value = field.id;
+          option.textContent = field.name;
+          option.dataset.type = field.type;
+          option.dataset.targetType = field.targetType;
+          option.dataset.options = JSON.stringify(field.options || []);
+          // Disable non-job fields since they won't work for job filtering
+          if (!isJobType) {
+            option.disabled = true;
+            option.textContent = `${field.name} (not filterable)`;
+          }
+          optgroup.appendChild(option);
+        });
+
+        fieldSelect.appendChild(optgroup);
+      });
+
+      // Add any remaining types not in typeOrder
+      Object.keys(groupedFields).forEach(targetType => {
+        if (typeOrder.includes(targetType)) return;
+        if (!groupedFields[targetType] || groupedFields[targetType].length === 0) return;
+
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = `${targetType.charAt(0).toUpperCase() + targetType.slice(1)} Fields`;
+
+        groupedFields[targetType].forEach(field => {
+          const option = document.createElement('option');
+          option.value = field.id;
+          option.textContent = `${field.name} (not filterable)`;
+          option.dataset.type = field.type;
+          option.dataset.targetType = field.targetType;
+          option.dataset.options = JSON.stringify(field.options || []);
+          option.disabled = true;
+          optgroup.appendChild(option);
+        });
+
+        fieldSelect.appendChild(optgroup);
+      });
+
+      // Show status message if no job fields found
+      const jobFieldCount = (groupedFields['job'] || []).length;
+      const totalCount = customFieldDefinitions.length;
+
+      console.log('QuickJobSwitcher: Loaded', totalCount, 'custom field definitions,', jobFieldCount, 'are Job fields');
+
+      const statusDiv = document.getElementById('jt-cf-status');
+      if (statusDiv && jobFieldCount === 0 && totalCount > 0) {
+        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `Found ${totalCount} custom field(s), but none are Job fields.<br>Create Job custom fields in JobTread to enable filtering.`;
+        statusDiv.style.color = '#f59e0b';
+      } else if (statusDiv && totalCount === 0) {
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = 'No custom fields found in your organization.';
+        statusDiv.style.color = '#6b7280';
+      }
     } catch (error) {
       console.error('QuickJobSwitcher: Failed to load custom fields:', error);
       const statusDiv = document.getElementById('jt-cf-status');
