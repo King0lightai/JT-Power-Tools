@@ -112,7 +112,18 @@ const JobTreadAPI = (() => {
     }
 
     try {
-      console.log('JobTreadAPI: Executing Pave query:', JSON.stringify(query, null, 2));
+      // Debug: Check if query is already a string (would indicate double-stringify issue)
+      console.log('JobTreadAPI: Query input type:', typeof query);
+      console.log('JobTreadAPI: Query input:', query);
+
+      // Prepare body - ensure we're not double-stringifying
+      const bodyString = typeof query === 'string' ? query : JSON.stringify(query);
+
+      // Debug: Log exactly what's being sent
+      console.log('JobTreadAPI: Body type:', typeof bodyString);
+      console.log('JobTreadAPI: Body string:', bodyString);
+      console.log('JobTreadAPI: Body first char:', bodyString.charAt(0));
+      console.log('JobTreadAPI: API Key (first 10 chars):', apiKey.substring(0, 10) + '...');
 
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -120,8 +131,12 @@ const JobTreadAPI = (() => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify(query)
+        body: bodyString
       });
+
+      // Debug: Log response details
+      console.log('JobTreadAPI: Response status:', response.status);
+      console.log('JobTreadAPI: Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -452,6 +467,60 @@ const JobTreadAPI = (() => {
     }
   }
 
+  /**
+   * Direct API test - bypasses storage, uses provided credentials directly
+   * Useful for debugging connection issues
+   * @param {string} apiKey - API key to test with
+   * @returns {Promise<Object>} Test result
+   */
+  async function directApiTest(apiKey) {
+    const query = {
+      currentGrant: {
+        user: {
+          memberships: {
+            nodes: {
+              organization: {
+                id: {},
+                name: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    console.log('JobTreadAPI: Direct test starting...');
+    console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
+    console.log('JobTreadAPI: Query object:', query);
+
+    const bodyString = JSON.stringify(query);
+    console.log('JobTreadAPI: Body string:', bodyString);
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: bodyString
+      });
+
+      console.log('JobTreadAPI: Response status:', response.status);
+      const responseText = await response.text();
+      console.log('JobTreadAPI: Response body:', responseText);
+
+      if (response.ok) {
+        return { success: true, data: JSON.parse(responseText) };
+      } else {
+        return { success: false, status: response.status, error: responseText };
+      }
+    } catch (error) {
+      console.error('JobTreadAPI: Direct test error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Public API
   return {
     // Configuration
@@ -477,6 +546,9 @@ const JobTreadAPI = (() => {
 
     // Cache management
     clearCache,
+
+    // Direct testing
+    directApiTest,
 
     // Constants
     STORAGE_KEYS
