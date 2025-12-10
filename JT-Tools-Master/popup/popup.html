@@ -294,6 +294,24 @@
       <div class="status-message" id="statusMessage"></div>
     </div>
 
+    <!-- API Settings Section -->
+    <div class="api-section">
+      <div class="section-label">JobTread API (Experimental)</div>
+
+      <div id="apiStatus" class="api-status">
+        <p class="status-text"></p>
+      </div>
+
+      <div class="api-input">
+        <input type="password" id="apiKey" placeholder="Enter JobTread API key">
+        <button id="testApiBtn" class="btn-verify">Test</button>
+      </div>
+
+      <p class="api-hint">
+        API key enables advanced filtering in Quick Job Switcher
+      </p>
+    </div>
+
     <!-- License Section -->
     <div class="license-section">
       <div class="section-label">Premium License</div>
@@ -323,6 +341,7 @@
   </div>
 
   <script src="../services/license.js"></script>
+  <script src="../services/jobtread-api.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

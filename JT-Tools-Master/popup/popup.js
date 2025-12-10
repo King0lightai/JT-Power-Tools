@@ -85,6 +85,80 @@ const defaultSettings = {
   ]
 };
 
+// Check and update API status on load
+async function checkApiStatus() {
+  const apiStatus = document.getElementById('apiStatus');
+  const statusText = apiStatus.querySelector('.status-text');
+  const apiKeyInput = document.getElementById('apiKey');
+
+  const isConfigured = await JobTreadAPI.isConfigured();
+
+  if (isConfigured) {
+    apiStatus.className = 'api-status active';
+    statusText.textContent = 'API key configured';
+    apiKeyInput.placeholder = '••••••••••••••••';
+  } else {
+    apiStatus.className = 'api-status inactive';
+    statusText.textContent = 'No API key configured';
+    apiKeyInput.placeholder = 'Enter JobTread API key';
+  }
+}
+
+// Test and save API key
+async function testApiKey() {
+  const apiKeyInput = document.getElementById('apiKey');
+  const testBtn = document.getElementById('testApiBtn');
+  const apiKey = apiKeyInput.value.trim();
+
+  // If no new key entered, test existing key
+  if (!apiKey) {
+    const isConfigured = await JobTreadAPI.isConfigured();
+    if (!isConfigured) {
+      showStatus('Please enter an API key', 'error');
+      return;
+    }
+  } else {
+    // Save the new API key first
+    await JobTreadAPI.setApiKey(apiKey);
+  }
+
+  // Disable button during test
+  testBtn.disabled = true;
+  testBtn.textContent = 'Testing...';
+
+  try {
+    const result = await JobTreadAPI.testConnection();
+
+    if (result.success) {
+      showStatus('API connection successful!', 'success');
+      apiKeyInput.value = '';
+      await checkApiStatus();
+
+      // Try to discover available queries for debugging
+      console.log('JobTreadAPI: Discovering schema...');
+      try {
+        const queries = await JobTreadAPI.getAvailableQueries();
+        console.log('JobTreadAPI: Available queries:', queries);
+      } catch (schemaError) {
+        console.log('JobTreadAPI: Schema discovery failed (introspection may be disabled):', schemaError.message);
+      }
+    } else {
+      showStatus(result.message || 'API connection failed', 'error');
+      // If test failed and we just set a new key, clear it
+      if (apiKey) {
+        await chrome.storage.sync.remove(JobTreadAPI.STORAGE_KEYS.API_KEY);
+        await checkApiStatus();
+      }
+    }
+  } catch (error) {
+    console.error('Error testing API:', error);
+    showStatus('Error testing API connection', 'error');
+  } finally {
+    testBtn.disabled = false;
+    testBtn.textContent = 'Test';
+  }
+}
+
 // Check and update license status on load
 async function checkLicenseStatus() {
   const licenseData = await LicenseService.getLicenseData();
@@ -565,6 +639,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Check license status first (just UI, don't modify settings)
   const hasLicense = await checkLicenseStatus();
 
+  // Check API status
+  await checkApiStatus();
+
   // Load current settings and update UI
   await loadSettings();
 
@@ -585,6 +662,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
     }
   }
+
+  // Listen for API key test
+  document.getElementById('testApiBtn').addEventListener('click', testApiKey);
+
+  // Allow Enter key in API key input
+  document.getElementById('apiKey').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      testApiKey();
+    }
+  });
 
   // Listen for license verification
   document.getElementById('verifyBtn').addEventListener('click', verifyLicenseKey);
