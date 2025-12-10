@@ -5,6 +5,64 @@ const JobTreadAPI = (() => {
   // API Configuration - JobTread uses Pave query language
   const API_URL = 'https://api.jobtread.com/pave';
 
+  /**
+   * Detect if we're running in a context that needs the background proxy
+   * Content scripts run in web page context and face CORS restrictions
+   * Popup and service worker run in extension context and can make direct calls
+   */
+  function needsProxy() {
+    // Check if we're in a content script context
+    // Content scripts have access to chrome.runtime but not chrome.action
+    // Popup and service worker have access to chrome.action
+    try {
+      // If we can't access chrome at all, we're in a web page context
+      if (typeof chrome === 'undefined' || !chrome.runtime) {
+        return false; // Can't use proxy anyway
+      }
+      // If we have chrome.action, we're in popup or service worker (extension context)
+      if (chrome.action) {
+        return false; // Direct fetch will work
+      }
+      // Otherwise we're likely in a content script
+      return true;
+    } catch (e) {
+      return true; // Default to proxy for safety
+    }
+  }
+
+  /**
+   * Make a fetch request, routing through background proxy if in content script
+   * @param {string} url - URL to fetch
+   * @param {Object} options - Fetch options
+   * @returns {Promise<Response>} Fetch response or proxy result
+   */
+  async function proxyFetch(url, options) {
+    if (needsProxy()) {
+      console.log('JobTreadAPI: Using background proxy for API request');
+      // Send through background service worker
+      const result = await chrome.runtime.sendMessage({
+        type: 'JOBTREAD_API_REQUEST',
+        url: url,
+        options: options
+      });
+
+      // Convert proxy result to a Response-like object
+      return {
+        ok: result.success,
+        status: result.status || (result.success ? 200 : 500),
+        statusText: result.statusText || '',
+        text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
+        json: async () => result.data,
+        headers: { entries: () => [] }, // Simplified headers
+        _proxyResult: result
+      };
+    } else {
+      console.log('JobTreadAPI: Using direct fetch (extension context)');
+      // Direct fetch in extension context (popup or service worker)
+      return fetch(url, options);
+    }
+  }
+
   // Storage keys
   const STORAGE_KEYS = {
     API_KEY: 'jtToolsApiKey',
@@ -125,7 +183,7 @@ const JobTreadAPI = (() => {
       console.log('JobTreadAPI: Body first char:', bodyString.charAt(0));
       console.log('JobTreadAPI: API Key (first 10 chars):', apiKey.substring(0, 10) + '...');
 
-      const response = await fetch(API_URL, {
+      const response = await proxyFetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +194,11 @@ const JobTreadAPI = (() => {
 
       // Debug: Log response details
       console.log('JobTreadAPI: Response status:', response.status);
-      console.log('JobTreadAPI: Response headers:', Object.fromEntries(response.headers.entries()));
+      try {
+        console.log('JobTreadAPI: Response headers:', Object.fromEntries(response.headers.entries()));
+      } catch (e) {
+        console.log('JobTreadAPI: Response from proxy');
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -471,54 +533,141 @@ const JobTreadAPI = (() => {
    * Direct API test - bypasses storage, uses provided credentials directly
    * Useful for debugging connection issues
    * @param {string} apiKey - API key to test with
+   * @param {string} orgId - Optional org ID for testing
    * @returns {Promise<Object>} Test result
    */
-  async function directApiTest(apiKey) {
-    const query = {
-      currentGrant: {
-        user: {
-          memberships: {
-            nodes: {
-              organization: {
-                id: {},
-                name: {}
+  async function directApiTest(apiKey, orgId = null) {
+    // Try multiple query formats to find what works
+    const queryFormats = [
+      // Format 1: currentGrant (simplest - no org ID needed)
+      {
+        name: 'currentGrant simple',
+        query: {
+          currentGrant: {
+            id: {},
+            user: {
+              id: {},
+              name: {}
+            }
+          }
+        }
+      },
+      // Format 2: currentGrant with nested memberships
+      {
+        name: 'currentGrant with memberships',
+        query: {
+          currentGrant: {
+            user: {
+              memberships: {
+                nodes: {
+                  organization: {
+                    id: {},
+                    name: {}
+                  }
+                }
               }
             }
           }
         }
+      },
+      // Format 3: Organization with $ args (if orgId provided)
+      ...(orgId ? [{
+        name: 'organization with $ args',
+        query: {
+          organization: {
+            $: { id: orgId },
+            id: {},
+            name: {}
+          }
+        }
+      }] : []),
+      // Format 4: Try _args instead of $ (standard Pave format)
+      ...(orgId ? [{
+        name: 'organization with _args',
+        query: {
+          organization: {
+            _args: { id: orgId },
+            id: {},
+            name: {}
+          }
+        }
+      }] : []),
+      // Format 5: Wrapped in query key
+      {
+        name: 'wrapped in query key',
+        query: {
+          query: {
+            currentGrant: {
+              id: {}
+            }
+          }
+        }
       }
-    };
+    ];
 
-    console.log('JobTreadAPI: Direct test starting...');
+    console.log('JobTreadAPI: Direct test starting with multiple formats...');
     console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
-    console.log('JobTreadAPI: Query object:', query);
+    if (orgId) console.log('JobTreadAPI: Using Org ID:', orgId);
 
-    const bodyString = JSON.stringify(query);
-    console.log('JobTreadAPI: Body string:', bodyString);
+    const results = [];
 
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: bodyString
-      });
+    for (const format of queryFormats) {
+      console.log(`\n--- Testing format: ${format.name} ---`);
+      console.log('JobTreadAPI: Query object:', JSON.stringify(format.query, null, 2));
 
-      console.log('JobTreadAPI: Response status:', response.status);
-      const responseText = await response.text();
-      console.log('JobTreadAPI: Response body:', responseText);
+      const bodyString = JSON.stringify(format.query);
 
-      if (response.ok) {
-        return { success: true, data: JSON.parse(responseText) };
-      } else {
-        return { success: false, status: response.status, error: responseText };
+      try {
+        const response = await proxyFetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: bodyString
+        });
+
+        console.log('JobTreadAPI: Response status:', response.status);
+        const responseText = await response.text();
+        console.log('JobTreadAPI: Response body:', responseText.substring(0, 500));
+
+        let parsedResponse;
+        try {
+          parsedResponse = JSON.parse(responseText);
+        } catch (e) {
+          parsedResponse = responseText;
+        }
+
+        results.push({
+          format: format.name,
+          status: response.status,
+          success: response.ok,
+          response: response.ok ? parsedResponse : responseText
+        });
+
+        // If successful, return immediately
+        if (response.ok) {
+          console.log(`SUCCESS! Format "${format.name}" worked!`);
+          return {
+            success: true,
+            format: format.name,
+            data: parsedResponse,
+            allResults: results
+          };
+        }
+      } catch (error) {
+        console.error(`JobTreadAPI: Format "${format.name}" error:`, error.message);
+        results.push({
+          format: format.name,
+          success: false,
+          error: error.message
+        });
       }
-    } catch (error) {
-      console.error('JobTreadAPI: Direct test error:', error);
-      return { success: false, error: error.message };
     }
+
+    // All formats failed
+    console.log('JobTreadAPI: All formats failed');
+    return { success: false, error: 'All query formats failed', allResults: results };
   }
 
   // Public API
