@@ -146,6 +146,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: true });
         return false;
 
+      case 'JOBTREAD_API_REQUEST':
+        // Proxy API requests from content scripts to bypass CORS
+        handleApiRequest(message.url, message.options)
+          .then(result => {
+            sendResponse(result);
+          })
+          .catch(error => {
+            console.error('API proxy request failed:', error);
+            sendResponse({ success: false, error: error.message });
+          });
+        return true; // Keep channel open for async response
+
       default:
         console.warn('Unknown message type:', message.type);
         sendResponse({ success: false, error: 'Unknown message type' });
@@ -157,6 +169,50 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 });
+
+/**
+ * Handle API request proxy for content scripts
+ * Background service worker can bypass CORS due to host_permissions
+ * @param {string} url - API URL to fetch
+ * @param {Object} options - Fetch options (method, headers, body)
+ * @returns {Promise<Object>} API response
+ */
+async function handleApiRequest(url, options) {
+  try {
+    console.log('JT-Tools API Proxy: Request to', url);
+    console.log('JT-Tools API Proxy: Options:', JSON.stringify(options, null, 2));
+
+    const response = await fetch(url, options);
+
+    console.log('JT-Tools API Proxy: Response status:', response.status);
+
+    const responseText = await response.text();
+    console.log('JT-Tools API Proxy: Response body (first 500 chars):', responseText.substring(0, 500));
+
+    // Try to parse as JSON, fall back to text
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      data = responseText;
+    }
+
+    return {
+      success: response.ok,
+      status: response.status,
+      statusText: response.statusText,
+      data: data,
+      isJson: typeof data === 'object'
+    };
+  } catch (error) {
+    console.error('JT-Tools API Proxy: Fetch error:', error);
+    return {
+      success: false,
+      error: error.message,
+      isNetworkError: true
+    };
+  }
+}
 
 /**
  * Handle settings update
