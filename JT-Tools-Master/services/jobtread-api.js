@@ -71,7 +71,7 @@ const JobTreadAPI = (() => {
   async function setOrgId(orgId) {
     try {
       await chrome.storage.sync.set({ [STORAGE_KEYS.ORG_ID]: orgId });
-      console.log('JobTreadAPI: Org ID saved');
+      console.log('JobTreadAPI: Org ID saved:', orgId);
       return true;
     } catch (error) {
       console.error('JobTreadAPI: Error saving org ID:', error);
@@ -80,7 +80,7 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Check if API is configured (has both API key and org ID)
+   * Check if API is configured (has API key)
    * @returns {Promise<boolean>}
    */
   async function isConfigured() {
@@ -89,7 +89,7 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Check if fully configured (has org ID too)
+   * Check if fully configured (has both API key and org ID)
    * @returns {Promise<boolean>}
    */
   async function isFullyConfigured() {
@@ -146,48 +146,64 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Fetch the current user's organization info
-   * Used to discover the organization ID
-   * @returns {Promise<Object>} User and organization info
+   * Test API connection by fetching organization name
+   * @param {string} orgId - Organization ID to test with
+   * @returns {Promise<Object>} Connection test result
    */
-  async function fetchCurrentUser() {
-    const query = {
-      viewer: {
-        id: {},
-        email: {},
-        name: {},
-        organizations: {
-          nodes: {
-            id: {},
-            name: {}
-          }
-        }
-      }
-    };
-
-    const result = await paveQuery(query);
-    return result.viewer;
-  }
-
-  /**
-   * Auto-discover and save organization ID from current user
-   * @returns {Promise<string|null>} Organization ID or null
-   */
-  async function discoverOrgId() {
+  async function testConnection(orgId = null) {
     try {
-      const user = await fetchCurrentUser();
-
-      if (user?.organizations?.nodes?.length > 0) {
-        const orgId = user.organizations.nodes[0].id;
-        await setOrgId(orgId);
-        console.log('JobTreadAPI: Discovered org ID:', orgId);
-        return orgId;
+      // Get org ID if not provided
+      if (!orgId) {
+        orgId = await getOrgId();
       }
 
-      return null;
+      if (!orgId) {
+        return {
+          success: false,
+          message: 'Organization ID is required'
+        };
+      }
+
+      // Simple query to fetch organization name - matches user's example format
+      const query = {
+        organization: {
+          $: { id: orgId },
+          id: {},
+          name: {}
+        }
+      };
+
+      const result = await paveQuery(query);
+
+      if (result.organization) {
+        // Save the org ID since it worked
+        await setOrgId(orgId);
+
+        return {
+          success: true,
+          message: 'API connection successful',
+          organization: {
+            id: result.organization.id,
+            name: result.organization.name
+          }
+        };
+      }
+
+      return { success: false, message: 'No organization data returned' };
     } catch (error) {
-      console.error('JobTreadAPI: Failed to discover org ID:', error);
-      throw error;
+      // Check for CORS errors
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        return {
+          success: false,
+          message: 'CORS blocked - API calls require a server proxy',
+          error
+        };
+      }
+      return {
+        success: false,
+        message: error.message || 'Connection failed',
+        error
+      };
     }
   }
 
@@ -218,15 +234,12 @@ const JobTreadAPI = (() => {
     if (!orgId) {
       orgId = await getOrgId();
       if (!orgId) {
-        // Try to discover it
-        orgId = await discoverOrgId();
-        if (!orgId) {
-          throw new Error('Organization ID not configured');
-        }
+        throw new Error('Organization ID not configured');
       }
     }
 
     // Pave query for custom fields targeting jobs
+    // Matches the user's exact example format
     const query = {
       organization: {
         $: { id: orgId },
@@ -270,20 +283,22 @@ const JobTreadAPI = (() => {
    * @returns {Promise<Array>} List of jobs with custom fields
    */
   async function fetchJobs(options = {}) {
-    const { limit = 100, search = '', status = null } = options;
+    const { limit = 100, status = null } = options;
 
     let orgId = await getOrgId();
     if (!orgId) {
-      orgId = await discoverOrgId();
-      if (!orgId) {
-        throw new Error('Organization ID not configured');
-      }
+      throw new Error('Organization ID not configured');
     }
 
-    // Build where clause
-    const whereConditions = [];
+    // Build query parameters
+    const queryParams = {
+      size: limit,
+      sortBy: [{ field: 'createdAt', direction: 'DESC' }]
+    };
+
+    // Add status filter if provided
     if (status) {
-      whereConditions.push(['status', '=', status]);
+      queryParams.where = ['status', '=', status];
     }
 
     // Pave query for jobs
@@ -291,11 +306,7 @@ const JobTreadAPI = (() => {
       organization: {
         $: { id: orgId },
         jobs: {
-          $: {
-            first: limit,
-            ...(whereConditions.length > 0 && { where: whereConditions }),
-            sortBy: [{ field: 'createdAt', direction: 'DESC' }]
-          },
+          $: queryParams,
           nodes: {
             id: {},
             name: {},
@@ -330,66 +341,6 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Fetch jobs filtered by a specific custom field value
-   * @param {string} customFieldId - Custom field ID
-   * @param {string} value - Value to filter by
-   * @returns {Promise<Array>} Filtered jobs
-   */
-  async function fetchJobsByCustomField(customFieldId, value) {
-    let orgId = await getOrgId();
-    if (!orgId) {
-      orgId = await discoverOrgId();
-      if (!orgId) {
-        throw new Error('Organization ID not configured');
-      }
-    }
-
-    // Pave query for jobs filtered by custom field
-    // Note: The exact filter syntax may need adjustment based on API capabilities
-    const query = {
-      organization: {
-        $: { id: orgId },
-        jobs: {
-          $: {
-            first: 100,
-            where: [
-              ['customFieldValues', 'some', [
-                ['customField', 'id', '=', customFieldId],
-                ['value', '=', value]
-              ]]
-            ],
-            sortBy: [{ field: 'number', direction: 'DESC' }]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            number: {},
-            status: {},
-            customFieldValues: {
-              nodes: {
-                id: {},
-                value: {},
-                customField: {
-                  id: {},
-                  name: {}
-                }
-              }
-            }
-          }
-        }
-      }
-    };
-
-    try {
-      const result = await paveQuery(query);
-      return result.organization?.jobs?.nodes || [];
-    } catch (error) {
-      console.error('JobTreadAPI: Failed to fetch filtered jobs:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Get unique values for a custom field across all jobs
    * Useful for building filter dropdowns
    * @param {string} customFieldId - Custom field ID
@@ -410,44 +361,6 @@ const JobTreadAPI = (() => {
     });
 
     return Array.from(values).sort();
-  }
-
-  /**
-   * Test API connection with current key
-   * @returns {Promise<Object>} Connection test result
-   */
-  async function testConnection() {
-    try {
-      // Try to fetch current user to test the connection
-      const user = await fetchCurrentUser();
-
-      if (user) {
-        // Auto-discover org ID while we're at it
-        if (user.organizations?.nodes?.length > 0) {
-          const orgId = user.organizations.nodes[0].id;
-          await setOrgId(orgId);
-        }
-
-        return {
-          success: true,
-          message: 'API connection successful',
-          user: {
-            email: user.email,
-            name: user.name,
-            orgId: user.organizations?.nodes?.[0]?.id,
-            orgName: user.organizations?.nodes?.[0]?.name
-          }
-        };
-      }
-
-      return { success: false, message: 'No user data returned' };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Connection failed',
-        error
-      };
-    }
   }
 
   /**
@@ -498,11 +411,8 @@ const JobTreadAPI = (() => {
     clearConfig,
 
     // Data fetching
-    fetchCurrentUser,
-    discoverOrgId,
     fetchCustomFieldDefinitions,
     fetchJobs,
-    fetchJobsByCustomField,
     getCustomFieldValues,
 
     // Raw query access

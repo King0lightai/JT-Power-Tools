@@ -609,12 +609,11 @@ input:checked + .slider:before {
 
 .api-input {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 10px;
 }
 
 .api-input input {
-  flex: 1;
   padding: 8px 10px;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
@@ -622,6 +621,15 @@ input:checked + .slider:before {
   font-family: 'SF Mono', Monaco, 'Courier New', monospace;
   color: #1a1a1a;
   background: #ffffff;
+}
+
+.api-input input#apiKey {
+  flex: 2;
+}
+
+.api-input input#orgId {
+  flex: 1;
+  min-width: 80px;
 }
 
 .api-input input:focus {
