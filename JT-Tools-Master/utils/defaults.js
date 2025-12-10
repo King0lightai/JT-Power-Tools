@@ -33,6 +33,9 @@ const JTDefaults = (() => {
     // Internal Features (not user-toggleable)
     helpSidebarSupport: true,
 
+    // API (Experimental) Features
+    customFieldFilter: false,
+
     // Theme Configuration
     themeColors: {
       primary: '#3B82F6',     // Default blue
@@ -50,7 +53,8 @@ const JTDefaults = (() => {
   const FEATURE_CATEGORIES = {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups'],
     productivityTools: ['formatter', 'quickJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter'],
-    appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme']
+    appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
+    apiExperimental: ['customFieldFilter']
   };
 
   /**

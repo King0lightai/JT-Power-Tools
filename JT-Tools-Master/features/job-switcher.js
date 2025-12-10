@@ -208,6 +208,19 @@ const QuickJobSwitcherFeature = (() => {
   async function injectFilterUI(searchInput) {
     console.log('QuickJobSwitcher: injectFilterUI called');
 
+    // Check if the feature is enabled in settings
+    try {
+      const result = await chrome.storage.sync.get(['jtToolsSettings']);
+      const settings = result.jtToolsSettings || {};
+      if (!settings.customFieldFilter) {
+        console.log('QuickJobSwitcher: Custom field filter is disabled in settings');
+        return;
+      }
+    } catch (e) {
+      console.log('QuickJobSwitcher: Could not check settings, skipping filter UI');
+      return;
+    }
+
     // Check if JobTreadAPI is available and configured
     if (typeof JobTreadAPI === 'undefined') {
       console.log('QuickJobSwitcher: JobTreadAPI not available, skipping filter UI');

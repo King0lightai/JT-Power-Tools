@@ -574,10 +574,18 @@ input:checked + .slider:before {
 }
 
 /* API Section */
+/* Old API section - keeping for backward compatibility */
 .api-section {
   padding: 0 20px 16px 20px;
   background: #ffffff;
   border-bottom: 1px solid #e8e8e8;
+}
+
+/* API Config Panel - inside collapsible category */
+.api-config-panel {
+  padding: 12px 0 4px 0;
+  border-top: 1px solid #e8e8e8;
+  margin-top: 8px;
 }
 
 .api-status {
