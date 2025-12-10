@@ -20,6 +20,15 @@
   border-color: #bfdbfe; /* Light blue border when sticky */
 }
 
+/* Docked toolbar state - positioned in budget footer bar */
+.jt-formatter-toolbar.jt-toolbar-docked {
+  position: fixed;
+  box-shadow: none;
+  border-color: transparent;
+  background: transparent;
+  transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
+}
+
 .jt-toolbar-group {
   display: flex;
   gap: 0;

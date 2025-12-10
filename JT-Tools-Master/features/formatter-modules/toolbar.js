@@ -48,6 +48,141 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is a budget table Description field
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isBudgetDescriptionField(field) {
+    if (!field || field.getAttribute('placeholder') !== 'Description') {
+      return false;
+    }
+    // Check if it's inside a budget table (has the characteristic row structure)
+    const row = field.closest('.flex.min-w-max');
+    if (!row) return false;
+
+    // Check for budget table indicators - parent should have overflow-auto
+    const scrollContainer = row.closest('.overflow-auto');
+    return scrollContainer !== null;
+  }
+
+  /**
+   * Find the budget table footer bar
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findBudgetFooterBar(field) {
+    // Find the scroll container
+    const scrollContainer = field.closest('.overflow-auto');
+    if (!scrollContainer) return null;
+
+    // The footer bar is a sibling flex row that contains buttons (+ Item, + Group)
+    // It's typically the last .flex.min-w-max that has buttons inside
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+    for (const row of allRows) {
+      // Look for the row with "+ Item" button
+      const hasAddButtons = row.querySelector('button, [role="button"]');
+      const hasItemText = row.textContent.includes('Item') && row.textContent.includes('Group');
+      if (hasAddButtons && hasItemText) {
+        return row;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find the column index of the field's cell in the budget table
+   * @param {HTMLTextAreaElement} field
+   * @returns {number} Column index, or -1 if not found
+   */
+  function getFieldColumnIndex(field) {
+    // Find the cell containing this field (div with width style in the row)
+    let cell = field.parentElement;
+    while (cell && !cell.style.width && cell.parentElement) {
+      cell = cell.parentElement;
+      // Stop if we've gone too far up
+      if (cell.classList.contains('overflow-auto')) return -1;
+    }
+
+    if (!cell || !cell.style.width) return -1;
+
+    // Get the row (parent of the cell)
+    const row = cell.parentElement;
+    if (!row) return -1;
+
+    // Find the index of this cell among siblings with width styles
+    const siblings = Array.from(row.children).filter(el => el.style.width);
+    return siblings.indexOf(cell);
+  }
+
+  /**
+   * Find the footer cell at the given column index
+   * @param {HTMLElement} footerBar
+   * @param {number} columnIndex
+   * @returns {HTMLElement|null}
+   */
+  function getFooterCellAtIndex(footerBar, columnIndex) {
+    const cells = Array.from(footerBar.children).filter(el => el.style.width);
+    return cells[columnIndex] || null;
+  }
+
+  /**
+   * Check if the footer cell is visible in the horizontal scroll
+   * @param {HTMLElement} footerCell
+   * @param {HTMLElement} scrollContainer
+   * @returns {boolean}
+   */
+  function isFooterCellVisible(footerCell, scrollContainer) {
+    const cellRect = footerCell.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    // Check if cell is within the visible horizontal bounds of the container
+    // Allow some tolerance (at least 100px of the cell visible)
+    const visibleWidth = Math.min(cellRect.right, containerRect.right) - Math.max(cellRect.left, containerRect.left);
+    return visibleWidth >= 100;
+  }
+
+  /**
+   * Position toolbar in the budget footer cell (docked mode)
+   * @param {HTMLElement} toolbar
+   * @param {HTMLElement} footerCell
+   * @param {HTMLElement} scrollContainer
+   * @returns {boolean} True if positioned successfully, false if should hide
+   */
+  function positionToolbarInFooter(toolbar, footerCell, scrollContainer) {
+    // Check if footer cell is visible
+    if (!isFooterCellVisible(footerCell, scrollContainer)) {
+      toolbar.style.visibility = 'hidden';
+      toolbar.style.opacity = '0';
+      return false;
+    }
+
+    const cellRect = footerCell.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    // Position toolbar inside the footer cell
+    // Center it vertically in the cell, align to left edge
+    const toolbarHeight = 44;
+    const padding = 4;
+
+    let left = cellRect.left + padding;
+    let top = cellRect.top + (cellRect.height - toolbarHeight) / 2;
+
+    // Clamp left position to container bounds
+    const maxLeft = containerRect.right - toolbar.offsetWidth - padding;
+    left = Math.max(containerRect.left + padding, Math.min(left, maxLeft));
+
+    toolbar.style.position = 'fixed';
+    toolbar.style.top = `${top}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.visibility = 'visible';
+    toolbar.style.opacity = '1';
+    toolbar.classList.add('jt-toolbar-docked');
+    toolbar.classList.remove('jt-toolbar-sticky');
+
+    return true;
+  }
+
+  /**
    * Find the bottom edge of sticky headers that are above the field
    * @param {HTMLTextAreaElement} field - The field we're positioning toolbar for
    * @returns {number} The bottom edge of the lowest sticky header above the field (in viewport coords)
@@ -113,10 +248,31 @@ const FormatterToolbar = (() => {
 
   /**
    * Position toolbar relative to field with sticky behavior
+   * For budget Description fields, docks in the footer bar
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
    */
   function positionToolbar(toolbar, field) {
+    // Check if this is a budget Description field - use docked mode
+    if (isBudgetDescriptionField(field)) {
+      const scrollContainer = field.closest('.overflow-auto');
+      const footerBar = findBudgetFooterBar(field);
+      const columnIndex = getFieldColumnIndex(field);
+
+      if (footerBar && columnIndex >= 0 && scrollContainer) {
+        const footerCell = getFooterCellAtIndex(footerBar, columnIndex);
+        if (footerCell) {
+          positionToolbarInFooter(toolbar, footerCell, scrollContainer);
+          return;
+        }
+      }
+      // Fall through to floating mode if docking fails
+    }
+
+    // Remove docked class if not docking
+    toolbar.classList.remove('jt-toolbar-docked');
+    toolbar.style.position = 'absolute';
+
     const rect = field.getBoundingClientRect();
     const toolbarHeight = 44;
     const padding = 8;
@@ -132,51 +288,33 @@ const FormatterToolbar = (() => {
     const fieldVisibleBottom = Math.min(rect.bottom, viewportBottom);
     const fieldVisibleHeight = fieldVisibleBottom - fieldVisibleTop;
 
-    // Default: prefer positioning above the field
-    let preferAbove = rect.top > toolbarHeight + padding + viewportTop + 10;
     let topPosition;
     let isSticky = false;
 
-    if (preferAbove) {
-      // Normal position: above the field
-      const normalTop = rect.top + window.scrollY - toolbarHeight - padding;
-      const normalTopViewport = rect.top - toolbarHeight - padding;
+    // Always favor positioning above/at the top of the field
+    // Calculate where the toolbar would be if placed above the field
+    const normalTopAbove = rect.top + window.scrollY - toolbarHeight - padding;
+    const normalTopAboveViewport = rect.top - toolbarHeight - padding;
 
-      // Check if this position would be above the viewport (hidden by scroll or sticky header)
-      if (normalTopViewport < viewportTop) {
-        // Toolbar would be hidden - make it sticky
-        isSticky = true;
-        // Position toolbar at the top of the visible area, just below sticky headers
-        topPosition = viewportTop + window.scrollY + padding;
+    // Check if there's room above the field (between sticky header and field top)
+    const roomAbove = rect.top - viewportTop;
 
-        // But don't position it below the field
-        const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
-        if (topPosition > maxTop) {
-          topPosition = maxTop;
-        }
-      } else {
-        topPosition = normalTop;
+    if (roomAbove >= toolbarHeight + padding) {
+      // Enough room above - place toolbar above the field
+      topPosition = normalTopAbove;
+    } else if (normalTopAboveViewport < viewportTop) {
+      // Not enough room above - make toolbar sticky at top of visible area
+      isSticky = true;
+      topPosition = viewportTop + window.scrollY + padding;
+
+      // But don't position it past the bottom of the field
+      const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
+      if (topPosition > maxTop) {
+        topPosition = maxTop;
       }
     } else {
-      // Normal position: below the field
-      const normalTop = rect.bottom + window.scrollY + padding;
-      const normalBottomViewport = rect.bottom + toolbarHeight + padding;
-
-      // Check if this position would be below the viewport (hidden by scroll)
-      if (normalBottomViewport > viewportBottom) {
-        // Toolbar would be hidden - make it sticky
-        isSticky = true;
-        // Position toolbar at the bottom of the visible area
-        topPosition = viewportBottom + window.scrollY - toolbarHeight - padding;
-
-        // But don't position it above the field
-        const minTop = rect.top + window.scrollY + padding;
-        if (topPosition < minTop) {
-          topPosition = minTop;
-        }
-      } else {
-        topPosition = normalTop;
-      }
+      // Edge case: place above
+      topPosition = normalTopAbove;
     }
 
     // Hide toolbar if field is not visible enough (less than 30px visible)

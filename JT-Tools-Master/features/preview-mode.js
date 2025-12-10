@@ -499,43 +499,89 @@ const PreviewModeFeature = (() => {
       }, 100);
     };
 
+    // Scroll handler to reposition preview
+    const handleScroll = () => {
+      if (preview && document.body.contains(preview) && document.body.contains(textarea)) {
+        positionPreview(preview, textarea, button);
+      }
+    };
+
     textarea.addEventListener('input', updatePreview);
     textarea.addEventListener('blur', handleBlur);
+    window.addEventListener('scroll', handleScroll, true);
     preview._updateHandler = updatePreview;
     preview._blurHandler = handleBlur;
+    preview._scrollHandler = handleScroll;
     preview._textarea = textarea;
+    preview._button = button;
 
     console.log('Premium Formatter: Preview shown');
   }
 
-  // Position preview panel intelligently
+  // Get sticky header offset for preview positioning (mirrors toolbar logic)
+  function getPreviewStickyOffset(textarea) {
+    const fieldRect = textarea.getBoundingClientRect();
+    let maxOffset = 0;
+
+    // Check elements with sticky class
+    const stickyClassElements = document.querySelectorAll('.sticky');
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (style.position === 'sticky') {
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom <= fieldRect.top + 50 && rect.height > 15 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
+          }
+        }
+      }
+    });
+
+    return maxOffset;
+  }
+
+  // Position preview panel intelligently, following the toolbar
   function positionPreview(preview, textarea, button) {
     const textareaRect = textarea.getBoundingClientRect();
-    const buttonRect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
+    const stickyOffset = getPreviewStickyOffset(textarea);
 
     const previewWidth = 400;
     const previewMaxHeight = 300;
+    const toolbarHeight = 44;
+    const padding = 8;
+
+    // Calculate the top position to align with where the toolbar would be
+    const viewportTop = stickyOffset || 0;
+    const roomAbove = textareaRect.top - viewportTop;
+
+    let top;
+    if (roomAbove >= toolbarHeight + padding) {
+      // Toolbar is above the field - align preview with top of field
+      top = textareaRect.top;
+    } else {
+      // Toolbar is sticky - align preview with sticky position
+      top = viewportTop + padding;
+    }
 
     // Try to position to the right of the textarea
     let left = textareaRect.right + 12;
-    let top = textareaRect.top;
 
     // If not enough space on the right, position to the left
     if (left + previewWidth > viewportWidth - 20) {
       left = textareaRect.left - previewWidth - 12;
     }
 
-    // If still not enough space, position below
+    // If still not enough space (narrow viewport), position below toolbar area
     if (left < 20) {
-      left = textareaRect.left;
-      top = textareaRect.bottom + 12;
+      left = Math.max(20, textareaRect.left);
+      top = top + toolbarHeight + padding + 12;
     }
 
-    // If would go off bottom, position above
+    // Ensure preview doesn't go below viewport
     if (top + previewMaxHeight > viewportHeight - 20) {
-      top = Math.max(20, textareaRect.top - previewMaxHeight - 12);
+      top = Math.max(viewportTop + padding, viewportHeight - previewMaxHeight - 20);
     }
 
     // Apply position
@@ -563,6 +609,11 @@ const PreviewModeFeature = (() => {
       // Remove blur listener
       if (activePreview._blurHandler && activePreview._textarea) {
         activePreview._textarea.removeEventListener('blur', activePreview._blurHandler);
+      }
+
+      // Remove scroll listener
+      if (activePreview._scrollHandler) {
+        window.removeEventListener('scroll', activePreview._scrollHandler, true);
       }
 
       activePreview.classList.remove('show');
