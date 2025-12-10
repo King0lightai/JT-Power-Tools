@@ -273,6 +273,28 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Check if an element is inside a popup container
+   * Popups are identified by shadow-lg class on a container element
+   * This is used to prevent marking elements inside popups with freeze header classes
+   */
+  function isInsidePopup(element) {
+    // Check if element is inside a popup container
+    // Popups typically have shadow-lg class combined with other styling
+    const popupContainer = element.closest('.shadow-lg');
+    if (!popupContainer) return false;
+
+    // Make sure it's not the main content area (shadow-lg is also used elsewhere)
+    // Popup containers typically have: shadow-lg + (rounded-sm or overflow-hidden) + (bg-white or border)
+    // Also check if it's in a fixed/absolute positioned container (modal overlay)
+    const hasPopupStyling = popupContainer.classList.contains('rounded-sm') ||
+                           popupContainer.classList.contains('overflow-hidden') ||
+                           popupContainer.closest('.fixed') ||
+                           popupContainer.closest('[class*="m-auto"]');
+
+    return hasPopupStyling;
+  }
+
+  /**
    * Find and mark the top header bar
    * Looking for: div.shrink-0.sticky with JobTread logo and search
    */
@@ -662,6 +684,9 @@ const FreezeHeaderFeature = (() => {
       if (container.classList.contains('jt-action-toolbar')) continue;
       if (container.classList.contains('jt-schedule-header-container')) continue;
 
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(container)) continue;
+
       const text = container.textContent;
 
       // Check for folder navigation indicators
@@ -703,6 +728,9 @@ const FreezeHeaderFeature = (() => {
       if (container.classList.contains('jt-action-toolbar')) continue;
       if (container.classList.contains('jt-schedule-header-container')) continue;
 
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(container)) continue;
+
       const headerText = container.textContent;
 
       // Check for file list column headers
@@ -726,6 +754,9 @@ const FreezeHeaderFeature = (() => {
       if (flexHeader.closest('.jt-files-list-header')) continue;
       if (flexHeader.closest('.jt-schedule-header-container')) continue;
       if (flexHeader.closest('.jt-budget-header-container')) continue;
+
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(flexHeader)) continue;
 
       const headerText = flexHeader.textContent;
 
@@ -773,6 +804,9 @@ const FreezeHeaderFeature = (() => {
       // Skip if already marked as something else
       if (sidebar.classList.contains('jt-top-header')) continue;
       if (sidebar.classList.contains('jt-job-tabs-container')) continue;
+
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(sidebar)) continue;
 
       const text = sidebar.textContent;
 
