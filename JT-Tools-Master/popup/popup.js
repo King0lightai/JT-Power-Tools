@@ -117,28 +117,19 @@ async function testApiKey() {
   const apiKey = apiKeyInput.value.trim();
   const orgId = orgIdInput.value.trim();
 
-  // If no new values entered, use existing
+  // If no new API key entered, use existing
   let useApiKey = apiKey;
-  let useOrgId = orgId;
-
   if (!useApiKey) {
     useApiKey = await JobTreadAPI.getApiKey();
   }
-  if (!useOrgId) {
-    useOrgId = await JobTreadAPI.getOrgId();
-  }
 
-  // Validate we have both
+  // Validate we have API key
   if (!useApiKey) {
     showStatus('Grant Key is required', 'error');
     return;
   }
-  if (!useOrgId) {
-    showStatus('Org ID is required', 'error');
-    return;
-  }
 
-  // Save credentials before testing
+  // Save API key before testing (org ID will be auto-discovered if not provided)
   if (apiKey) {
     await JobTreadAPI.setApiKey(apiKey);
   }
@@ -151,7 +142,8 @@ async function testApiKey() {
   testBtn.textContent = 'Testing...';
 
   try {
-    const result = await JobTreadAPI.testConnection(useOrgId);
+    // Pass org ID if manually provided, otherwise let it auto-discover
+    const result = await JobTreadAPI.testConnection(orgId || null);
 
     if (result.success) {
       const orgName = result.organization?.name || 'Unknown';
@@ -171,7 +163,7 @@ async function testApiKey() {
     } else {
       showStatus(result.message || 'API connection failed', 'error');
       // If test failed and we just set new credentials, clear them
-      if (apiKey || orgId) {
+      if (apiKey) {
         await JobTreadAPI.clearConfig();
         await checkApiStatus();
       }

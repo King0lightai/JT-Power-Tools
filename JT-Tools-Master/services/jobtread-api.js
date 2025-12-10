@@ -146,25 +146,79 @@ const JobTreadAPI = (() => {
   }
 
   /**
+   * Discover organization ID from the current grant
+   * Uses currentGrant -> user -> memberships to find orgs
+   * @returns {Promise<Object>} Organization info with id and name
+   */
+  async function discoverOrganization() {
+    const query = {
+      currentGrant: {
+        user: {
+          memberships: {
+            nodes: {
+              organization: {
+                id: {},
+                name: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const result = await paveQuery(query);
+    const memberships = result.currentGrant?.user?.memberships?.nodes || [];
+
+    if (memberships.length > 0) {
+      const org = memberships[0].organization;
+      return {
+        id: org.id,
+        name: org.name
+      };
+    }
+
+    throw new Error('No organization found for this grant key');
+  }
+
+  /**
    * Test API connection by fetching organization name
-   * @param {string} orgId - Organization ID to test with
+   * @param {string} orgId - Organization ID to test with (optional - will auto-discover)
    * @returns {Promise<Object>} Connection test result
    */
   async function testConnection(orgId = null) {
     try {
-      // Get org ID if not provided
+      // If no org ID provided, try to discover it
       if (!orgId) {
         orgId = await getOrgId();
       }
 
+      // If still no org ID, try to discover from currentGrant
       if (!orgId) {
-        return {
-          success: false,
-          message: 'Organization ID is required'
-        };
+        console.log('JobTreadAPI: No org ID, attempting auto-discovery...');
+        try {
+          const org = await discoverOrganization();
+          if (org) {
+            await setOrgId(org.id);
+            return {
+              success: true,
+              message: 'API connection successful',
+              organization: {
+                id: org.id,
+                name: org.name
+              }
+            };
+          }
+        } catch (discoverError) {
+          console.error('JobTreadAPI: Auto-discovery failed:', discoverError);
+          return {
+            success: false,
+            message: discoverError.message || 'Failed to discover organization',
+            error: discoverError
+          };
+        }
       }
 
-      // Simple query to fetch organization name - matches user's example format
+      // If we have an org ID, verify it works
       const query = {
         organization: {
           $: { id: orgId },
@@ -409,6 +463,9 @@ const JobTreadAPI = (() => {
     isFullyConfigured,
     testConnection,
     clearConfig,
+
+    // Organization discovery
+    discoverOrganization,
 
     // Data fetching
     fetchCustomFieldDefinitions,
