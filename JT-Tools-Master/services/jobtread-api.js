@@ -224,7 +224,9 @@ const JobTreadAPI = (() => {
   async function discoverOrganization() {
     const query = {
       currentGrant: {
+        id: {},
         user: {
+          id: {},
           memberships: {
             nodes: {
               organization: {
@@ -238,7 +240,8 @@ const JobTreadAPI = (() => {
     };
 
     const result = await paveQuery(query);
-    const memberships = result.currentGrant?.user?.memberships?.nodes || [];
+    // Response is wrapped in "query" key
+    const memberships = result.query?.currentGrant?.user?.memberships?.nodes || [];
 
     if (memberships.length > 0) {
       const org = memberships[0].organization;
@@ -300,7 +303,8 @@ const JobTreadAPI = (() => {
 
       const result = await paveQuery(query);
 
-      if (result.organization) {
+      // Response is wrapped in "query" key
+      if (result.query?.organization) {
         // Save the org ID since it worked
         await setOrgId(orgId);
 
@@ -308,8 +312,8 @@ const JobTreadAPI = (() => {
           success: true,
           message: 'API connection successful',
           organization: {
-            id: result.organization.id,
-            name: result.organization.name
+            id: result.query.organization.id,
+            name: result.query.organization.name
           }
         };
       }
@@ -363,15 +367,18 @@ const JobTreadAPI = (() => {
       }
     }
 
-    // Pave query for custom fields targeting jobs
-    // Matches the user's exact example format
+    // Pave query for custom fields - get all and filter for jobs client-side
+    // Using the correct format from JT docs
     const query = {
       organization: {
         $: { id: orgId },
+        id: {},
         customFields: {
           $: {
-            where: ['targetType', '=', 'job'],
-            sortBy: [{ field: 'position' }]
+            sortBy: [
+              { field: 'targetType' },
+              { field: 'position' }
+            ]
           },
           nodes: {
             id: {},
@@ -386,16 +393,19 @@ const JobTreadAPI = (() => {
 
     try {
       const result = await paveQuery(query);
-      const definitions = result.organization?.customFields?.nodes || [];
+      const allDefinitions = result.query?.organization?.customFields?.nodes || [];
+
+      // Filter for job custom fields only
+      const jobDefinitions = allDefinitions.filter(cf => cf.targetType === 'job');
 
       // Cache the results
       await chrome.storage.local.set({
-        [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: definitions,
+        [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: jobDefinitions,
         [STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP]: Date.now()
       });
 
-      console.log('JobTreadAPI: Fetched custom field definitions:', definitions);
-      return definitions;
+      console.log('JobTreadAPI: Fetched custom field definitions:', jobDefinitions);
+      return jobDefinitions;
     } catch (error) {
       console.error('JobTreadAPI: Failed to fetch custom field definitions:', error);
       throw error;
@@ -405,10 +415,14 @@ const JobTreadAPI = (() => {
   /**
    * Fetch jobs with their custom field values
    * @param {Object} options - Query options
+   * @param {number} options.limit - Max number of jobs to fetch (default 100)
+   * @param {string} options.status - Filter by job status
+   * @param {string} options.customFieldName - Custom field name to filter by
+   * @param {string} options.customFieldValue - Custom field value to filter by
    * @returns {Promise<Array>} List of jobs with custom fields
    */
   async function fetchJobs(options = {}) {
-    const { limit = 100, status = null } = options;
+    const { limit = 100, status = null, customFieldName = null, customFieldValue = null } = options;
 
     let orgId = await getOrgId();
     if (!orgId) {
@@ -426,10 +440,33 @@ const JobTreadAPI = (() => {
       queryParams.where = ['status', '=', status];
     }
 
+    // Add custom field filter using the "with" pattern from JT docs
+    if (customFieldName && customFieldValue) {
+      queryParams.with = {
+        cf: {
+          _: 'customFieldValues',
+          $: {
+            where: [['customField', 'name'], '=', customFieldName]
+          },
+          values: {
+            $: { field: 'value' }
+          }
+        }
+      };
+      // Combine with existing where clause if present
+      const cfWhere = [['cf', 'values'], '=', customFieldValue];
+      if (queryParams.where) {
+        queryParams.where = ['and', queryParams.where, cfWhere];
+      } else {
+        queryParams.where = cfWhere;
+      }
+    }
+
     // Pave query for jobs
     const query = {
       organization: {
         $: { id: orgId },
+        id: {},
         jobs: {
           $: queryParams,
           nodes: {
@@ -456,7 +493,7 @@ const JobTreadAPI = (() => {
 
     try {
       const result = await paveQuery(query);
-      const jobs = result.organization?.jobs?.nodes || [];
+      const jobs = result.query?.organization?.jobs?.nodes || [];
       console.log('JobTreadAPI: Fetched jobs:', jobs.length);
       return jobs;
     } catch (error) {
