@@ -26,7 +26,49 @@ const QuickJobSwitcherFeature = (() => {
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
 
+    // Watch for sidebar appearing (regardless of how it was opened)
+    setupSidebarObserver();
+
     console.log('QuickJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
+  }
+
+  /**
+   * Set up a MutationObserver to detect when the job switcher sidebar appears
+   * This ensures the filter UI is injected regardless of how the sidebar is opened
+   */
+  function setupSidebarObserver() {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if this is the job switcher sidebar
+            const sidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0')
+              ? node
+              : node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+
+            if (sidebar) {
+              console.log('QuickJobSwitcher: Sidebar detected via observer');
+              // Find the search input and inject filter UI
+              setTimeout(() => {
+                const searchInput = sidebar.querySelector('input[placeholder*="Search"]') ||
+                                   sidebar.querySelector('input[type="text"]');
+                if (searchInput) {
+                  console.log('QuickJobSwitcher: Found search input, injecting filter UI');
+                  injectFilterUI(searchInput);
+                }
+              }, 100);
+            }
+          }
+        }
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    console.log('QuickJobSwitcher: Sidebar observer set up');
   }
 
   /**
