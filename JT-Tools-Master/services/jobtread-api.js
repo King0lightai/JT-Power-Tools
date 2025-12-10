@@ -433,7 +433,7 @@ const JobTreadAPI = (() => {
     // Build query parameters
     const queryParams = {
       size: limit,
-      sortBy: [{ field: 'createdAt', direction: 'DESC' }]
+      sortBy: [{ field: 'createdAt' }]
     };
 
     // Add status filter if provided
