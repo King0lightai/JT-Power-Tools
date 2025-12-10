@@ -418,23 +418,29 @@ const JobTreadAPI = (() => {
   /**
    * Fetch jobs with their custom field values
    * @param {Object} options - Query options
-   * @param {number} options.limit - Max number of jobs to fetch (default 100)
+   * @param {number} options.limit - Max number of jobs to fetch (default 100, max 100)
+   * @param {number} options.offset - Number of jobs to skip for pagination
    * @param {string} options.status - Filter by job status
    * @returns {Promise<Array>} List of jobs with custom fields
    */
   async function fetchJobs(options = {}) {
-    const { limit = 100, status = null } = options;
+    const { limit = 100, offset = 0, status = null } = options;
 
     let orgId = await getOrgId();
     if (!orgId) {
       throw new Error('Organization ID not configured');
     }
 
-    // Build query parameters
+    // Build query parameters (max size is 100)
     const queryParams = {
-      size: limit,
+      size: Math.min(limit, 100),
       sortBy: [{ field: 'createdAt' }]
     };
+
+    // Add pagination offset
+    if (offset > 0) {
+      queryParams.skip = offset;
+    }
 
     // Add status filter if provided
     if (status) {
@@ -486,14 +492,26 @@ const JobTreadAPI = (() => {
    * Fetch jobs filtered by custom field value (client-side filtering)
    * @param {string} fieldId - Custom field ID to filter by
    * @param {string} fieldValue - Value to match
-   * @param {number} limit - Max jobs to fetch before filtering
    * @returns {Promise<Array>} Filtered list of jobs
    */
-  async function fetchJobsByCustomField(fieldId, fieldValue, limit = 500) {
-    const jobs = await fetchJobs({ limit });
+  async function fetchJobsByCustomField(fieldId, fieldValue) {
+    // API max is 100 per page, fetch multiple pages to get more jobs
+    const allJobs = [];
+    const pageSize = 100;
+    const maxPages = 5; // Get up to 500 jobs total
+
+    for (let page = 0; page < maxPages; page++) {
+      const jobs = await fetchJobs({ limit: pageSize, offset: page * pageSize });
+      allJobs.push(...jobs);
+
+      // Stop if we got fewer than requested (no more pages)
+      if (jobs.length < pageSize) break;
+    }
+
+    console.log('JobTreadAPI: Fetched total jobs:', allJobs.length);
 
     // Filter client-side by custom field value
-    const filteredJobs = jobs.filter(job => {
+    const filteredJobs = allJobs.filter(job => {
       const cfValues = job.customFieldValues?.nodes || [];
       return cfValues.some(cfv =>
         cfv.customField?.id === fieldId &&
@@ -512,11 +530,19 @@ const JobTreadAPI = (() => {
    * @returns {Promise<Array>} Unique values
    */
   async function getCustomFieldValues(customFieldId) {
-    // Fetch all jobs and extract unique values for the field
-    const jobs = await fetchJobs({ limit: 500 });
+    // Fetch jobs with pagination (API max is 100 per page)
+    const allJobs = [];
+    const pageSize = 100;
+    const maxPages = 5;
+
+    for (let page = 0; page < maxPages; page++) {
+      const jobs = await fetchJobs({ limit: pageSize, offset: page * pageSize });
+      allJobs.push(...jobs);
+      if (jobs.length < pageSize) break;
+    }
 
     const values = new Set();
-    jobs.forEach(job => {
+    allJobs.forEach(job => {
       const fieldValues = job.customFieldValues?.nodes || [];
       fieldValues.forEach(fv => {
         if (fv.customField?.id === customFieldId && fv.value) {
