@@ -537,94 +537,80 @@ const JobTreadAPI = (() => {
    * @returns {Promise<Object>} Test result
    */
   async function directApiTest(apiKey, orgId = null) {
-    // Try multiple query formats to find what works
-    const queryFormats = [
-      // Format 1: currentGrant (simplest - no org ID needed)
+    // Try multiple query formats and header variations to find what works
+    const testQuery = {
+      organization: {
+        $: { id: orgId || '22PGZ29nPpZH' },
+        id: {},
+        name: {}
+      }
+    };
+
+    const variations = [
+      // Variation 1: Standard format
       {
-        name: 'currentGrant simple',
-        query: {
-          currentGrant: {
-            id: {},
-            user: {
-              id: {},
-              name: {}
-            }
-          }
-        }
+        name: 'standard JSON',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(testQuery)
       },
-      // Format 2: currentGrant with nested memberships
+      // Variation 2: With charset
       {
-        name: 'currentGrant with memberships',
-        query: {
-          currentGrant: {
-            user: {
-              memberships: {
-                nodes: {
-                  organization: {
-                    id: {},
-                    name: {}
-                  }
-                }
-              }
-            }
-          }
-        }
+        name: 'with charset utf-8',
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(testQuery)
       },
-      // Format 3: Organization with $ args (if orgId provided)
-      ...(orgId ? [{
-        name: 'organization with $ args',
-        query: {
-          organization: {
-            $: { id: orgId },
-            id: {},
-            name: {}
-          }
-        }
-      }] : []),
-      // Format 4: Try _args instead of $ (standard Pave format)
-      ...(orgId ? [{
-        name: 'organization with _args',
-        query: {
-          organization: {
-            _args: { id: orgId },
-            id: {},
-            name: {}
-          }
-        }
-      }] : []),
-      // Format 5: Wrapped in query key
+      // Variation 3: Wrapped in query key
       {
         name: 'wrapped in query key',
-        query: {
-          query: {
-            currentGrant: {
-              id: {}
-            }
-          }
-        }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ query: testQuery })
+      },
+      // Variation 4: With Accept header
+      {
+        name: 'with Accept header',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(testQuery)
+      },
+      // Variation 5: Try text/plain (some APIs are weird)
+      {
+        name: 'text/plain content-type',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(testQuery)
       }
     ];
 
-    console.log('JobTreadAPI: Direct test starting with multiple formats...');
+    console.log('JobTreadAPI: Direct test starting with multiple variations...');
     console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
-    if (orgId) console.log('JobTreadAPI: Using Org ID:', orgId);
+    console.log('JobTreadAPI: Test query:', JSON.stringify(testQuery, null, 2));
 
     const results = [];
 
-    for (const format of queryFormats) {
-      console.log(`\n--- Testing format: ${format.name} ---`);
-      console.log('JobTreadAPI: Query object:', JSON.stringify(format.query, null, 2));
-
-      const bodyString = JSON.stringify(format.query);
+    for (const variation of variations) {
+      console.log(`\n--- Testing variation: ${variation.name} ---`);
+      console.log('Headers:', JSON.stringify(variation.headers, null, 2));
+      console.log('Body:', variation.body);
 
       try {
         const response = await proxyFetch(API_URL, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: bodyString
+          headers: variation.headers,
+          body: variation.body
         });
 
         console.log('JobTreadAPI: Response status:', response.status);
@@ -639,7 +625,7 @@ const JobTreadAPI = (() => {
         }
 
         results.push({
-          format: format.name,
+          variation: variation.name,
           status: response.status,
           success: response.ok,
           response: response.ok ? parsedResponse : responseText
@@ -647,27 +633,27 @@ const JobTreadAPI = (() => {
 
         // If successful, return immediately
         if (response.ok) {
-          console.log(`SUCCESS! Format "${format.name}" worked!`);
+          console.log(`SUCCESS! Variation "${variation.name}" worked!`);
           return {
             success: true,
-            format: format.name,
+            variation: variation.name,
             data: parsedResponse,
             allResults: results
           };
         }
       } catch (error) {
-        console.error(`JobTreadAPI: Format "${format.name}" error:`, error.message);
+        console.error(`JobTreadAPI: Variation "${variation.name}" error:`, error.message);
         results.push({
-          format: format.name,
+          variation: variation.name,
           success: false,
           error: error.message
         });
       }
     }
 
-    // All formats failed
-    console.log('JobTreadAPI: All formats failed');
-    return { success: false, error: 'All query formats failed', allResults: results };
+    // All variations failed
+    console.log('JobTreadAPI: All variations failed');
+    return { success: false, error: 'All variations failed', allResults: results };
   }
 
   // Public API
