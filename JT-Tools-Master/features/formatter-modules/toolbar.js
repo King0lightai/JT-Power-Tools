@@ -48,42 +48,62 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Find the height of sticky headers at the top of the viewport
-   * @returns {number} The total height of sticky elements at top
+   * Find the bottom edge of sticky headers that are above the field
+   * @param {HTMLTextAreaElement} field - The field we're positioning toolbar for
+   * @returns {number} The bottom edge of the lowest sticky header above the field (in viewport coords)
    */
-  function getStickyHeaderOffset() {
+  function getStickyHeaderOffset(field) {
+    const fieldRect = field.getBoundingClientRect();
     let maxOffset = 0;
 
-    // Only check semantic header/nav elements (not classes that might contain "header")
-    const potentialHeaders = document.querySelectorAll('header, nav');
-
-    potentialHeaders.forEach(el => {
+    // Check semantic header/nav elements
+    const semanticHeaders = document.querySelectorAll('header, nav');
+    semanticHeaders.forEach(el => {
       const style = window.getComputedStyle(el);
       const position = style.position;
       const top = parseFloat(style.top) || 0;
 
-      // Check if it's a sticky/fixed element anchored at the top
       if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 20) {
         const rect = el.getBoundingClientRect();
-        // Only consider elements that are actually at the top of viewport
-        if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
-          const bottomEdge = rect.bottom;
-          if (bottomEdge > maxOffset && bottomEdge < 200) {
-            maxOffset = bottomEdge;
+        // Element should be above the field and reasonably sized
+        if (rect.bottom < fieldRect.top + 50 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
           }
         }
       }
     });
 
-    // Also check for inline sticky styles, but be conservative
-    const jtStickyElements = document.querySelectorAll('[style*="position: sticky"], [style*="position:sticky"]');
-    jtStickyElements.forEach(el => {
-      const rect = el.getBoundingClientRect();
-      // Only consider if actually at top and reasonably sized (like a header bar)
-      if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
-        const bottomEdge = rect.bottom;
-        if (bottomEdge > maxOffset && bottomEdge < 200) {
-          maxOffset = bottomEdge;
+    // Check elements with sticky class (JobTread budget table headers, sidebar headers)
+    const stickyClassElements = document.querySelectorAll('.sticky');
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      const position = style.position;
+
+      if (position === 'sticky') {
+        const rect = el.getBoundingClientRect();
+        // Element should be above or overlapping the field's top area, and reasonably sized
+        if (rect.bottom <= fieldRect.top + 50 && rect.height > 15 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
+          }
+        }
+      }
+    });
+
+    // Also check parent rows of sticky elements (for table header rows like JobTread budget)
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (style.position === 'sticky') {
+        const parent = el.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          // Parent row should be above the field and look like a header row
+          if (parentRect.bottom <= fieldRect.top + 50 && parentRect.height > 15 && parentRect.height < 100) {
+            if (parentRect.bottom > maxOffset) {
+              maxOffset = parentRect.bottom;
+            }
+          }
         }
       }
     });
@@ -101,7 +121,7 @@ const FormatterToolbar = (() => {
     const toolbarHeight = 44;
     const padding = 8;
     const viewportHeight = window.innerHeight;
-    const stickyHeaderOffset = getStickyHeaderOffset();
+    const stickyHeaderOffset = getStickyHeaderOffset(field);
 
     // Calculate usable viewport area (accounting for sticky headers)
     const viewportTop = stickyHeaderOffset || 0;
