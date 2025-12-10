@@ -41,22 +41,31 @@ const QuickJobSwitcherFeature = (() => {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if this is the job switcher sidebar
-            const sidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0')
-              ? node
-              : node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+            // Check if this is the job switcher sidebar (has z-30 class and contains "Job Switcher" text)
+            let sidebar = null;
 
-            if (sidebar) {
+            // Check if the node itself is the sidebar container
+            if (node.classList?.contains('z-30') && node.classList?.contains('absolute')) {
+              sidebar = node;
+            } else {
+              // Check within added node for sidebar
+              sidebar = node.querySelector?.('div.z-30.absolute');
+            }
+
+            // Verify it's the job switcher by checking for the title
+            if (sidebar && sidebar.textContent?.includes('Job Switcher')) {
               console.log('QuickJobSwitcher: Sidebar detected via observer');
-              // Find the search input and inject filter UI
+              // Find the search input and inject filter UI after a short delay
               setTimeout(() => {
                 const searchInput = sidebar.querySelector('input[placeholder*="Search"]') ||
-                                   sidebar.querySelector('input[type="text"]');
+                                   sidebar.querySelector('input');
                 if (searchInput) {
                   console.log('QuickJobSwitcher: Found search input, injecting filter UI');
                   injectFilterUI(searchInput);
+                } else {
+                  console.log('QuickJobSwitcher: Could not find search input in sidebar');
                 }
-              }, 100);
+              }, 150);
             }
           }
         }
@@ -355,8 +364,9 @@ const QuickJobSwitcherFeature = (() => {
       console.log('QuickJobSwitcher: Grouped custom fields:', Object.keys(groupedFields));
 
       // Populate dropdown with optgroups for each targetType
-      // Job fields first (these work best for job filtering)
-      const typeOrder = ['job', 'budget', 'contact', 'vendor', 'account', 'other'];
+      // Job fields first (these work for job filtering)
+      // Schema targetTypes: costItem, customer, customerContact, dailyLog, job, location, vendor, vendorContact
+      const typeOrder = ['job', 'dailylog', 'costitem', 'customer', 'customercontact', 'location', 'vendor', 'vendorcontact'];
 
       typeOrder.forEach(targetType => {
         if (!groupedFields[targetType] || groupedFields[targetType].length === 0) return;
