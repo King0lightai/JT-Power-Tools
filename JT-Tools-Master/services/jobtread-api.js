@@ -240,8 +240,11 @@ const JobTreadAPI = (() => {
     };
 
     const result = await paveQuery(query);
+    console.log('JobTreadAPI: discoverOrganization full result:', JSON.stringify(result, null, 2));
+
     // Response is wrapped in "query" key
     const memberships = result.query?.currentGrant?.user?.memberships?.nodes || [];
+    console.log('JobTreadAPI: memberships found:', memberships.length, memberships);
 
     if (memberships.length > 0) {
       const org = memberships[0].organization;
