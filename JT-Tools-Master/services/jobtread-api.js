@@ -370,16 +370,16 @@ const JobTreadAPI = (() => {
       }
     }
 
-    // Pave query for custom fields - get all and filter for jobs client-side
-    // Using the correct format from JT docs
+    // Pave query for custom fields - filter for job targetType
+    // Using the correct format from JT docs with where clause
     const query = {
       organization: {
         $: { id: orgId },
         id: {},
         customFields: {
           $: {
+            where: ['targetType', '=', 'job'],
             sortBy: [
-              { field: 'targetType' },
               { field: 'position' }
             ]
           },
@@ -397,36 +397,18 @@ const JobTreadAPI = (() => {
     try {
       const result = await paveQuery(query);
       // Response comes back WITHOUT the "query" wrapper
-      const allDefinitions = result.organization?.customFields?.nodes || [];
+      const jobDefinitions = result.organization?.customFields?.nodes || [];
 
-      // Log all targetTypes for debugging
-      const targetTypes = [...new Set(allDefinitions.map(cf => cf.targetType))];
-      console.log('JobTreadAPI: All custom field targetTypes found:', targetTypes);
-      console.log('JobTreadAPI: All custom fields:', allDefinitions);
+      console.log('JobTreadAPI: Fetched job custom fields:', jobDefinitions.length);
+      console.log('JobTreadAPI: Job custom fields:', jobDefinitions);
 
-      // Separate by targetType
-      const jobFields = allDefinitions.filter(cf =>
-        cf.targetType && cf.targetType.toLowerCase() === 'job'
-      );
-      const budgetFields = allDefinitions.filter(cf =>
-        cf.targetType && cf.targetType.toLowerCase() === 'budget'
-      );
-      const otherFields = allDefinitions.filter(cf =>
-        cf.targetType && !['job', 'budget'].includes(cf.targetType.toLowerCase())
-      );
-
-      console.log('JobTreadAPI: Job fields:', jobFields.length, ', Budget fields:', budgetFields.length, ', Other:', otherFields.length);
-
-      // Return ALL custom fields with their targetType preserved
-      // This allows the UI to show all available fields and indicate which type they are
       // Cache the results
       await chrome.storage.local.set({
-        [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: allDefinitions,
+        [STORAGE_KEYS.CUSTOM_FIELDS_CACHE]: jobDefinitions,
         [STORAGE_KEYS.CUSTOM_FIELDS_TIMESTAMP]: Date.now()
       });
 
-      console.log('JobTreadAPI: Returning all custom field definitions:', allDefinitions.length);
-      return allDefinitions;
+      return jobDefinitions;
     } catch (error) {
       console.error('JobTreadAPI: Failed to fetch custom field definitions:', error);
       throw error;
