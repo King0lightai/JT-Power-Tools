@@ -159,7 +159,8 @@ const JobTreadAPI = (() => {
   /**
    * Execute a Pave query
    * JobTread uses Pave query language - a JSON-based query format
-   * @param {Object} query - Pave query object
+   * The query must be wrapped in a "query" key with grantKey in "$"
+   * @param {Object} query - Pave query object (inner query, will be wrapped)
    * @returns {Promise<Object>} Response data
    */
   async function paveQuery(query) {
@@ -170,35 +171,28 @@ const JobTreadAPI = (() => {
     }
 
     try {
-      // Debug: Check if query is already a string (would indicate double-stringify issue)
-      console.log('JobTreadAPI: Query input type:', typeof query);
-      console.log('JobTreadAPI: Query input:', query);
+      // Wrap query in the correct format per JT docs:
+      // { "query": { "$": { "grantKey": "..." }, ...innerQuery } }
+      const wrappedQuery = {
+        query: {
+          $: { grantKey: apiKey },
+          ...query
+        }
+      };
 
-      // Prepare body - ensure we're not double-stringifying
-      const bodyString = typeof query === 'string' ? query : JSON.stringify(query);
+      console.log('JobTreadAPI: Wrapped query:', JSON.stringify(wrappedQuery, null, 2));
 
-      // Debug: Log exactly what's being sent
-      console.log('JobTreadAPI: Body type:', typeof bodyString);
-      console.log('JobTreadAPI: Body string:', bodyString);
-      console.log('JobTreadAPI: Body first char:', bodyString.charAt(0));
-      console.log('JobTreadAPI: API Key (first 10 chars):', apiKey.substring(0, 10) + '...');
+      const bodyString = JSON.stringify(wrappedQuery);
 
       const response = await proxyFetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Content-Type': 'application/json'
         },
         body: bodyString
       });
 
-      // Debug: Log response details
       console.log('JobTreadAPI: Response status:', response.status);
-      try {
-        console.log('JobTreadAPI: Response headers:', Object.fromEntries(response.headers.entries()));
-      } catch (e) {
-        console.log('JobTreadAPI: Response from proxy');
-      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -537,123 +531,73 @@ const JobTreadAPI = (() => {
    * @returns {Promise<Object>} Test result
    */
   async function directApiTest(apiKey, orgId = null) {
-    // Try multiple query formats and header variations to find what works
-    const testQuery = {
-      organization: {
-        $: { id: orgId || '22PGZ29nPpZH' },
-        id: {},
-        name: {}
+    // Use the correct JT Docs format:
+    // { "query": { "$": { "grantKey": "..." }, ...innerQuery } }
+    const wrappedQuery = {
+      query: {
+        $: { grantKey: apiKey },
+        currentGrant: {
+          id: {},
+          user: {
+            id: {},
+            name: {},
+            memberships: {
+              nodes: {
+                organization: {
+                  id: {},
+                  name: {}
+                }
+              }
+            }
+          }
+        }
       }
     };
 
-    const variations = [
-      // Variation 1: Standard format
-      {
-        name: 'standard JSON',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(testQuery)
-      },
-      // Variation 2: With charset
-      {
-        name: 'with charset utf-8',
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(testQuery)
-      },
-      // Variation 3: Wrapped in query key
-      {
-        name: 'wrapped in query key',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ query: testQuery })
-      },
-      // Variation 4: With Accept header
-      {
-        name: 'with Accept header',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(testQuery)
-      },
-      // Variation 5: Try text/plain (some APIs are weird)
-      {
-        name: 'text/plain content-type',
-        headers: {
-          'Content-Type': 'text/plain',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(testQuery)
-      }
-    ];
-
-    console.log('JobTreadAPI: Direct test starting with multiple variations...');
+    console.log('JobTreadAPI: Direct test with correct format...');
     console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
-    console.log('JobTreadAPI: Test query:', JSON.stringify(testQuery, null, 2));
+    console.log('JobTreadAPI: Wrapped query:', JSON.stringify(wrappedQuery, null, 2));
 
-    const results = [];
+    try {
+      const response = await proxyFetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(wrappedQuery)
+      });
 
-    for (const variation of variations) {
-      console.log(`\n--- Testing variation: ${variation.name} ---`);
-      console.log('Headers:', JSON.stringify(variation.headers, null, 2));
-      console.log('Body:', variation.body);
+      console.log('JobTreadAPI: Response status:', response.status);
+      const responseText = await response.text();
+      console.log('JobTreadAPI: Response body:', responseText);
 
+      let parsedResponse;
       try {
-        const response = await proxyFetch(API_URL, {
-          method: 'POST',
-          headers: variation.headers,
-          body: variation.body
-        });
-
-        console.log('JobTreadAPI: Response status:', response.status);
-        const responseText = await response.text();
-        console.log('JobTreadAPI: Response body:', responseText.substring(0, 500));
-
-        let parsedResponse;
-        try {
-          parsedResponse = JSON.parse(responseText);
-        } catch (e) {
-          parsedResponse = responseText;
-        }
-
-        results.push({
-          variation: variation.name,
-          status: response.status,
-          success: response.ok,
-          response: response.ok ? parsedResponse : responseText
-        });
-
-        // If successful, return immediately
-        if (response.ok) {
-          console.log(`SUCCESS! Variation "${variation.name}" worked!`);
-          return {
-            success: true,
-            variation: variation.name,
-            data: parsedResponse,
-            allResults: results
-          };
-        }
-      } catch (error) {
-        console.error(`JobTreadAPI: Variation "${variation.name}" error:`, error.message);
-        results.push({
-          variation: variation.name,
-          success: false,
-          error: error.message
-        });
+        parsedResponse = JSON.parse(responseText);
+      } catch (e) {
+        parsedResponse = responseText;
       }
-    }
 
-    // All variations failed
-    console.log('JobTreadAPI: All variations failed');
-    return { success: false, error: 'All variations failed', allResults: results };
+      if (response.ok) {
+        console.log('SUCCESS! API connection works!');
+        return {
+          success: true,
+          data: parsedResponse
+        };
+      } else {
+        return {
+          success: false,
+          status: response.status,
+          error: responseText
+        };
+      }
+    } catch (error) {
+      console.error('JobTreadAPI: Direct test error:', error.message);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 
   // Public API
