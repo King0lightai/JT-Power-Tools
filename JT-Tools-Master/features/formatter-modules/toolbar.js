@@ -54,34 +54,35 @@ const FormatterToolbar = (() => {
   function getStickyHeaderOffset() {
     let maxOffset = 0;
 
-    // Find elements with position: sticky or position: fixed at the top
-    const potentialHeaders = document.querySelectorAll('header, nav, [class*="header"], [class*="nav"], [class*="sticky"], [class*="fixed"]');
+    // Only check semantic header/nav elements (not classes that might contain "header")
+    const potentialHeaders = document.querySelectorAll('header, nav');
 
     potentialHeaders.forEach(el => {
       const style = window.getComputedStyle(el);
       const position = style.position;
       const top = parseFloat(style.top) || 0;
 
-      // Check if it's a sticky/fixed element at the top
-      if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 100) {
+      // Check if it's a sticky/fixed element anchored at the top
+      if ((position === 'sticky' || position === 'fixed') && top >= 0 && top < 20) {
         const rect = el.getBoundingClientRect();
-        // Only consider elements that are actually visible at the top
-        if (rect.top >= -5 && rect.top < 100) {
+        // Only consider elements that are actually at the top of viewport
+        if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
           const bottomEdge = rect.bottom;
-          if (bottomEdge > maxOffset) {
+          if (bottomEdge > maxOffset && bottomEdge < 200) {
             maxOffset = bottomEdge;
           }
         }
       }
     });
 
-    // Also check for common JobTread sticky elements
+    // Also check for inline sticky styles, but be conservative
     const jtStickyElements = document.querySelectorAll('[style*="position: sticky"], [style*="position:sticky"]');
     jtStickyElements.forEach(el => {
       const rect = el.getBoundingClientRect();
-      if (rect.top >= -5 && rect.top < 100) {
+      // Only consider if actually at top and reasonably sized (like a header bar)
+      if (rect.top >= -5 && rect.top < 20 && rect.height < 150) {
         const bottomEdge = rect.bottom;
-        if (bottomEdge > maxOffset) {
+        if (bottomEdge > maxOffset && bottomEdge < 200) {
           maxOffset = bottomEdge;
         }
       }
