@@ -53,6 +53,75 @@ const AlertModal = (() => {
   const plusIconPath = '<path d="M5 12h14M12 5v14"></path>';
 
   /**
+   * Apply formatting to a textarea (simplified version for modal)
+   * @param {HTMLTextAreaElement} textarea - The textarea to format
+   * @param {string} format - The format to apply
+   */
+  function applyFormatToTextarea(textarea, format) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selection = text.substring(start, end);
+    const hasSelection = selection.length > 0;
+
+    let before = text.substring(0, start);
+    let after = text.substring(end);
+    let replacement;
+    let cursorPos;
+
+    switch(format) {
+      case 'bold':
+        replacement = hasSelection ? `*${selection}*` : '**';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'italic':
+        replacement = hasSelection ? `^${selection}^` : '^^';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'underline':
+        replacement = hasSelection ? `_${selection}_` : '__';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'strikethrough':
+        replacement = hasSelection ? `~${selection}~` : '~~';
+        cursorPos = hasSelection ? start + replacement.length : start + 1;
+        break;
+
+      case 'bullet':
+        if (hasSelection) {
+          replacement = selection.split('\n').map(line => `- ${line}`).join('\n');
+        } else {
+          replacement = '- ';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 2;
+        break;
+
+      case 'numbered':
+        if (hasSelection) {
+          replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
+        } else {
+          replacement = '1. ';
+        }
+        cursorPos = hasSelection ? start + replacement.length : start + 3;
+        break;
+
+      default:
+        return;
+    }
+
+    // Update textarea value
+    textarea.value = before + replacement + after;
+    textarea.setSelectionRange(cursorPos, cursorPos);
+
+    // Dispatch input event for any listeners
+    const inputEvent = new Event('input', { bubbles: true });
+    textarea.dispatchEvent(inputEvent);
+  }
+
+  /**
    * Create and show the alert modal
    * @returns {Promise<Object|null>} Alert data or null if cancelled
    */
@@ -115,6 +184,21 @@ const AlertModal = (() => {
 
               <!-- Subject Input -->
               <input type="text" class="jt-alert-subject" placeholder="Subject" value="">
+            </div>
+
+            <!-- Formatter Toolbar for Message -->
+            <div class="jt-alert-formatter-toolbar">
+              <div class="jt-toolbar-group">
+                <button type="button" class="jt-alert-format-btn" data-format="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                <button type="button" class="jt-alert-format-btn" data-format="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                <button type="button" class="jt-alert-format-btn" data-format="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <button type="button" class="jt-alert-format-btn" data-format="strikethrough" title="Strikethrough"><s>S</s></button>
+              </div>
+              <div class="jt-toolbar-divider"></div>
+              <div class="jt-toolbar-group">
+                <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1.</button>
+                <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">•</button>
+              </div>
             </div>
 
             <!-- Message Textarea -->
@@ -226,6 +310,42 @@ const AlertModal = (() => {
           overlay.querySelectorAll('.jt-alert-dropdown-menu').forEach(m => {
             m.classList.remove('jt-dropdown-open');
           });
+        }
+      });
+
+      // Setup formatter toolbar buttons
+      const formatButtons = overlay.querySelectorAll('.jt-alert-format-btn');
+      formatButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const format = btn.dataset.format;
+          if (format && messageTextarea) {
+            applyFormatToTextarea(messageTextarea, format);
+            // Re-focus the textarea after formatting
+            messageTextarea.focus();
+          }
+        });
+      });
+
+      // Handle keyboard shortcuts in message textarea
+      messageTextarea.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+        if (!modifier) return;
+
+        let format = null;
+        switch(e.key.toLowerCase()) {
+          case 'b': format = 'bold'; break;
+          case 'i': format = 'italic'; break;
+          case 'u': format = 'underline'; break;
+        }
+
+        if (format) {
+          e.preventDefault();
+          e.stopPropagation();
+          applyFormatToTextarea(messageTextarea, format);
         }
       });
 
