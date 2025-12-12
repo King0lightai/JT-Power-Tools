@@ -90,6 +90,53 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Find the budget table header row (sticky row with column names)
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findBudgetHeaderRow(field) {
+    // Find the scroll container
+    const scrollContainer = field.closest('.overflow-auto');
+    if (!scrollContainer) return null;
+
+    // The header row has sticky cells with bg-gray-100 and contains column names
+    // Look for rows with sticky z-10 children
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+    for (const row of allRows) {
+      // Header row has sticky cells with z-10
+      const stickyCells = row.querySelectorAll('.sticky.z-10');
+      if (stickyCells.length > 0) {
+        // Verify it has column headers like "Name", "Description"
+        const hasName = row.textContent.includes('Name');
+        const hasDescription = row.textContent.includes('Description');
+        if (hasName && hasDescription) {
+          return row;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find the Description header cell in the header row
+   * @param {HTMLElement} headerRow
+   * @returns {HTMLElement|null}
+   */
+  function findDescriptionHeaderCell(headerRow) {
+    // Find cells with width style (column cells)
+    const cells = Array.from(headerRow.children).filter(el => el.style.width);
+
+    for (const cell of cells) {
+      // Look for the cell containing "Description" text
+      const textContent = cell.textContent.trim();
+      if (textContent.startsWith('Description')) {
+        return cell;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Find the column index of the field's cell in the budget table
    * @param {HTMLTextAreaElement} field
    * @returns {number} Column index, or -1 if not found
@@ -183,6 +230,56 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Position toolbar in the budget header cell (sticky header mode)
+   * @param {HTMLElement} toolbar
+   * @param {HTMLElement} headerCell
+   * @param {HTMLElement} scrollContainer
+   * @returns {boolean} True if positioned successfully, false if should hide
+   */
+  function positionToolbarInHeader(toolbar, headerCell, scrollContainer) {
+    const cellRect = headerCell.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    // Check if header cell is at least partially visible horizontally
+    const visibleWidth = Math.min(cellRect.right, containerRect.right) - Math.max(cellRect.left, containerRect.left);
+    if (visibleWidth < 100) {
+      toolbar.style.visibility = 'hidden';
+      toolbar.style.opacity = '0';
+      return false;
+    }
+
+    const toolbarHeight = 32; // Slightly smaller for header
+    const padding = 8;
+
+    // Position toolbar at the right side of the header cell
+    // Leave room for the "Description" label on the left
+    const toolbarWidth = toolbar.offsetWidth || 400;
+
+    // Calculate left position - align to right side of visible area
+    let left = Math.min(cellRect.right, containerRect.right) - toolbarWidth - padding;
+
+    // Don't go past the left edge of the cell
+    left = Math.max(cellRect.left + 100, left); // Leave 100px for "Description" label
+
+    // Clamp to container bounds
+    left = Math.max(containerRect.left + padding, left);
+
+    // Center vertically in header cell
+    let top = cellRect.top + (cellRect.height - toolbarHeight) / 2;
+
+    toolbar.style.position = 'fixed';
+    toolbar.style.top = `${top}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.visibility = 'visible';
+    toolbar.style.opacity = '1';
+    toolbar.classList.add('jt-toolbar-header-docked');
+    toolbar.classList.remove('jt-toolbar-docked');
+    toolbar.classList.remove('jt-toolbar-sticky');
+
+    return true;
+  }
+
+  /**
    * Find the bottom edge of sticky headers that are above the field
    * @param {HTMLTextAreaElement} field - The field we're positioning toolbar for
    * @returns {number} The bottom edge of the lowest sticky header above the field (in viewport coords)
@@ -248,29 +345,31 @@ const FormatterToolbar = (() => {
 
   /**
    * Position toolbar relative to field with sticky behavior
-   * For budget Description fields, docks in the footer bar
+   * For budget Description fields, docks in the sticky header row
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
    */
   function positionToolbar(toolbar, field) {
-    // Check if this is a budget Description field - use docked mode
+    // Check if this is a budget Description field - use header docked mode
     if (isBudgetDescriptionField(field)) {
       const scrollContainer = field.closest('.overflow-auto');
-      const footerBar = findBudgetFooterBar(field);
-      const columnIndex = getFieldColumnIndex(field);
+      const headerRow = findBudgetHeaderRow(field);
 
-      if (footerBar && columnIndex >= 0 && scrollContainer) {
-        const footerCell = getFooterCellAtIndex(footerBar, columnIndex);
-        if (footerCell) {
-          positionToolbarInFooter(toolbar, footerCell, scrollContainer);
-          return;
+      if (headerRow && scrollContainer) {
+        const headerCell = findDescriptionHeaderCell(headerRow);
+        if (headerCell) {
+          const success = positionToolbarInHeader(toolbar, headerCell, scrollContainer);
+          if (success) {
+            return;
+          }
         }
       }
-      // Fall through to floating mode if docking fails
+      // Fall through to floating mode if header docking fails
     }
 
-    // Remove docked class if not docking
+    // Remove docked classes if not docking
     toolbar.classList.remove('jt-toolbar-docked');
+    toolbar.classList.remove('jt-toolbar-header-docked');
     toolbar.style.position = 'absolute';
 
     const rect = field.getBoundingClientRect();
