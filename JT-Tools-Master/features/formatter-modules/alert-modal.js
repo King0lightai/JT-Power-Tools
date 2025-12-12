@@ -53,75 +53,6 @@ const AlertModal = (() => {
   const plusIconPath = '<path d="M5 12h14M12 5v14"></path>';
 
   /**
-   * Apply formatting to a textarea (simplified version for modal)
-   * @param {HTMLTextAreaElement} textarea - The textarea to format
-   * @param {string} format - The format to apply
-   */
-  function applyFormatToTextarea(textarea, format) {
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const selection = text.substring(start, end);
-    const hasSelection = selection.length > 0;
-
-    let before = text.substring(0, start);
-    let after = text.substring(end);
-    let replacement;
-    let cursorPos;
-
-    switch(format) {
-      case 'bold':
-        replacement = hasSelection ? `*${selection}*` : '**';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
-      case 'italic':
-        replacement = hasSelection ? `^${selection}^` : '^^';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
-      case 'underline':
-        replacement = hasSelection ? `_${selection}_` : '__';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
-      case 'strikethrough':
-        replacement = hasSelection ? `~${selection}~` : '~~';
-        cursorPos = hasSelection ? start + replacement.length : start + 1;
-        break;
-
-      case 'bullet':
-        if (hasSelection) {
-          replacement = selection.split('\n').map(line => `- ${line}`).join('\n');
-        } else {
-          replacement = '- ';
-        }
-        cursorPos = hasSelection ? start + replacement.length : start + 2;
-        break;
-
-      case 'numbered':
-        if (hasSelection) {
-          replacement = selection.split('\n').map((line, i) => `${i+1}. ${line}`).join('\n');
-        } else {
-          replacement = '1. ';
-        }
-        cursorPos = hasSelection ? start + replacement.length : start + 3;
-        break;
-
-      default:
-        return;
-    }
-
-    // Update textarea value
-    textarea.value = before + replacement + after;
-    textarea.setSelectionRange(cursorPos, cursorPos);
-
-    // Dispatch input event for any listeners
-    const inputEvent = new Event('input', { bubbles: true });
-    textarea.dispatchEvent(inputEvent);
-  }
-
-  /**
    * Create and show the alert modal
    * @returns {Promise<Object|null>} Alert data or null if cancelled
    */
@@ -313,22 +244,22 @@ const AlertModal = (() => {
         }
       });
 
-      // Setup formatter toolbar buttons
+      // Setup formatter toolbar buttons - reuse existing FormatterFormats module
       const formatButtons = overlay.querySelectorAll('.jt-alert-format-btn');
       formatButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           const format = btn.dataset.format;
-          if (format && messageTextarea) {
-            applyFormatToTextarea(messageTextarea, format);
+          if (format && messageTextarea && window.FormatterFormats) {
+            window.FormatterFormats.applyFormat(messageTextarea, format);
             // Re-focus the textarea after formatting
             messageTextarea.focus();
           }
         });
       });
 
-      // Handle keyboard shortcuts in message textarea
+      // Handle keyboard shortcuts in message textarea - reuse existing FormatterFormats module
       messageTextarea.addEventListener('keydown', (e) => {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const modifier = isMac ? e.metaKey : e.ctrlKey;
@@ -342,10 +273,10 @@ const AlertModal = (() => {
           case 'u': format = 'underline'; break;
         }
 
-        if (format) {
+        if (format && window.FormatterFormats) {
           e.preventDefault();
           e.stopPropagation();
-          applyFormatToTextarea(messageTextarea, format);
+          window.FormatterFormats.applyFormat(messageTextarea, format);
         }
       });
 
