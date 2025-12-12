@@ -253,14 +253,15 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    const padding = 4;
+    const padding = 8;
+    const toolbarHeight = toolbar.offsetHeight || 32;
 
-    // Position toolbar BELOW the header cell (between header and content rows)
-    // Align to the left edge of the Description column
-    let left = Math.max(cellRect.left, containerRect.left) + padding;
+    // Position toolbar INSIDE the header cell, vertically centered
+    // Place it after the "Description" text, with some left offset
+    let left = Math.max(cellRect.left, containerRect.left) + 120; // Offset past "Description" text
 
-    // Position just below the header cell
-    let top = cellRect.bottom + padding;
+    // Vertically center in the header cell
+    let top = cellRect.top + (cellRect.height - toolbarHeight) / 2;
 
     toolbar.style.position = 'fixed';
     toolbar.style.top = `${top}px`;
