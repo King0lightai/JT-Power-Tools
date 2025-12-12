@@ -121,11 +121,21 @@ const FormatterToolbar = (() => {
   function findDescriptionHeaderCell(headerRow) {
     // Look through all direct children for the Description cell
     for (const cell of headerRow.children) {
-      // Check if this cell contains "Description" text (but not description content)
-      const innerText = cell.textContent.trim();
-      // The header cell will just say "Description" at the start, not have long content
-      if (innerText.startsWith('Description') && innerText.length < 50) {
-        return cell;
+      // The Description header cell has a nested structure:
+      // <div class="shrink-0 bg-gray-100 font-bold...">
+      //   <div class="grow min-w-0 select-none">
+      //     <div>Description</div>
+      //   </div>
+      // </div>
+      // Look for the inner text element that says exactly "Description"
+      const textElements = cell.querySelectorAll('div');
+      for (const el of textElements) {
+        // Check direct text content (not nested)
+        if (el.childNodes.length === 1 &&
+            el.childNodes[0].nodeType === Node.TEXT_NODE &&
+            el.textContent.trim() === 'Description') {
+          return cell;
+        }
       }
     }
     return null;
@@ -225,7 +235,7 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Position toolbar in the budget header cell (sticky header mode)
+   * Position toolbar below the budget header cell (between header and content)
    * @param {HTMLElement} toolbar
    * @param {HTMLElement} headerCell
    * @param {HTMLElement} scrollContainer
@@ -243,24 +253,50 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    const toolbarHeight = 32; // Slightly smaller for header
-    const padding = 8;
+    const padding = 4;
 
-    // Position toolbar at the right side of the header cell
-    // Leave room for the "Description" label on the left
-    const toolbarWidth = toolbar.offsetWidth || 400;
+    // Position toolbar BELOW the header cell (between header and content rows)
+    // Align to the left edge of the Description column
+    let left = Math.max(cellRect.left, containerRect.left) + padding;
 
-    // Calculate left position - align to right side of visible area
-    let left = Math.min(cellRect.right, containerRect.right) - toolbarWidth - padding;
+    // Position just below the header cell
+    let top = cellRect.bottom + padding;
 
-    // Don't go past the left edge of the cell
-    left = Math.max(cellRect.left + 100, left); // Leave 100px for "Description" label
+    toolbar.style.position = 'fixed';
+    toolbar.style.top = `${top}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.visibility = 'visible';
+    toolbar.style.opacity = '1';
+    toolbar.classList.add('jt-toolbar-header-docked');
+    toolbar.classList.remove('jt-toolbar-docked');
+    toolbar.classList.remove('jt-toolbar-sticky');
 
-    // Clamp to container bounds
-    left = Math.max(containerRect.left + padding, left);
+    return true;
+  }
 
-    // Center vertically in header cell
-    let top = cellRect.top + (cellRect.height - toolbarHeight) / 2;
+  /**
+   * Fallback: Position toolbar below the entire header row when specific cell isn't found
+   * @param {HTMLElement} toolbar - The toolbar element
+   * @param {HTMLElement} headerRow - The header row element
+   * @param {HTMLElement} scrollContainer - The scroll container
+   * @returns {boolean} True if successfully positioned
+   */
+  function positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer) {
+    const rowRect = headerRow.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    // Only show if header row is visible
+    if (rowRect.bottom < containerRect.top || rowRect.top > containerRect.bottom) {
+      toolbar.style.visibility = 'hidden';
+      toolbar.style.opacity = '0';
+      return false;
+    }
+
+    const padding = 4;
+
+    // Position toolbar below the header row, aligned to left of container
+    let left = containerRect.left + padding;
+    let top = rowRect.bottom + padding;
 
     toolbar.style.position = 'fixed';
     toolbar.style.top = `${top}px`;
@@ -357,6 +393,11 @@ const FormatterToolbar = (() => {
           if (success) {
             return;
           }
+        }
+        // Fallback: position below the header ROW if specific cell not found
+        const success = positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer);
+        if (success) {
+          return;
         }
       }
       // Fall through to floating mode if header docking fails
