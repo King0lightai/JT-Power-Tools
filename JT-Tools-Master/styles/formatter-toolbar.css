@@ -920,3 +920,72 @@
   text-decoration: line-through;
   font-size: 13px;
 }
+
+/* Dropdown arrow in toolbar buttons */
+.jt-alert-format-btn .jt-dropdown-arrow {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-left: 2px;
+}
+
+/* Toolbar dropdown groups */
+.jt-alert-dropdown-group {
+  position: relative;
+}
+
+/* Toolbar dropdowns */
+.jt-alert-toolbar-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 0.25rem;
+  z-index: 100;
+  min-width: 80px;
+  flex-direction: column;
+  gap: 0;
+}
+
+.jt-alert-toolbar-dropdown.jt-dropdown-visible {
+  display: flex;
+}
+
+.jt-alert-toolbar-dropdown .jt-alert-format-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.jt-alert-toolbar-dropdown .jt-alert-format-btn:first-child {
+  border-top-left-radius: 0.125rem;
+  border-top-right-radius: 0.125rem;
+}
+
+.jt-alert-toolbar-dropdown .jt-alert-format-btn:last-child {
+  border-bottom-left-radius: 0.125rem;
+  border-bottom-right-radius: 0.125rem;
+  border-bottom: none;
+}
+
+/* Color picker button */
+.jt-alert-color-btn .jt-color-icon {
+  font-weight: 700;
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 25%, #10b981 50%, #3b82f6 75%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Color dropdown specific styling */
+.jt-alert-color-dropdown .jt-alert-format-btn {
+  font-weight: 700;
+  min-width: 32px;
+  justify-content: center;
+}
