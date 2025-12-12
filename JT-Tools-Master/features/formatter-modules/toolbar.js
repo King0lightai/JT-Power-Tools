@@ -99,15 +99,24 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // The header row is the FIRST .flex.min-w-max child - it contains the column headers
-    // and has sticky cells for the checkbox and Name columns
-    const firstRow = scrollContainer.querySelector('.flex.min-w-max');
-    if (!firstRow) return null;
+    // Look through all .flex.min-w-max rows for the one that contains "Name" and "Description"
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+    for (const row of allRows) {
+      // Skip rows that have textareas (those are data rows)
+      if (row.querySelector('textarea')) continue;
 
-    // Verify this row has header indicators: bg-gray-100 font-bold cells
-    const headerCells = firstRow.querySelectorAll('.bg-gray-100.font-bold');
-    if (headerCells.length > 0) {
-      return firstRow;
+      // Skip footer rows (have "+ Item" or "Item" and "Group" buttons)
+      const rowText = row.textContent;
+      if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
+
+      // Check if this row contains both "Name" and "Description" text (header indicators)
+      const hasName = rowText.includes('Name');
+      const hasDescription = rowText.includes('Description');
+
+      if (hasName && hasDescription) {
+        // This is the header row
+        return row;
+      }
     }
 
     return null;
@@ -119,23 +128,14 @@ const FormatterToolbar = (() => {
    * @returns {HTMLElement|null}
    */
   function findDescriptionHeaderCell(headerRow) {
-    // Look through all direct children for the Description cell
+    // Look through direct children of the header row
     for (const cell of headerRow.children) {
-      // The Description header cell has a nested structure:
-      // <div class="shrink-0 bg-gray-100 font-bold...">
-      //   <div class="grow min-w-0 select-none">
-      //     <div>Description</div>
-      //   </div>
-      // </div>
-      // Look for the inner text element that says exactly "Description"
-      const textElements = cell.querySelectorAll('div');
-      for (const el of textElements) {
-        // Check direct text content (not nested)
-        if (el.childNodes.length === 1 &&
-            el.childNodes[0].nodeType === Node.TEXT_NODE &&
-            el.textContent.trim() === 'Description') {
-          return cell;
-        }
+      // Skip if not a header-styled cell
+      if (!cell.classList.contains('bg-gray-100')) continue;
+
+      // Check if this cell contains "Description" text anywhere
+      if (cell.textContent.includes('Description')) {
+        return cell;
       }
     }
     return null;
