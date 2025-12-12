@@ -117,6 +117,21 @@ const AlertModal = (() => {
               <input type="text" class="jt-alert-subject" placeholder="Subject" value="">
             </div>
 
+            <!-- Formatter Toolbar for Message -->
+            <div class="jt-alert-formatter-toolbar">
+              <div class="jt-toolbar-group">
+                <button type="button" class="jt-alert-format-btn" data-format="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                <button type="button" class="jt-alert-format-btn" data-format="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                <button type="button" class="jt-alert-format-btn" data-format="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <button type="button" class="jt-alert-format-btn" data-format="strikethrough" title="Strikethrough"><s>S</s></button>
+              </div>
+              <div class="jt-toolbar-divider"></div>
+              <div class="jt-toolbar-group">
+                <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1.</button>
+                <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">•</button>
+              </div>
+            </div>
+
             <!-- Message Textarea -->
             <div class="jt-alert-message-container">
               <textarea class="jt-alert-message" placeholder="Message"></textarea>
@@ -226,6 +241,42 @@ const AlertModal = (() => {
           overlay.querySelectorAll('.jt-alert-dropdown-menu').forEach(m => {
             m.classList.remove('jt-dropdown-open');
           });
+        }
+      });
+
+      // Setup formatter toolbar buttons - reuse existing FormatterFormats module
+      const formatButtons = overlay.querySelectorAll('.jt-alert-format-btn');
+      formatButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const format = btn.dataset.format;
+          if (format && messageTextarea && window.FormatterFormats) {
+            window.FormatterFormats.applyFormat(messageTextarea, format);
+            // Re-focus the textarea after formatting
+            messageTextarea.focus();
+          }
+        });
+      });
+
+      // Handle keyboard shortcuts in message textarea - reuse existing FormatterFormats module
+      messageTextarea.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+        if (!modifier) return;
+
+        let format = null;
+        switch(e.key.toLowerCase()) {
+          case 'b': format = 'bold'; break;
+          case 'i': format = 'italic'; break;
+          case 'u': format = 'underline'; break;
+        }
+
+        if (format && window.FormatterFormats) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.FormatterFormats.applyFormat(messageTextarea, format);
         }
       });
 

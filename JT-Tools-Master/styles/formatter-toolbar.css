@@ -29,15 +29,16 @@
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
 }
 
-/* Header-docked toolbar state - positioned in sticky budget header row */
+/* Header-docked toolbar state - positioned below budget header row */
 .jt-formatter-toolbar.jt-toolbar-header-docked {
   position: fixed;
-  background: #f3f4f6; /* Match header bg-gray-100 */
+  background: #ffffff;
   border: 1px solid #d1d5db;
   border-radius: 0.25rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 0.125rem 0.25rem;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
+  padding: 0.25rem 0.5rem;
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button {
@@ -835,3 +836,87 @@
 .jt-color-green { color: #10b981; }
 .jt-color-orange { color: #f97316; }
 .jt-color-purple { color: #8b5cf6; }
+
+/* ========================================
+   Alert Modal Formatter Toolbar
+   ======================================== */
+
+.jt-alert-formatter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.jt-alert-formatter-toolbar .jt-toolbar-group {
+  display: flex;
+  gap: 0;
+}
+
+.jt-alert-formatter-toolbar .jt-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #d1d5db;
+  margin: 0 0.25rem;
+}
+
+.jt-alert-format-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0.25rem 0.5rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.125rem;
+  cursor: pointer;
+  font-size: 13px;
+  color: #4b5563;
+  transition: all 0.15s ease;
+}
+
+/* Keep grouped buttons with rounded corners on ends only */
+.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+
+.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.jt-alert-format-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.jt-alert-format-btn:active {
+  background: #e5e7eb;
+}
+
+.jt-alert-format-btn strong {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.jt-alert-format-btn em {
+  font-style: italic;
+  font-size: 13px;
+}
+
+.jt-alert-format-btn u {
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.jt-alert-format-btn s {
+  text-decoration: line-through;
+  font-size: 13px;
+}
