@@ -99,21 +99,17 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // The header row has sticky cells with bg-gray-100 and contains column names
-    // Look for rows with sticky z-10 children
-    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
-    for (const row of allRows) {
-      // Header row has sticky cells with z-10
-      const stickyCells = row.querySelectorAll('.sticky.z-10');
-      if (stickyCells.length > 0) {
-        // Verify it has column headers like "Name", "Description"
-        const hasName = row.textContent.includes('Name');
-        const hasDescription = row.textContent.includes('Description');
-        if (hasName && hasDescription) {
-          return row;
-        }
-      }
+    // The header row is the FIRST .flex.min-w-max child - it contains the column headers
+    // and has sticky cells for the checkbox and Name columns
+    const firstRow = scrollContainer.querySelector('.flex.min-w-max');
+    if (!firstRow) return null;
+
+    // Verify this row has header indicators: bg-gray-100 font-bold cells
+    const headerCells = firstRow.querySelectorAll('.bg-gray-100.font-bold');
+    if (headerCells.length > 0) {
+      return firstRow;
     }
+
     return null;
   }
 
@@ -123,13 +119,12 @@ const FormatterToolbar = (() => {
    * @returns {HTMLElement|null}
    */
   function findDescriptionHeaderCell(headerRow) {
-    // Find cells with width style (column cells)
-    const cells = Array.from(headerRow.children).filter(el => el.style.width);
-
-    for (const cell of cells) {
-      // Look for the cell containing "Description" text
-      const textContent = cell.textContent.trim();
-      if (textContent.startsWith('Description')) {
+    // Look through all direct children for the Description cell
+    for (const cell of headerRow.children) {
+      // Check if this cell contains "Description" text (but not description content)
+      const innerText = cell.textContent.trim();
+      // The header cell will just say "Description" at the start, not have long content
+      if (innerText.startsWith('Description') && innerText.length < 50) {
         return cell;
       }
     }
