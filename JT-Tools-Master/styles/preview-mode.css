@@ -883,6 +883,76 @@
   background: var(--jt-preview-scrollbar-thumb-hover, #9ca3af);
 }
 
+/* ========================================
+   Alert Box Styles (Theme-aware)
+   ======================================== */
+
+.jt-preview-content .jt-alert-box {
+  margin: 8px 0;
+  padding: 0.5rem 1rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.jt-preview-content .jt-alert-subject {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.jt-preview-content .jt-alert-body {
+  color: #374151;
+}
+
+/* Alert color variants - Light theme */
+.jt-preview-content .jt-alert-border-blue { border-left-color: #3b82f6; }
+.jt-preview-content .jt-alert-bg-blue { background-color: #eff6ff; }
+.jt-preview-content .jt-alert-text-blue { color: #3b82f6; }
+
+.jt-preview-content .jt-alert-border-yellow { border-left-color: #f59e0b; }
+.jt-preview-content .jt-alert-bg-yellow { background-color: #fffbeb; }
+.jt-preview-content .jt-alert-text-yellow { color: #f59e0b; }
+
+.jt-preview-content .jt-alert-border-red { border-left-color: #ef4444; }
+.jt-preview-content .jt-alert-bg-red { background-color: #fef2f2; }
+.jt-preview-content .jt-alert-text-red { color: #ef4444; }
+
+.jt-preview-content .jt-alert-border-green { border-left-color: #10b981; }
+.jt-preview-content .jt-alert-bg-green { background-color: #f0fdf4; }
+.jt-preview-content .jt-alert-text-green { color: #10b981; }
+
+.jt-preview-content .jt-alert-border-orange { border-left-color: #f97316; }
+.jt-preview-content .jt-alert-bg-orange { background-color: #fff7ed; }
+.jt-preview-content .jt-alert-text-orange { color: #f97316; }
+
+.jt-preview-content .jt-alert-border-purple { border-left-color: #8b5cf6; }
+.jt-preview-content .jt-alert-bg-purple { background-color: #faf5ff; }
+.jt-preview-content .jt-alert-text-purple { color: #8b5cf6; }
+
+/* Alert color variants - Dark theme */
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-body {
+  color: #e5e7eb !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-blue { background-color: rgba(59, 130, 246, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-blue { color: #60a5fa !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-yellow { background-color: rgba(245, 158, 11, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-yellow { color: #fbbf24 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-red { background-color: rgba(239, 68, 68, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-red { color: #f87171 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-green { background-color: rgba(16, 185, 129, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-green { color: #34d399 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-orange { background-color: rgba(249, 115, 22, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-orange { color: #fb923c !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-purple { background-color: rgba(139, 92, 246, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-purple { color: #a78bfa !important; }
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .jt-preview-panel {
