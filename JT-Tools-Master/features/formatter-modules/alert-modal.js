@@ -117,7 +117,7 @@ const AlertModal = (() => {
               <input type="text" class="jt-alert-subject" placeholder="Subject" value="">
             </div>
 
-            <!-- Formatter Toolbar for Message -->
+            <!-- Formatter Toolbar for Message (Full Features) -->
             <div class="jt-alert-formatter-toolbar">
               <div class="jt-toolbar-group">
                 <button type="button" class="jt-alert-format-btn" data-format="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
@@ -125,10 +125,50 @@ const AlertModal = (() => {
                 <button type="button" class="jt-alert-format-btn" data-format="underline" title="Underline (Ctrl+U)"><u>U</u></button>
                 <button type="button" class="jt-alert-format-btn" data-format="strikethrough" title="Strikethrough"><s>S</s></button>
               </div>
+
               <div class="jt-toolbar-divider"></div>
-              <div class="jt-toolbar-group">
-                <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1.</button>
-                <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">•</button>
+
+              <!-- Headings Dropdown -->
+              <div class="jt-toolbar-group jt-alert-dropdown-group">
+                <button type="button" class="jt-alert-format-btn jt-alert-dropdown-trigger" data-dropdown-target="headings" title="Headings">
+                  H<span class="jt-dropdown-arrow">▾</span>
+                </button>
+                <div class="jt-alert-toolbar-dropdown" data-dropdown-id="headings">
+                  <button type="button" class="jt-alert-format-btn" data-format="h1" title="Heading 1">H1</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="h2" title="Heading 2">H2</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="h3" title="Heading 3">H3</button>
+                </div>
+              </div>
+
+              <div class="jt-toolbar-divider"></div>
+
+              <!-- More Options Dropdown -->
+              <div class="jt-toolbar-group jt-alert-dropdown-group">
+                <button type="button" class="jt-alert-format-btn jt-alert-dropdown-trigger" data-dropdown-target="more" title="More Options">
+                  +<span class="jt-dropdown-arrow">▾</span>
+                </button>
+                <div class="jt-alert-toolbar-dropdown" data-dropdown-id="more">
+                  <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">• List</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1. List</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="link" title="Insert Link">🔗 Link</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="quote" title="Quote">❝ Quote</button>
+                  <button type="button" class="jt-alert-format-btn" data-format="table" title="Insert Table">⊞ Table</button>
+                </div>
+              </div>
+
+              <div class="jt-toolbar-divider"></div>
+
+              <!-- Color Picker Dropdown -->
+              <div class="jt-toolbar-group jt-alert-dropdown-group">
+                <button type="button" class="jt-alert-format-btn jt-alert-color-btn jt-alert-dropdown-trigger" data-dropdown-target="colors" title="Text Color">
+                  <span class="jt-color-icon">A</span>
+                </button>
+                <div class="jt-alert-toolbar-dropdown jt-alert-color-dropdown" data-dropdown-id="colors">
+                  <button type="button" class="jt-alert-format-btn jt-color-green" data-format="color" data-color="green" title="Green">A</button>
+                  <button type="button" class="jt-alert-format-btn jt-color-yellow" data-format="color" data-color="yellow" title="Yellow">A</button>
+                  <button type="button" class="jt-alert-format-btn jt-color-blue" data-format="color" data-color="blue" title="Blue">A</button>
+                  <button type="button" class="jt-alert-format-btn jt-color-red" data-format="color" data-color="red" title="Red">A</button>
+                </div>
               </div>
             </div>
 
@@ -244,17 +284,61 @@ const AlertModal = (() => {
         }
       });
 
+      // Setup toolbar dropdown triggers
+      const toolbarDropdownTriggers = overlay.querySelectorAll('.jt-alert-dropdown-trigger');
+      toolbarDropdownTriggers.forEach(trigger => {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const targetId = trigger.dataset.dropdownTarget;
+          const dropdown = overlay.querySelector(`[data-dropdown-id="${targetId}"]`);
+
+          // Close all other toolbar dropdowns
+          overlay.querySelectorAll('.jt-alert-toolbar-dropdown').forEach(d => {
+            if (d !== dropdown) d.classList.remove('jt-dropdown-visible');
+          });
+
+          // Toggle this dropdown
+          if (dropdown) {
+            dropdown.classList.toggle('jt-dropdown-visible');
+          }
+        });
+      });
+
+      // Close toolbar dropdowns when clicking outside
+      overlay.addEventListener('click', (e) => {
+        if (!e.target.closest('.jt-alert-dropdown-group')) {
+          overlay.querySelectorAll('.jt-alert-toolbar-dropdown').forEach(d => {
+            d.classList.remove('jt-dropdown-visible');
+          });
+        }
+      });
+
       // Setup formatter toolbar buttons - reuse existing FormatterFormats module
-      const formatButtons = overlay.querySelectorAll('.jt-alert-format-btn');
+      const formatButtons = overlay.querySelectorAll('.jt-alert-format-btn[data-format]');
       formatButtons.forEach(btn => {
+        // Skip dropdown triggers
+        if (btn.classList.contains('jt-alert-dropdown-trigger')) return;
+
         btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           const format = btn.dataset.format;
+          const color = btn.dataset.color;
+
           if (format && messageTextarea && window.FormatterFormats) {
-            window.FormatterFormats.applyFormat(messageTextarea, format);
+            if (format === 'color' && color) {
+              window.FormatterFormats.applyFormat(messageTextarea, format, { color });
+            } else {
+              window.FormatterFormats.applyFormat(messageTextarea, format);
+            }
             // Re-focus the textarea after formatting
             messageTextarea.focus();
+
+            // Close any open toolbar dropdowns
+            overlay.querySelectorAll('.jt-alert-toolbar-dropdown').forEach(d => {
+              d.classList.remove('jt-dropdown-visible');
+            });
           }
         });
       });
