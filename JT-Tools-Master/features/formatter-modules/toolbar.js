@@ -275,6 +275,42 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Fallback: Position toolbar below the entire header row when specific cell isn't found
+   * @param {HTMLElement} toolbar - The toolbar element
+   * @param {HTMLElement} headerRow - The header row element
+   * @param {HTMLElement} scrollContainer - The scroll container
+   * @returns {boolean} True if successfully positioned
+   */
+  function positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer) {
+    const rowRect = headerRow.getBoundingClientRect();
+    const containerRect = scrollContainer.getBoundingClientRect();
+
+    // Only show if header row is visible
+    if (rowRect.bottom < containerRect.top || rowRect.top > containerRect.bottom) {
+      toolbar.style.visibility = 'hidden';
+      toolbar.style.opacity = '0';
+      return false;
+    }
+
+    const padding = 4;
+
+    // Position toolbar below the header row, aligned to left of container
+    let left = containerRect.left + padding;
+    let top = rowRect.bottom + padding;
+
+    toolbar.style.position = 'fixed';
+    toolbar.style.top = `${top}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.visibility = 'visible';
+    toolbar.style.opacity = '1';
+    toolbar.classList.add('jt-toolbar-header-docked');
+    toolbar.classList.remove('jt-toolbar-docked');
+    toolbar.classList.remove('jt-toolbar-sticky');
+
+    return true;
+  }
+
+  /**
    * Find the bottom edge of sticky headers that are above the field
    * @param {HTMLTextAreaElement} field - The field we're positioning toolbar for
    * @returns {number} The bottom edge of the lowest sticky header above the field (in viewport coords)
@@ -357,6 +393,11 @@ const FormatterToolbar = (() => {
           if (success) {
             return;
           }
+        }
+        // Fallback: position below the header ROW if specific cell not found
+        const success = positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer);
+        if (success) {
+          return;
         }
       }
       // Fall through to floating mode if header docking fails

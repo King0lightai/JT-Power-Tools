@@ -50,6 +50,11 @@ const FormatterDetection = (() => {
   function isFormatterField(textarea) {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
 
+    // Exclude textareas inside our own Alert modal (it has built-in toolbar)
+    if (textarea.closest('.jt-alert-modal')) {
+      return false;
+    }
+
     // First, check if field already has JobTread's native formatter
     if (hasNativeFormatter(textarea)) {
       return false; // Skip fields that already have native formatter
