@@ -554,7 +554,15 @@
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content * {
-  color: #d1d5db;
+  color: #e5e7eb !important;
+}
+
+/* Ensure all text in dark theme is light - override any inherited styles */
+.jt-preview-panel.dark-theme .jt-preview-content,
+.jt-preview-panel.dark-theme .jt-preview-content p,
+.jt-preview-panel.dark-theme .jt-preview-content span,
+.jt-preview-panel.dark-theme .jt-preview-content div {
+  color: #e5e7eb !important;
 }
 
 .jt-preview-panel.dark-theme .jt-preview-empty {

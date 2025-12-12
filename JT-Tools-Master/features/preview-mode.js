@@ -348,6 +348,34 @@ const PreviewModeFeature = (() => {
     showPreview(textarea, button);
   }
 
+  // Detect if JobTread is in dark mode (by checking body background color)
+  function isJobTreadDarkMode() {
+    const body = document.body;
+    if (!body) return false;
+
+    // Check for dark mode class on body or html
+    if (body.classList.contains('dark') || document.documentElement.classList.contains('dark')) {
+      return true;
+    }
+
+    // Check body background color
+    const bgColor = window.getComputedStyle(body).backgroundColor;
+    if (bgColor) {
+      // Parse RGB values
+      const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        // Calculate luminance - dark mode if less than 50
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+        return luminance < 80;
+      }
+    }
+
+    return false;
+  }
+
   // Detect and apply theme
   function detectAndApplyTheme(element) {
     if (!element) return;
@@ -359,8 +387,8 @@ const PreviewModeFeature = (() => {
       // Remove existing theme classes
       element.classList.remove('dark-theme', 'custom-theme');
 
-      // Check if dark mode is enabled
-      if (settings.darkMode) {
+      // Check if dark mode is enabled (either via settings OR JobTread's native dark mode)
+      if (settings.darkMode || isJobTreadDarkMode()) {
         element.classList.add('dark-theme');
         return;
       }
@@ -540,7 +568,7 @@ const PreviewModeFeature = (() => {
     return maxOffset;
   }
 
-  // Position preview panel intelligently - NEVER overlap the textarea
+  // Position preview panel intelligently - prefer LEFT side, NEVER overlap textarea
   function positionPreview(preview, textarea, button) {
     const textareaRect = textarea.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
@@ -553,22 +581,29 @@ const PreviewModeFeature = (() => {
     const gap = 16; // Gap between textarea and preview
 
     // Calculate available space on each side of the textarea
-    const spaceOnRight = viewportWidth - textareaRect.right - padding;
     const spaceOnLeft = textareaRect.left - padding;
+    const spaceOnRight = viewportWidth - textareaRect.right - padding;
 
     let left, top;
     let placedSide = false;
 
-    // Prefer positioning to the RIGHT of the textarea
-    if (spaceOnRight >= previewWidth + gap) {
+    // PREFER positioning to the LEFT of the textarea (user requested)
+    if (spaceOnLeft >= previewWidth + gap) {
+      left = textareaRect.left - previewWidth - gap;
+      top = textareaRect.top;
+      placedSide = true;
+    }
+    // Otherwise try positioning to the RIGHT
+    else if (spaceOnRight >= previewWidth + gap) {
       left = textareaRect.right + gap;
       top = textareaRect.top;
       placedSide = true;
     }
-    // Otherwise try positioning to the LEFT
-    else if (spaceOnLeft >= previewWidth + gap) {
-      left = textareaRect.left - previewWidth - gap;
+    // If not enough space on either side, try a smaller width on LEFT
+    else if (spaceOnLeft >= 250) {
+      left = padding;
       top = textareaRect.top;
+      preview.style.width = `${spaceOnLeft - gap}px`;
       placedSide = true;
     }
 
@@ -602,7 +637,9 @@ const PreviewModeFeature = (() => {
     preview.style.position = 'fixed';
     preview.style.left = `${left}px`;
     preview.style.top = `${top}px`;
-    preview.style.width = `${previewWidth}px`;
+    if (!preview.style.width) {
+      preview.style.width = `${previewWidth}px`;
+    }
     preview.style.maxHeight = `${previewMaxHeight}px`;
 
     // Add show class for animation
