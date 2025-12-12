@@ -540,53 +540,68 @@ const PreviewModeFeature = (() => {
     return maxOffset;
   }
 
-  // Position preview panel intelligently, following the toolbar
+  // Position preview panel intelligently - NEVER overlap the textarea
   function positionPreview(preview, textarea, button) {
     const textareaRect = textarea.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const stickyOffset = getPreviewStickyOffset(textarea);
 
-    const previewWidth = 400;
-    const previewMaxHeight = 300;
-    const toolbarHeight = 44;
-    const padding = 8;
+    const previewWidth = 380;
+    const previewMaxHeight = 280;
+    const padding = 12;
+    const gap = 16; // Gap between textarea and preview
 
-    // Calculate the top position to align with where the toolbar would be
-    const viewportTop = stickyOffset || 0;
-    const roomAbove = textareaRect.top - viewportTop;
+    // Calculate available space on each side of the textarea
+    const spaceOnRight = viewportWidth - textareaRect.right - padding;
+    const spaceOnLeft = textareaRect.left - padding;
 
-    let top;
-    if (roomAbove >= toolbarHeight + padding) {
-      // Toolbar is above the field - align preview with top of field
+    let left, top;
+    let placedSide = false;
+
+    // Prefer positioning to the RIGHT of the textarea
+    if (spaceOnRight >= previewWidth + gap) {
+      left = textareaRect.right + gap;
       top = textareaRect.top;
-    } else {
-      // Toolbar is sticky - align preview with sticky position
-      top = viewportTop + padding;
+      placedSide = true;
+    }
+    // Otherwise try positioning to the LEFT
+    else if (spaceOnLeft >= previewWidth + gap) {
+      left = textareaRect.left - previewWidth - gap;
+      top = textareaRect.top;
+      placedSide = true;
     }
 
-    // Try to position to the right of the textarea
-    let left = textareaRect.right + 12;
+    // If neither side works, position BELOW the textarea (never overlap!)
+    if (!placedSide) {
+      left = Math.max(padding, Math.min(textareaRect.left, viewportWidth - previewWidth - padding));
+      top = textareaRect.bottom + gap;
 
-    // If not enough space on the right, position to the left
-    if (left + previewWidth > viewportWidth - 20) {
-      left = textareaRect.left - previewWidth - 12;
+      // If not enough room below, position ABOVE the textarea
+      if (top + previewMaxHeight > viewportHeight - padding) {
+        top = textareaRect.top - previewMaxHeight - gap;
+      }
+
+      // If still no room above, clamp to viewport bottom
+      if (top < stickyOffset + padding) {
+        top = stickyOffset + padding;
+      }
     }
 
-    // If still not enough space (narrow viewport), position below toolbar area
-    if (left < 20) {
-      left = Math.max(20, textareaRect.left);
-      top = top + toolbarHeight + padding + 12;
+    // If placed on the side, adjust vertical position to stay in viewport
+    if (placedSide) {
+      // Account for sticky headers
+      const minTop = stickyOffset + padding;
+      const maxTop = viewportHeight - previewMaxHeight - padding;
+
+      // Try to align with textarea top, but clamp to viewport
+      top = Math.max(minTop, Math.min(top, maxTop));
     }
 
-    // Ensure preview doesn't go below viewport
-    if (top + previewMaxHeight > viewportHeight - 20) {
-      top = Math.max(viewportTop + padding, viewportHeight - previewMaxHeight - 20);
-    }
-
-    // Apply position
-    preview.style.left = `${left + window.scrollX}px`;
-    preview.style.top = `${top + window.scrollY}px`;
+    // Use fixed positioning for consistent behavior
+    preview.style.position = 'fixed';
+    preview.style.left = `${left}px`;
+    preview.style.top = `${top}px`;
     preview.style.width = `${previewWidth}px`;
     preview.style.maxHeight = `${previewMaxHeight}px`;
 
@@ -836,14 +851,14 @@ const PreviewModeFeature = (() => {
 
   // Render a single alert
   function renderAlert(color, icon, subject, body) {
-    // Color mappings
+    // Color mappings - use JT-specific classes that work with dark theme
     const colorMap = {
-      blue: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-500' },
-      yellow: { border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-500' },
-      red: { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-500' },
-      green: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-500' },
-      orange: { border: 'border-jtOrange', bg: 'bg-orange-50', text: 'text-jtOrange' },
-      purple: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-500' }
+      blue: { border: 'jt-alert-border-blue', bg: 'jt-alert-bg-blue', text: 'jt-alert-text-blue' },
+      yellow: { border: 'jt-alert-border-yellow', bg: 'jt-alert-bg-yellow', text: 'jt-alert-text-yellow' },
+      red: { border: 'jt-alert-border-red', bg: 'jt-alert-bg-red', text: 'jt-alert-text-red' },
+      green: { border: 'jt-alert-border-green', bg: 'jt-alert-bg-green', text: 'jt-alert-text-green' },
+      orange: { border: 'jt-alert-border-orange', bg: 'jt-alert-bg-orange', text: 'jt-alert-text-orange' },
+      purple: { border: 'jt-alert-border-purple', bg: 'jt-alert-bg-purple', text: 'jt-alert-text-purple' }
     };
 
     // Icon SVG paths
@@ -862,11 +877,11 @@ const PreviewModeFeature = (() => {
     // Process body inline formatting
     const processedBody = processInlineFormatting(body);
 
-    return `<div class="border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
-  <div class="font-bold text-base ${colors.text}">
+    return `<div class="jt-alert-box ${colors.border} ${colors.bg}">
+  <div class="jt-alert-subject ${colors.text}">
     <div>${escapeHTML(subject)}</div>
   </div>
-  <div class="text-gray-900 dark:text-gray-100">${processedBody}</div>
+  <div class="jt-alert-body">${processedBody}</div>
 </div>`;
   }
 
