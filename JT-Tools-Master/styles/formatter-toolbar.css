@@ -29,15 +29,16 @@
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
 }
 
-/* Header-docked toolbar state - positioned in sticky budget header row */
+/* Header-docked toolbar state - positioned below budget header row */
 .jt-formatter-toolbar.jt-toolbar-header-docked {
   position: fixed;
-  background: #f3f4f6; /* Match header bg-gray-100 */
+  background: #ffffff;
   border: 1px solid #d1d5db;
   border-radius: 0.25rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 0.125rem 0.25rem;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
+  padding: 0.25rem 0.5rem;
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button {

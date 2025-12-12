@@ -235,7 +235,7 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Position toolbar in the budget header cell (sticky header mode)
+   * Position toolbar below the budget header cell (between header and content)
    * @param {HTMLElement} toolbar
    * @param {HTMLElement} headerCell
    * @param {HTMLElement} scrollContainer
@@ -253,24 +253,14 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    const toolbarHeight = 32; // Slightly smaller for header
-    const padding = 8;
+    const padding = 4;
 
-    // Position toolbar at the right side of the header cell
-    // Leave room for the "Description" label on the left
-    const toolbarWidth = toolbar.offsetWidth || 400;
+    // Position toolbar BELOW the header cell (between header and content rows)
+    // Align to the left edge of the Description column
+    let left = Math.max(cellRect.left, containerRect.left) + padding;
 
-    // Calculate left position - align to right side of visible area
-    let left = Math.min(cellRect.right, containerRect.right) - toolbarWidth - padding;
-
-    // Don't go past the left edge of the cell
-    left = Math.max(cellRect.left + 100, left); // Leave 100px for "Description" label
-
-    // Clamp to container bounds
-    left = Math.max(containerRect.left + padding, left);
-
-    // Center vertically in header cell
-    let top = cellRect.top + (cellRect.height - toolbarHeight) / 2;
+    // Position just below the header cell
+    let top = cellRect.bottom + padding;
 
     toolbar.style.position = 'fixed';
     toolbar.style.top = `${top}px`;
