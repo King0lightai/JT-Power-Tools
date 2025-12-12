@@ -121,11 +121,21 @@ const FormatterToolbar = (() => {
   function findDescriptionHeaderCell(headerRow) {
     // Look through all direct children for the Description cell
     for (const cell of headerRow.children) {
-      // Check if this cell contains "Description" text (but not description content)
-      const innerText = cell.textContent.trim();
-      // The header cell will just say "Description" at the start, not have long content
-      if (innerText.startsWith('Description') && innerText.length < 50) {
-        return cell;
+      // The Description header cell has a nested structure:
+      // <div class="shrink-0 bg-gray-100 font-bold...">
+      //   <div class="grow min-w-0 select-none">
+      //     <div>Description</div>
+      //   </div>
+      // </div>
+      // Look for the inner text element that says exactly "Description"
+      const textElements = cell.querySelectorAll('div');
+      for (const el of textElements) {
+        // Check direct text content (not nested)
+        if (el.childNodes.length === 1 &&
+            el.childNodes[0].nodeType === Node.TEXT_NODE &&
+            el.textContent.trim() === 'Description') {
+          return cell;
+        }
       }
     }
     return null;
