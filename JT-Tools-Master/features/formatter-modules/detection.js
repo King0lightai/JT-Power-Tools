@@ -51,7 +51,9 @@ const FormatterDetection = (() => {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
 
     // Exclude textareas inside our own Alert modal (it has built-in toolbar)
-    if (textarea.closest('.jt-alert-modal')) {
+    if (textarea.closest('.jt-alert-modal') ||
+        textarea.closest('.jt-alert-modal-overlay') ||
+        textarea.classList.contains('jt-alert-message')) {
       return false;
     }
 
