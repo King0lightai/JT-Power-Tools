@@ -114,33 +114,13 @@ const FormatterFormats = (() => {
 
     let newText;
     let newCursorPos;
+    let newSelectionEnd;
 
-    function findMarkerPositions(text, pos, marker) {
-      let openPos = -1;
-      let closePos = -1;
-
-      for (let i = pos - 1; i >= 0; i--) {
-        if (text[i] === marker) {
-          openPos = i;
-          break;
-        }
-        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
-          break;
-        }
-      }
-
-      for (let i = pos; i < text.length; i++) {
-        if (text[i] === marker) {
-          closePos = i;
-          break;
-        }
-        if (text[i] === '\n' || '*^_~'.includes(text[i])) {
-          break;
-        }
-      }
-
-      return { openPos, closePos };
-    }
+    // Get line boundaries
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', end);
+    const lineEndPos = lineEnd === -1 ? text.length : lineEnd;
+    const lineText = text.substring(lineStart, lineEndPos);
 
     switch(format) {
       case 'bold':
@@ -156,63 +136,69 @@ const FormatterFormats = (() => {
         const marker = markerMap[format];
 
         if (hasSelection) {
+          // Check if selection is wrapped by markers
           const before = text.substring(0, start);
           const after = text.substring(end);
-          const selection = text.substring(start, end);
 
           if (before.endsWith(marker) && after.startsWith(marker)) {
-            newText = before.slice(0, -1) + selection + after.slice(1);
+            // Remove the wrapping markers
+            newText = before.slice(0, -1) + text.substring(start, end) + after.slice(1);
             newCursorPos = start - 1;
+            newSelectionEnd = end - 1;
           } else {
-            const cleaned = selection.replace(new RegExp(`\\${marker}`, 'g'), '');
+            // Selection contains markers, remove them from inside
+            const selection = text.substring(start, end);
+            const cleaned = selection.split(marker).join('');
             newText = before + cleaned + after;
             newCursorPos = start;
+            newSelectionEnd = start + cleaned.length;
           }
         } else {
-          const { openPos, closePos } = findMarkerPositions(text, start, marker);
+          // No selection - find the enclosing format markers on the current line
+          const relPos = start - lineStart;
+          const pair = findEnclosingPair(lineText, relPos, marker);
 
-          if (openPos !== -1 && closePos !== -1) {
-            const before = text.substring(0, openPos);
-            const middle = text.substring(openPos + 1, closePos);
-            const after = text.substring(closePos + 1);
-            newText = before + middle + after;
+          if (pair) {
+            // Remove the markers
+            const beforeLine = text.substring(0, lineStart);
+            const afterLine = text.substring(lineEndPos);
+            const newLineText = lineText.substring(0, pair.open) +
+                               lineText.substring(pair.open + 1, pair.close) +
+                               lineText.substring(pair.close + 1);
+            newText = beforeLine + newLineText + afterLine;
+
+            // Adjust cursor position (one marker removed before cursor)
             newCursorPos = start - 1;
           } else {
-            return;
+            return; // No format found to remove
           }
         }
         break;
 
       case 'color':
-        const before = text.substring(0, start);
-        const lineStart = before.lastIndexOf('\n') + 1;
-        const lineText = text.substring(lineStart);
-        const lineEnd = lineText.indexOf('\n');
-        const fullLine = lineEnd === -1 ? lineText : lineText.substring(0, lineEnd);
-
         // Match color tag at the beginning of the line
-        const colorMatch = fullLine.match(/^\[!color:\w+\]\s*/);
+        const colorMatch = lineText.match(/^\[!color:\w+\]\s*/);
         if (colorMatch) {
           const beforeLine = text.substring(0, lineStart);
           const afterMatch = text.substring(lineStart + colorMatch[0].length);
           newText = beforeLine + afterMatch;
-          newCursorPos = lineStart;
+          newCursorPos = Math.max(lineStart, start - colorMatch[0].length);
         } else {
-          // No color tag found on this line, nothing to remove
-          return;
+          return; // No color tag found
         }
         break;
 
       case 'justify-center':
       case 'justify-right':
-        const before2 = text.substring(0, start);
-        const jLineStart = before2.lastIndexOf('\n') + 1;
-        const beforeLine2 = text.substring(0, jLineStart);
-        const afterLine = text.substring(jLineStart);
-
-        const cleaned = afterLine.replace(/^(-:-|--:)\s*/, '');
-        newText = beforeLine2 + cleaned;
-        newCursorPos = jLineStart;
+        const justifyMatch = lineText.match(/^(-:-|--:)\s*/);
+        if (justifyMatch) {
+          const beforeLine = text.substring(0, lineStart);
+          const afterMatch = text.substring(lineStart + justifyMatch[0].length);
+          newText = beforeLine + afterMatch;
+          newCursorPos = lineStart;
+        } else {
+          return; // No justify tag found
+        }
         break;
 
       default:
@@ -220,12 +206,57 @@ const FormatterFormats = (() => {
     }
 
     // Update field value using native setter to avoid React state issues
-    isInsertingText = true; // Lock to prevent MutationObserver interference
+    isInsertingText = true;
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Dispatch events immediately - React will clear value if we delay
+    // Set selection/cursor
+    if (newSelectionEnd !== undefined && newSelectionEnd !== newCursorPos) {
+      field.setSelectionRange(newCursorPos, newSelectionEnd);
+    }
+
+    // Dispatch events immediately
     dispatchReactSafeEventImmediate(field, newCursorPos);
+  }
+
+  /**
+   * Find the marker pair that encloses the given position
+   * @param {string} line - Line text
+   * @param {number} pos - Position within the line
+   * @param {string} marker - Marker character
+   * @returns {Object|null} {open, close} or null if not found
+   */
+  function findEnclosingPair(line, pos, marker) {
+    let i = 0;
+
+    while (i < line.length) {
+      if (line[i] === marker) {
+        const openPos = i;
+        let closePos = -1;
+
+        // Look for closing marker
+        for (let j = i + 1; j < line.length; j++) {
+          if (line[j] === marker) {
+            closePos = j;
+            break;
+          }
+        }
+
+        if (closePos !== -1) {
+          // Check if position is inside this pair
+          if (pos > openPos && pos <= closePos) {
+            return { open: openPos, close: closePos };
+          }
+          i = closePos + 1;
+        } else {
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+
+    return null;
   }
 
   /**
