@@ -256,10 +256,15 @@ const FormatterToolbar = (() => {
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group">
-      <button data-format="h1" title="Heading 1">H1</button>
-      <button data-format="h2" title="Heading 2">H2</button>
-      <button data-format="h3" title="Heading 3">H3</button>
+    <div class="jt-toolbar-group jt-dropdown-group">
+      <button class="jt-dropdown-btn" title="Headings">
+        <span>H</span><span class="jt-dropdown-arrow">▾</span>
+      </button>
+      <div class="jt-dropdown-menu">
+        <button data-format="h1" title="Heading 1">H1</button>
+        <button data-format="h2" title="Heading 2">H2</button>
+        <button data-format="h3" title="Heading 3">H3</button>
+      </div>
     </div>
 
     <div class="jt-toolbar-divider"></div>
