@@ -445,6 +445,11 @@ const FormatterToolbar = (() => {
       if (scrollContainer) {
         console.log('Formatter: sticky elements in container:', scrollContainer.querySelectorAll('.sticky').length);
         console.log('Formatter: flex rows in container:', scrollContainer.querySelectorAll('.flex').length);
+        // Debug: log first few sticky elements
+        const stickies = scrollContainer.querySelectorAll('.sticky');
+        for (let i = 0; i < Math.min(5, stickies.length); i++) {
+          console.log(`Formatter: sticky[${i}] text="${stickies[i].textContent.substring(0, 50)}" classes="${stickies[i].className}"`);
+        }
       }
 
       if (headerRow && scrollContainer) {
