@@ -99,35 +99,22 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // Look through all .flex.min-w-max rows for the header row
+    // Look through all .flex.min-w-max rows for the one that contains "Name" and "Description"
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
     for (const row of allRows) {
-      // Skip rows that have textareas (those are data rows being edited)
+      // Skip rows that have textareas (those are data rows)
       if (row.querySelector('textarea')) continue;
 
-      // Skip footer rows (have gray button styling for + Item/Group)
-      if (row.querySelector('.bg-gray-700')) continue;
+      // Skip footer rows (have "+ Item" or "Item" and "Group" buttons)
+      const rowText = row.textContent;
+      if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
 
-      // Look for header-styled cells (bg-gray-100 AND font-bold)
-      // that contain "Name" or "Description" as direct label text
-      const headerCells = row.querySelectorAll('.bg-gray-100.font-bold');
-      if (headerCells.length < 2) continue; // Header should have multiple styled cells
+      // Check if this row contains both "Name" and "Description" text (header indicators)
+      const hasName = rowText.includes('Name');
+      const hasDescription = rowText.includes('Description');
 
-      let hasNameHeader = false;
-      let hasDescriptionHeader = false;
-
-      for (const cell of headerCells) {
-        const cellText = cell.textContent.trim();
-        // Check for short header labels, not long content
-        if (cellText === 'Name' || (cellText.startsWith('Name') && cellText.length < 20)) {
-          hasNameHeader = true;
-        }
-        if (cellText === 'Description' || (cellText.startsWith('Description') && cellText.length < 20)) {
-          hasDescriptionHeader = true;
-        }
-      }
-
-      if (hasNameHeader && hasDescriptionHeader) {
+      if (hasName && hasDescription) {
+        // This is the header row
         return row;
       }
     }
@@ -141,15 +128,13 @@ const FormatterToolbar = (() => {
    * @returns {HTMLElement|null}
    */
   function findDescriptionHeaderCell(headerRow) {
-    // Look through direct children of the header row for the Description column
+    // Look through direct children of the header row
     for (const cell of headerRow.children) {
-      // Must have header styling
+      // Skip if not a header-styled cell
       if (!cell.classList.contains('bg-gray-100')) continue;
 
-      // Check if this cell contains "Description" as a short label
-      const cellText = cell.textContent.trim();
-      if (cellText === 'Description' ||
-          (cellText.includes('Description') && cellText.length < 30)) {
+      // Check if this cell contains "Description" text anywhere
+      if (cell.textContent.includes('Description')) {
         return cell;
       }
     }
