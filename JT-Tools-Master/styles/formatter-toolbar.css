@@ -1475,24 +1475,26 @@
   display: flex;
 }
 
-/* Items inside overflow dropdown */
+/* Items inside overflow dropdown - Light mode (default) */
 .jt-overflow-dropdown .jt-toolbar-item {
   min-width: 32px;
   height: 32px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 0.375rem;
+  color: #64748b !important;
 }
 
 .jt-overflow-dropdown .jt-toolbar-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
 }
 
 .jt-overflow-dropdown .jt-toolbar-item.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #ffffff;
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
 }
 
 /* Preview button in overflow */
@@ -1745,25 +1747,28 @@
 /* Dark mode for overflow dropdown */
 .dark .jt-overflow-dropdown,
 [data-theme="dark"] .jt-overflow-dropdown,
-[data-mode="dark"] .jt-overflow-dropdown {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+[data-mode="dark"] .jt-overflow-dropdown,
+[class*="dark"] .jt-overflow-dropdown {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
 .dark .jt-overflow-dropdown .jt-toolbar-item,
 [data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item,
-[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item {
-  background: #334155;
-  border-color: #475569;
-  color: #e2e8f0;
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item,
+[class*="dark"] .jt-overflow-dropdown .jt-toolbar-item {
+  background: #334155 !important;
+  border-color: #475569 !important;
+  color: #e2e8f0 !important;
 }
 
 .dark .jt-overflow-dropdown .jt-toolbar-item:hover,
 [data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover,
-[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover {
-  background: #475569;
-  border-color: #64748b;
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover,
+[class*="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: #475569 !important;
+  border-color: #64748b !important;
 }
 
 /* Dark mode for more dropdown */
@@ -1907,23 +1912,5 @@
   }
 }
 
-/* System dark mode preference fallback */
-@media (prefers-color-scheme: dark) {
-  .jt-formatter-toolbar:not(.jt-light-mode) {
-    background: #1e293b;
-    border-color: #334155;
-  }
-
-  .jt-formatter-toolbar:not(.jt-light-mode) button {
-    color: #94a3b8;
-  }
-
-  .jt-formatter-toolbar:not(.jt-light-mode) button:hover {
-    background: #334155;
-    color: #e2e8f0;
-  }
-
-  .jt-formatter-toolbar:not(.jt-light-mode) .jt-toolbar-divider {
-    background: #475569;
-  }
-}
+/* System dark mode preference - only apply if explicitly opted in with class */
+/* Note: Removed auto-detection to prevent conflicts with JobTread's theme */
