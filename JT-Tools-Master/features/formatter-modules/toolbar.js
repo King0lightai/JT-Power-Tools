@@ -1488,16 +1488,34 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside the Alert modal (which has its own formatter toolbar)
+   * Check if a field is inside a modal that should use embedded toolbar instead of floating
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
-  function isAlertModalField(field) {
+  function isModalField(field) {
     if (!field) return false;
+
     // Check if field is inside our custom Alert modal
-    return field.closest('.jt-alert-modal-overlay') !== null ||
-           field.closest('.jt-alert-modal') !== null ||
-           field.classList.contains('jt-alert-message');
+    if (field.closest('.jt-alert-modal-overlay') !== null ||
+        field.closest('.jt-alert-modal') !== null ||
+        field.classList.contains('jt-alert-message')) {
+      return true;
+    }
+
+    // Check for JobTread native modals (centered dialogs with shadow)
+    // These have classes like: m-auto shadow-lg rounded-sm bg-white max-w-*
+    const modalContainer = field.closest('.m-auto.shadow-lg, [class*="modal"], [class*="dialog"]');
+    if (modalContainer) {
+      // Verify it's a centered modal (not just any shadow element)
+      const style = window.getComputedStyle(modalContainer);
+      if (modalContainer.classList.contains('m-auto') ||
+          style.position === 'fixed' ||
+          modalContainer.closest('[class*="fixed"]')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -1507,8 +1525,8 @@ const FormatterToolbar = (() => {
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
 
-    // Don't show floating toolbar for Alert modal fields (they have their own built-in toolbar)
-    if (isAlertModalField(field)) {
+    // Don't show floating toolbar for modal fields (they should use embedded toolbar or have their own)
+    if (isModalField(field)) {
       return;
     }
 
