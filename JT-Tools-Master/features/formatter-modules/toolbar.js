@@ -738,13 +738,24 @@ const FormatterToolbar = (() => {
 
     if (isBudgetField) {
       // For budget Description fields, dock toolbar inside the footer bar row
-      // This makes it visually connected to the + Item / + Group buttons
+      // The footer bar with + Item / + Group is always visible at the bottom
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
-        const containerRect = scrollContainer.getBoundingClientRect();
+        // Find the footer bar (+ Item / + Group row) - it's OUTSIDE the scroll container
+        // The footer bar is a sibling of the scroll container's parent
+        let footerBar = findBudgetFooterBar(field);
 
-        // Find the footer bar (+ Item / + Group row) to dock inside
-        const footerBar = findBudgetFooterBar(field);
+        // If not found inside, look for it as the last visible row with the buttons
+        if (!footerBar) {
+          // Try finding the footer bar by looking for the bg-gray-700 buttons
+          const allButtons = document.querySelectorAll('[role="button"].bg-gray-700');
+          for (const btn of allButtons) {
+            if (btn.textContent.includes('Item') || btn.textContent.includes('Group')) {
+              footerBar = btn.closest('.flex.min-w-max');
+              break;
+            }
+          }
+        }
 
         if (footerBar) {
           const footerRect = footerBar.getBoundingClientRect();
@@ -753,20 +764,28 @@ const FormatterToolbar = (() => {
           const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
 
           // Position horizontally: after the + Item / + Group buttons
-          // Find the last button in the footer and position after it
-          const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+          // Find the container with the buttons (usually the second cell with width 300px)
+          const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
+                                  footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
           let left;
 
-          if (footerButtons.length > 0) {
-            const lastButton = footerButtons[footerButtons.length - 1];
-            const lastButtonRect = lastButton.getBoundingClientRect();
-            left = lastButtonRect.right + 16; // 16px gap after buttons
+          if (buttonContainer) {
+            const containerRect = buttonContainer.getBoundingClientRect();
+            left = containerRect.right + 16; // Position after the button container
           } else {
-            left = footerRect.left + 16;
+            // Fallback: find the last button and position after it
+            const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+            if (footerButtons.length > 0) {
+              const lastButton = footerButtons[footerButtons.length - 1];
+              const lastButtonRect = lastButton.getBoundingClientRect();
+              left = lastButtonRect.right + 16;
+            } else {
+              left = footerRect.left + 350; // Approximate position after Name column
+            }
           }
 
           // Ensure toolbar doesn't go off-screen
-          const toolbarWidth = toolbar.offsetWidth || 300;
+          const toolbarWidth = toolbar.offsetWidth || 500;
           const viewportWidth = window.innerWidth;
           if (left + toolbarWidth > viewportWidth - padding) {
             left = Math.max(padding, viewportWidth - toolbarWidth - padding);
@@ -782,13 +801,13 @@ const FormatterToolbar = (() => {
           toolbar.classList.remove('jt-toolbar-budget-bottom');
           return;
         } else {
-          // Fallback: position above the bottom of container (leave room for scrollbar)
-          const bottomPadding = 50;
-          const top = containerRect.bottom - toolbarHeight - bottomPadding;
+          // Fallback: position at bottom of viewport above scroll area
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const top = containerRect.bottom - toolbarHeight - 8;
           let left = rect.left;
 
           // Ensure toolbar doesn't go off-screen
-          const toolbarWidth = toolbar.offsetWidth || 300;
+          const toolbarWidth = toolbar.offsetWidth || 500;
           const viewportWidth = window.innerWidth;
           if (left + toolbarWidth > viewportWidth - padding) {
             left = Math.max(padding, viewportWidth - toolbarWidth - padding);
