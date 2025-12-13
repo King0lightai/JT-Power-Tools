@@ -413,6 +413,27 @@ const FormatterToolbar = (() => {
     const padding = 8;
     const viewportHeight = window.innerHeight;
 
+    // Check if this is a budget Description field - use header positioning
+    if (isBudgetDescriptionField(field)) {
+      const scrollContainer = field.closest('.overflow-auto');
+      const headerRow = findBudgetHeaderRow(field);
+
+      if (headerRow && scrollContainer) {
+        const headerCell = findDescriptionHeaderCell(headerRow);
+        if (headerCell) {
+          // Position inside the Description header cell
+          if (positionToolbarInHeader(toolbar, headerCell, scrollContainer)) {
+            return;
+          }
+        }
+        // Fallback: position below the header row
+        if (positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer)) {
+          return;
+        }
+      }
+      // If header positioning fails, fall through to default behavior
+    }
+
     // Find the top offset (below any fixed/sticky headers)
     const stickyHeaderOffset = getStickyHeaderOffset(field) || 60; // Default 60px for JobTread header
 
