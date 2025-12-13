@@ -189,6 +189,18 @@ const FormatterToolbar = (() => {
     if (parent) {
       const embedded = parent.querySelector('.jt-formatter-toolbar-embedded');
       if (embedded) return embedded;
+
+      // Also check before the parent (for JobTread's relative/absolute container)
+      const parentStyle = window.getComputedStyle(parent);
+      if (parentStyle.position === 'relative') {
+        let parentSibling = parent.previousElementSibling;
+        while (parentSibling) {
+          if (parentSibling.classList.contains('jt-formatter-toolbar-embedded')) {
+            return parentSibling;
+          }
+          parentSibling = parentSibling.previousElementSibling;
+        }
+      }
     }
 
     return null;
@@ -298,8 +310,32 @@ const FormatterToolbar = (() => {
       setupPreviewButton(toolbar, field);
     }
 
-    // Insert toolbar before the field (after the label)
-    field.parentElement.insertBefore(toolbar, field);
+    // Find the right insertion point - need to insert OUTSIDE any relative/absolute container
+    // JobTread uses a relative container with absolute textarea + preview div overlay
+    let insertTarget = field;
+    let insertParent = field.parentElement;
+
+    // Check if parent is a relative container with absolute-positioned children (JobTread's preview system)
+    if (insertParent) {
+      const parentStyle = window.getComputedStyle(insertParent);
+      if (parentStyle.position === 'relative') {
+        // Check if the field is absolute positioned inside
+        const fieldStyle = window.getComputedStyle(field);
+        if (fieldStyle.position === 'absolute') {
+          // Insert before the relative container, not inside it
+          insertTarget = insertParent;
+          insertParent = insertParent.parentElement;
+        }
+      }
+    }
+
+    // Insert toolbar before the target
+    if (insertParent) {
+      insertParent.insertBefore(toolbar, insertTarget);
+    } else {
+      // Fallback: insert before the field
+      field.parentElement.insertBefore(toolbar, field);
+    }
 
     return toolbar;
   }
