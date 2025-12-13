@@ -191,11 +191,11 @@
 }
 
 .jt-preview-content blockquote {
-  border-left: 4px solid #e5e7eb;
+  border-left: 4px solid #f59e0b; /* Yellow/gold like JobTread */
   padding-left: 12px;
   margin: 8px 0;
-  color: #6b7280 !important;
-  font-style: italic;
+  color: #374151 !important;
+  font-style: normal;
 }
 
 .jt-preview-content a {
@@ -595,8 +595,8 @@
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content blockquote {
-  border-left-color: #464646;
-  color: #9ca3af !important;
+  border-left-color: #fbbf24; /* Yellow/gold in dark mode */
+  color: #d1d5db !important;
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content a {
@@ -785,8 +785,8 @@
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content blockquote {
-  border-left-color: var(--jt-preview-border, #e5e7eb);
-  color: var(--jt-preview-text-muted, #6b7280) !important;
+  border-left-color: var(--jt-preview-blockquote-border, #f59e0b);
+  color: var(--jt-preview-text, #374151) !important;
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content a {
@@ -897,20 +897,30 @@
 
 .jt-preview-content .jt-alert-box {
   margin: 8px 0;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border-left-width: 4px;
   border-left-style: solid;
   border-radius: 0 0.25rem 0.25rem 0;
 }
 
 .jt-preview-content .jt-alert-subject {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
   font-size: 1rem;
   margin-bottom: 0.25rem;
 }
 
+.jt-preview-content .jt-alert-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
 .jt-preview-content .jt-alert-body {
   color: #374151;
+  margin-left: 26px; /* Align with text after icon */
 }
 
 /* Alert color variants - Light theme */
