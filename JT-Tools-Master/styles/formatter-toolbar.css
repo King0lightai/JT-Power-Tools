@@ -1486,3 +1486,164 @@
 .jt-formatter-toolbar-embedded .jt-alert-btn {
   font-size: 14px;
 }
+
+/* ========================================
+   More Menu Dropdown (Sidebar Embedded Toolbar)
+   ======================================== */
+
+.jt-more-group {
+  position: relative;
+}
+
+.jt-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0.25rem 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.jt-more-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.jt-more-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-more-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem;
+  z-index: 1000000;
+  min-width: 200px;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.jt-more-dropdown-visible {
+  display: flex;
+}
+
+.jt-more-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.375rem 0;
+}
+
+.jt-more-section:not(:last-child) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.jt-more-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 0 0.375rem;
+  margin-bottom: 0.125rem;
+}
+
+.jt-more-row {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.jt-more-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0.375rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.jt-more-row button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.jt-more-row button:active {
+  transform: translateY(0);
+}
+
+.jt-more-row button.active {
+  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.jt-more-row button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Color buttons in more dropdown */
+.jt-more-row button.jt-color-option {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.jt-more-row button.jt-color-green {
+  color: #10b981;
+}
+
+.jt-more-row button.jt-color-green:hover {
+  background: #d1fae5;
+}
+
+.jt-more-row button.jt-color-yellow {
+  color: #f59e0b;
+}
+
+.jt-more-row button.jt-color-yellow:hover {
+  background: #fef3c7;
+}
+
+.jt-more-row button.jt-color-blue {
+  color: #3b82f6;
+}
+
+.jt-more-row button.jt-color-blue:hover {
+  background: #dbeafe;
+}
+
+.jt-more-row button.jt-color-red {
+  color: #ef4444;
+}
+
+.jt-more-row button.jt-color-red:hover {
+  background: #fee2e2;
+}

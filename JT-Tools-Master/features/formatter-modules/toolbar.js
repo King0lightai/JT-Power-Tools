@@ -253,6 +253,9 @@ const FormatterToolbar = (() => {
       hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg>'
     };
 
+    // SVG for more icon (three dots)
+    const moreIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>';
+
     toolbarHTML += `
     <div class="jt-toolbar-group">
       <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
@@ -284,41 +287,47 @@ const FormatterToolbar = (() => {
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group">
-      <button data-format="bullet" title="Bullet List">${icons.bullet}</button>
-      <button data-format="numbered" title="Numbered List">${icons.numbered}</button>
-      <button data-format="link" title="Insert Link">${icons.link}</button>
-      <button data-format="quote" title="Quote">${icons.quote}</button>
-      <button data-format="table" title="Insert Table">${icons.table}</button>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group">
-      <button data-format="justify-left" title="Align Left (:--)">${icons.alignLeft}</button>
-      <button data-format="justify-center" title="Align Center (-:-)">${icons.alignCenter}</button>
-      <button data-format="justify-right" title="Align Right (--:)">${icons.alignRight}</button>
-      <button data-format="hr" title="Horizontal Rule (---)">${icons.hr}</button>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group jt-color-group">
-      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-        ${icons.color}
+    <!-- More options menu (...) -->
+    <div class="jt-toolbar-group jt-more-group">
+      <button class="jt-more-btn" title="More formatting options">
+        ${moreIcon}
       </button>
-      <div class="jt-color-dropdown">
-        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+      <div class="jt-more-dropdown">
+        <div class="jt-more-section">
+          <div class="jt-more-section-label">Lists & Blocks</div>
+          <div class="jt-more-row">
+            <button data-format="bullet" title="Bullet List">${icons.bullet}</button>
+            <button data-format="numbered" title="Numbered List">${icons.numbered}</button>
+            <button data-format="quote" title="Quote">${icons.quote}</button>
+            <button data-format="table" title="Insert Table">${icons.table}</button>
+          </div>
+        </div>
+        <div class="jt-more-section">
+          <div class="jt-more-section-label">Insert</div>
+          <div class="jt-more-row">
+            <button data-format="link" title="Insert Link">${icons.link}</button>
+            <button data-format="hr" title="Horizontal Rule (---)">${icons.hr}</button>
+            <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
+          </div>
+        </div>
+        <div class="jt-more-section">
+          <div class="jt-more-section-label">Alignment</div>
+          <div class="jt-more-row">
+            <button data-format="justify-left" title="Align Left (:--)">${icons.alignLeft}</button>
+            <button data-format="justify-center" title="Align Center (-:-)">${icons.alignCenter}</button>
+            <button data-format="justify-right" title="Align Right (--:)">${icons.alignRight}</button>
+          </div>
+        </div>
+        <div class="jt-more-section">
+          <div class="jt-more-section-label">Text Color</div>
+          <div class="jt-more-row">
+            <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+            <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+            <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+            <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group">
-      <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
     </div>
   `;
 
@@ -326,7 +335,7 @@ const FormatterToolbar = (() => {
 
     // Setup handlers
     setupDropdowns(toolbar);
-    setupColorPicker(toolbar);
+    setupMoreDropdown(toolbar);
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
 
@@ -1020,6 +1029,53 @@ const FormatterToolbar = (() => {
         });
         colorDropdown.classList.remove('jt-color-dropdown-visible');
       }
+    });
+  }
+
+  /**
+   * Setup more dropdown handlers (for embedded toolbar)
+   * @param {HTMLElement} toolbar
+   */
+  function setupMoreDropdown(toolbar) {
+    const moreGroup = toolbar.querySelector('.jt-more-group');
+    if (!moreGroup) return;
+
+    const moreBtn = moreGroup.querySelector('.jt-more-btn');
+    const moreDropdown = moreGroup.querySelector('.jt-more-dropdown');
+
+    if (!moreBtn || !moreDropdown) return;
+
+    moreBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Close other dropdowns
+      toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
+        menu.classList.remove('jt-dropdown-visible');
+      });
+      const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
+      if (colorDropdown) {
+        colorDropdown.classList.remove('jt-color-dropdown-visible');
+      }
+
+      moreDropdown.classList.toggle('jt-more-dropdown-visible');
+    });
+
+    // Close more dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.jt-more-group')) {
+        moreDropdown.classList.remove('jt-more-dropdown-visible');
+      }
+    });
+
+    // Close more dropdown after clicking a button inside it
+    moreDropdown.querySelectorAll('button[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Small delay to allow the format to be applied first
+        setTimeout(() => {
+          moreDropdown.classList.remove('jt-more-dropdown-visible');
+        }, 50);
+      });
     });
   }
 
