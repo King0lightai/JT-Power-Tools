@@ -66,62 +66,12 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is a compact message compose area
-   * These should use floating toolbar, not embedded (to save space)
-   * @param {HTMLTextAreaElement} field
-   * @returns {boolean}
-   */
-  function isCompactMessageArea(field) {
-    if (!field) return false;
-
-    // Check if there's a Send button nearby (indicates message compose)
-    const container = field.closest('form') || field.parentElement?.parentElement?.parentElement;
-    if (container) {
-      const sendButton = container.querySelector('button');
-      const hasSendButton = sendButton && (
-        sendButton.textContent.toLowerCase().includes('send') ||
-        sendButton.textContent.toLowerCase().includes('post') ||
-        sendButton.textContent.toLowerCase().includes('reply')
-      );
-
-      if (hasSendButton) {
-        // This is a message compose area - use floating toolbar
-        return true;
-      }
-    }
-
-    // Check for TO/Recipients field nearby (indicates message compose)
-    const parentContainer = field.parentElement?.parentElement?.parentElement?.parentElement;
-    if (parentContainer) {
-      const hasToField = parentContainer.textContent.includes('TO') ||
-                         parentContainer.querySelector('[placeholder*="ecipient"]');
-      if (hasToField) {
-        return true;
-      }
-    }
-
-    // Check if textarea is small (compact area)
-    const rect = field.getBoundingClientRect();
-    if (rect.height < 80) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
    * Check if a field is inside a sidebar/panel (NOT a modal)
-   * and should use embedded toolbar
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isSidebarField(field) {
     if (!field) return false;
-
-    // Compact message compose areas should use floating toolbar, not embedded
-    if (isCompactMessageArea(field)) {
-      return false;
-    }
 
     // First, exclude true modals - they should use floating toolbar, not embedded
     // JobTread modals have .m-auto.shadow-lg with a fixed backdrop
