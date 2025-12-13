@@ -221,12 +221,12 @@ const FormatterToolbar = (() => {
 
     // Create the toolbar
     toolbar = document.createElement('div');
-    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-compact';
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-expanded';
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
 
-    // Build toolbar HTML (compact with dropdowns for sidebar)
+    // Build toolbar HTML (expanded - all buttons inline, no dropdowns)
     let toolbarHTML = '';
 
     if (hasPreviewMode) {
@@ -256,44 +256,29 @@ const FormatterToolbar = (() => {
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-dropdown-group">
-      <button class="jt-dropdown-btn" title="Headings">
-        <span>H</span><span class="jt-dropdown-arrow">▾</span>
-      </button>
-      <div class="jt-dropdown-menu">
-        <button data-format="h1" title="Heading 1">H1</button>
-        <button data-format="h2" title="Heading 2">H2</button>
-        <button data-format="h3" title="Heading 3">H3</button>
-      </div>
+    <div class="jt-toolbar-group">
+      <button data-format="h1" title="Heading 1">H1</button>
+      <button data-format="h2" title="Heading 2">H2</button>
+      <button data-format="h3" title="Heading 3">H3</button>
     </div>
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-dropdown-group">
-      <button class="jt-dropdown-btn" title="More">
-        <span>+</span>
-      </button>
-      <div class="jt-dropdown-menu">
-        <button data-format="bullet" title="Bullet List">• List</button>
-        <button data-format="numbered" title="Numbered List">1. List</button>
-        <button data-format="link" title="Insert Link">🔗 Link</button>
-        <button data-format="quote" title="Quote">❝ Quote</button>
-        <button data-format="table" title="Insert Table">⊞ Table</button>
-      </div>
+    <div class="jt-toolbar-group">
+      <button data-format="bullet" title="Bullet List">•</button>
+      <button data-format="numbered" title="Numbered List">1.</button>
+      <button data-format="link" title="Insert Link">🔗</button>
+      <button data-format="quote" title="Quote">❝</button>
+      <button data-format="table" title="Insert Table">⊞</button>
     </div>
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-color-group">
-      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-        <span class="jt-color-icon">A</span>
-      </button>
-      <div class="jt-color-dropdown">
-        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
-      </div>
+    <div class="jt-toolbar-group">
+      <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+      <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+      <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+      <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
     </div>
 
     <div class="jt-toolbar-divider"></div>
@@ -305,9 +290,7 @@ const FormatterToolbar = (() => {
 
     toolbar.innerHTML = toolbarHTML;
 
-    // Setup handlers
-    setupDropdowns(toolbar);
-    setupColorPicker(toolbar);
+    // Setup handlers (no dropdowns needed for expanded toolbar)
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
 
