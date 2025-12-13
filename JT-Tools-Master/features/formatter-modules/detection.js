@@ -211,10 +211,13 @@ const FormatterDetection = (() => {
 
     // Check if cursor/selection is inside any pair
     for (const pair of pairs) {
-      // For a selection, check if it's fully wrapped by the markers
       if (start !== end) {
-        // Selection is wrapped if markers are immediately outside the selection
-        if (pair.open === relStart - 1 && pair.close === relEnd) {
+        // For a selection, check if it's:
+        // 1. Exactly wrapped by markers (for toggle off): *[hello]*
+        // 2. Fully contained within markers: *[hel]lo* or *he[ll]o*
+        const isExactlyWrapped = (pair.open === relStart - 1 && pair.close === relEnd);
+        const isContainedWithin = (relStart > pair.open && relEnd <= pair.close);
+        if (isExactlyWrapped || isContainedWithin) {
           return true;
         }
       } else {

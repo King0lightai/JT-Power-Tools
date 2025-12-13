@@ -61,13 +61,15 @@ const FormatterFormats = (() => {
   /**
    * Dispatch events immediately - for cases where React clears value during delays
    * @param {HTMLTextAreaElement} field - The textarea field
-   * @param {number|null} cursorPos - Cursor position to set
+   * @param {number|null} cursorPos - Cursor position to set (or selection start)
+   * @param {number|null} selectionEnd - Selection end position (if different from cursorPos)
    */
-  function dispatchReactSafeEventImmediate(field, cursorPos = null) {
+  function dispatchReactSafeEventImmediate(field, cursorPos = null, selectionEnd = null) {
     try {
-      // Set cursor position first
+      // Set cursor/selection position first
       if (cursorPos !== null) {
-        field.setSelectionRange(cursorPos, cursorPos);
+        const endPos = selectionEnd !== null ? selectionEnd : cursorPos;
+        field.setSelectionRange(cursorPos, endPos);
       }
 
       // Dispatch input event IMMEDIATELY (synchronously)
@@ -136,7 +138,7 @@ const FormatterFormats = (() => {
         const marker = markerMap[format];
 
         if (hasSelection) {
-          // Check if selection is wrapped by markers
+          // Check if selection is exactly wrapped by markers
           const before = text.substring(0, start);
           const after = text.substring(end);
 
@@ -146,12 +148,32 @@ const FormatterFormats = (() => {
             newCursorPos = start - 1;
             newSelectionEnd = end - 1;
           } else {
-            // Selection contains markers, remove them from inside
-            const selection = text.substring(start, end);
-            const cleaned = selection.split(marker).join('');
-            newText = before + cleaned + after;
-            newCursorPos = start;
-            newSelectionEnd = start + cleaned.length;
+            // Selection is inside formatted text or contains markers
+            // Find the enclosing format markers on the current line
+            const relStart = start - lineStart;
+            const relEnd = end - lineStart;
+            const pair = findEnclosingPair(lineText, relStart, marker);
+
+            if (pair && relEnd <= pair.close) {
+              // Selection is inside this format pair - remove the enclosing markers
+              const beforeLine = text.substring(0, lineStart);
+              const afterLine = text.substring(lineEndPos);
+              const newLineText = lineText.substring(0, pair.open) +
+                                 lineText.substring(pair.open + 1, pair.close) +
+                                 lineText.substring(pair.close + 1);
+              newText = beforeLine + newLineText + afterLine;
+
+              // Adjust positions (one marker removed before selection)
+              newCursorPos = start - 1;
+              newSelectionEnd = end - 1;
+            } else {
+              // Selection contains markers, remove them from inside
+              const selection = text.substring(start, end);
+              const cleaned = selection.split(marker).join('');
+              newText = before + cleaned + after;
+              newCursorPos = start;
+              newSelectionEnd = start + cleaned.length;
+            }
           }
         } else {
           // No selection - find the enclosing format markers on the current line
@@ -210,13 +232,8 @@ const FormatterFormats = (() => {
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
     nativeInputValueSetter.call(field, newText);
 
-    // Set selection/cursor
-    if (newSelectionEnd !== undefined && newSelectionEnd !== newCursorPos) {
-      field.setSelectionRange(newCursorPos, newSelectionEnd);
-    }
-
-    // Dispatch events immediately
-    dispatchReactSafeEventImmediate(field, newCursorPos);
+    // Dispatch events immediately with proper selection preservation
+    dispatchReactSafeEventImmediate(field, newCursorPos, newSelectionEnd);
   }
 
   /**
