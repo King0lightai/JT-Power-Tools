@@ -1347,7 +1347,7 @@ const FormatterToolbar = (() => {
     const toolbar = document.createElement('div');
     toolbar.className = expanded
       ? 'jt-formatter-toolbar jt-formatter-expanded'
-      : 'jt-formatter-toolbar jt-formatter-compact';
+      : 'jt-formatter-toolbar jt-responsive-toolbar';
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
@@ -1439,93 +1439,50 @@ const FormatterToolbar = (() => {
       </div>
     `;
     } else {
-      // Compact layout with dropdowns (default)
+      // Responsive layout with overflow menu (same as embedded toolbar)
+      // Note: Preview button is added above (before if/else) for all modes
+
+      // All buttons in priority order (lower = more important, shown first)
       toolbarHTML += `
-      <div class="jt-toolbar-group">
-        <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
-          <strong>B</strong>
-        </button>
-        <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
-          <em>I</em>
-        </button>
-        <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
-          <u>U</u>
-        </button>
-        <button data-format="strikethrough" title="Strikethrough (~text~)">
-          <s>S</s>
-        </button>
-      </div>
+        <button class="jt-toolbar-item" data-format="bold" data-priority="1" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
+        <button class="jt-toolbar-item" data-format="italic" data-priority="2" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
+        <button class="jt-toolbar-item" data-format="underline" data-priority="3" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
+        <button class="jt-toolbar-item" data-format="strikethrough" data-priority="4" title="Strikethrough (~text~)"><s>S</s></button>
+        <button class="jt-toolbar-item" data-format="h1" data-priority="5" title="Heading 1">H<sub>1</sub></button>
+        <button class="jt-toolbar-item" data-format="h2" data-priority="6" title="Heading 2">H<sub>2</sub></button>
+        <button class="jt-toolbar-item" data-format="h3" data-priority="7" title="Heading 3">H<sub>3</sub></button>
+        <button class="jt-toolbar-item" data-format="justify-left" data-priority="8" title="Align Left (:--)">${icons.alignLeft}</button>
+        <button class="jt-toolbar-item" data-format="justify-center" data-priority="9" title="Align Center (-:-)">${icons.alignCenter}</button>
+        <button class="jt-toolbar-item" data-format="justify-right" data-priority="10" title="Align Right (--:)">${icons.alignRight}</button>
+        <button class="jt-toolbar-item" data-format="bullet" data-priority="11" title="Bullet List">${icons.bullet}</button>
+        <button class="jt-toolbar-item" data-format="numbered" data-priority="12" title="Numbered List">${icons.numbered}</button>
+        <button class="jt-toolbar-item" data-format="link" data-priority="13" title="Insert Link">${icons.link}</button>
+        <button class="jt-toolbar-item" data-format="quote" data-priority="14" title="Quote">${icons.quote}</button>
+        <button class="jt-toolbar-item" data-format="table" data-priority="15" title="Insert Table">${icons.table}</button>
+        <button class="jt-toolbar-item" data-format="hr" data-priority="16" title="Horizontal Rule (---)">${icons.hr}</button>
+        <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="17" title="Green">A</button>
+        <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="18" title="Yellow">A</button>
+        <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="19" title="Blue">A</button>
+        <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="20" title="Red">A</button>
+        <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="21" title="Insert Alert">${icons.alert}</button>
+      `;
 
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-dropdown-group">
-        <button class="jt-dropdown-btn" title="Headings">
-          <span>H</span><span class="jt-dropdown-arrow">▾</span>
-        </button>
-        <div class="jt-dropdown-menu">
-          <button data-format="h1" title="Heading 1">H1</button>
-          <button data-format="h2" title="Heading 2">H2</button>
-          <button data-format="h3" title="Heading 3">H3</button>
+      // More menu (always visible, contains overflow items)
+      const moreIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>';
+      toolbarHTML += `
+        <div class="jt-overflow-menu">
+          <button class="jt-overflow-btn" title="More options">${moreIcon}</button>
+          <div class="jt-overflow-dropdown"></div>
         </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-dropdown-group">
-        <button class="jt-dropdown-btn" title="More">
-          <span>+</span>
-        </button>
-        <div class="jt-dropdown-menu">
-          <button data-format="bullet" title="Bullet List">${icons.bullet} List</button>
-          <button data-format="numbered" title="Numbered List">${icons.numbered} List</button>
-          <button data-format="link" title="Insert Link">${icons.link} Link</button>
-          <button data-format="quote" title="Quote">${icons.quote} Quote</button>
-          <button data-format="table" title="Insert Table">${icons.table} Table</button>
-          <button data-format="hr" title="Horizontal Rule (---)">${icons.hr} Rule</button>
-        </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-dropdown-group">
-        <button class="jt-dropdown-btn" title="Alignment">
-          ${icons.alignLeft}<span class="jt-dropdown-arrow">▾</span>
-        </button>
-        <div class="jt-dropdown-menu">
-          <button data-format="justify-left" title="Align Left (:--)">${icons.alignLeft} Left</button>
-          <button data-format="justify-center" title="Align Center (-:-)">${icons.alignCenter} Center</button>
-          <button data-format="justify-right" title="Align Right (--:)">${icons.alignRight} Right</button>
-        </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-color-group">
-        <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-          <span class="jt-color-icon">A</span>
-        </button>
-        <div class="jt-color-dropdown">
-          <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-          <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-          <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-          <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
-        </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group">
-        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
-      </div>
-    `;
+      `;
     }
 
     toolbar.innerHTML = toolbarHTML;
 
     // Setup handlers
     if (!expanded) {
-      setupDropdowns(toolbar);
-      setupColorPicker(toolbar);
+      // Responsive toolbar with overflow menu
+      setupResponsiveToolbar(toolbar);
     }
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
