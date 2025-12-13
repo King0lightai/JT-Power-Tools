@@ -66,6 +66,69 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is inside a sidebar/panel
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isSidebarField(field) {
+    if (!field) return false;
+
+    // Check for JobTread's drag-scroll-boundary (sidebars use this)
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) return true;
+
+    // Check for common sidebar/panel patterns
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    if (sidebar) return true;
+
+    // Check if inside a fixed/absolute positioned container that looks like a sidebar
+    let parent = field.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        const rect = parent.getBoundingClientRect();
+        // Sidebars are typically narrow (< 600px) and tall
+        if (rect.width < 600 && rect.height > 200) {
+          return true;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
+  }
+
+  /**
+   * Find the sidebar container for a field
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findSidebarContainer(field) {
+    // Try drag-scroll-boundary first
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) return dragScrollContainer;
+
+    // Try common sidebar patterns
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    if (sidebar) return sidebar;
+
+    // Find fixed/absolute container
+    let parent = field.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        const rect = parent.getBoundingClientRect();
+        if (rect.width < 600 && rect.height > 200) {
+          return parent;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return null;
+  }
+
+  /**
    * Find the budget table footer bar
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
@@ -480,6 +543,46 @@ const FormatterToolbar = (() => {
         toolbar.style.visibility = 'visible';
         toolbar.style.opacity = '1';
         toolbar.classList.add('jt-toolbar-budget-bottom');
+        toolbar.classList.remove('jt-toolbar-sticky');
+        return;
+      }
+    }
+
+    // Check if this is a sidebar field - position at bottom of sidebar
+    const isSidebar = isSidebarField(field);
+    if (isSidebar) {
+      const sidebarContainer = findSidebarContainer(field);
+      if (sidebarContainer) {
+        const sidebarRect = sidebarContainer.getBoundingClientRect();
+        const toolbarWidth = toolbar.offsetWidth || 300;
+        const bottomPadding = 12;
+        const sidePadding = 12;
+
+        // Position at bottom of sidebar, horizontally centered or aligned left
+        let top = sidebarRect.bottom - toolbarHeight - bottomPadding;
+        let left = sidebarRect.left + sidePadding;
+
+        // Make sure toolbar fits within sidebar width
+        if (left + toolbarWidth > sidebarRect.right - sidePadding) {
+          left = sidebarRect.right - toolbarWidth - sidePadding;
+        }
+
+        // Make sure it's not below the viewport
+        if (top + toolbarHeight > viewportHeight - padding) {
+          top = viewportHeight - toolbarHeight - padding;
+        }
+
+        // Make sure it's not above the field
+        if (top < rect.bottom + padding) {
+          top = rect.bottom + padding;
+        }
+
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = `${top}px`;
+        toolbar.style.left = `${left}px`;
+        toolbar.style.visibility = 'visible';
+        toolbar.style.opacity = '1';
+        toolbar.classList.add('jt-toolbar-sidebar-bottom');
         toolbar.classList.remove('jt-toolbar-sticky');
         return;
       }
