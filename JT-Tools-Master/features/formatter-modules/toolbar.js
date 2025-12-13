@@ -243,6 +243,12 @@ const FormatterToolbar = (() => {
     toolbar = document.createElement('div');
     toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-responsive-toolbar';
 
+    // Check if this is a scrollable sidebar (should have sticky behavior)
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) {
+      toolbar.classList.add('jt-sidebar-sticky');
+    }
+
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
 

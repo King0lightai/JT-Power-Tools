@@ -1283,6 +1283,14 @@
   gap: 2px;
 }
 
+/* Sidebar sticky toolbar - scrolls with content but sticks to top */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-sidebar-sticky {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100;
+  background: #ffffff;
+}
+
 /* Responsive toolbar - flat button layout like JobTread */
 .jt-formatter-toolbar.jt-responsive-toolbar {
   display: flex;
@@ -1743,6 +1751,13 @@
 [data-mode="dark"] .jt-formatter-toolbar-embedded {
   background: #1f2937;
   border-color: #374151;
+}
+
+/* Dark mode for sidebar sticky toolbar */
+.dark .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
+[data-theme="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
+[data-mode="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky {
+  background: #1f2937;
 }
 
 /* Dark mode for overflow dropdown */
