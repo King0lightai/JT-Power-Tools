@@ -221,12 +221,12 @@ const FormatterToolbar = (() => {
 
     // Create the toolbar
     toolbar = document.createElement('div');
-    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-expanded';
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-compact';
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
 
-    // Build toolbar HTML (expanded - all buttons inline, no dropdowns)
+    // Build toolbar HTML (semi-expanded - headers and colors in dropdowns, rest inline)
     let toolbarHTML = '';
 
     if (hasPreviewMode) {
@@ -256,10 +256,15 @@ const FormatterToolbar = (() => {
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group">
-      <button data-format="h1" title="Heading 1">H1</button>
-      <button data-format="h2" title="Heading 2">H2</button>
-      <button data-format="h3" title="Heading 3">H3</button>
+    <div class="jt-toolbar-group jt-dropdown-group">
+      <button class="jt-dropdown-btn" title="Headings">
+        <span>H</span><span class="jt-dropdown-arrow">▾</span>
+      </button>
+      <div class="jt-dropdown-menu">
+        <button data-format="h1" title="Heading 1">H1</button>
+        <button data-format="h2" title="Heading 2">H2</button>
+        <button data-format="h3" title="Heading 3">H3</button>
+      </div>
     </div>
 
     <div class="jt-toolbar-divider"></div>
@@ -274,11 +279,16 @@ const FormatterToolbar = (() => {
 
     <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group">
-      <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-      <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-      <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-      <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+    <div class="jt-toolbar-group jt-color-group">
+      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
+        <span class="jt-color-icon">A</span>
+      </button>
+      <div class="jt-color-dropdown">
+        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+      </div>
     </div>
 
     <div class="jt-toolbar-divider"></div>
@@ -290,7 +300,9 @@ const FormatterToolbar = (() => {
 
     toolbar.innerHTML = toolbarHTML;
 
-    // Setup handlers (no dropdowns needed for expanded toolbar)
+    // Setup handlers
+    setupDropdowns(toolbar);
+    setupColorPicker(toolbar);
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
 
