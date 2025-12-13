@@ -1272,13 +1272,13 @@
    Embedded Toolbar Styles (Sidebar fields)
    ======================================== */
 
-/* Embedded toolbar - sticky below sidebar header */
+/* Embedded toolbar - appears above textarea */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded {
-  position: sticky !important;
-  top: 56px !important; /* Below the sticky sidebar header (typically ~56px tall) */
+  position: relative !important;
+  top: auto !important;
   left: auto !important;
   width: 100%;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
