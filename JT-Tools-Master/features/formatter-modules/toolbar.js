@@ -438,20 +438,30 @@ const FormatterToolbar = (() => {
     const isBudgetField = isBudgetDescriptionField(field);
 
     if (isBudgetField) {
-      // For budget Description fields, position toolbar at bottom of visible area
+      // For budget Description fields, position toolbar aligned with the footer bar
       // This prevents the toolbar from covering the text being edited
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
         const containerRect = scrollContainer.getBoundingClientRect();
         const toolbarWidth = toolbar.offsetWidth || 300;
 
-        // Position at bottom-left of the scroll container's visible area
-        const bottomPadding = 12;
-        const leftPadding = 12;
+        // Find the footer bar (+ Item / + Group row) to align with
+        const footerBar = findBudgetFooterBar(field);
+        let top;
 
-        // Calculate position - bottom of container, aligned with the field horizontally
-        let left = Math.max(rect.left, containerRect.left + leftPadding);
-        let top = containerRect.bottom - toolbarHeight - bottomPadding;
+        if (footerBar) {
+          // Align vertically centered with the footer bar
+          const footerRect = footerBar.getBoundingClientRect();
+          top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
+        } else {
+          // Fallback: position at bottom of container
+          const bottomPadding = 8;
+          top = containerRect.bottom - toolbarHeight - bottomPadding;
+        }
+
+        // Position horizontally: align with the Description column (field's left edge)
+        // But offset past the frozen Name column
+        let left = rect.left;
 
         // Ensure toolbar doesn't go off-screen
         const viewportWidth = window.innerWidth;
