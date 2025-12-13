@@ -7,22 +7,32 @@ This document provides comprehensive guidance for AI assistants (Claude) working
 **JT Power Tools** is a Chrome extension (Manifest V3) that enhances the JobTread construction management platform (app.jobtread.com) with productivity features and UI improvements.
 
 ### Key Information
-- **Version**: 3.3.0
+- **Version**: 3.3.8 (Beta)
 - **Platform**: Chrome Extension (Manifest V3)
 - **Target**: JobTread web application (app.jobtread.com)
 - **License Model**: Free + Premium features via Gumroad
 - **Repository**: https://github.com/King0lightai/JT-Power-Tools
+- **Chrome Web Store**: [Live](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 
-### Core Features
-1. **Schedule Drag & Drop** (Premium) - Drag schedule items between dates with multi-year support
-2. **Contrast Fix** - Automatic text color adjustment for better readability
-3. **Text Formatter** - Rich text formatting toolbar for text fields
-4. **Preview Mode** (Premium) - Live markdown preview with floating panel
-5. **Quick Job Switcher** - Keyboard-driven job search and navigation
-6. **Quick Notes** - Persistent notepad with markdown support
-7. **Dark Mode** - Dark theme for JobTread interface
-8. **Custom Theme** (Premium) - Personalized color palettes
-9. **Budget Hierarchy Shading** - Progressive visual shading for nested budget groups
+### Core Features (14 Total)
+
+**Premium Features (3):**
+1. **Schedule Drag & Drop** - Drag schedule items between dates with multi-year support, weekend override (Shift), end date modification (Alt)
+2. **Preview Mode** - Live markdown preview with floating panel for budget descriptions and daily logs
+3. **Custom Theme** - Personalized color palettes with HSL-based generation, up to 3 saved themes
+
+**Free Features (11):**
+4. **Contrast Fix** - Automatic text color adjustment for WCAG-compliant readability
+5. **Text Formatter** - Rich text formatting toolbar with bold, italic, headings, tables, links, alerts, and keyboard shortcuts
+6. **Quick Job Switcher** - Keyboard-driven job search (J+S or Alt+J) with real-time filtering
+7. **Quick Notes** - Persistent notepad with markdown support, WYSIWYG editor, and cross-device sync
+8. **Dark Mode** - Complete dark theme for JobTread interface with current date highlighting
+9. **Budget Hierarchy Shading** - Progressive visual shading for nested budget groups (up to 5 levels)
+10. **Freeze Header** - Sticky column/row headers during table scrolling
+11. **Character Counter** - Real-time character count in message fields
+12. **Kanban Type Filter** - Auto-hide empty columns in Kanban view
+13. **Auto Collapse Groups** - Automatically collapse 100% complete budget groups on load
+14. **Help Sidebar Support** - Integrates extension support into JobTread help system
 
 ## Project Architecture
 
@@ -30,26 +40,30 @@ This document provides comprehensive guidance for AI assistants (Claude) working
 
 ```
 JT-Power-Tools/
-├── JT-Tools-Master/              # Main extension directory
+├── JT-Tools-Master/              # Main extension directory (846KB)
 │   ├── manifest.json             # Chrome extension manifest (V3)
-│   ├── content.js                # Main orchestrator script
+│   ├── content.js                # Main orchestrator script (13.3KB)
 │   ├── background/
 │   │   └── service-worker.js     # Background service worker
 │   ├── popup/
-│   │   ├── popup.html            # Settings UI
-│   │   ├── popup.js              # Settings logic
-│   │   └── popup.css             # Settings styling
-│   ├── features/                 # Feature modules
-│   │   ├── drag-drop.js
-│   │   ├── contrast-fix.js
-│   │   ├── formatter.js
-│   │   ├── preview-mode.js
-│   │   ├── job-switcher.js
-│   │   ├── quick-notes.js
-│   │   ├── dark-mode.js
-│   │   ├── rgb-theme.js
-│   │   ├── budget-hierarchy.js
-│   │   └── drag-drop-modules/   # Drag & Drop sub-modules
+│   │   ├── popup.html            # Settings UI (13.2KB)
+│   │   ├── popup.js              # Settings logic (24.5KB)
+│   │   └── popup.css             # Settings styling (15.5KB)
+│   ├── features/                 # Feature modules (307KB total)
+│   │   ├── drag-drop.js          # Schedule drag & drop (Premium)
+│   │   ├── contrast-fix.js       # Text color adjustment
+│   │   ├── formatter.js          # Rich text formatting (15.5KB)
+│   │   ├── preview-mode.js       # Markdown preview (Premium, 35.8KB)
+│   │   ├── job-switcher.js       # Quick job search (11.9KB)
+│   │   ├── quick-notes.js        # Persistent notepad (58.7KB)
+│   │   ├── dark-mode.js          # Dark theme
+│   │   ├── rgb-theme.js          # Custom themes (Premium, 36.4KB)
+│   │   ├── budget-hierarchy.js   # Nested budget shading (21.3KB)
+│   │   ├── freeze-header.js      # Sticky headers (47.7KB)
+│   │   ├── character-counter.js  # Message char counter (14.6KB)
+│   │   ├── kanban-type-filter.js # Hide empty Kanban columns (11.2KB)
+│   │   ├── auto-collapse-groups.js # Auto-collapse completed (10.6KB)
+│   │   └── drag-drop-modules/    # Drag & Drop sub-modules
 │   │       ├── view-detector.js
 │   │       ├── date-utils.js
 │   │       ├── weekend-utils.js
@@ -57,20 +71,62 @@ JT-Power-Tools/
 │   │       ├── sidebar-manager.js
 │   │       ├── date-changer.js
 │   │       ├── event-handlers.js
-│   │       └── infinite-scroll.js
-│   ├── styles/                   # CSS files
-│   │   ├── formatter-toolbar.css
-│   │   ├── preview-mode.css
-│   │   ├── quick-notes.css
-│   │   └── dark-mode.css
-│   ├── services/                 # Shared services
-│   └── icons/                    # Extension icons
+│   │       ├── infinite-scroll.js
+│   │       ├── task-completion.js
+│   │       └── action-items-completion.js
+│   ├── formatter-modules/        # Text Formatter sub-modules
+│   │   ├── detection.js          # Field detection
+│   │   ├── formats.js            # Formatting operations (22.8KB)
+│   │   ├── toolbar.js            # Toolbar UI (29.8KB)
+│   │   └── alert-modal.js        # Alert builder modal (17.3KB)
+│   ├── quick-notes-modules/      # Quick Notes sub-modules
+│   │   ├── storage.js            # Storage operations
+│   │   ├── markdown.js           # Markdown rendering
+│   │   └── editor.js             # WYSIWYG editor (13.1KB)
+│   ├── rgb-theme-modules/        # Theme sub-modules
+│   │   └── palette.js            # Color palette generation
+│   ├── utils/                    # Shared utilities (8 modules)
+│   │   ├── color-utils.js        # Color manipulation
+│   │   ├── debounce.js           # Event throttling
+│   │   ├── defaults.js           # Default settings
+│   │   ├── dom-helpers.js        # Safe DOM operations
+│   │   ├── error-handler.js      # Error logging & handling
+│   │   ├── logger.js             # Logging utilities
+│   │   ├── sanitizer.js          # Input sanitization & XSS prevention
+│   │   └── storage-wrapper.js    # Safe Chrome storage API
+│   ├── styles/                   # CSS files (86KB total)
+│   │   ├── formatter-toolbar.css (20.5KB)
+│   │   ├── preview-mode.css      (26.5KB)
+│   │   ├── quick-notes.css       (21.7KB)
+│   │   └── dark-mode.css         (18.6KB)
+│   └── icons/                    # Extension icons (light/dark variants)
+├── server/                       # License validation proxy server
+│   ├── cloudflare-worker-license-proxy.js
+│   ├── express-license-proxy.js
+│   ├── package.json
+│   ├── DEPLOYMENT.md
+│   └── .env.example
 ├── chrome-web-store/             # Chrome Web Store documentation
-├── docs/                         # Project documentation
-├── server/                       # License server (if applicable)
-├── README.md                     # User-facing documentation
-└── CHANGELOG.md                  # Version history and changes
+│   ├── CHROME_WEB_STORE_LISTING.md
+│   ├── PRIVACY_POLICY.md
+│   └── SINGLE_PURPOSE_STATEMENT.txt
+├── docs/                         # Documentation website (Jekyll)
+│   ├── index.html
+│   ├── changelog.html
+│   ├── privacy.html
+│   └── guides/
+├── README.md                     # User-facing documentation (25KB)
+├── CHANGELOG.md                  # Version history (13.9KB)
+├── IMPROVEMENTS.md               # Debugging & refactoring summary
+├── SECURITY_FIXES.md             # Security vulnerability fixes
+├── LICENSE                       # MIT License
+└── claude.md                     # AI assistant guide (this file)
 ```
+
+**Codebase Statistics:**
+- **44 JavaScript files** totaling ~11,700 lines of code
+- **5 CSS files** totaling 86KB
+- **Main extension directory**: 846KB
 
 ### Key Design Patterns
 
@@ -365,25 +421,73 @@ function triggerReactChange(element, value) {
 
 ### Security Considerations
 
-#### 1. Content Security Policy
+The project includes a comprehensive `utils/` directory with security utilities. See `SECURITY_FIXES.md` for detailed security improvements.
+
+#### 1. Input Sanitization (utils/sanitizer.js)
+Use the sanitizer utilities for all user input:
+```javascript
+// Color validation - strict hex format only
+Sanitizer.sanitizeHexColor(color)  // Returns #RRGGBB or null
+
+// CSS value sanitization
+Sanitizer.sanitizeCSSValue(value)  // Strips dangerous characters
+
+// HTML escaping for XSS prevention
+Sanitizer.escapeHtml(text)         // Escapes &, <, >, ", '
+
+// URL sanitization - blocks javascript: and data: URIs
+Sanitizer.sanitizeUrl(url)         // Returns safe URL or empty string
+
+// License key format validation
+Sanitizer.sanitizeLicenseKey(key)  // Validates format
+```
+
+#### 2. Safe DOM Operations (utils/dom-helpers.js)
+Always use DOM helpers for safe element manipulation:
+```javascript
+// Safe element creation with null checks
+DomHelpers.createElement(tag, attributes, children)
+
+// Safe element removal
+DomHelpers.removeElement(element)
+
+// Safe text content setting (avoids innerHTML)
+DomHelpers.setTextContent(element, text)
+
+// Timeout-based element waiting
+DomHelpers.waitForElement(selector, timeout)
+```
+
+#### 3. Memory Leak Prevention
+- Use WeakMap for controller references to avoid memory leaks
+- Store event listeners and properly clean them up in cleanup()
+- Use AbortController for cancelable operations
+- Always disconnect MutationObservers when feature is disabled
+
+#### 4. Content Security Policy
 - Follow Chrome extension CSP guidelines
 - No inline scripts or eval()
 - Use chrome.runtime.getURL() for resources
 
-#### 2. Data Storage
-- Use chrome.storage.sync for user settings
-- Sanitize user input before storage
-- Validate data before use
+#### 5. Data Storage (utils/storage-wrapper.js)
+Use the storage wrapper for consistent Chrome storage API access:
+```javascript
+// Safe storage operations with error handling
+StorageWrapper.get(keys)    // Returns promise
+StorageWrapper.set(items)   // Returns promise
+StorageWrapper.remove(keys) // Returns promise
+```
 
-#### 3. External Communications
-- Only communicate with trusted domains
-- Validate responses from external APIs
-- Use HTTPS for all external requests
+#### 6. Server-Side License Validation
+- License validation uses secure proxy server (Express or Cloudflare Workers)
+- Product ID kept secret on server side
+- Rate limiting prevents abuse
+- Client never directly accesses Gumroad API
 
-#### 4. Premium License Validation
-- Never expose license validation logic in content scripts
-- Use background service worker for sensitive operations
-- Validate licenses server-side when possible
+#### 7. Manifest Permissions
+- Minimal permissions: `storage`, `activeTab`
+- Host permissions limited to specific domains only
+- No overreaching permissions requested
 
 ### Testing
 
@@ -972,6 +1076,41 @@ Types:
 3. Check CSS specificity
 4. Verify no CSP violations
 
+## Recent Development Focus
+
+### Active Development Areas (as of v3.3.8)
+
+The following areas have been the focus of recent development work:
+
+1. **Text Formatter Toolbar Positioning**
+   - Toolbar docking to sticky headers in budget tables
+   - Viewport-sticky behavior for consistent positioning
+   - Alert builder modal integration
+   - Sticky header detection improvements
+
+2. **Preview Mode Refinements**
+   - Dark theme contrast and positioning fixes
+   - Floating panel viewport positioning
+   - Real-time rendering updates
+
+3. **Freeze Header Feature**
+   - Sticky column/row headers for tables
+   - Integration with formatter toolbar
+   - Preventing overlapping with scrollable content
+
+4. **Security Improvements**
+   - Input sanitization utilities (sanitizer.js)
+   - Safe DOM operations (dom-helpers.js)
+   - Memory leak prevention with WeakMap
+   - Server-side license validation
+
+### Known Areas for Future Work
+
+- Performance optimization for large budget tables
+- Additional keyboard shortcuts
+- Enhanced accessibility features
+- Mobile/responsive improvements
+
 ## Contact & Support
 
 - **Repository**: https://github.com/King0lightai/JT-Power-Tools
@@ -985,15 +1124,35 @@ Types:
 
 When working on this project:
 
+### Critical Requirements
 1. **ALWAYS update CHANGELOG.md** for any functional changes
 2. Follow the modular feature pattern for consistency
 3. Test thoroughly before committing
 4. Maintain backward compatibility
 5. Handle cleanup properly (no memory leaks)
-6. Use prefixed console logs for debugging
+
+### Code Quality Guidelines
+6. Use prefixed console logs for debugging (e.g., `Formatter:`, `DragDrop:`)
 7. Respect React event handling in JobTread
 8. Check for premium license when needed
 9. Keep code style consistent with existing patterns
 10. Document complex logic with comments
 
-**Remember**: Every change should make the user's experience better while maintaining stability and performance.
+### Security Requirements
+11. **Use `utils/sanitizer.js`** for all user input validation
+12. **Use `utils/dom-helpers.js`** for safe DOM operations
+13. **Use `utils/storage-wrapper.js`** for Chrome storage operations
+14. Never use innerHTML with user-provided content
+15. Validate colors, URLs, and CSS values before use
+
+### Architecture Guidelines
+16. Complex features should be split into sub-modules (see `formatter-modules/`, `drag-drop-modules/`)
+17. Use WeakMap for storing element-specific data to prevent memory leaks
+18. Always provide cleanup() functions that fully reverse init() effects
+19. Use AbortController for cancelable async operations
+
+**Remember**: Every change should make the user's experience better while maintaining stability, security, and performance.
+
+---
+
+*Last updated: Version 3.3.8*
