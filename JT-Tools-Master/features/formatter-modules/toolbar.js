@@ -73,24 +73,15 @@ const FormatterToolbar = (() => {
   function isSidebarField(field) {
     if (!field) return false;
 
-    // First, exclude true modals - they should use floating toolbar, not embedded
-    // JobTread modals have .m-auto.shadow-lg with a fixed backdrop
-    const modalContainer = field.closest('.m-auto.shadow-lg');
+    // First, exclude modals/popups - they use centered auto-margin layout
+    // This catches NEW JOB MESSAGE popup and similar
+    const modalContainer = field.closest('.m-auto');
     if (modalContainer) {
-      const backdrop = modalContainer.parentElement;
-      if (backdrop) {
-        const backdropStyle = window.getComputedStyle(backdrop);
-        const backdropRect = backdrop.getBoundingClientRect();
-        // If it's a true full-screen modal, this is NOT a sidebar
-        if (backdropStyle.position === 'fixed' &&
-            backdropRect.width >= window.innerWidth * 0.8 &&
-            backdropRect.height >= window.innerHeight * 0.8) {
-          return false;
-        }
-      }
+      return false;
     }
 
     // Check for JobTread's drag-scroll-boundary (sidebars use this)
+    // This is the primary and most reliable sidebar indicator
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return true;
 
@@ -98,14 +89,16 @@ const FormatterToolbar = (() => {
     const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return true;
 
-    // Check if inside a fixed/absolute positioned container that looks like a sidebar
+    // Check if inside a fixed/absolute positioned container on the RIGHT side of screen
+    // (sidebars in JobTread typically appear on the right)
     let parent = field.parentElement;
     while (parent && parent !== document.body) {
       const style = window.getComputedStyle(parent);
       if (style.position === 'fixed' || style.position === 'absolute') {
         const rect = parent.getBoundingClientRect();
-        // Sidebars are typically narrow (< 600px) and tall
-        if (rect.width < 600 && rect.height > 200) {
+        // Sidebars are typically narrow (< 600px), tall, and positioned on the right
+        const isOnRight = rect.left > window.innerWidth * 0.5;
+        if (rect.width < 600 && rect.height > 200 && isOnRight) {
           return true;
         }
       }
