@@ -989,3 +989,40 @@
   min-width: 32px;
   justify-content: center;
 }
+
+/* ========================================
+   Embedded Toolbar Styles (Sidebar fields)
+   ======================================== */
+
+/* Embedded toolbar - positioned in the DOM flow, not floating */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  box-shadow: none;
+  flex-wrap: wrap;
+}
+
+.jt-formatter-toolbar-embedded button {
+  background: #ffffff;
+}
+
+.jt-formatter-toolbar-embedded button:hover {
+  background: #f3f4f6;
+}
+
+/* Dropdown menus open upward for embedded toolbar */
+.jt-formatter-toolbar-embedded .jt-dropdown-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+.jt-formatter-toolbar-embedded .jt-color-dropdown.jt-dropdown-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
