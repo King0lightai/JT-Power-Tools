@@ -191,7 +191,7 @@
 }
 
 .jt-preview-content blockquote {
-  border-left: 4px solid #f59e0b; /* Yellow/gold like JobTread */
+  border-left: 4px solid #9ca3af; /* Gray like JobTread */
   padding-left: 12px;
   margin: 8px 0;
   color: #374151 !important;
@@ -488,7 +488,7 @@
   }
 
   .jt-preview-content blockquote {
-    border-left-color: #fbbf24; /* Yellow/gold in dark mode */
+    border-left-color: #6b7280; /* Gray in dark mode */
     color: #d1d5db;
   }
 
@@ -595,7 +595,7 @@
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content blockquote {
-  border-left-color: #fbbf24; /* Yellow/gold in dark mode */
+  border-left-color: #6b7280; /* Gray in dark mode */
   color: #d1d5db !important;
 }
 
@@ -785,7 +785,7 @@
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content blockquote {
-  border-left-color: var(--jt-preview-blockquote-border, #f59e0b);
+  border-left-color: var(--jt-preview-blockquote-border, #9ca3af);
   color: var(--jt-preview-text, #374151) !important;
 }
 
