@@ -99,8 +99,23 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // Look through all .flex.min-w-max rows for the one that contains "Name" and "Description"
-    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+    // Strategy 1: Look for sticky elements that contain header text
+    const stickyElements = scrollContainer.querySelectorAll('.sticky');
+    for (const sticky of stickyElements) {
+      const text = sticky.textContent;
+      // Header should have column names like "Name" and "Description"
+      if (text.includes('Name') && text.includes('Description')) {
+        // Return the sticky element's parent row if it's a flex container
+        const parent = sticky.parentElement;
+        if (parent && (parent.classList.contains('flex') || parent.style.display === 'flex')) {
+          return parent;
+        }
+        return sticky;
+      }
+    }
+
+    // Strategy 2: Look through all flex rows for header-like rows
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
     for (const row of allRows) {
       // Skip rows that have textareas (those are data rows)
       if (row.querySelector('textarea')) continue;
@@ -117,6 +132,12 @@ const FormatterToolbar = (() => {
         // This is the header row
         return row;
       }
+    }
+
+    // Strategy 3: Look for the jt-budget-header-container if freeze-header created one
+    const budgetHeader = scrollContainer.querySelector('.jt-budget-header-container');
+    if (budgetHeader) {
+      return budgetHeader;
     }
 
     return null;
@@ -420,7 +441,11 @@ const FormatterToolbar = (() => {
     if (isBudgetField) {
       const scrollContainer = field.closest('.overflow-auto');
       const headerRow = findBudgetHeaderRow(field);
-      console.log('Formatter: scrollContainer =', !!scrollContainer, 'headerRow =', !!headerRow);
+      console.log('Formatter: scrollContainer =', !!scrollContainer, 'headerRow =', !!headerRow, headerRow);
+      if (scrollContainer) {
+        console.log('Formatter: sticky elements in container:', scrollContainer.querySelectorAll('.sticky').length);
+        console.log('Formatter: flex rows in container:', scrollContainer.querySelectorAll('.flex').length);
+      }
 
       if (headerRow && scrollContainer) {
         const headerCell = findDescriptionHeaderCell(headerRow);
