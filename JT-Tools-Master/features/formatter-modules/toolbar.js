@@ -320,6 +320,20 @@ const FormatterToolbar = (() => {
     const fieldRect = field.getBoundingClientRect();
     let maxOffset = 0;
 
+    // Helper to check if element is a table header (should be excluded)
+    const isTableHeader = (el) => {
+      const tagName = el.tagName.toLowerCase();
+      // Exclude thead, th, and elements inside tables that aren't page-level headers
+      if (tagName === 'thead' || tagName === 'th') {
+        return true;
+      }
+      // Also exclude if element is inside a table
+      if (el.closest('table')) {
+        return true;
+      }
+      return false;
+    };
+
     // Check semantic header/nav elements
     const semanticHeaders = document.querySelectorAll('header, nav');
     semanticHeaders.forEach(el => {
@@ -339,8 +353,14 @@ const FormatterToolbar = (() => {
     });
 
     // Check elements with sticky class (JobTread budget table headers, sidebar headers)
+    // Exclude table headers (thead, th) - these are data tables, not page-level headers
     const stickyClassElements = document.querySelectorAll('.sticky');
     stickyClassElements.forEach(el => {
+      // Skip table header elements - they're not page-level navigation headers
+      if (isTableHeader(el)) {
+        return;
+      }
+
       const style = window.getComputedStyle(el);
       const position = style.position;
 
@@ -356,11 +376,17 @@ const FormatterToolbar = (() => {
     });
 
     // Also check parent rows of sticky elements (for table header rows like JobTread budget)
+    // But skip if the parent is inside a table element
     stickyClassElements.forEach(el => {
+      // Skip table header elements
+      if (isTableHeader(el)) {
+        return;
+      }
+
       const style = window.getComputedStyle(el);
       if (style.position === 'sticky') {
         const parent = el.parentElement;
-        if (parent) {
+        if (parent && !parent.closest('table')) {
           const parentRect = parent.getBoundingClientRect();
           // Parent row should be above the field and look like a header row
           if (parentRect.bottom <= fieldRect.top + 50 && parentRect.height > 15 && parentRect.height < 100) {
@@ -382,107 +408,64 @@ const FormatterToolbar = (() => {
    * @param {HTMLTextAreaElement} field
    */
   function positionToolbar(toolbar, field) {
-    // Check if this is a budget Description field - use header docked mode
-    if (isBudgetDescriptionField(field)) {
-      const scrollContainer = field.closest('.overflow-auto');
-      const headerRow = findBudgetHeaderRow(field);
-
-      if (headerRow && scrollContainer) {
-        const headerCell = findDescriptionHeaderCell(headerRow);
-        if (headerCell) {
-          const success = positionToolbarInHeader(toolbar, headerCell, scrollContainer);
-          if (success) {
-            return;
-          }
-        }
-        // Fallback: position below the header ROW if specific cell not found
-        const success = positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer);
-        if (success) {
-          return;
-        }
-      }
-      // Fall through to floating mode if header docking fails
-    }
-
-    // Remove docked classes if not docking
-    toolbar.classList.remove('jt-toolbar-docked');
-    toolbar.classList.remove('jt-toolbar-header-docked');
-    toolbar.style.position = 'absolute';
-
     const rect = field.getBoundingClientRect();
-    const toolbarHeight = 44;
+    const toolbarHeight = toolbar.offsetHeight || 36;
     const padding = 8;
     const viewportHeight = window.innerHeight;
-    const stickyHeaderOffset = getStickyHeaderOffset(field);
 
-    // Calculate usable viewport area (accounting for sticky headers)
-    const viewportTop = stickyHeaderOffset || 0;
-    const viewportBottom = viewportHeight - padding;
+    // Find the top offset (below any fixed/sticky headers)
+    const stickyHeaderOffset = getStickyHeaderOffset(field) || 60; // Default 60px for JobTread header
 
-    // Determine if field is partially or fully visible
-    const fieldVisibleTop = Math.max(rect.top, viewportTop);
-    const fieldVisibleBottom = Math.min(rect.bottom, viewportBottom);
+    // Calculate visible area of the field
+    const fieldVisibleTop = Math.max(rect.top, stickyHeaderOffset);
+    const fieldVisibleBottom = Math.min(rect.bottom, viewportHeight - padding);
     const fieldVisibleHeight = fieldVisibleBottom - fieldVisibleTop;
 
-    let topPosition;
-    let isSticky = false;
-
-    // Always favor positioning above/at the top of the field
-    // Calculate where the toolbar would be if placed above the field
-    const normalTopAbove = rect.top + window.scrollY - toolbarHeight - padding;
-    const normalTopAboveViewport = rect.top - toolbarHeight - padding;
-
-    // Check if there's room above the field (between sticky header and field top)
-    const roomAbove = rect.top - viewportTop;
-
-    if (roomAbove >= toolbarHeight + padding) {
-      // Enough room above - place toolbar above the field
-      topPosition = normalTopAbove;
-    } else if (normalTopAboveViewport < viewportTop) {
-      // Not enough room above - make toolbar sticky at top of visible area
-      isSticky = true;
-      topPosition = viewportTop + window.scrollY + padding;
-
-      // But don't position it past the bottom of the field
-      const maxTop = rect.bottom + window.scrollY - toolbarHeight - padding;
-      if (topPosition > maxTop) {
-        topPosition = maxTop;
-      }
-    } else {
-      // Edge case: place above
-      topPosition = normalTopAbove;
-    }
-
-    // Hide toolbar if field is not visible enough (less than 30px visible)
+    // Hide toolbar if field is not visible enough
     if (fieldVisibleHeight < 30) {
       toolbar.style.visibility = 'hidden';
       toolbar.style.opacity = '0';
       return;
+    }
+
+    toolbar.style.visibility = 'visible';
+    toolbar.style.opacity = '1';
+    toolbar.style.position = 'fixed';
+    toolbar.classList.remove('jt-toolbar-docked');
+
+    // Determine vertical position
+    let top;
+    const roomAboveField = rect.top - stickyHeaderOffset;
+
+    if (roomAboveField >= toolbarHeight + padding) {
+      // Enough room above the field - position just above it
+      top = rect.top - toolbarHeight - padding;
+      toolbar.classList.remove('jt-toolbar-sticky');
     } else {
-      toolbar.style.visibility = 'visible';
-      toolbar.style.opacity = '1';
+      // Not enough room above - stick to top of viewport (below headers)
+      top = stickyHeaderOffset + padding;
+      toolbar.classList.add('jt-toolbar-sticky');
+
+      // But don't go past the bottom of the field
+      const maxTop = rect.bottom - toolbarHeight - padding;
+      if (top > maxTop) {
+        top = maxTop;
+      }
     }
 
-    toolbar.style.top = `${topPosition}px`;
-    toolbar.style.width = `auto`;
+    toolbar.style.top = `${top}px`;
 
-    // Toggle sticky class for potential styling differences
-    toolbar.classList.toggle('jt-toolbar-sticky', isSticky);
-
-    // Calculate left position with right-side overflow prevention
-    let leftPosition = rect.left + window.scrollX;
-
-    // Get the toolbar's actual width
-    const toolbarWidth = toolbar.offsetWidth || toolbar.getBoundingClientRect().width;
+    // Horizontal position - align with field, prevent overflow
+    let left = rect.left;
+    const toolbarWidth = toolbar.offsetWidth || 300;
     const viewportWidth = window.innerWidth;
-    const rightEdgePadding = 8;
 
-    // Check if toolbar would overflow on the right side
-    if (leftPosition + toolbarWidth > viewportWidth - rightEdgePadding) {
-      leftPosition = Math.max(rightEdgePadding, viewportWidth - toolbarWidth - rightEdgePadding);
+    if (left + toolbarWidth > viewportWidth - padding) {
+      left = Math.max(padding, viewportWidth - toolbarWidth - padding);
     }
 
-    toolbar.style.left = `${leftPosition}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.width = 'auto';
   }
 
   /**
