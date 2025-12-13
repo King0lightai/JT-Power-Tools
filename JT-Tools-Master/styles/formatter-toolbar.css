@@ -1463,16 +1463,15 @@
 
 .jt-overflow-dropdown {
   display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  position: fixed; /* Fixed to escape stacking contexts */
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
   padding: 0.375rem;
-  z-index: 999999;
+  z-index: 2147483647; /* Maximum z-index to ensure visibility */
   min-width: 160px;
+  max-width: 280px;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 2px;

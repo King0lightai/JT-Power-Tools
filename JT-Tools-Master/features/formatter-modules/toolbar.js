@@ -66,19 +66,36 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside a sidebar/panel
+   * Check if a field is inside a sidebar/panel (NOT a modal)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isSidebarField(field) {
     if (!field) return false;
 
+    // First, exclude true modals - they should use floating toolbar, not embedded
+    // JobTread modals have .m-auto.shadow-lg with a fixed backdrop
+    const modalContainer = field.closest('.m-auto.shadow-lg');
+    if (modalContainer) {
+      const backdrop = modalContainer.parentElement;
+      if (backdrop) {
+        const backdropStyle = window.getComputedStyle(backdrop);
+        const backdropRect = backdrop.getBoundingClientRect();
+        // If it's a true full-screen modal, this is NOT a sidebar
+        if (backdropStyle.position === 'fixed' &&
+            backdropRect.width >= window.innerWidth * 0.8 &&
+            backdropRect.height >= window.innerHeight * 0.8) {
+          return false;
+        }
+      }
+    }
+
     // Check for JobTread's drag-scroll-boundary (sidebars use this)
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return true;
 
-    // Check for common sidebar/panel patterns
-    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    // Check for common sidebar/panel patterns (but NOT modals/dialogs)
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return true;
 
     // Check if inside a fixed/absolute positioned container that looks like a sidebar
@@ -108,8 +125,8 @@ const FormatterToolbar = (() => {
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return dragScrollContainer;
 
-    // Try common sidebar patterns
-    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    // Try common sidebar patterns (but NOT modals/dialogs)
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return sidebar;
 
     // Find fixed/absolute container
@@ -1105,11 +1122,39 @@ const FormatterToolbar = (() => {
 
     if (!overflowMenu || !overflowDropdown || !overflowBtn) return;
 
+    // Position dropdown using fixed positioning to escape stacking contexts
+    function positionDropdown() {
+      const btnRect = overflowBtn.getBoundingClientRect();
+      const dropdownWidth = overflowDropdown.offsetWidth || 160;
+
+      // Position below button, aligned to right edge
+      let top = btnRect.bottom + 4;
+      let left = btnRect.right - dropdownWidth;
+
+      // Ensure dropdown doesn't go off screen
+      if (left < 8) left = 8;
+      if (top + 200 > window.innerHeight) {
+        // Position above button if not enough space below
+        top = btnRect.top - overflowDropdown.offsetHeight - 4;
+      }
+
+      overflowDropdown.style.position = 'fixed';
+      overflowDropdown.style.top = `${top}px`;
+      overflowDropdown.style.left = `${left}px`;
+      overflowDropdown.style.right = 'auto';
+    }
+
     // Toggle overflow dropdown
     overflowBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      const isVisible = overflowDropdown.classList.contains('jt-overflow-dropdown-visible');
       overflowDropdown.classList.toggle('jt-overflow-dropdown-visible');
+
+      // Position dropdown when opening
+      if (!isVisible) {
+        requestAnimationFrame(positionDropdown);
+      }
     });
 
     // Close dropdown when clicking outside
