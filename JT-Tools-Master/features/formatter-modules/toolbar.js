@@ -434,42 +434,45 @@ const FormatterToolbar = (() => {
     const padding = 8;
     const viewportHeight = window.innerHeight;
 
-    // Check if this is a budget Description field - use header positioning
+    // Check if this is a budget Description field - use bottom positioning
     const isBudgetField = isBudgetDescriptionField(field);
-    console.log('Formatter: isBudgetDescriptionField =', isBudgetField, 'placeholder =', field.getAttribute('placeholder'));
 
     if (isBudgetField) {
+      // For budget Description fields, position toolbar at bottom of visible area
+      // This prevents the toolbar from covering the text being edited
       const scrollContainer = field.closest('.overflow-auto');
-      const headerRow = findBudgetHeaderRow(field);
-      console.log('Formatter: scrollContainer =', !!scrollContainer, 'headerRow =', !!headerRow, headerRow);
       if (scrollContainer) {
-        console.log('Formatter: sticky elements in container:', scrollContainer.querySelectorAll('.sticky').length);
-        console.log('Formatter: flex rows in container:', scrollContainer.querySelectorAll('.flex').length);
-        // Debug: log first few sticky elements
-        const stickies = scrollContainer.querySelectorAll('.sticky');
-        for (let i = 0; i < Math.min(5, stickies.length); i++) {
-          console.log(`Formatter: sticky[${i}] text="${stickies[i].textContent.substring(0, 50)}" classes="${stickies[i].className}"`);
-        }
-      }
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const toolbarWidth = toolbar.offsetWidth || 300;
 
-      if (headerRow && scrollContainer) {
-        const headerCell = findDescriptionHeaderCell(headerRow);
-        console.log('Formatter: headerCell =', !!headerCell, headerCell);
-        if (headerCell) {
-          // Position inside the Description header cell
-          if (positionToolbarInHeader(toolbar, headerCell, scrollContainer)) {
-            console.log('Formatter: positioned in header cell');
-            return;
-          }
+        // Position at bottom-left of the scroll container's visible area
+        const bottomPadding = 12;
+        const leftPadding = 12;
+
+        // Calculate position - bottom of container, aligned with the field horizontally
+        let left = Math.max(rect.left, containerRect.left + leftPadding);
+        let top = containerRect.bottom - toolbarHeight - bottomPadding;
+
+        // Ensure toolbar doesn't go off-screen
+        const viewportWidth = window.innerWidth;
+        if (left + toolbarWidth > viewportWidth - padding) {
+          left = Math.max(padding, viewportWidth - toolbarWidth - padding);
         }
-        // Fallback: position below the header row
-        if (positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer)) {
-          console.log('Formatter: positioned below header row');
-          return;
+
+        // Make sure it's not below the viewport
+        if (top + toolbarHeight > viewportHeight - padding) {
+          top = viewportHeight - toolbarHeight - padding;
         }
+
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = `${top}px`;
+        toolbar.style.left = `${left}px`;
+        toolbar.style.visibility = 'visible';
+        toolbar.style.opacity = '1';
+        toolbar.classList.add('jt-toolbar-budget-bottom');
+        toolbar.classList.remove('jt-toolbar-sticky');
+        return;
       }
-      // If header positioning fails, fall through to default behavior
-      console.log('Formatter: falling through to default positioning');
     }
 
     // Find the top offset (below any fixed/sticky headers)
