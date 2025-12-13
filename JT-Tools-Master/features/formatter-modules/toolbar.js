@@ -320,6 +320,20 @@ const FormatterToolbar = (() => {
     const fieldRect = field.getBoundingClientRect();
     let maxOffset = 0;
 
+    // Helper to check if element is a table header (should be excluded)
+    const isTableHeader = (el) => {
+      const tagName = el.tagName.toLowerCase();
+      // Exclude thead, th, and elements inside tables that aren't page-level headers
+      if (tagName === 'thead' || tagName === 'th') {
+        return true;
+      }
+      // Also exclude if element is inside a table
+      if (el.closest('table')) {
+        return true;
+      }
+      return false;
+    };
+
     // Check semantic header/nav elements
     const semanticHeaders = document.querySelectorAll('header, nav');
     semanticHeaders.forEach(el => {
@@ -339,8 +353,14 @@ const FormatterToolbar = (() => {
     });
 
     // Check elements with sticky class (JobTread budget table headers, sidebar headers)
+    // Exclude table headers (thead, th) - these are data tables, not page-level headers
     const stickyClassElements = document.querySelectorAll('.sticky');
     stickyClassElements.forEach(el => {
+      // Skip table header elements - they're not page-level navigation headers
+      if (isTableHeader(el)) {
+        return;
+      }
+
       const style = window.getComputedStyle(el);
       const position = style.position;
 
@@ -356,11 +376,17 @@ const FormatterToolbar = (() => {
     });
 
     // Also check parent rows of sticky elements (for table header rows like JobTread budget)
+    // But skip if the parent is inside a table element
     stickyClassElements.forEach(el => {
+      // Skip table header elements
+      if (isTableHeader(el)) {
+        return;
+      }
+
       const style = window.getComputedStyle(el);
       if (style.position === 'sticky') {
         const parent = el.parentElement;
-        if (parent) {
+        if (parent && !parent.closest('table')) {
           const parentRect = parent.getBoundingClientRect();
           // Parent row should be above the field and look like a header row
           if (parentRect.bottom <= fieldRect.top + 50 && parentRect.height > 15 && parentRect.height < 100) {
