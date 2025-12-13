@@ -548,7 +548,7 @@ const FormatterToolbar = (() => {
       }
     }
 
-    // Check if this is a sidebar field - position at bottom of sidebar
+    // Check if this is a sidebar field - position at bottom of visible viewport
     const isSidebar = isSidebarField(field);
     if (isSidebar) {
       const sidebarContainer = findSidebarContainer(field);
@@ -558,8 +558,11 @@ const FormatterToolbar = (() => {
         const bottomPadding = 12;
         const sidePadding = 12;
 
-        // Position at bottom of sidebar, horizontally centered or aligned left
-        let top = sidebarRect.bottom - toolbarHeight - bottomPadding;
+        // Position at bottom of the VISIBLE area (viewport), not the sidebar
+        // This ensures toolbar is always visible regardless of scroll position
+        let top = viewportHeight - toolbarHeight - bottomPadding;
+
+        // But constrain to within the sidebar's horizontal bounds
         let left = sidebarRect.left + sidePadding;
 
         // Make sure toolbar fits within sidebar width
@@ -567,14 +570,9 @@ const FormatterToolbar = (() => {
           left = sidebarRect.right - toolbarWidth - sidePadding;
         }
 
-        // Make sure it's not below the viewport
-        if (top + toolbarHeight > viewportHeight - padding) {
-          top = viewportHeight - toolbarHeight - padding;
-        }
-
-        // Make sure it's not above the field
-        if (top < rect.bottom + padding) {
-          top = rect.bottom + padding;
+        // Don't position below the sidebar's visible bottom
+        if (top > sidebarRect.bottom - toolbarHeight - bottomPadding) {
+          top = sidebarRect.bottom - toolbarHeight - bottomPadding;
         }
 
         toolbar.style.position = 'fixed';
