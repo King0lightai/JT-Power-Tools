@@ -212,28 +212,29 @@
 
 /* ========================================
    Expanded Toolbar Styles (Budget view inline)
+   Compact flat style like sidebar formatter
    ======================================== */
 
 .jt-formatter-toolbar.jt-formatter-expanded {
-  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  padding: 0.375rem 0.5rem;
-  gap: 0.375rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 0.25rem;
+  gap: 2px;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded button {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  min-width: 28px;
-  height: 28px;
-  font-size: 12px;
-  color: #475569;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.375rem;
+  min-width: 26px;
+  height: 26px;
+  font-size: 13px;
+  color: #64748b;
+  box-shadow: none;
+  transition: all 0.1s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -241,27 +242,26 @@
 
 .jt-formatter-toolbar.jt-formatter-expanded button:hover {
   background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #1e293b;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  border-color: #e2e8f0;
+  color: #334155;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded button.active {
-  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
-  border-color: #1d4ed8;
+  background: #3b82f6;
+  border-color: #3b82f6;
   color: #ffffff;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded button.active:hover {
-  background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 100%);
+  background: #2563eb;
+  border-color: #2563eb;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-divider {
   width: 1px;
-  height: 22px;
-  background: linear-gradient(to bottom, transparent 0%, #e2e8f0 20%, #e2e8f0 80%, transparent 100%);
-  margin: 0 0.125rem;
+  height: 18px;
+  background: #e2e8f0;
+  margin: 0 2px;
   align-self: center;
 }
 
@@ -269,47 +269,41 @@
 .jt-formatter-toolbar.jt-formatter-expanded button em,
 .jt-formatter-toolbar.jt-formatter-expanded button u,
 .jt-formatter-toolbar.jt-formatter-expanded button s {
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Grouped buttons in expanded toolbar */
 .jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-group {
   display: inline-flex;
   gap: 0;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  padding: 2px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-group button {
-  border: none;
-  box-shadow: none;
   border-radius: 0.25rem;
-  min-width: 24px;
-  height: 24px;
+  min-width: 26px;
+  height: 26px;
   margin: 0;
-}
-
-.jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-group button:hover {
-  box-shadow: none;
 }
 
 /* SVG icons in expanded toolbar */
 .jt-formatter-toolbar.jt-formatter-expanded button svg {
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   stroke-width: 2;
 }
 
 /* Preview button in expanded toolbar */
 .jt-formatter-toolbar.jt-formatter-expanded .jt-preview-toggle {
-  background: linear-gradient(to bottom, #f0fdf4 0%, #dcfce7 100%);
-  border-color: #86efac;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
   color: #166534;
   font-weight: 500;
-  padding: 0.25rem 0.625rem;
+  padding: 0.25rem 0.5rem;
 }
 
 .jt-formatter-toolbar.jt-formatter-expanded .jt-preview-toggle:hover {
@@ -1694,4 +1688,242 @@
 
 .jt-more-row button.jt-color-red:hover {
   background: #fee2e2;
+}
+
+/* ========================================
+   Dark Mode Support
+   Supports: .dark class, data-theme="dark", and prefers-color-scheme
+   ======================================== */
+
+/* Dark mode using class or attribute */
+.dark .jt-formatter-toolbar,
+[data-theme="dark"] .jt-formatter-toolbar,
+[data-mode="dark"] .jt-formatter-toolbar {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .jt-formatter-toolbar button,
+[data-theme="dark"] .jt-formatter-toolbar button,
+[data-mode="dark"] .jt-formatter-toolbar button {
+  color: #94a3b8;
+  background: transparent;
+  border-color: transparent;
+}
+
+.dark .jt-formatter-toolbar button:hover,
+[data-theme="dark"] .jt-formatter-toolbar button:hover,
+[data-mode="dark"] .jt-formatter-toolbar button:hover {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark .jt-formatter-toolbar button.active,
+[data-theme="dark"] .jt-formatter-toolbar button.active,
+[data-mode="dark"] .jt-formatter-toolbar button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.dark .jt-formatter-toolbar .jt-toolbar-divider,
+[data-theme="dark"] .jt-formatter-toolbar .jt-toolbar-divider,
+[data-mode="dark"] .jt-formatter-toolbar .jt-toolbar-divider {
+  background: #475569;
+}
+
+/* Dark mode for embedded toolbar */
+.dark .jt-formatter-toolbar-embedded,
+[data-theme="dark"] .jt-formatter-toolbar-embedded,
+[data-mode="dark"] .jt-formatter-toolbar-embedded {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+/* Dark mode for overflow dropdown */
+.dark .jt-overflow-dropdown,
+[data-theme="dark"] .jt-overflow-dropdown,
+[data-mode="dark"] .jt-overflow-dropdown {
+  background: #1e293b;
+  border-color: #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dark .jt-overflow-dropdown .jt-toolbar-item,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark .jt-overflow-dropdown .jt-toolbar-item:hover,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+/* Dark mode for more dropdown */
+.dark .jt-more-dropdown,
+[data-theme="dark"] .jt-more-dropdown,
+[data-mode="dark"] .jt-more-dropdown {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .jt-more-section-label,
+[data-theme="dark"] .jt-more-section-label,
+[data-mode="dark"] .jt-more-section-label {
+  color: #64748b;
+}
+
+.dark .jt-more-row button,
+[data-theme="dark"] .jt-more-row button,
+[data-mode="dark"] .jt-more-row button {
+  background: #334155;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark .jt-more-row button:hover,
+[data-theme="dark"] .jt-more-row button:hover,
+[data-mode="dark"] .jt-more-row button:hover {
+  background: #475569;
+}
+
+/* Dark mode for tooltips */
+.dark .jt-custom-tooltip,
+[data-theme="dark"] .jt-custom-tooltip,
+[data-mode="dark"] .jt-custom-tooltip {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Dark mode for alert modal */
+.dark .jt-alert-modal,
+[data-theme="dark"] .jt-alert-modal,
+[data-mode="dark"] .jt-alert-modal {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.dark .jt-alert-modal-header,
+[data-theme="dark"] .jt-alert-modal-header,
+[data-mode="dark"] .jt-alert-modal-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .jt-alert-modal-footer,
+[data-theme="dark"] .jt-alert-modal-footer,
+[data-mode="dark"] .jt-alert-modal-footer {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .jt-alert-subject,
+.dark .jt-alert-message,
+[data-theme="dark"] .jt-alert-subject,
+[data-theme="dark"] .jt-alert-message,
+[data-mode="dark"] .jt-alert-subject,
+[data-mode="dark"] .jt-alert-message {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.dark .jt-alert-dropdown-button,
+.dark .jt-alert-dropdown-menu,
+.dark .jt-alert-dropdown-item,
+[data-theme="dark"] .jt-alert-dropdown-button,
+[data-theme="dark"] .jt-alert-dropdown-menu,
+[data-theme="dark"] .jt-alert-dropdown-item,
+[data-mode="dark"] .jt-alert-dropdown-button,
+[data-mode="dark"] .jt-alert-dropdown-menu,
+[data-mode="dark"] .jt-alert-dropdown-item {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.dark .jt-alert-dropdown-item:hover,
+[data-theme="dark"] .jt-alert-dropdown-item:hover,
+[data-mode="dark"] .jt-alert-dropdown-item:hover {
+  background: #334155;
+}
+
+/* Dark mode preview button */
+.dark .jt-preview-toggle,
+[data-theme="dark"] .jt-preview-toggle,
+[data-mode="dark"] .jt-preview-toggle {
+  background: #064e3b;
+  border-color: #065f46;
+  color: #6ee7b7;
+}
+
+.dark .jt-preview-toggle:hover,
+[data-theme="dark"] .jt-preview-toggle:hover,
+[data-mode="dark"] .jt-preview-toggle:hover {
+  background: #065f46;
+  border-color: #047857;
+}
+
+/* ========================================
+   RGB/Accent Theme Support
+   Uses CSS custom properties for customization
+   ======================================== */
+
+/* Define default accent color variable */
+.jt-formatter-toolbar {
+  --jt-accent: #3b82f6;
+  --jt-accent-hover: #2563eb;
+  --jt-accent-light: #dbeafe;
+}
+
+/* Active buttons use accent color */
+.jt-formatter-toolbar button.active {
+  background: var(--jt-accent);
+  border-color: var(--jt-accent);
+}
+
+.jt-formatter-toolbar button.active:hover {
+  background: var(--jt-accent-hover);
+  border-color: var(--jt-accent-hover);
+}
+
+/* Support for JobTread's theme color variables if they exist */
+@supports (color: var(--primary)) {
+  .jt-formatter-toolbar {
+    --jt-accent: var(--primary, #3b82f6);
+  }
+}
+
+@supports (color: var(--accent)) {
+  .jt-formatter-toolbar {
+    --jt-accent: var(--accent, #3b82f6);
+  }
+}
+
+/* System dark mode preference fallback */
+@media (prefers-color-scheme: dark) {
+  .jt-formatter-toolbar:not(.jt-light-mode) {
+    background: #1e293b;
+    border-color: #334155;
+  }
+
+  .jt-formatter-toolbar:not(.jt-light-mode) button {
+    color: #94a3b8;
+  }
+
+  .jt-formatter-toolbar:not(.jt-light-mode) button:hover {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  .jt-formatter-toolbar:not(.jt-light-mode) .jt-toolbar-divider {
+    background: #475569;
+  }
 }
