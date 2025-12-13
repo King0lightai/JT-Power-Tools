@@ -414,24 +414,32 @@ const FormatterToolbar = (() => {
     const viewportHeight = window.innerHeight;
 
     // Check if this is a budget Description field - use header positioning
-    if (isBudgetDescriptionField(field)) {
+    const isBudgetField = isBudgetDescriptionField(field);
+    console.log('Formatter: isBudgetDescriptionField =', isBudgetField, 'placeholder =', field.getAttribute('placeholder'));
+
+    if (isBudgetField) {
       const scrollContainer = field.closest('.overflow-auto');
       const headerRow = findBudgetHeaderRow(field);
+      console.log('Formatter: scrollContainer =', !!scrollContainer, 'headerRow =', !!headerRow);
 
       if (headerRow && scrollContainer) {
         const headerCell = findDescriptionHeaderCell(headerRow);
+        console.log('Formatter: headerCell =', !!headerCell, headerCell);
         if (headerCell) {
           // Position inside the Description header cell
           if (positionToolbarInHeader(toolbar, headerCell, scrollContainer)) {
+            console.log('Formatter: positioned in header cell');
             return;
           }
         }
         // Fallback: position below the header row
         if (positionToolbarBelowHeaderRow(toolbar, headerRow, scrollContainer)) {
+          console.log('Formatter: positioned below header row');
           return;
         }
       }
       // If header positioning fails, fall through to default behavior
+      console.log('Formatter: falling through to default positioning');
     }
 
     // Find the top offset (below any fixed/sticky headers)
