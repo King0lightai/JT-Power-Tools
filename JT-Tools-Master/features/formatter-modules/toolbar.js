@@ -1488,7 +1488,9 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside a modal that should use embedded toolbar instead of floating
+   * Check if a field is inside a modal that should NOT show the floating toolbar
+   * (because the floating toolbar would appear on top of the modal awkwardly)
+   * This does NOT prevent embedded toolbars - only the floating one
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
@@ -1502,16 +1504,21 @@ const FormatterToolbar = (() => {
       return true;
     }
 
-    // Check for JobTread native modals (centered dialogs with shadow)
-    // These have classes like: m-auto shadow-lg rounded-sm bg-white max-w-*
-    const modalContainer = field.closest('.m-auto.shadow-lg, [class*="modal"], [class*="dialog"]');
+    // Check for JobTread native modals - these are centered dialogs with a backdrop
+    // They have: .m-auto.shadow-lg AND are inside a fixed full-screen overlay
+    const modalContainer = field.closest('.m-auto.shadow-lg');
     if (modalContainer) {
-      // Verify it's a centered modal (not just any shadow element)
-      const style = window.getComputedStyle(modalContainer);
-      if (modalContainer.classList.contains('m-auto') ||
-          style.position === 'fixed' ||
-          modalContainer.closest('[class*="fixed"]')) {
-        return true;
+      // Must have a fixed backdrop parent that covers the viewport
+      const backdrop = modalContainer.parentElement;
+      if (backdrop) {
+        const backdropStyle = window.getComputedStyle(backdrop);
+        const backdropRect = backdrop.getBoundingClientRect();
+        // True modal backdrop: fixed position, covers most of viewport
+        if (backdropStyle.position === 'fixed' &&
+            backdropRect.width >= window.innerWidth * 0.9 &&
+            backdropRect.height >= window.innerHeight * 0.9) {
+          return true;
+        }
       }
     }
 
@@ -1525,14 +1532,11 @@ const FormatterToolbar = (() => {
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
 
-    // Don't show floating toolbar for modal fields (they should use embedded toolbar or have their own)
-    if (isModalField(field)) {
-      return;
-    }
-
     clearHideTimeout();
 
     // Check if this is a sidebar field - use embedded toolbar
+    // IMPORTANT: Check sidebar FIRST, before modal detection
+    // Sidebar embedded toolbars should always be available
     const isSidebar = isSidebarField(field) && !isBudgetDescriptionField(field);
     if (isSidebar) {
       // For sidebar fields, embed the toolbar in the DOM (not floating)
@@ -1548,6 +1552,12 @@ const FormatterToolbar = (() => {
         updateToolbarState(field, embeddedToolbar);
         return;
       }
+    }
+
+    // Don't show floating toolbar for modal fields
+    // (modal fields should have their own embedded toolbar or no toolbar)
+    if (isModalField(field)) {
+      return;
     }
 
     // For non-sidebar fields, use floating toolbar
