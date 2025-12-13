@@ -417,9 +417,11 @@ const FormatterFeature = (() => {
   function handleGlobalClick(e) {
     const clickedElement = e.target;
 
-    // Don't hide if clicking on a formatter field or the toolbar
-    if (Detection().isFormatterField(clickedElement) ||
-        clickedElement.closest('.jt-formatter-toolbar')) {
+    // Don't hide if clicking on a formatter-ready field or the toolbar
+    // Use data-formatter-ready attribute for more reliable detection
+    if (clickedElement.closest('[data-formatter-ready="true"]') ||
+        clickedElement.closest('.jt-formatter-toolbar') ||
+        clickedElement.closest('.jt-formatter-toolbar-embedded')) {
       return;
     }
 
