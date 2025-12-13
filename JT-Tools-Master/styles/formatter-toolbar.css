@@ -1283,11 +1283,11 @@
   gap: 2px;
 }
 
-/* Sidebar sticky toolbar - scrolls with content but sticks to top */
+/* Sidebar sticky toolbar - scrolls with content but sticks below header */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-sidebar-sticky {
   position: sticky !important;
-  top: 0 !important;
-  z-index: 100;
+  top: 48px !important; /* Below the sidebar header (typically ~48px tall) */
+  z-index: 9; /* Below sidebar header (z-10) but above content */
   background: #ffffff;
 }
 
