@@ -108,7 +108,9 @@ const FreezeHeaderFeature = (() => {
     /* We exclude sidebars with top: 48-50px as these are global overlays that should stay at header level */
     /* We also exclude sidebar headers with top: 0 (e.g., "COST ITEM DETAILS", "Update Task") */
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky) {
+    /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
+    /* These excluded elements keep their native JobTread positioning */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 

@@ -66,6 +66,281 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is inside a sidebar/panel
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isSidebarField(field) {
+    if (!field) return false;
+
+    // Check for JobTread's drag-scroll-boundary (sidebars use this)
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) return true;
+
+    // Check for common sidebar/panel patterns
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    if (sidebar) return true;
+
+    // Check if inside a fixed/absolute positioned container that looks like a sidebar
+    let parent = field.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        const rect = parent.getBoundingClientRect();
+        // Sidebars are typically narrow (< 600px) and tall
+        if (rect.width < 600 && rect.height > 200) {
+          return true;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
+  }
+
+  /**
+   * Find the sidebar container for a field
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findSidebarContainer(field) {
+    // Try drag-scroll-boundary first
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) return dragScrollContainer;
+
+    // Try common sidebar patterns
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    if (sidebar) return sidebar;
+
+    // Find fixed/absolute container
+    let parent = field.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        const rect = parent.getBoundingClientRect();
+        if (rect.width < 600 && rect.height > 200) {
+          return parent;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return null;
+  }
+
+  /**
+   * Find the label element for a field (to embed toolbar after it)
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findFieldLabel(field) {
+    // Check for associated label via id
+    if (field.id) {
+      const label = document.querySelector(`label[for="${field.id}"]`);
+      if (label) return label;
+    }
+
+    // Look for label as previous sibling or parent's previous sibling
+    let element = field.previousElementSibling;
+    while (element) {
+      if (element.tagName === 'LABEL' || element.classList.contains('label') ||
+          element.textContent.includes('Description') || element.textContent.includes('Notes')) {
+        return element;
+      }
+      element = element.previousElementSibling;
+    }
+
+    // Check parent for label
+    const parent = field.parentElement;
+    if (parent) {
+      element = parent.previousElementSibling;
+      while (element) {
+        if (element.tagName === 'LABEL' || element.classList.contains('label') ||
+            element.textContent.includes('Description') || element.textContent.includes('Notes')) {
+          return element;
+        }
+        // Also check if it's a wrapper containing a label
+        const innerLabel = element.querySelector('label, .label');
+        if (innerLabel) return innerLabel;
+        element = element.previousElementSibling;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if a toolbar is already embedded for this field
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findEmbeddedToolbar(field) {
+    // Check if there's already an embedded toolbar before this field
+    let sibling = field.previousElementSibling;
+    while (sibling) {
+      if (sibling.classList.contains('jt-formatter-toolbar-embedded')) {
+        return sibling;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+
+    // Also check parent's children
+    const parent = field.parentElement;
+    if (parent) {
+      const embedded = parent.querySelector('.jt-formatter-toolbar-embedded');
+      if (embedded) return embedded;
+
+      // Also check before the parent (for JobTread's relative/absolute container)
+      const parentStyle = window.getComputedStyle(parent);
+      if (parentStyle.position === 'relative') {
+        let parentSibling = parent.previousElementSibling;
+        while (parentSibling) {
+          if (parentSibling.classList.contains('jt-formatter-toolbar-embedded')) {
+            return parentSibling;
+          }
+          parentSibling = parentSibling.previousElementSibling;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Create and embed toolbar between label and field for sidebar fields
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function embedToolbarForField(field) {
+    // Check if already embedded
+    let toolbar = findEmbeddedToolbar(field);
+    if (toolbar) {
+      toolbar.style.display = 'flex';
+      return toolbar;
+    }
+
+    // Create the toolbar
+    toolbar = document.createElement('div');
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-compact';
+
+    // Check if PreviewModeFeature is available and active
+    const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
+
+    // Build toolbar HTML (semi-expanded - headers and colors in dropdowns, rest inline)
+    let toolbarHTML = '';
+
+    if (hasPreviewMode) {
+      toolbarHTML += `
+      <button class="jt-preview-toggle" data-action="preview" title="Preview">
+        <span>Preview</span>
+      </button>
+      <div class="jt-toolbar-divider"></div>
+      `;
+    }
+
+    toolbarHTML += `
+    <div class="jt-toolbar-group">
+      <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
+        <strong>B</strong>
+      </button>
+      <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
+        <em>I</em>
+      </button>
+      <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
+        <u>U</u>
+      </button>
+      <button data-format="strikethrough" title="Strikethrough (~text~)">
+        <s>S</s>
+      </button>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-dropdown-group">
+      <button class="jt-dropdown-btn" title="Headings">
+        <span>H</span><span class="jt-dropdown-arrow">▾</span>
+      </button>
+      <div class="jt-dropdown-menu">
+        <button data-format="h1" title="Heading 1">H1</button>
+        <button data-format="h2" title="Heading 2">H2</button>
+        <button data-format="h3" title="Heading 3">H3</button>
+      </div>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group">
+      <button data-format="bullet" title="Bullet List">•</button>
+      <button data-format="numbered" title="Numbered List">1.</button>
+      <button data-format="link" title="Insert Link">🔗</button>
+      <button data-format="quote" title="Quote">❝</button>
+      <button data-format="table" title="Insert Table">⊞</button>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-color-group">
+      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
+        <span class="jt-color-icon">A</span>
+      </button>
+      <div class="jt-color-dropdown">
+        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+      </div>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group">
+      <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+    </div>
+  `;
+
+    toolbar.innerHTML = toolbarHTML;
+
+    // Setup handlers
+    setupDropdowns(toolbar);
+    setupColorPicker(toolbar);
+    setupFormatButtons(toolbar, field);
+    setupCustomTooltips(toolbar);
+
+    if (hasPreviewMode) {
+      setupPreviewButton(toolbar, field);
+    }
+
+    // Find the right insertion point - need to insert OUTSIDE any relative/absolute container
+    // JobTread uses a relative container with absolute textarea + preview div overlay
+    let insertTarget = field;
+    let insertParent = field.parentElement;
+
+    // Check if parent is a relative container with absolute-positioned children (JobTread's preview system)
+    if (insertParent) {
+      const parentStyle = window.getComputedStyle(insertParent);
+      if (parentStyle.position === 'relative') {
+        // Check if the field is absolute positioned inside
+        const fieldStyle = window.getComputedStyle(field);
+        if (fieldStyle.position === 'absolute') {
+          // Insert before the relative container, not inside it
+          insertTarget = insertParent;
+          insertParent = insertParent.parentElement;
+        }
+      }
+    }
+
+    // Insert toolbar before the target
+    if (insertParent) {
+      insertParent.insertBefore(toolbar, insertTarget);
+    } else {
+      // Fallback: insert before the field
+      field.parentElement.insertBefore(toolbar, field);
+    }
+
+    return toolbar;
+  }
+
+  /**
    * Find the budget table footer bar
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
@@ -99,8 +374,23 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // Look through all .flex.min-w-max rows for the one that contains "Name" and "Description"
-    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+    // Strategy 1: Look for sticky elements that contain header text
+    const stickyElements = scrollContainer.querySelectorAll('.sticky');
+    for (const sticky of stickyElements) {
+      const text = sticky.textContent;
+      // Header should have column names like "Name" and "Description"
+      if (text.includes('Name') && text.includes('Description')) {
+        // Return the sticky element's parent row if it's a flex container
+        const parent = sticky.parentElement;
+        if (parent && (parent.classList.contains('flex') || parent.style.display === 'flex')) {
+          return parent;
+        }
+        return sticky;
+      }
+    }
+
+    // Strategy 2: Look through all flex rows for header-like rows
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
     for (const row of allRows) {
       // Skip rows that have textareas (those are data rows)
       if (row.querySelector('textarea')) continue;
@@ -117,6 +407,12 @@ const FormatterToolbar = (() => {
         // This is the header row
         return row;
       }
+    }
+
+    // Strategy 3: Look for the jt-budget-header-container if freeze-header created one
+    const budgetHeader = scrollContainer.querySelector('.jt-budget-header-container');
+    if (budgetHeader) {
+      return budgetHeader;
     }
 
     return null;
@@ -412,6 +708,95 @@ const FormatterToolbar = (() => {
     const toolbarHeight = toolbar.offsetHeight || 36;
     const padding = 8;
     const viewportHeight = window.innerHeight;
+
+    // Check if this is a budget Description field - use bottom positioning
+    const isBudgetField = isBudgetDescriptionField(field);
+
+    if (isBudgetField) {
+      // For budget Description fields, position toolbar aligned with the footer bar
+      // This prevents the toolbar from covering the text being edited
+      const scrollContainer = field.closest('.overflow-auto');
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const toolbarWidth = toolbar.offsetWidth || 300;
+
+        // Find the footer bar (+ Item / + Group row) to align with
+        const footerBar = findBudgetFooterBar(field);
+        let top;
+
+        if (footerBar) {
+          // Position ABOVE the footer bar (not covering scrollbar)
+          const footerRect = footerBar.getBoundingClientRect();
+          top = footerRect.top - toolbarHeight - 8;
+        } else {
+          // Fallback: position above the bottom of container (leave room for scrollbar)
+          const bottomPadding = 50;
+          top = containerRect.bottom - toolbarHeight - bottomPadding;
+        }
+
+        // Position horizontally: align with the Description column (field's left edge)
+        // But offset past the frozen Name column
+        let left = rect.left;
+
+        // Ensure toolbar doesn't go off-screen
+        const viewportWidth = window.innerWidth;
+        if (left + toolbarWidth > viewportWidth - padding) {
+          left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+        }
+
+        // Make sure it's not below the viewport
+        if (top + toolbarHeight > viewportHeight - padding) {
+          top = viewportHeight - toolbarHeight - padding;
+        }
+
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = `${top}px`;
+        toolbar.style.left = `${left}px`;
+        toolbar.style.visibility = 'visible';
+        toolbar.style.opacity = '1';
+        toolbar.classList.add('jt-toolbar-budget-bottom');
+        toolbar.classList.remove('jt-toolbar-sticky');
+        return;
+      }
+    }
+
+    // Check if this is a sidebar field - position at bottom of visible viewport
+    const isSidebar = isSidebarField(field);
+    if (isSidebar) {
+      const sidebarContainer = findSidebarContainer(field);
+      if (sidebarContainer) {
+        const sidebarRect = sidebarContainer.getBoundingClientRect();
+        const toolbarWidth = toolbar.offsetWidth || 300;
+        const bottomPadding = 12;
+        const sidePadding = 12;
+
+        // Position at bottom of the VISIBLE area (viewport), not the sidebar
+        // This ensures toolbar is always visible regardless of scroll position
+        let top = viewportHeight - toolbarHeight - bottomPadding;
+
+        // But constrain to within the sidebar's horizontal bounds
+        let left = sidebarRect.left + sidePadding;
+
+        // Make sure toolbar fits within sidebar width
+        if (left + toolbarWidth > sidebarRect.right - sidePadding) {
+          left = sidebarRect.right - toolbarWidth - sidePadding;
+        }
+
+        // Don't position below the sidebar's visible bottom
+        if (top > sidebarRect.bottom - toolbarHeight - bottomPadding) {
+          top = sidebarRect.bottom - toolbarHeight - bottomPadding;
+        }
+
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = `${top}px`;
+        toolbar.style.left = `${left}px`;
+        toolbar.style.visibility = 'visible';
+        toolbar.style.opacity = '1';
+        toolbar.classList.add('jt-toolbar-sidebar-bottom');
+        toolbar.classList.remove('jt-toolbar-sticky');
+        return;
+      }
+    }
 
     // Find the top offset (below any fixed/sticky headers)
     const stickyHeaderOffset = getStickyHeaderOffset(field) || 60; // Default 60px for JobTread header
@@ -715,11 +1100,16 @@ const FormatterToolbar = (() => {
   /**
    * Create the toolbar element
    * @param {HTMLTextAreaElement} field
+   * @param {Object} options - Options for toolbar creation
+   * @param {boolean} options.expanded - If true, show all buttons inline (no dropdowns)
    * @returns {HTMLElement}
    */
-  function createToolbar(field) {
+  function createToolbar(field, options = {}) {
+    const { expanded = false } = options;
     const toolbar = document.createElement('div');
-    toolbar.className = 'jt-formatter-toolbar jt-formatter-compact';
+    toolbar.className = expanded
+      ? 'jt-formatter-toolbar jt-formatter-expanded'
+      : 'jt-formatter-toolbar jt-formatter-compact';
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
@@ -736,76 +1126,132 @@ const FormatterToolbar = (() => {
       `;
     }
 
-    toolbarHTML += `
-    <div class="jt-toolbar-group">
-      <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
-        <strong>B</strong>
-      </button>
-      <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
-        <em>I</em>
-      </button>
-      <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
-        <u>U</u>
-      </button>
-      <button data-format="strikethrough" title="Strikethrough (~text~)">
-        <s>S</s>
-      </button>
-    </div>
+    if (expanded) {
+      // Expanded layout - all buttons visible inline (for budget view)
+      toolbarHTML += `
+      <div class="jt-toolbar-group">
+        <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
+          <strong>B</strong>
+        </button>
+        <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
+          <em>I</em>
+        </button>
+        <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
+          <u>U</u>
+        </button>
+        <button data-format="strikethrough" title="Strikethrough (~text~)">
+          <s>S</s>
+        </button>
+      </div>
 
-    <div class="jt-toolbar-divider"></div>
+      <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-dropdown-group">
-      <button class="jt-dropdown-btn" title="Headings">
-        <span>H</span><span class="jt-dropdown-arrow">▾</span>
-      </button>
-      <div class="jt-dropdown-menu">
+      <div class="jt-toolbar-group">
         <button data-format="h1" title="Heading 1">H1</button>
         <button data-format="h2" title="Heading 2">H2</button>
         <button data-format="h3" title="Heading 3">H3</button>
       </div>
-    </div>
 
-    <div class="jt-toolbar-divider"></div>
+      <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-dropdown-group">
-      <button class="jt-dropdown-btn" title="More">
-        <span>+</span>
-      </button>
-      <div class="jt-dropdown-menu">
-        <button data-format="bullet" title="Bullet List">• List</button>
-        <button data-format="numbered" title="Numbered List">1. List</button>
-        <button data-format="link" title="Insert Link">🔗 Link</button>
-        <button data-format="quote" title="Quote">❝ Quote</button>
-        <button data-format="table" title="Insert Table">⊞ Table</button>
+      <div class="jt-toolbar-group">
+        <button data-format="bullet" title="Bullet List">•</button>
+        <button data-format="numbered" title="Numbered List">1.</button>
+        <button data-format="link" title="Insert Link">🔗</button>
+        <button data-format="quote" title="Quote">❝</button>
+        <button data-format="table" title="Insert Table">⊞</button>
       </div>
-    </div>
 
-    <div class="jt-toolbar-divider"></div>
+      <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group jt-color-group">
-      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-        <span class="jt-color-icon">A</span>
-      </button>
-      <div class="jt-color-dropdown">
+      <div class="jt-toolbar-group">
         <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
         <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
         <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
         <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
       </div>
-    </div>
 
-    <div class="jt-toolbar-divider"></div>
+      <div class="jt-toolbar-divider"></div>
 
-    <div class="jt-toolbar-group">
-      <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
-    </div>
-  `;
+      <div class="jt-toolbar-group">
+        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+      </div>
+    `;
+    } else {
+      // Compact layout with dropdowns (default)
+      toolbarHTML += `
+      <div class="jt-toolbar-group">
+        <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
+          <strong>B</strong>
+        </button>
+        <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
+          <em>I</em>
+        </button>
+        <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
+          <u>U</u>
+        </button>
+        <button data-format="strikethrough" title="Strikethrough (~text~)">
+          <s>S</s>
+        </button>
+      </div>
+
+      <div class="jt-toolbar-divider"></div>
+
+      <div class="jt-toolbar-group jt-dropdown-group">
+        <button class="jt-dropdown-btn" title="Headings">
+          <span>H</span><span class="jt-dropdown-arrow">▾</span>
+        </button>
+        <div class="jt-dropdown-menu">
+          <button data-format="h1" title="Heading 1">H1</button>
+          <button data-format="h2" title="Heading 2">H2</button>
+          <button data-format="h3" title="Heading 3">H3</button>
+        </div>
+      </div>
+
+      <div class="jt-toolbar-divider"></div>
+
+      <div class="jt-toolbar-group jt-dropdown-group">
+        <button class="jt-dropdown-btn" title="More">
+          <span>+</span>
+        </button>
+        <div class="jt-dropdown-menu">
+          <button data-format="bullet" title="Bullet List">• List</button>
+          <button data-format="numbered" title="Numbered List">1. List</button>
+          <button data-format="link" title="Insert Link">🔗 Link</button>
+          <button data-format="quote" title="Quote">❝ Quote</button>
+          <button data-format="table" title="Insert Table">⊞ Table</button>
+        </div>
+      </div>
+
+      <div class="jt-toolbar-divider"></div>
+
+      <div class="jt-toolbar-group jt-color-group">
+        <button data-format="color-picker" title="Text Color" class="jt-color-btn">
+          <span class="jt-color-icon">A</span>
+        </button>
+        <div class="jt-color-dropdown">
+          <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+          <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+          <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+          <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+        </div>
+      </div>
+
+      <div class="jt-toolbar-divider"></div>
+
+      <div class="jt-toolbar-group">
+        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+      </div>
+    `;
+    }
 
     toolbar.innerHTML = toolbarHTML;
 
     // Setup handlers
-    setupDropdowns(toolbar);
-    setupColorPicker(toolbar);
+    if (!expanded) {
+      setupDropdowns(toolbar);
+      setupColorPicker(toolbar);
+    }
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
 
@@ -826,7 +1272,36 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
+    // Check if this is a sidebar field - use embedded toolbar
+    const isSidebar = isSidebarField(field) && !isBudgetDescriptionField(field);
+    if (isSidebar) {
+      // For sidebar fields, embed the toolbar in the DOM (not floating)
+      const embeddedToolbar = embedToolbarForField(field);
+      if (embeddedToolbar) {
+        // Hide any active floating toolbar (but don't remove it)
+        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+          activeToolbar.style.display = 'none';
+        }
+        // Set activeToolbar to embedded toolbar so state updates work
+        activeToolbar = embeddedToolbar;
+        activeField = field;
+        updateToolbarState(field, embeddedToolbar);
+        return;
+      }
+    }
+
+    // For non-sidebar fields, use floating toolbar
     if (activeToolbar && !document.body.contains(activeToolbar)) {
+      activeToolbar = null;
+    }
+
+    // Check if this is a budget Description field (needs expanded toolbar)
+    const needsExpanded = isBudgetDescriptionField(field);
+    const hasExpanded = activeToolbar && activeToolbar.classList.contains('jt-formatter-expanded');
+
+    // If toolbar type doesn't match what we need, recreate it
+    if (activeToolbar && needsExpanded !== hasExpanded) {
+      activeToolbar.remove();
       activeToolbar = null;
     }
 
@@ -838,7 +1313,7 @@ const FormatterToolbar = (() => {
       positionToolbar(activeToolbar, field);
       updateToolbarState(field, activeToolbar);
     } else {
-      const toolbar = createToolbar(field);
+      const toolbar = createToolbar(field, { expanded: needsExpanded });
       positionToolbar(toolbar, field);
       updateToolbarState(field, toolbar);
       activeToolbar = toolbar;
@@ -853,7 +1328,13 @@ const FormatterToolbar = (() => {
     clearHideTimeout();
 
     if (activeToolbar) {
-      activeToolbar.remove();
+      // For embedded toolbars, just hide them (don't remove from DOM)
+      if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+        activeToolbar.style.display = 'none';
+      } else {
+        // For floating toolbars, remove from DOM
+        activeToolbar.remove();
+      }
       activeToolbar = null;
       activeField = null;
     }
