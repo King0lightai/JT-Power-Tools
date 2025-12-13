@@ -724,50 +724,72 @@ const FormatterToolbar = (() => {
     const isBudgetField = isBudgetDescriptionField(field);
 
     if (isBudgetField) {
-      // For budget Description fields, position toolbar aligned with the footer bar
-      // This prevents the toolbar from covering the text being edited
+      // For budget Description fields, dock toolbar inside the footer bar row
+      // This makes it visually connected to the + Item / + Group buttons
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
         const containerRect = scrollContainer.getBoundingClientRect();
-        const toolbarWidth = toolbar.offsetWidth || 300;
 
-        // Find the footer bar (+ Item / + Group row) to align with
+        // Find the footer bar (+ Item / + Group row) to dock inside
         const footerBar = findBudgetFooterBar(field);
-        let top;
 
         if (footerBar) {
-          // Position ABOVE the footer bar (not covering scrollbar)
           const footerRect = footerBar.getBoundingClientRect();
-          top = footerRect.top - toolbarHeight - 8;
+
+          // Position toolbar INSIDE the footer bar row, vertically centered
+          const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
+
+          // Position horizontally: after the + Item / + Group buttons
+          // Find the last button in the footer and position after it
+          const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+          let left;
+
+          if (footerButtons.length > 0) {
+            const lastButton = footerButtons[footerButtons.length - 1];
+            const lastButtonRect = lastButton.getBoundingClientRect();
+            left = lastButtonRect.right + 16; // 16px gap after buttons
+          } else {
+            left = footerRect.left + 16;
+          }
+
+          // Ensure toolbar doesn't go off-screen
+          const toolbarWidth = toolbar.offsetWidth || 300;
+          const viewportWidth = window.innerWidth;
+          if (left + toolbarWidth > viewportWidth - padding) {
+            left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+          }
+
+          toolbar.style.position = 'fixed';
+          toolbar.style.top = `${top}px`;
+          toolbar.style.left = `${left}px`;
+          toolbar.style.visibility = 'visible';
+          toolbar.style.opacity = '1';
+          toolbar.classList.add('jt-toolbar-docked');
+          toolbar.classList.remove('jt-toolbar-sticky');
+          toolbar.classList.remove('jt-toolbar-budget-bottom');
+          return;
         } else {
           // Fallback: position above the bottom of container (leave room for scrollbar)
           const bottomPadding = 50;
-          top = containerRect.bottom - toolbarHeight - bottomPadding;
+          const top = containerRect.bottom - toolbarHeight - bottomPadding;
+          let left = rect.left;
+
+          // Ensure toolbar doesn't go off-screen
+          const toolbarWidth = toolbar.offsetWidth || 300;
+          const viewportWidth = window.innerWidth;
+          if (left + toolbarWidth > viewportWidth - padding) {
+            left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+          }
+
+          toolbar.style.position = 'fixed';
+          toolbar.style.top = `${top}px`;
+          toolbar.style.left = `${left}px`;
+          toolbar.style.visibility = 'visible';
+          toolbar.style.opacity = '1';
+          toolbar.classList.add('jt-toolbar-budget-bottom');
+          toolbar.classList.remove('jt-toolbar-sticky');
+          return;
         }
-
-        // Position horizontally: align with the Description column (field's left edge)
-        // But offset past the frozen Name column
-        let left = rect.left;
-
-        // Ensure toolbar doesn't go off-screen
-        const viewportWidth = window.innerWidth;
-        if (left + toolbarWidth > viewportWidth - padding) {
-          left = Math.max(padding, viewportWidth - toolbarWidth - padding);
-        }
-
-        // Make sure it's not below the viewport
-        if (top + toolbarHeight > viewportHeight - padding) {
-          top = viewportHeight - toolbarHeight - padding;
-        }
-
-        toolbar.style.position = 'fixed';
-        toolbar.style.top = `${top}px`;
-        toolbar.style.left = `${left}px`;
-        toolbar.style.visibility = 'visible';
-        toolbar.style.opacity = '1';
-        toolbar.classList.add('jt-toolbar-budget-bottom');
-        toolbar.classList.remove('jt-toolbar-sticky');
-        return;
       }
     }
 
@@ -1137,6 +1159,16 @@ const FormatterToolbar = (() => {
       `;
     }
 
+    // SVG icons for cleaner look (used in both expanded and compact modes)
+    const icons = {
+      bullet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1" fill="currentColor"></circle><circle cx="3" cy="12" r="1" fill="currentColor"></circle><circle cx="3" cy="18" r="1" fill="currentColor"></circle></svg>',
+      numbered: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><text x="3" y="7" font-size="6" fill="currentColor" stroke="none" font-weight="600">1</text><text x="3" y="13" font-size="6" fill="currentColor" stroke="none" font-weight="600">2</text><text x="3" y="19" font-size="6" fill="currentColor" stroke="none" font-weight="600">3</text></svg>',
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+      quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg>',
+      table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
+    };
+
     if (expanded) {
       // Expanded layout - all buttons visible inline (for budget view)
       toolbarHTML += `
@@ -1166,11 +1198,11 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
 
       <div class="jt-toolbar-group">
-        <button data-format="bullet" title="Bullet List">•</button>
-        <button data-format="numbered" title="Numbered List">1.</button>
-        <button data-format="link" title="Insert Link">🔗</button>
-        <button data-format="quote" title="Quote">❝</button>
-        <button data-format="table" title="Insert Table">⊞</button>
+        <button data-format="bullet" title="Bullet List">${icons.bullet}</button>
+        <button data-format="numbered" title="Numbered List">${icons.numbered}</button>
+        <button data-format="link" title="Insert Link">${icons.link}</button>
+        <button data-format="quote" title="Quote">${icons.quote}</button>
+        <button data-format="table" title="Insert Table">${icons.table}</button>
       </div>
 
       <div class="jt-toolbar-divider"></div>
@@ -1185,7 +1217,7 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
 
       <div class="jt-toolbar-group">
-        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
       </div>
     `;
     } else {
@@ -1226,11 +1258,11 @@ const FormatterToolbar = (() => {
           <span>+</span>
         </button>
         <div class="jt-dropdown-menu">
-          <button data-format="bullet" title="Bullet List">• List</button>
-          <button data-format="numbered" title="Numbered List">1. List</button>
-          <button data-format="link" title="Insert Link">🔗 Link</button>
-          <button data-format="quote" title="Quote">❝ Quote</button>
-          <button data-format="table" title="Insert Table">⊞ Table</button>
+          <button data-format="bullet" title="Bullet List">${icons.bullet} List</button>
+          <button data-format="numbered" title="Numbered List">${icons.numbered} List</button>
+          <button data-format="link" title="Insert Link">${icons.link} Link</button>
+          <button data-format="quote" title="Quote">${icons.quote} Quote</button>
+          <button data-format="table" title="Insert Table">${icons.table} Table</button>
         </div>
       </div>
 
@@ -1251,7 +1283,7 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
 
       <div class="jt-toolbar-group">
-        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
       </div>
     `;
     }
