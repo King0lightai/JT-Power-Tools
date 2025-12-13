@@ -108,8 +108,16 @@ const FreezeHeaderFeature = (() => {
     /* We exclude sidebars with top: 48-50px as these are global overlays that should stay at header level */
     /* We also exclude sidebar headers with top: 0 (e.g., "COST ITEM DETAILS", "Update Task") */
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky) {
+    /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
+    /* Table headers (thead) and z-10 sticky elements inside sidebars should keep their natural position */
+    /* These are internal headers (like Availability view) that shouldn't be affected by freeze header */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] thead.sticky,
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.z-10 {
+      top: 0 !important;
     }
 
     /* Exclude popup/modal sticky elements from freeze header positioning */
