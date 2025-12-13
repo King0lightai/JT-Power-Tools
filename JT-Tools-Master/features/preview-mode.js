@@ -909,14 +909,18 @@ const PreviewModeFeature = (() => {
     };
 
     const colors = colorMap[color] || colorMap.blue;
-    const iconSVG = iconMap[icon] || iconMap.lightbulb;
+    const iconSVG = iconMap[icon] || iconMap.infoCircle;
 
     // Process body inline formatting
     const processedBody = processInlineFormatting(body);
 
+    // Build the icon SVG element
+    const iconElement = `<svg class="jt-alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconSVG}</svg>`;
+
     return `<div class="jt-alert-box ${colors.border} ${colors.bg}">
   <div class="jt-alert-subject ${colors.text}">
-    <div>${escapeHTML(subject)}</div>
+    ${iconElement}
+    <span>${escapeHTML(subject)}</span>
   </div>
   <div class="jt-alert-body">${processedBody}</div>
 </div>`;

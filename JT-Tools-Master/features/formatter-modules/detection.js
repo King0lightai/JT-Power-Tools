@@ -150,125 +150,122 @@ const FormatterDetection = (() => {
       'justify-right': false
     };
 
-    // For selections, check if entire selection is wrapped
-    if (start !== end) {
-      const selection = text.substring(start, end);
-
-      // Check multiple levels of nested formatting
-      let checkStart = start;
-      let checkEnd = end;
-
-      // Keep checking outward for format markers
-      while (checkStart > 0 && checkEnd < text.length) {
-        const charBefore = text[checkStart - 1];
-        const charAfter = text[checkEnd];
-        let foundFormat = false;
-
-        // Check each format type at this level
-        if (charBefore === '*' && charAfter === '*') {
-          activeFormats.bold = true;
-          foundFormat = true;
-        }
-        if (charBefore === '^' && charAfter === '^') {
-          activeFormats.italic = true;
-          foundFormat = true;
-        }
-        if (charBefore === '_' && charAfter === '_') {
-          activeFormats.underline = true;
-          foundFormat = true;
-        }
-        if (charBefore === '~' && charAfter === '~') {
-          activeFormats.strikethrough = true;
-          foundFormat = true;
-        }
-
-        // Move outward to check next level
-        if (foundFormat) {
-          checkStart--;
-          checkEnd++;
-        } else {
-          // No format markers at this level, stop checking
-          break;
-        }
-      }
-
-      // Check for color (look for color tag anywhere before selection on the line)
-      const selLineStart = text.lastIndexOf('\n', start - 1) + 1;
-      const beforeSelection = text.substring(selLineStart, start);
-      // Find the LAST color tag before the selection (in case there are multiple)
-      const colorMatches = beforeSelection.match(/\[!color:(\w+)\]/g);
-      if (colorMatches && colorMatches.length > 0) {
-        const lastColorMatch = colorMatches[colorMatches.length - 1];
-        const colorName = lastColorMatch.match(/\[!color:(\w+)\]/)[1];
-        activeFormats.color = colorName;
-      }
-    } else {
-      // For cursor position, check what we're inside of
-      // Check multiple levels of nesting by repeatedly expanding outward
-      let checkStart = start;
-      let checkEnd = start;
-
-      // Keep expanding to find all nested format boundaries
-      while (checkStart > 0 || checkEnd < text.length) {
-        // Expand to next format boundary
-        while (checkStart > 0 && !'*^_~\n'.includes(text[checkStart - 1])) {
-          checkStart--;
-        }
-        while (checkEnd < text.length && !'*^_~\n'.includes(text[checkEnd])) {
-          checkEnd++;
-        }
-
-        // Check if we're between format markers at this level
-        if (checkStart > 0 && checkEnd < text.length) {
-          const charBefore = text[checkStart - 1];
-          const charAfter = text[checkEnd];
-
-          if (charBefore === '*' && charAfter === '*') {
-            activeFormats.bold = true;
-          }
-          if (charBefore === '^' && charAfter === '^') {
-            activeFormats.italic = true;
-          }
-          if (charBefore === '_' && charAfter === '_') {
-            activeFormats.underline = true;
-          }
-          if (charBefore === '~' && charAfter === '~') {
-            activeFormats.strikethrough = true;
-          }
-
-          // Move outward to check next level of nesting
-          checkStart--;
-          checkEnd++;
-        } else {
-          // No more format markers to check
-          break;
-        }
-      }
-
-      // Check for color (look for color tag anywhere before cursor on the line)
-      const curLineStart = text.lastIndexOf('\n', start - 1) + 1;
-      const beforeCursor = text.substring(curLineStart, start);
-      // Find the LAST color tag before the cursor (in case there are multiple)
-      const colorMatches = beforeCursor.match(/\[!color:(\w+)\]/g);
-      if (colorMatches && colorMatches.length > 0) {
-        const lastColorMatch = colorMatches[colorMatches.length - 1];
-        const colorName = lastColorMatch.match(/\[!color:(\w+)\]/)[1];
-        activeFormats.color = colorName;
-      }
-    }
-
-    // Check line-level formats (justify)
+    // Get the current line for line-level format detection
     const lineStart = text.lastIndexOf('\n', start - 1) + 1;
     const lineEnd = text.indexOf('\n', start);
     const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
 
+    // Check line-level formats (justify)
     if (currentLine.trim().startsWith('-:-')) {
       activeFormats['justify-center'] = true;
     } else if (currentLine.trim().startsWith('--:')) {
       activeFormats['justify-right'] = true;
     }
 
+    // Check for color on the current line
+    const colorMatch = currentLine.match(/^\[!color:(\w+)\]/);
+    if (colorMatch) {
+      activeFormats.color = colorMatch[1];
+    }
+
+    // For inline formats (bold, italic, underline, strikethrough),
+    // we need to check if the cursor/selection is inside format markers
+    const markerMap = {
+      '*': 'bold',
+      '^': 'italic',
+      '_': 'underline',
+      '~': 'strikethrough'
+    };
+
+    // Check each format type
+    for (const [marker, formatName] of Object.entries(markerMap)) {
+      if (isInsideFormat(text, start, end, marker)) {
+        activeFormats[formatName] = true;
+      }
+    }
+
     return activeFormats;
+  }
+
+  /**
+   * Check if cursor/selection is inside a specific format
+   * @param {string} text - Full text content
+   * @param {number} start - Selection start
+   * @param {number} end - Selection end
+   * @param {string} marker - Format marker character
+   * @returns {boolean} True if inside the format
+   */
+  function isInsideFormat(text, start, end, marker) {
+    // Get the current line boundaries (formats don't span lines)
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const lineEnd = text.indexOf('\n', end);
+    const lineEndPos = lineEnd === -1 ? text.length : lineEnd;
+    const lineText = text.substring(lineStart, lineEndPos);
+
+    // Adjust positions to be relative to line
+    const relStart = start - lineStart;
+    const relEnd = end - lineStart;
+
+    // Find all marker pairs on this line
+    const pairs = findMarkerPairs(lineText, marker);
+
+    // Check if cursor/selection is inside any pair
+    for (const pair of pairs) {
+      if (start !== end) {
+        // For a selection, check if it's:
+        // 1. Exactly wrapped by markers (for toggle off): *[hello]*
+        // 2. Fully contained within markers: *[hel]lo* or *he[ll]o*
+        const isExactlyWrapped = (pair.open === relStart - 1 && pair.close === relEnd);
+        const isContainedWithin = (relStart > pair.open && relEnd <= pair.close);
+        if (isExactlyWrapped || isContainedWithin) {
+          return true;
+        }
+      } else {
+        // Cursor is inside if between open and close markers (exclusive of markers)
+        if (relStart > pair.open && relStart <= pair.close) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Find all paired markers on a line
+   * @param {string} line - Line text
+   * @param {string} marker - Marker character
+   * @returns {Array} Array of {open, close} positions
+   */
+  function findMarkerPairs(line, marker) {
+    const pairs = [];
+    let i = 0;
+
+    while (i < line.length) {
+      if (line[i] === marker) {
+        // Found opening marker, look for closing marker
+        const openPos = i;
+        let closePos = -1;
+
+        for (let j = i + 1; j < line.length; j++) {
+          if (line[j] === marker) {
+            closePos = j;
+            break;
+          }
+        }
+
+        if (closePos !== -1) {
+          pairs.push({ open: openPos, close: closePos });
+          i = closePos + 1;
+        } else {
+          i++;
+        }
+      } else {
+        i++;
+      }
+    }
+
+    return pairs;
   }
 
   // Public API
