@@ -513,12 +513,12 @@ const FormatterToolbar = (() => {
         let top;
 
         if (footerBar) {
-          // Align vertically centered with the footer bar
+          // Position ABOVE the footer bar (not covering scrollbar)
           const footerRect = footerBar.getBoundingClientRect();
-          top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
+          top = footerRect.top - toolbarHeight - 8;
         } else {
-          // Fallback: position at bottom of container
-          const bottomPadding = 8;
+          // Fallback: position above the bottom of container (leave room for scrollbar)
+          const bottomPadding = 50;
           top = containerRect.bottom - toolbarHeight - bottomPadding;
         }
 
