@@ -488,8 +488,8 @@
   }
 
   .jt-preview-content blockquote {
-    border-left-color: #4b5563;
-    color: #9ca3af;
+    border-left-color: #fbbf24; /* Yellow/gold in dark mode */
+    color: #d1d5db;
   }
 
   .jt-preview-content::-webkit-scrollbar-track {
