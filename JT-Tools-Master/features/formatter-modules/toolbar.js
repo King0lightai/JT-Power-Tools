@@ -268,7 +268,7 @@ const FormatterToolbar = (() => {
       <button class="jt-dropdown-btn" title="More">
         <span>+</span>
       </button>
-      <div class="jt-dropdown-menu jt-dropdown-menu-up">
+      <div class="jt-dropdown-menu">
         <button data-format="bullet" title="Bullet List">• List</button>
         <button data-format="numbered" title="Numbered List">1. List</button>
         <button data-format="link" title="Insert Link">🔗 Link</button>
@@ -283,7 +283,7 @@ const FormatterToolbar = (() => {
       <button data-format="color-picker" title="Text Color" class="jt-color-btn">
         <span class="jt-color-icon">A</span>
       </button>
-      <div class="jt-color-dropdown jt-dropdown-menu-up">
+      <div class="jt-color-dropdown">
         <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
         <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
         <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
