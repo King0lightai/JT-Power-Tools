@@ -1333,7 +1333,13 @@ const FormatterToolbar = (() => {
     clearHideTimeout();
 
     if (activeToolbar) {
-      activeToolbar.remove();
+      // For embedded toolbars, just hide them (don't remove from DOM)
+      if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+        activeToolbar.style.display = 'none';
+      } else {
+        // For floating toolbars, remove from DOM
+        activeToolbar.remove();
+      }
       activeToolbar = null;
       activeField = null;
     }
