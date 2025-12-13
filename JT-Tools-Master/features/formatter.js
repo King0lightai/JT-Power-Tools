@@ -285,6 +285,8 @@ const FormatterFeature = (() => {
         field.addEventListener('input', () => handleFieldInput(field), { signal });
         field.addEventListener('click', () => handleFieldClick(field), { signal });
         field.addEventListener('keyup', () => handleFieldKeyup(field), { signal });
+        // Use select event for more reliable cursor/selection change detection
+        field.addEventListener('select', () => handleFieldSelectionChange(field), { signal });
       }
     });
   }
@@ -346,6 +348,14 @@ const FormatterFeature = (() => {
   }
 
   function handleFieldKeyup(field) {
+    const activeToolbar = Toolbar().getActiveToolbar();
+    const activeField = Toolbar().getActiveField();
+    if (activeToolbar && activeField === field) {
+      Toolbar().updateToolbarState(field, activeToolbar);
+    }
+  }
+
+  function handleFieldSelectionChange(field) {
     const activeToolbar = Toolbar().getActiveToolbar();
     const activeField = Toolbar().getActiveField();
     if (activeToolbar && activeField === field) {

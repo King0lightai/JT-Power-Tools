@@ -1283,10 +1283,12 @@ const FormatterToolbar = (() => {
       // For sidebar fields, embed the toolbar in the DOM (not floating)
       const embeddedToolbar = embedToolbarForField(field);
       if (embeddedToolbar) {
-        // Hide any active floating toolbar
+        // Hide any active floating toolbar (but don't remove it)
         if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
           activeToolbar.style.display = 'none';
         }
+        // Set activeToolbar to embedded toolbar so state updates work
+        activeToolbar = embeddedToolbar;
         activeField = field;
         updateToolbarState(field, embeddedToolbar);
         return;
