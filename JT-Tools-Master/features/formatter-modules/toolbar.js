@@ -129,6 +129,182 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Find the label element for a field (to embed toolbar after it)
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findFieldLabel(field) {
+    // Check for associated label via id
+    if (field.id) {
+      const label = document.querySelector(`label[for="${field.id}"]`);
+      if (label) return label;
+    }
+
+    // Look for label as previous sibling or parent's previous sibling
+    let element = field.previousElementSibling;
+    while (element) {
+      if (element.tagName === 'LABEL' || element.classList.contains('label') ||
+          element.textContent.includes('Description') || element.textContent.includes('Notes')) {
+        return element;
+      }
+      element = element.previousElementSibling;
+    }
+
+    // Check parent for label
+    const parent = field.parentElement;
+    if (parent) {
+      element = parent.previousElementSibling;
+      while (element) {
+        if (element.tagName === 'LABEL' || element.classList.contains('label') ||
+            element.textContent.includes('Description') || element.textContent.includes('Notes')) {
+          return element;
+        }
+        // Also check if it's a wrapper containing a label
+        const innerLabel = element.querySelector('label, .label');
+        if (innerLabel) return innerLabel;
+        element = element.previousElementSibling;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Check if a toolbar is already embedded for this field
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findEmbeddedToolbar(field) {
+    // Check if there's already an embedded toolbar before this field
+    let sibling = field.previousElementSibling;
+    while (sibling) {
+      if (sibling.classList.contains('jt-formatter-toolbar-embedded')) {
+        return sibling;
+      }
+      sibling = sibling.previousElementSibling;
+    }
+
+    // Also check parent's children
+    const parent = field.parentElement;
+    if (parent) {
+      const embedded = parent.querySelector('.jt-formatter-toolbar-embedded');
+      if (embedded) return embedded;
+    }
+
+    return null;
+  }
+
+  /**
+   * Create and embed toolbar between label and field for sidebar fields
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function embedToolbarForField(field) {
+    // Check if already embedded
+    let toolbar = findEmbeddedToolbar(field);
+    if (toolbar) {
+      toolbar.style.display = 'flex';
+      return toolbar;
+    }
+
+    // Create the toolbar
+    toolbar = document.createElement('div');
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-compact';
+
+    // Check if PreviewModeFeature is available and active
+    const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
+
+    // Build toolbar HTML (compact with dropdowns for sidebar)
+    let toolbarHTML = '';
+
+    if (hasPreviewMode) {
+      toolbarHTML += `
+      <button class="jt-preview-toggle" data-action="preview" title="Preview">
+        <span>Preview</span>
+      </button>
+      <div class="jt-toolbar-divider"></div>
+      `;
+    }
+
+    toolbarHTML += `
+    <div class="jt-toolbar-group">
+      <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
+        <strong>B</strong>
+      </button>
+      <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
+        <em>I</em>
+      </button>
+      <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
+        <u>U</u>
+      </button>
+      <button data-format="strikethrough" title="Strikethrough (~text~)">
+        <s>S</s>
+      </button>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group">
+      <button data-format="h1" title="Heading 1">H1</button>
+      <button data-format="h2" title="Heading 2">H2</button>
+      <button data-format="h3" title="Heading 3">H3</button>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-dropdown-group">
+      <button class="jt-dropdown-btn" title="More">
+        <span>+</span>
+      </button>
+      <div class="jt-dropdown-menu jt-dropdown-menu-up">
+        <button data-format="bullet" title="Bullet List">• List</button>
+        <button data-format="numbered" title="Numbered List">1. List</button>
+        <button data-format="link" title="Insert Link">🔗 Link</button>
+        <button data-format="quote" title="Quote">❝ Quote</button>
+        <button data-format="table" title="Insert Table">⊞ Table</button>
+      </div>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group jt-color-group">
+      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
+        <span class="jt-color-icon">A</span>
+      </button>
+      <div class="jt-color-dropdown jt-dropdown-menu-up">
+        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
+        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
+        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
+        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
+      </div>
+    </div>
+
+    <div class="jt-toolbar-divider"></div>
+
+    <div class="jt-toolbar-group">
+      <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+    </div>
+  `;
+
+    toolbar.innerHTML = toolbarHTML;
+
+    // Setup handlers
+    setupDropdowns(toolbar);
+    setupColorPicker(toolbar);
+    setupFormatButtons(toolbar, field);
+    setupCustomTooltips(toolbar);
+
+    if (hasPreviewMode) {
+      setupPreviewButton(toolbar, field);
+    }
+
+    // Insert toolbar before the field (after the label)
+    field.parentElement.insertBefore(toolbar, field);
+
+    return toolbar;
+  }
+
+  /**
    * Find the budget table footer bar
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
@@ -1060,6 +1236,23 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
+    // Check if this is a sidebar field - use embedded toolbar
+    const isSidebar = isSidebarField(field) && !isBudgetDescriptionField(field);
+    if (isSidebar) {
+      // For sidebar fields, embed the toolbar in the DOM (not floating)
+      const embeddedToolbar = embedToolbarForField(field);
+      if (embeddedToolbar) {
+        // Hide any active floating toolbar
+        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+          activeToolbar.style.display = 'none';
+        }
+        activeField = field;
+        updateToolbarState(field, embeddedToolbar);
+        return;
+      }
+    }
+
+    // For non-sidebar fields, use floating toolbar
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
     }
