@@ -1366,11 +1366,29 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is inside the Alert modal (which has its own formatter toolbar)
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isAlertModalField(field) {
+    if (!field) return false;
+    // Check if field is inside our custom Alert modal
+    return field.closest('.jt-alert-modal-overlay') !== null ||
+           field.closest('.jt-alert-modal') !== null ||
+           field.classList.contains('jt-alert-message');
+  }
+
+  /**
    * Show the toolbar for a field
    * @param {HTMLTextAreaElement} field
    */
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
+
+    // Don't show floating toolbar for Alert modal fields (they have their own built-in toolbar)
+    if (isAlertModalField(field)) {
+      return;
+    }
 
     clearHideTimeout();
 
