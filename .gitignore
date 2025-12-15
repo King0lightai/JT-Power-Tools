@@ -59,6 +59,10 @@ key.pem
 *.backup
 *~
 
+# Local development files
+.extension-test-profile/
+.mcp.json
+
 # Dependencies lock files (optional - some prefer to commit these)
 # package-lock.json
 # yarn.lock

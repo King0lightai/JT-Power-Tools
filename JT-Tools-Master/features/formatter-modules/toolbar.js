@@ -66,29 +66,39 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside a sidebar/panel
+   * Check if a field is inside a sidebar/panel (NOT a modal)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isSidebarField(field) {
     if (!field) return false;
 
+    // First, exclude modals/popups - they use centered auto-margin layout
+    // This catches NEW JOB MESSAGE popup and similar
+    const modalContainer = field.closest('.m-auto');
+    if (modalContainer) {
+      return false;
+    }
+
     // Check for JobTread's drag-scroll-boundary (sidebars use this)
+    // This is the primary and most reliable sidebar indicator
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return true;
 
-    // Check for common sidebar/panel patterns
-    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    // Check for common sidebar/panel patterns (but NOT modals/dialogs)
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return true;
 
-    // Check if inside a fixed/absolute positioned container that looks like a sidebar
+    // Check if inside a fixed/absolute positioned container on the RIGHT side of screen
+    // (sidebars in JobTread typically appear on the right)
     let parent = field.parentElement;
     while (parent && parent !== document.body) {
       const style = window.getComputedStyle(parent);
       if (style.position === 'fixed' || style.position === 'absolute') {
         const rect = parent.getBoundingClientRect();
-        // Sidebars are typically narrow (< 600px) and tall
-        if (rect.width < 600 && rect.height > 200) {
+        // Sidebars are typically narrow (< 600px), tall, and positioned on the right
+        const isOnRight = rect.left > window.innerWidth * 0.5;
+        if (rect.width < 600 && rect.height > 200 && isOnRight) {
           return true;
         }
       }
@@ -108,8 +118,8 @@ const FormatterToolbar = (() => {
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return dragScrollContainer;
 
-    // Try common sidebar patterns
-    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"], [class*="modal"], [class*="dialog"]');
+    // Try common sidebar patterns (but NOT modals/dialogs)
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return sidebar;
 
     // Find fixed/absolute container
@@ -208,6 +218,7 @@ const FormatterToolbar = (() => {
 
   /**
    * Create and embed toolbar between label and field for sidebar fields
+   * Uses responsive overflow - buttons that don't fit go into the ... menu
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
@@ -216,93 +227,84 @@ const FormatterToolbar = (() => {
     let toolbar = findEmbeddedToolbar(field);
     if (toolbar) {
       toolbar.style.display = 'flex';
+      // Re-run overflow check in case width changed
+      requestAnimationFrame(() => updateToolbarOverflow(toolbar));
       return toolbar;
     }
 
     // Create the toolbar
     toolbar = document.createElement('div');
-    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-compact';
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-responsive-toolbar';
+
+    // Note: Previously added jt-sidebar-sticky for sticky positioning, but this caused
+    // overlap issues with textarea fields like Message. Now the toolbar flows naturally
+    // in the document, pushing content down rather than overlapping it.
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
 
-    // Build toolbar HTML (semi-expanded - headers and colors in dropdowns, rest inline)
+    // SVG icons for cleaner look
+    const icons = {
+      bullet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1" fill="currentColor"></circle><circle cx="3" cy="12" r="1" fill="currentColor"></circle><circle cx="3" cy="18" r="1" fill="currentColor"></circle></svg>',
+      numbered: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><text x="3" y="7" font-size="6" fill="currentColor" stroke="none" font-weight="600">1</text><text x="3" y="13" font-size="6" fill="currentColor" stroke="none" font-weight="600">2</text><text x="3" y="19" font-size="6" fill="currentColor" stroke="none" font-weight="600">3</text></svg>',
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+      quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg>',
+      table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+      color: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5" fill="#ef4444" stroke="none"></circle><circle cx="17.5" cy="10.5" r="2.5" fill="#f59e0b" stroke="none"></circle><circle cx="8.5" cy="7.5" r="2.5" fill="#3b82f6" stroke="none"></circle><circle cx="6.5" cy="12.5" r="2.5" fill="#10b981" stroke="none"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"></path></svg>',
+      alignLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="15" y2="12"></line><line x1="3" y1="18" x2="18" y2="18"></line></svg>',
+      alignCenter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="6" y1="12" x2="18" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>',
+      alignRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="9" y1="12" x2="21" y2="12"></line><line x1="6" y1="18" x2="21" y2="18"></line></svg>',
+      hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg>'
+    };
+
+    // SVG for more icon (three dots)
+    const moreIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>';
+
+    // Build toolbar with all buttons inline (will be managed by overflow logic)
     let toolbarHTML = '';
 
     if (hasPreviewMode) {
-      toolbarHTML += `
-      <button class="jt-preview-toggle" data-action="preview" title="Preview">
-        <span>Preview</span>
-      </button>
-      <div class="jt-toolbar-divider"></div>
-      `;
+      toolbarHTML += `<button class="jt-preview-toggle jt-toolbar-item" data-action="preview" data-priority="0" title="Preview"><span>Preview</span></button>`;
     }
 
+    // All buttons in priority order (lower = more important, shown first)
     toolbarHTML += `
-    <div class="jt-toolbar-group">
-      <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
-        <strong>B</strong>
-      </button>
-      <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
-        <em>I</em>
-      </button>
-      <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
-        <u>U</u>
-      </button>
-      <button data-format="strikethrough" title="Strikethrough (~text~)">
-        <s>S</s>
-      </button>
-    </div>
+      <button class="jt-toolbar-item" data-format="bold" data-priority="1" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
+      <button class="jt-toolbar-item" data-format="italic" data-priority="2" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
+      <button class="jt-toolbar-item" data-format="underline" data-priority="3" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
+      <button class="jt-toolbar-item" data-format="strikethrough" data-priority="4" title="Strikethrough (~text~)"><s>S</s></button>
+      <button class="jt-toolbar-item" data-format="h1" data-priority="5" title="Heading 1">H<sub>1</sub></button>
+      <button class="jt-toolbar-item" data-format="h2" data-priority="6" title="Heading 2">H<sub>2</sub></button>
+      <button class="jt-toolbar-item" data-format="h3" data-priority="7" title="Heading 3">H<sub>3</sub></button>
+      <button class="jt-toolbar-item" data-format="justify-left" data-priority="8" title="Align Left (:--)">${icons.alignLeft}</button>
+      <button class="jt-toolbar-item" data-format="justify-center" data-priority="9" title="Align Center (-:-)">${icons.alignCenter}</button>
+      <button class="jt-toolbar-item" data-format="justify-right" data-priority="10" title="Align Right (--:)">${icons.alignRight}</button>
+      <button class="jt-toolbar-item" data-format="bullet" data-priority="11" title="Bullet List">${icons.bullet}</button>
+      <button class="jt-toolbar-item" data-format="numbered" data-priority="12" title="Numbered List">${icons.numbered}</button>
+      <button class="jt-toolbar-item" data-format="link" data-priority="13" title="Insert Link">${icons.link}</button>
+      <button class="jt-toolbar-item" data-format="quote" data-priority="14" title="Quote">${icons.quote}</button>
+      <button class="jt-toolbar-item" data-format="table" data-priority="15" title="Insert Table">${icons.table}</button>
+      <button class="jt-toolbar-item" data-format="hr" data-priority="16" title="Horizontal Rule (---)">${icons.hr}</button>
+      <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="17" title="Green">A</button>
+      <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="18" title="Yellow">A</button>
+      <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="19" title="Blue">A</button>
+      <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="20" title="Red">A</button>
+      <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="21" title="Insert Alert">${icons.alert}</button>
+    `;
 
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group jt-dropdown-group">
-      <button class="jt-dropdown-btn" title="Headings">
-        <span>H</span><span class="jt-dropdown-arrow">▾</span>
-      </button>
-      <div class="jt-dropdown-menu">
-        <button data-format="h1" title="Heading 1">H1</button>
-        <button data-format="h2" title="Heading 2">H2</button>
-        <button data-format="h3" title="Heading 3">H3</button>
+    // More menu (always visible, contains overflow items)
+    toolbarHTML += `
+      <div class="jt-overflow-menu">
+        <button class="jt-overflow-btn" title="More options">${moreIcon}</button>
+        <div class="jt-overflow-dropdown"></div>
       </div>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group">
-      <button data-format="bullet" title="Bullet List">•</button>
-      <button data-format="numbered" title="Numbered List">1.</button>
-      <button data-format="link" title="Insert Link">🔗</button>
-      <button data-format="quote" title="Quote">❝</button>
-      <button data-format="table" title="Insert Table">⊞</button>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group jt-color-group">
-      <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-        <span class="jt-color-icon">A</span>
-      </button>
-      <div class="jt-color-dropdown">
-        <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-        <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-        <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-        <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
-      </div>
-    </div>
-
-    <div class="jt-toolbar-divider"></div>
-
-    <div class="jt-toolbar-group">
-      <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
-    </div>
-  `;
+    `;
 
     toolbar.innerHTML = toolbarHTML;
 
     // Setup handlers
-    setupDropdowns(toolbar);
-    setupColorPicker(toolbar);
+    setupResponsiveToolbar(toolbar);
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
 
@@ -713,50 +715,91 @@ const FormatterToolbar = (() => {
     const isBudgetField = isBudgetDescriptionField(field);
 
     if (isBudgetField) {
-      // For budget Description fields, position toolbar aligned with the footer bar
-      // This prevents the toolbar from covering the text being edited
+      // For budget Description fields, dock toolbar inside the footer bar row
+      // The footer bar with + Item / + Group is always visible at the bottom
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
-        const containerRect = scrollContainer.getBoundingClientRect();
-        const toolbarWidth = toolbar.offsetWidth || 300;
+        // Find the footer bar (+ Item / + Group row) - it's OUTSIDE the scroll container
+        // The footer bar is a sibling of the scroll container's parent
+        let footerBar = findBudgetFooterBar(field);
 
-        // Find the footer bar (+ Item / + Group row) to align with
-        const footerBar = findBudgetFooterBar(field);
-        let top;
+        // If not found inside, look for it as the last visible row with the buttons
+        if (!footerBar) {
+          // Try finding the footer bar by looking for the bg-gray-700 buttons
+          const allButtons = document.querySelectorAll('[role="button"].bg-gray-700');
+          for (const btn of allButtons) {
+            if (btn.textContent.includes('Item') || btn.textContent.includes('Group')) {
+              footerBar = btn.closest('.flex.min-w-max');
+              break;
+            }
+          }
+        }
 
         if (footerBar) {
-          // Position ABOVE the footer bar (not covering scrollbar)
           const footerRect = footerBar.getBoundingClientRect();
-          top = footerRect.top - toolbarHeight - 8;
+
+          // Position toolbar INSIDE the footer bar row, vertically centered
+          const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
+
+          // Position horizontally: after the + Item / + Group buttons
+          // Find the container with the buttons (usually the second cell with width 300px)
+          const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
+                                  footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
+          let left;
+
+          if (buttonContainer) {
+            const containerRect = buttonContainer.getBoundingClientRect();
+            left = containerRect.right + 16; // Position after the button container
+          } else {
+            // Fallback: find the last button and position after it
+            const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+            if (footerButtons.length > 0) {
+              const lastButton = footerButtons[footerButtons.length - 1];
+              const lastButtonRect = lastButton.getBoundingClientRect();
+              left = lastButtonRect.right + 16;
+            } else {
+              left = footerRect.left + 350; // Approximate position after Name column
+            }
+          }
+
+          // Ensure toolbar doesn't go off-screen
+          const toolbarWidth = toolbar.offsetWidth || 500;
+          const viewportWidth = window.innerWidth;
+          if (left + toolbarWidth > viewportWidth - padding) {
+            left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+          }
+
+          toolbar.style.position = 'fixed';
+          toolbar.style.top = `${top}px`;
+          toolbar.style.left = `${left}px`;
+          toolbar.style.visibility = 'visible';
+          toolbar.style.opacity = '1';
+          toolbar.classList.add('jt-toolbar-docked');
+          toolbar.classList.remove('jt-toolbar-sticky');
+          toolbar.classList.remove('jt-toolbar-budget-bottom');
+          return;
         } else {
-          // Fallback: position above the bottom of container (leave room for scrollbar)
-          const bottomPadding = 50;
-          top = containerRect.bottom - toolbarHeight - bottomPadding;
+          // Fallback: position at bottom of viewport above scroll area
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const top = containerRect.bottom - toolbarHeight - 8;
+          let left = rect.left;
+
+          // Ensure toolbar doesn't go off-screen
+          const toolbarWidth = toolbar.offsetWidth || 500;
+          const viewportWidth = window.innerWidth;
+          if (left + toolbarWidth > viewportWidth - padding) {
+            left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+          }
+
+          toolbar.style.position = 'fixed';
+          toolbar.style.top = `${top}px`;
+          toolbar.style.left = `${left}px`;
+          toolbar.style.visibility = 'visible';
+          toolbar.style.opacity = '1';
+          toolbar.classList.add('jt-toolbar-budget-bottom');
+          toolbar.classList.remove('jt-toolbar-sticky');
+          return;
         }
-
-        // Position horizontally: align with the Description column (field's left edge)
-        // But offset past the frozen Name column
-        let left = rect.left;
-
-        // Ensure toolbar doesn't go off-screen
-        const viewportWidth = window.innerWidth;
-        if (left + toolbarWidth > viewportWidth - padding) {
-          left = Math.max(padding, viewportWidth - toolbarWidth - padding);
-        }
-
-        // Make sure it's not below the viewport
-        if (top + toolbarHeight > viewportHeight - padding) {
-          top = viewportHeight - toolbarHeight - padding;
-        }
-
-        toolbar.style.position = 'fixed';
-        toolbar.style.top = `${top}px`;
-        toolbar.style.left = `${left}px`;
-        toolbar.style.visibility = 'visible';
-        toolbar.style.opacity = '1';
-        toolbar.classList.add('jt-toolbar-budget-bottom');
-        toolbar.classList.remove('jt-toolbar-sticky');
-        return;
       }
     }
 
@@ -959,6 +1002,192 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Setup more dropdown handlers (for embedded toolbar - legacy)
+   * @param {HTMLElement} toolbar
+   */
+  function setupMoreDropdown(toolbar) {
+    const moreGroup = toolbar.querySelector('.jt-more-group');
+    if (!moreGroup) return;
+
+    const moreBtn = moreGroup.querySelector('.jt-more-btn');
+    const moreDropdown = moreGroup.querySelector('.jt-more-dropdown');
+
+    if (!moreBtn || !moreDropdown) return;
+
+    moreBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Close other dropdowns
+      toolbar.querySelectorAll('.jt-dropdown-menu').forEach(menu => {
+        menu.classList.remove('jt-dropdown-visible');
+      });
+      const colorDropdown = toolbar.querySelector('.jt-color-dropdown');
+      if (colorDropdown) {
+        colorDropdown.classList.remove('jt-color-dropdown-visible');
+      }
+
+      moreDropdown.classList.toggle('jt-more-dropdown-visible');
+    });
+
+    // Close more dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.jt-more-group')) {
+        moreDropdown.classList.remove('jt-more-dropdown-visible');
+      }
+    });
+
+    // Close more dropdown after clicking a button inside it
+    moreDropdown.querySelectorAll('button[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Small delay to allow the format to be applied first
+        setTimeout(() => {
+          moreDropdown.classList.remove('jt-more-dropdown-visible');
+        }, 50);
+      });
+    });
+  }
+
+  /**
+   * Update toolbar overflow - move buttons that don't fit into the overflow menu
+   * @param {HTMLElement} toolbar
+   */
+  function updateToolbarOverflow(toolbar) {
+    if (!toolbar || !toolbar.classList.contains('jt-responsive-toolbar')) return;
+
+    const overflowMenu = toolbar.querySelector('.jt-overflow-menu');
+    const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
+    const overflowBtn = toolbar.querySelector('.jt-overflow-btn');
+
+    if (!overflowMenu || !overflowDropdown) return;
+
+    // Get all toolbar items (buttons with data-priority)
+    const allItems = Array.from(toolbar.querySelectorAll('.jt-toolbar-item'));
+
+    // Reset - move all items back to toolbar (before overflow menu)
+    allItems.forEach(item => {
+      item.style.display = '';
+      item.classList.remove('jt-in-overflow');
+      if (item.parentElement === overflowDropdown) {
+        toolbar.insertBefore(item, overflowMenu);
+      }
+    });
+
+    // Get available width (toolbar width minus overflow button width and padding)
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const overflowBtnWidth = 36; // Approximate width of overflow button
+    const padding = 16; // Toolbar padding
+    const availableWidth = toolbarRect.width - overflowBtnWidth - padding;
+
+    // Calculate cumulative width of visible items
+    let currentWidth = 0;
+    let hasOverflow = false;
+
+    // Sort items by priority
+    const sortedItems = [...allItems].sort((a, b) => {
+      return parseInt(a.dataset.priority || '999') - parseInt(b.dataset.priority || '999');
+    });
+
+    sortedItems.forEach(item => {
+      // Temporarily show to measure
+      item.style.display = '';
+      const itemWidth = item.offsetWidth + 2; // 2px gap
+
+      if (currentWidth + itemWidth <= availableWidth) {
+        currentWidth += itemWidth;
+        item.classList.remove('jt-in-overflow');
+      } else {
+        // Move to overflow dropdown
+        hasOverflow = true;
+        item.classList.add('jt-in-overflow');
+        overflowDropdown.appendChild(item);
+      }
+    });
+
+    // Show/hide overflow button based on whether there are overflow items
+    overflowMenu.style.display = hasOverflow ? '' : 'none';
+  }
+
+  /**
+   * Setup responsive toolbar with overflow behavior
+   * @param {HTMLElement} toolbar
+   */
+  function setupResponsiveToolbar(toolbar) {
+    const overflowMenu = toolbar.querySelector('.jt-overflow-menu');
+    const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
+    const overflowBtn = toolbar.querySelector('.jt-overflow-btn');
+
+    if (!overflowMenu || !overflowDropdown || !overflowBtn) return;
+
+    // Position dropdown using fixed positioning to escape stacking contexts
+    function positionDropdown() {
+      const btnRect = overflowBtn.getBoundingClientRect();
+      const dropdownWidth = overflowDropdown.offsetWidth || 160;
+
+      // Position below button, aligned to right edge
+      let top = btnRect.bottom + 4;
+      let left = btnRect.right - dropdownWidth;
+
+      // Ensure dropdown doesn't go off screen
+      if (left < 8) left = 8;
+      if (top + 200 > window.innerHeight) {
+        // Position above button if not enough space below
+        top = btnRect.top - overflowDropdown.offsetHeight - 4;
+      }
+
+      overflowDropdown.style.position = 'fixed';
+      overflowDropdown.style.top = `${top}px`;
+      overflowDropdown.style.left = `${left}px`;
+      overflowDropdown.style.right = 'auto';
+    }
+
+    // Toggle overflow dropdown
+    overflowBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isVisible = overflowDropdown.classList.contains('jt-overflow-dropdown-visible');
+      overflowDropdown.classList.toggle('jt-overflow-dropdown-visible');
+
+      // Position dropdown when opening
+      if (!isVisible) {
+        requestAnimationFrame(positionDropdown);
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.jt-overflow-menu')) {
+        overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+      }
+    });
+
+    // Close dropdown after clicking a button inside it
+    overflowDropdown.addEventListener('click', (e) => {
+      if (e.target.closest('button[data-format]') || e.target.closest('button[data-action]')) {
+        setTimeout(() => {
+          overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+        }, 50);
+      }
+    });
+
+    // Initial overflow calculation (after render)
+    requestAnimationFrame(() => {
+      updateToolbarOverflow(toolbar);
+    });
+
+    // Watch for resize
+    if (window.ResizeObserver) {
+      const resizeObserver = new ResizeObserver(() => {
+        updateToolbarOverflow(toolbar);
+      });
+      resizeObserver.observe(toolbar);
+
+      // Store reference for cleanup
+      toolbar._resizeObserver = resizeObserver;
+    }
+  }
+
+  /**
    * Setup format button handlers
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
@@ -1109,7 +1338,7 @@ const FormatterToolbar = (() => {
     const toolbar = document.createElement('div');
     toolbar.className = expanded
       ? 'jt-formatter-toolbar jt-formatter-expanded'
-      : 'jt-formatter-toolbar jt-formatter-compact';
+      : 'jt-formatter-toolbar jt-responsive-toolbar';
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
@@ -1125,6 +1354,20 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
       `;
     }
+
+    // SVG icons for cleaner look (used in both expanded and compact modes)
+    const icons = {
+      bullet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1" fill="currentColor"></circle><circle cx="3" cy="12" r="1" fill="currentColor"></circle><circle cx="3" cy="18" r="1" fill="currentColor"></circle></svg>',
+      numbered: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><text x="3" y="7" font-size="6" fill="currentColor" stroke="none" font-weight="600">1</text><text x="3" y="13" font-size="6" fill="currentColor" stroke="none" font-weight="600">2</text><text x="3" y="19" font-size="6" fill="currentColor" stroke="none" font-weight="600">3</text></svg>',
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+      quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg>',
+      table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+      alignLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="15" y2="12"></line><line x1="3" y1="18" x2="18" y2="18"></line></svg>',
+      alignCenter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="6" y1="12" x2="18" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>',
+      alignRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="9" y1="12" x2="21" y2="12"></line><line x1="6" y1="18" x2="21" y2="18"></line></svg>',
+      hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg>'
+    };
 
     if (expanded) {
       // Expanded layout - all buttons visible inline (for budget view)
@@ -1155,11 +1398,20 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
 
       <div class="jt-toolbar-group">
-        <button data-format="bullet" title="Bullet List">•</button>
-        <button data-format="numbered" title="Numbered List">1.</button>
-        <button data-format="link" title="Insert Link">🔗</button>
-        <button data-format="quote" title="Quote">❝</button>
-        <button data-format="table" title="Insert Table">⊞</button>
+        <button data-format="bullet" title="Bullet List">${icons.bullet}</button>
+        <button data-format="numbered" title="Numbered List">${icons.numbered}</button>
+        <button data-format="link" title="Insert Link">${icons.link}</button>
+        <button data-format="quote" title="Quote">${icons.quote}</button>
+        <button data-format="table" title="Insert Table">${icons.table}</button>
+      </div>
+
+      <div class="jt-toolbar-divider"></div>
+
+      <div class="jt-toolbar-group">
+        <button data-format="justify-left" title="Align Left (:--)">${icons.alignLeft}</button>
+        <button data-format="justify-center" title="Align Center (-:-)">${icons.alignCenter}</button>
+        <button data-format="justify-right" title="Align Right (--:)">${icons.alignRight}</button>
+        <button data-format="hr" title="Horizontal Rule (---)">${icons.hr}</button>
       </div>
 
       <div class="jt-toolbar-divider"></div>
@@ -1174,83 +1426,54 @@ const FormatterToolbar = (() => {
       <div class="jt-toolbar-divider"></div>
 
       <div class="jt-toolbar-group">
-        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
+        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">${icons.alert}</button>
       </div>
     `;
     } else {
-      // Compact layout with dropdowns (default)
+      // Responsive layout with overflow menu (same as embedded toolbar)
+      // Note: Preview button is added above (before if/else) for all modes
+
+      // All buttons in priority order (lower = more important, shown first)
       toolbarHTML += `
-      <div class="jt-toolbar-group">
-        <button data-format="bold" title="Bold (*text*) - Ctrl/Cmd+B">
-          <strong>B</strong>
-        </button>
-        <button data-format="italic" title="Italic (^text^) - Ctrl/Cmd+I">
-          <em>I</em>
-        </button>
-        <button data-format="underline" title="Underline (_text_) - Ctrl/Cmd+U">
-          <u>U</u>
-        </button>
-        <button data-format="strikethrough" title="Strikethrough (~text~)">
-          <s>S</s>
-        </button>
-      </div>
+        <button class="jt-toolbar-item" data-format="bold" data-priority="1" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
+        <button class="jt-toolbar-item" data-format="italic" data-priority="2" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
+        <button class="jt-toolbar-item" data-format="underline" data-priority="3" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
+        <button class="jt-toolbar-item" data-format="strikethrough" data-priority="4" title="Strikethrough (~text~)"><s>S</s></button>
+        <button class="jt-toolbar-item" data-format="h1" data-priority="5" title="Heading 1">H<sub>1</sub></button>
+        <button class="jt-toolbar-item" data-format="h2" data-priority="6" title="Heading 2">H<sub>2</sub></button>
+        <button class="jt-toolbar-item" data-format="h3" data-priority="7" title="Heading 3">H<sub>3</sub></button>
+        <button class="jt-toolbar-item" data-format="justify-left" data-priority="8" title="Align Left (:--)">${icons.alignLeft}</button>
+        <button class="jt-toolbar-item" data-format="justify-center" data-priority="9" title="Align Center (-:-)">${icons.alignCenter}</button>
+        <button class="jt-toolbar-item" data-format="justify-right" data-priority="10" title="Align Right (--:)">${icons.alignRight}</button>
+        <button class="jt-toolbar-item" data-format="bullet" data-priority="11" title="Bullet List">${icons.bullet}</button>
+        <button class="jt-toolbar-item" data-format="numbered" data-priority="12" title="Numbered List">${icons.numbered}</button>
+        <button class="jt-toolbar-item" data-format="link" data-priority="13" title="Insert Link">${icons.link}</button>
+        <button class="jt-toolbar-item" data-format="quote" data-priority="14" title="Quote">${icons.quote}</button>
+        <button class="jt-toolbar-item" data-format="table" data-priority="15" title="Insert Table">${icons.table}</button>
+        <button class="jt-toolbar-item" data-format="hr" data-priority="16" title="Horizontal Rule (---)">${icons.hr}</button>
+        <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="17" title="Green">A</button>
+        <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="18" title="Yellow">A</button>
+        <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="19" title="Blue">A</button>
+        <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="20" title="Red">A</button>
+        <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="21" title="Insert Alert">${icons.alert}</button>
+      `;
 
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-dropdown-group">
-        <button class="jt-dropdown-btn" title="Headings">
-          <span>H</span><span class="jt-dropdown-arrow">▾</span>
-        </button>
-        <div class="jt-dropdown-menu">
-          <button data-format="h1" title="Heading 1">H1</button>
-          <button data-format="h2" title="Heading 2">H2</button>
-          <button data-format="h3" title="Heading 3">H3</button>
+      // More menu (always visible, contains overflow items)
+      const moreIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>';
+      toolbarHTML += `
+        <div class="jt-overflow-menu">
+          <button class="jt-overflow-btn" title="More options">${moreIcon}</button>
+          <div class="jt-overflow-dropdown"></div>
         </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-dropdown-group">
-        <button class="jt-dropdown-btn" title="More">
-          <span>+</span>
-        </button>
-        <div class="jt-dropdown-menu">
-          <button data-format="bullet" title="Bullet List">• List</button>
-          <button data-format="numbered" title="Numbered List">1. List</button>
-          <button data-format="link" title="Insert Link">🔗 Link</button>
-          <button data-format="quote" title="Quote">❝ Quote</button>
-          <button data-format="table" title="Insert Table">⊞ Table</button>
-        </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group jt-color-group">
-        <button data-format="color-picker" title="Text Color" class="jt-color-btn">
-          <span class="jt-color-icon">A</span>
-        </button>
-        <div class="jt-color-dropdown">
-          <button data-format="color" data-color="green" title="Green" class="jt-color-option jt-color-green">A</button>
-          <button data-format="color" data-color="yellow" title="Yellow" class="jt-color-option jt-color-yellow">A</button>
-          <button data-format="color" data-color="blue" title="Blue" class="jt-color-option jt-color-blue">A</button>
-          <button data-format="color" data-color="red" title="Red" class="jt-color-option jt-color-red">A</button>
-        </div>
-      </div>
-
-      <div class="jt-toolbar-divider"></div>
-
-      <div class="jt-toolbar-group">
-        <button data-format="alert" title="Insert Alert" class="jt-alert-btn">⚠️</button>
-      </div>
-    `;
+      `;
     }
 
     toolbar.innerHTML = toolbarHTML;
 
     // Setup handlers
     if (!expanded) {
-      setupDropdowns(toolbar);
-      setupColorPicker(toolbar);
+      // Responsive toolbar with overflow menu
+      setupResponsiveToolbar(toolbar);
     }
     setupFormatButtons(toolbar, field);
     setupCustomTooltips(toolbar);
@@ -1264,6 +1487,39 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is inside a modal that should NOT show the floating toolbar
+   * (because the floating toolbar would appear on top of the modal awkwardly)
+   * This does NOT prevent embedded toolbars - only the floating one
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isModalField(field) {
+    if (!field) return false;
+
+    // Check if field is inside our custom Alert modal
+    if (field.closest('.jt-alert-modal-overlay') !== null ||
+        field.closest('.jt-alert-modal') !== null ||
+        field.classList.contains('jt-alert-message')) {
+      return true;
+    }
+
+    // Check for JobTread native modals/popups - these are centered dialogs
+    // They use .m-auto.shadow-lg styling pattern for popup dialogs
+    // This includes both full-screen modals and nested popups (like NEW JOB MESSAGE)
+    const modalContainer = field.closest('.m-auto.shadow-lg');
+    if (modalContainer) {
+      // The .m-auto.shadow-lg pattern is sufficient to identify JobTread popups
+      // These popups can be either:
+      // 1. Full-screen modals with fixed backdrop (e.g., main dialogs)
+      // 2. Nested popups within sidebars (e.g., NEW JOB MESSAGE in task panel)
+      // Both should use embedded toolbar instead of floating
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
    * Show the toolbar for a field
    * @param {HTMLTextAreaElement} field
    */
@@ -1273,6 +1529,8 @@ const FormatterToolbar = (() => {
     clearHideTimeout();
 
     // Check if this is a sidebar field - use embedded toolbar
+    // IMPORTANT: Check sidebar FIRST, before modal detection
+    // Sidebar embedded toolbars should always be available
     const isSidebar = isSidebarField(field) && !isBudgetDescriptionField(field);
     if (isSidebar) {
       // For sidebar fields, embed the toolbar in the DOM (not floating)
@@ -1283,6 +1541,22 @@ const FormatterToolbar = (() => {
           activeToolbar.style.display = 'none';
         }
         // Set activeToolbar to embedded toolbar so state updates work
+        activeToolbar = embeddedToolbar;
+        activeField = field;
+        updateToolbarState(field, embeddedToolbar);
+        return;
+      }
+    }
+
+    // For modal fields (like NEW JOB MESSAGE popup), use embedded toolbar
+    // instead of floating toolbar to avoid awkward positioning issues
+    if (isModalField(field)) {
+      const embeddedToolbar = embedToolbarForField(field);
+      if (embeddedToolbar) {
+        // Hide any active floating toolbar
+        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+          activeToolbar.style.display = 'none';
+        }
         activeToolbar = embeddedToolbar;
         activeField = field;
         updateToolbarState(field, embeddedToolbar);
