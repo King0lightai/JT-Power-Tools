@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed dark toolbars and file viewers being incorrectly themed
 - Fixed content tiles incorrectly getting popup shadows
 - Fixed native formatter detection for custom fields in labels
+- Fixed Text Formatter not appearing in New Job Message popup modal
 
 ---
 

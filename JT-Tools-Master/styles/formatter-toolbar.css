@@ -23,51 +23,293 @@
 /* Docked toolbar state - positioned in budget footer bar */
 .jt-formatter-toolbar.jt-toolbar-docked {
   position: fixed;
-  box-shadow: none;
-  border-color: transparent;
-  background: transparent;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 0.25rem 0.375rem;
+  gap: 0.25rem;
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked button {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  min-width: 24px;
+  height: 24px;
+  font-size: 11px;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked button.active {
+  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: linear-gradient(to bottom, transparent 0%, #e2e8f0 20%, #e2e8f0 80%, transparent 100%);
+  margin: 0 0.125rem;
+  align-self: center;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked button strong,
+.jt-formatter-toolbar.jt-toolbar-docked button em,
+.jt-formatter-toolbar.jt-toolbar-docked button u,
+.jt-formatter-toolbar.jt-toolbar-docked button s {
+  font-size: 11px;
+}
+
+/* Grouped buttons in docked toolbar */
+.jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-group {
+  display: inline-flex;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  padding: 1px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked .jt-toolbar-group button {
+  border: none;
+  box-shadow: none;
+  border-radius: 0.125rem;
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+/* SVG icons in docked toolbar */
+.jt-formatter-toolbar.jt-toolbar-docked button svg {
+  width: 11px;
+  height: 11px;
+  stroke-width: 2;
+}
+
+/* Preview button in docked toolbar */
+.jt-formatter-toolbar.jt-toolbar-docked .jt-preview-toggle {
+  background: linear-gradient(to bottom, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+  color: #166534;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+}
+
+.jt-formatter-toolbar.jt-toolbar-docked .jt-preview-toggle:hover {
+  background: linear-gradient(to bottom, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #4ade80;
+  color: #14532d;
 }
 
 /* Header-docked toolbar state - positioned below budget header row */
 .jt-formatter-toolbar.jt-toolbar-header-docked {
   position: fixed;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
-  padding: 0.25rem 0.5rem;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 0.375rem 0.5rem;
+  gap: 0.375rem;
   transition: left 0.05s ease-out, opacity 0.15s ease, visibility 0.15s ease;
   z-index: 1000;
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button {
-  padding: 0.125rem 0.375rem;
-  min-width: 24px;
-  font-size: 11px;
-  background: transparent;
-  box-shadow: none;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  min-width: 28px;
+  height: 28px;
+  font-size: 12px;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button:hover {
-  background: #e5e7eb;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button.active {
-  background: #3b82f6;
+  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
   color: #ffffff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.jt-formatter-toolbar.jt-toolbar-header-docked button.active:hover {
+  background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 100%);
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-divider {
-  height: 16px;
-  margin: auto 0.125rem;
+  width: 1px;
+  height: 22px;
+  background: linear-gradient(to bottom, transparent 0%, #e2e8f0 20%, #e2e8f0 80%, transparent 100%);
+  margin: 0 0.125rem;
+  align-self: center;
 }
 
 .jt-formatter-toolbar.jt-toolbar-header-docked button strong,
 .jt-formatter-toolbar.jt-toolbar-header-docked button em,
 .jt-formatter-toolbar.jt-toolbar-header-docked button u,
 .jt-formatter-toolbar.jt-toolbar-header-docked button s {
-  font-size: 11px;
+  font-size: 12px;
+}
+
+/* Grouped buttons in header-docked toolbar */
+.jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-group {
+  display: inline-flex;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-group button {
+  border: none;
+  box-shadow: none;
+  border-radius: 0.25rem;
+  min-width: 24px;
+  height: 24px;
+  margin: 0;
+}
+
+.jt-formatter-toolbar.jt-toolbar-header-docked .jt-toolbar-group button:hover {
+  box-shadow: none;
+}
+
+/* SVG icons in header-docked toolbar */
+.jt-formatter-toolbar.jt-toolbar-header-docked button svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2;
+}
+
+/* ========================================
+   Expanded Toolbar Styles (Budget view inline)
+   Compact flat style like sidebar formatter
+   ======================================== */
+
+.jt-formatter-toolbar.jt-formatter-expanded {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 0.25rem;
+  gap: 2px;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.375rem;
+  min-width: 26px;
+  height: 26px;
+  font-size: 13px;
+  color: #64748b;
+  box-shadow: none;
+  transition: all 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded button:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded button.active:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: #e2e8f0;
+  margin: 0 2px;
+  align-self: center;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded button strong,
+.jt-formatter-toolbar.jt-formatter-expanded button em,
+.jt-formatter-toolbar.jt-formatter-expanded button u,
+.jt-formatter-toolbar.jt-formatter-expanded button s {
+  font-size: 13px;
+}
+
+/* Grouped buttons in expanded toolbar */
+.jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-group {
+  display: inline-flex;
+  gap: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded .jt-toolbar-group button {
+  border-radius: 0.25rem;
+  min-width: 26px;
+  height: 26px;
+  margin: 0;
+}
+
+/* SVG icons in expanded toolbar */
+.jt-formatter-toolbar.jt-formatter-expanded button svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* Preview button in expanded toolbar */
+.jt-formatter-toolbar.jt-formatter-expanded .jt-preview-toggle {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+}
+
+.jt-formatter-toolbar.jt-formatter-expanded .jt-preview-toggle:hover {
+  background: linear-gradient(to bottom, #dcfce7 0%, #bbf7d0 100%);
+  border-color: #4ade80;
+  color: #14532d;
 }
 
 .jt-toolbar-group {
@@ -844,61 +1086,86 @@
 .jt-alert-formatter-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.125rem;
-  margin-bottom: 0.25rem;
+  gap: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .jt-alert-formatter-toolbar .jt-toolbar-group {
-  display: flex;
+  display: inline-flex;
   gap: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .jt-alert-formatter-toolbar .jt-toolbar-divider {
   width: 1px;
-  height: 20px;
-  background: #d1d5db;
-  margin: 0 0.25rem;
+  height: 24px;
+  background: linear-gradient(to bottom, transparent 0%, #e2e8f0 20%, #e2e8f0 80%, transparent 100%);
+  margin: 0 0.125rem;
+  align-self: center;
 }
 
 .jt-alert-format-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.375rem;
   min-width: 28px;
   height: 28px;
   padding: 0.25rem 0.5rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 0.125rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
   cursor: pointer;
   font-size: 13px;
-  color: #4b5563;
+  color: #475569;
   transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Keep grouped buttons with rounded corners on ends only */
-.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn:not(:first-child) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  margin-left: -1px;
-}
-
-.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn:not(:last-child) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+/* Grouped buttons styling */
+.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn {
+  border: none;
+  box-shadow: none;
+  border-radius: 0.25rem;
+  min-width: 26px;
+  height: 26px;
+  margin: 0;
 }
 
 .jt-alert-format-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.jt-alert-formatter-toolbar .jt-toolbar-group .jt-alert-format-btn:hover {
+  box-shadow: none;
 }
 
 .jt-alert-format-btn:active {
-  background: #e5e7eb;
+  transform: translateY(0);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.jt-alert-format-btn.active {
+  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.jt-alert-format-btn.active:hover {
+  background: linear-gradient(to bottom, #2563eb 0%, #1d4ed8 100%);
 }
 
 .jt-alert-format-btn strong {
@@ -921,11 +1188,19 @@
   font-size: 13px;
 }
 
+/* SVG icons in alert toolbar */
+.jt-alert-format-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
 /* Dropdown arrow in toolbar buttons */
 .jt-alert-format-btn .jt-dropdown-arrow {
-  font-size: 10px;
-  opacity: 0.6;
-  margin-left: 2px;
+  font-size: 8px;
+  opacity: 0.5;
+  margin-left: 1px;
 }
 
 /* Toolbar dropdown groups */
@@ -937,15 +1212,15 @@
 .jt-alert-toolbar-dropdown {
   display: none;
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 0;
   background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 0.125rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.05);
   padding: 0.25rem;
   z-index: 100;
-  min-width: 80px;
+  min-width: 100px;
   flex-direction: column;
   gap: 0;
 }
@@ -958,72 +1233,739 @@
   width: 100%;
   justify-content: flex-start;
   text-align: left;
-  border-radius: 0;
   border: none;
-  border-bottom: 1px solid #f3f4f6;
+  box-shadow: none;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  height: auto;
 }
 
-.jt-alert-toolbar-dropdown .jt-alert-format-btn:first-child {
-  border-top-left-radius: 0.125rem;
-  border-top-right-radius: 0.125rem;
-}
-
-.jt-alert-toolbar-dropdown .jt-alert-format-btn:last-child {
-  border-bottom-left-radius: 0.125rem;
-  border-bottom-right-radius: 0.125rem;
-  border-bottom: none;
+.jt-alert-toolbar-dropdown .jt-alert-format-btn:hover {
+  box-shadow: none;
 }
 
 /* Color picker button */
-.jt-alert-color-btn .jt-color-icon {
-  font-weight: 700;
-  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 25%, #10b981 50%, #3b82f6 75%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.jt-alert-color-btn svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Color dropdown specific styling */
+.jt-alert-color-dropdown {
+  min-width: auto;
+}
+
 .jt-alert-color-dropdown .jt-alert-format-btn {
   font-weight: 700;
   min-width: 32px;
   justify-content: center;
+  padding: 0.375rem 0.5rem;
 }
 
 /* ========================================
    Embedded Toolbar Styles (Sidebar fields)
    ======================================== */
 
-/* Embedded toolbar - sticky below sidebar header */
+/* Embedded toolbar - appears above textarea */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded {
-  position: sticky !important;
-  top: 56px !important; /* Below the sticky sidebar header (typically ~56px tall) */
+  position: relative !important;
+  top: auto !important;
   left: auto !important;
   width: 100%;
   margin-bottom: 0.5rem;
-  background: #f9fafb;
+  background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
-  box-shadow: none;
-  flex-wrap: wrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  flex-wrap: nowrap;
+  z-index: 100; /* High enough for dropdown to show above other content */
+  padding: 0.25rem;
+  gap: 2px;
+}
+
+/* Sidebar embedded toolbar - flows with content, no sticky behavior
+   This prevents the toolbar from overlapping textarea fields like Message */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-sidebar-sticky {
+  position: relative !important;
+  top: auto !important;
   z-index: 9; /* Below sidebar header (z-10) but above content */
-}
-
-.jt-formatter-toolbar-embedded button {
   background: #ffffff;
+  /* Toolbar stays in document flow above the textarea, pushing content down naturally */
 }
 
-.jt-formatter-toolbar-embedded button:hover {
+/* Responsive toolbar - flat button layout like JobTread */
+.jt-formatter-toolbar.jt-responsive-toolbar {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Toolbar item buttons - flat style like JobTread */
+.jt-responsive-toolbar .jt-toolbar-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 13px;
+  color: #64748b;
+  transition: all 0.1s ease;
+  flex-shrink: 0;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item:active {
+  background: #e2e8f0;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.active:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Text formatting in toolbar items */
+.jt-responsive-toolbar .jt-toolbar-item strong {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item em {
+  font-style: italic;
+  font-size: 13px;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item u {
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item s {
+  text-decoration: line-through;
+  font-size: 13px;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item sub {
+  font-size: 9px;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+/* SVG icons in toolbar items */
+.jt-responsive-toolbar .jt-toolbar-item svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+/* Color buttons */
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-green {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-green:hover {
+  background: #d1fae5;
+  border-color: #a7f3d0;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-yellow {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-yellow:hover {
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-blue {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-blue:hover {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-red {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.jt-responsive-toolbar .jt-toolbar-item.jt-color-red:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+/* Preview button */
+.jt-responsive-toolbar .jt-preview-toggle {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+}
+
+.jt-responsive-toolbar .jt-preview-toggle:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+/* ========================================
+   Overflow Menu (Responsive Toolbar)
+   ======================================== */
+
+.jt-overflow-menu {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+  z-index: 1; /* Ensure dropdown can layer above siblings */
+}
+
+.jt-overflow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.1s ease;
+}
+
+.jt-overflow-btn:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.jt-overflow-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-overflow-dropdown {
+  display: none;
+  position: fixed; /* Fixed to escape stacking contexts */
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 0.375rem;
+  z-index: 2147483647; /* Maximum z-index to ensure visibility */
+  min-width: 160px;
+  max-width: 280px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.jt-overflow-dropdown-visible {
+  display: flex;
+}
+
+/* Items inside overflow dropdown - Light mode (default) */
+.jt-overflow-dropdown .jt-toolbar-item {
+  min-width: 32px;
+  height: 32px;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.375rem;
+  color: #64748b !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.active {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+/* Preview button in overflow */
+.jt-overflow-dropdown .jt-preview-toggle {
+  width: 100%;
+  justify-content: center;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+/* Legacy embedded toolbar styles (for backwards compatibility) */
+.jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn) {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  min-width: 28px;
+  height: 28px;
+  padding: 0.25rem 0.5rem;
+  font-size: 13px;
+  color: #64748b;
+  transition: all 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jt-formatter-toolbar-embedded button:not(.jt-toolbar-item):not(.jt-overflow-btn):hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* Alert button styling */
+.jt-responsive-toolbar .jt-alert-btn {
+  font-size: 13px;
+}
+
+/* ========================================
+   More Menu Dropdown (Sidebar Embedded Toolbar)
+   ======================================== */
+
+.jt-more-group {
+  position: relative;
+}
+
+.jt-more-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0.25rem 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.jt-more-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.jt-more-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.jt-more-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem;
+  z-index: 1000000;
+  min-width: 200px;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.jt-more-dropdown-visible {
+  display: flex;
+}
+
+.jt-more-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.375rem 0;
+}
+
+.jt-more-section:not(:last-child) {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.jt-more-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 0 0.375rem;
+  margin-bottom: 0.125rem;
+}
+
+.jt-more-row {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.jt-more-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0.375rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: #475569;
+  transition: all 0.15s ease;
+  box-shadow: none;
+}
+
+.jt-more-row button:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.jt-more-row button:active {
+  transform: translateY(0);
+}
+
+.jt-more-row button.active {
+  background: linear-gradient(to bottom, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.jt-more-row button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+/* Color buttons in more dropdown */
+.jt-more-row button.jt-color-option {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.jt-more-row button.jt-color-green {
+  color: #10b981;
+}
+
+.jt-more-row button.jt-color-green:hover {
+  background: #d1fae5;
+}
+
+.jt-more-row button.jt-color-yellow {
+  color: #f59e0b;
+}
+
+.jt-more-row button.jt-color-yellow:hover {
+  background: #fef3c7;
+}
+
+.jt-more-row button.jt-color-blue {
+  color: #3b82f6;
+}
+
+.jt-more-row button.jt-color-blue:hover {
+  background: #dbeafe;
+}
+
+.jt-more-row button.jt-color-red {
+  color: #ef4444;
+}
+
+.jt-more-row button.jt-color-red:hover {
+  background: #fee2e2;
+}
+
+/* ========================================
+   Dark Mode Support
+   Supports: .dark class, data-theme="dark", and prefers-color-scheme
+   Uses pure gray colors (not blue-tinted slate)
+   ======================================== */
+
+/* Dark mode using class or attribute */
+.dark .jt-formatter-toolbar,
+[data-theme="dark"] .jt-formatter-toolbar,
+[data-mode="dark"] .jt-formatter-toolbar {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .jt-formatter-toolbar button,
+[data-theme="dark"] .jt-formatter-toolbar button,
+[data-mode="dark"] .jt-formatter-toolbar button {
+  color: #9ca3af;
+  background: transparent;
+  border-color: transparent;
+}
+
+.dark .jt-formatter-toolbar button:hover,
+[data-theme="dark"] .jt-formatter-toolbar button:hover,
+[data-mode="dark"] .jt-formatter-toolbar button:hover {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .jt-formatter-toolbar button.active,
+[data-theme="dark"] .jt-formatter-toolbar button.active,
+[data-mode="dark"] .jt-formatter-toolbar button.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.dark .jt-formatter-toolbar .jt-toolbar-divider,
+[data-theme="dark"] .jt-formatter-toolbar .jt-toolbar-divider,
+[data-mode="dark"] .jt-formatter-toolbar .jt-toolbar-divider {
+  background: #4b5563;
+}
+
+/* Dark mode for embedded toolbar */
+.dark .jt-formatter-toolbar-embedded,
+[data-theme="dark"] .jt-formatter-toolbar-embedded,
+[data-mode="dark"] .jt-formatter-toolbar-embedded {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+/* Dark mode for sidebar sticky toolbar */
+.dark .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
+[data-theme="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
+[data-mode="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky {
+  background: #1f2937;
+}
+
+/* Dark mode for overflow dropdown */
+.dark .jt-overflow-dropdown,
+[data-theme="dark"] .jt-overflow-dropdown,
+[data-mode="dark"] .jt-overflow-dropdown,
+[class*="dark"] .jt-overflow-dropdown {
+  background: #1f2937 !important;
+  border-color: #374151 !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark .jt-overflow-dropdown .jt-toolbar-item,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item,
+[class*="dark"] .jt-overflow-dropdown .jt-toolbar-item {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+  color: #e5e7eb !important;
+}
+
+.dark .jt-overflow-dropdown .jt-toolbar-item:hover,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover,
+[class*="dark"] .jt-overflow-dropdown .jt-toolbar-item:hover {
+  background: #4b5563 !important;
+  border-color: #6b7280 !important;
+}
+
+/* Dark mode for more dropdown */
+.dark .jt-more-dropdown,
+[data-theme="dark"] .jt-more-dropdown,
+[data-mode="dark"] .jt-more-dropdown {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .jt-more-section-label,
+[data-theme="dark"] .jt-more-section-label,
+[data-mode="dark"] .jt-more-section-label {
+  color: #6b7280;
+}
+
+.dark .jt-more-row button,
+[data-theme="dark"] .jt-more-row button,
+[data-mode="dark"] .jt-more-row button {
+  background: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+.dark .jt-more-row button:hover,
+[data-theme="dark"] .jt-more-row button:hover,
+[data-mode="dark"] .jt-more-row button:hover {
+  background: #4b5563;
+}
+
+/* Dark mode for tooltips */
+.dark .jt-custom-tooltip,
+[data-theme="dark"] .jt-custom-tooltip,
+[data-mode="dark"] .jt-custom-tooltip {
   background: #f3f4f6;
+  color: #111827;
 }
 
-/* Dropdown menus open downward for embedded toolbar */
-.jt-formatter-toolbar-embedded .jt-dropdown-menu {
-  top: calc(100% + 4px);
-  bottom: auto;
+/* Dark mode for alert modal */
+.dark .jt-alert-modal,
+[data-theme="dark"] .jt-alert-modal,
+[data-mode="dark"] .jt-alert-modal {
+  background: #1f2937;
+  color: #e5e7eb;
 }
 
-.jt-formatter-toolbar-embedded .jt-color-dropdown {
-  top: calc(100% + 4px);
-  bottom: auto;
+.dark .jt-alert-modal-header,
+[data-theme="dark"] .jt-alert-modal-header,
+[data-mode="dark"] .jt-alert-modal-header {
+  background: #1f2937;
+  border-color: #374151;
 }
+
+.dark .jt-alert-modal-footer,
+[data-theme="dark"] .jt-alert-modal-footer,
+[data-mode="dark"] .jt-alert-modal-footer {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.dark .jt-alert-subject,
+.dark .jt-alert-message,
+[data-theme="dark"] .jt-alert-subject,
+[data-theme="dark"] .jt-alert-message,
+[data-mode="dark"] .jt-alert-subject,
+[data-mode="dark"] .jt-alert-message {
+  background: #111827;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+
+.dark .jt-alert-dropdown-button,
+.dark .jt-alert-dropdown-menu,
+.dark .jt-alert-dropdown-item,
+[data-theme="dark"] .jt-alert-dropdown-button,
+[data-theme="dark"] .jt-alert-dropdown-menu,
+[data-theme="dark"] .jt-alert-dropdown-item,
+[data-mode="dark"] .jt-alert-dropdown-button,
+[data-mode="dark"] .jt-alert-dropdown-menu,
+[data-mode="dark"] .jt-alert-dropdown-item {
+  background: #1f2937;
+  border-color: #374151;
+  color: #e5e7eb;
+}
+
+.dark .jt-alert-dropdown-item:hover,
+[data-theme="dark"] .jt-alert-dropdown-item:hover,
+[data-mode="dark"] .jt-alert-dropdown-item:hover {
+  background: #374151;
+}
+
+/* Dark mode preview button */
+.dark .jt-preview-toggle,
+[data-theme="dark"] .jt-preview-toggle,
+[data-mode="dark"] .jt-preview-toggle {
+  background: #064e3b;
+  border-color: #065f46;
+  color: #6ee7b7;
+}
+
+.dark .jt-preview-toggle:hover,
+[data-theme="dark"] .jt-preview-toggle:hover,
+[data-mode="dark"] .jt-preview-toggle:hover {
+  background: #065f46;
+  border-color: #047857;
+}
+
+/* Dark mode - preserve color button colors */
+.dark .jt-formatter-toolbar button.jt-color-green,
+[data-theme="dark"] .jt-formatter-toolbar button.jt-color-green,
+[data-mode="dark"] .jt-formatter-toolbar button.jt-color-green,
+.dark .jt-overflow-dropdown .jt-toolbar-item.jt-color-green,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-green,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-green {
+  color: #10b981 !important;
+}
+
+.dark .jt-formatter-toolbar button.jt-color-yellow,
+[data-theme="dark"] .jt-formatter-toolbar button.jt-color-yellow,
+[data-mode="dark"] .jt-formatter-toolbar button.jt-color-yellow,
+.dark .jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow {
+  color: #f59e0b !important;
+}
+
+.dark .jt-formatter-toolbar button.jt-color-blue,
+[data-theme="dark"] .jt-formatter-toolbar button.jt-color-blue,
+[data-mode="dark"] .jt-formatter-toolbar button.jt-color-blue,
+.dark .jt-overflow-dropdown .jt-toolbar-item.jt-color-blue,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-blue,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-blue {
+  color: #3b82f6 !important;
+}
+
+.dark .jt-formatter-toolbar button.jt-color-red,
+[data-theme="dark"] .jt-formatter-toolbar button.jt-color-red,
+[data-mode="dark"] .jt-formatter-toolbar button.jt-color-red,
+.dark .jt-overflow-dropdown .jt-toolbar-item.jt-color-red,
+[data-theme="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-red,
+[data-mode="dark"] .jt-overflow-dropdown .jt-toolbar-item.jt-color-red {
+  color: #ef4444 !important;
+}
+
+/* ========================================
+   RGB/Accent Theme Support
+   Uses CSS custom properties for customization
+   ======================================== */
+
+/* Define default accent color variable */
+.jt-formatter-toolbar {
+  --jt-accent: #3b82f6;
+  --jt-accent-hover: #2563eb;
+  --jt-accent-light: #dbeafe;
+}
+
+/* Active buttons use accent color */
+.jt-formatter-toolbar button.active {
+  background: var(--jt-accent);
+  border-color: var(--jt-accent);
+}
+
+.jt-formatter-toolbar button.active:hover {
+  background: var(--jt-accent-hover);
+  border-color: var(--jt-accent-hover);
+}
+
+/* Support for JobTread's theme color variables if they exist */
+@supports (color: var(--primary)) {
+  .jt-formatter-toolbar {
+    --jt-accent: var(--primary, #3b82f6);
+  }
+}
+
+@supports (color: var(--accent)) {
+  .jt-formatter-toolbar {
+    --jt-accent: var(--accent, #3b82f6);
+  }
+}
+
+/* System dark mode preference - only apply if explicitly opted in with class */
+/* Note: Removed auto-detection to prevent conflicts with JobTread's theme */
