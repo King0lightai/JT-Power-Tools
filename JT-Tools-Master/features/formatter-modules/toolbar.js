@@ -1520,6 +1520,19 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Hide all embedded toolbars except one
+   * @param {HTMLElement|null} exceptToolbar - Toolbar to keep visible (or null to hide all)
+   */
+  function hideAllEmbeddedToolbars(exceptToolbar = null) {
+    const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
+    embeddedToolbars.forEach(toolbar => {
+      if (toolbar !== exceptToolbar) {
+        toolbar.style.display = 'none';
+      }
+    });
+  }
+
+  /**
    * Show the toolbar for a field
    * @param {HTMLTextAreaElement} field
    */
@@ -1540,6 +1553,8 @@ const FormatterToolbar = (() => {
         if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
           activeToolbar.style.display = 'none';
         }
+        // Hide other embedded toolbars
+        hideAllEmbeddedToolbars(embeddedToolbar);
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1557,6 +1572,8 @@ const FormatterToolbar = (() => {
         if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
           activeToolbar.style.display = 'none';
         }
+        // Hide other embedded toolbars
+        hideAllEmbeddedToolbars(embeddedToolbar);
         activeToolbar = embeddedToolbar;
         activeField = field;
         updateToolbarState(field, embeddedToolbar);
@@ -1564,7 +1581,9 @@ const FormatterToolbar = (() => {
       }
     }
 
-    // For non-sidebar fields, use floating toolbar
+    // For non-sidebar/non-modal fields (like budget Description), use floating toolbar
+    // Hide all embedded toolbars since we're using a floating one
+    hideAllEmbeddedToolbars(null);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
     }
@@ -1600,6 +1619,9 @@ const FormatterToolbar = (() => {
    */
   function hideToolbar() {
     clearHideTimeout();
+
+    // Hide all embedded toolbars (they persist in DOM but should be hidden when not active)
+    hideAllEmbeddedToolbars(null);
 
     if (activeToolbar) {
       // For embedded toolbars, just hide them (don't remove from DOM)
