@@ -15,6 +15,29 @@ const FormatterDetection = (() => {
     // The toolbar is typically a sibling to the textarea's parent container
     // Structure: <div class="rounded-sm border"> contains both toolbar and textarea container
 
+    // Check if textarea is inside JobTread's native ADD ALERT modal
+    // The modal has a header with "ADD ALERT" or "EDIT ALERT" text and its own formatter
+    const modalContainer = textarea.closest('.m-auto.shadow-lg');
+    if (modalContainer) {
+      // Look for ADD ALERT / EDIT ALERT header
+      const header = modalContainer.querySelector('h2, .font-bold');
+      if (header && (header.textContent.includes('ADD ALERT') || header.textContent.includes('EDIT ALERT'))) {
+        return true; // Native alert modal has its own formatter
+      }
+
+      // Also check for any native formatter toolbar inside the modal
+      const nativeToolbar = modalContainer.querySelector('.flex.gap-1 button, .sticky button');
+      if (nativeToolbar) {
+        const toolbarContainer = nativeToolbar.closest('.flex.gap-1, .sticky');
+        if (toolbarContainer) {
+          const buttons = toolbarContainer.querySelectorAll('button');
+          if (buttons.length >= 3) {
+            return true; // Has native formatter buttons
+          }
+        }
+      }
+    }
+
     // Find the textarea's immediate container (the relative div)
     const relativeContainer = textarea.closest('div.relative');
     if (!relativeContainer) return false;
@@ -58,6 +81,7 @@ const FormatterDetection = (() => {
     }
 
     // First, check if field already has JobTread's native formatter
+    // This MUST be checked before any placeholder checks to avoid duplicates
     if (hasNativeFormatter(textarea)) {
       return false; // Skip fields that already have native formatter
     }
@@ -66,7 +90,17 @@ const FormatterDetection = (() => {
     const placeholder = textarea.getAttribute('placeholder');
 
     // Include message fields - users can format and preview messages
+    // BUT only if not inside a modal that has its own native formatter
     if (placeholder === 'Message') {
+      // Double-check: exclude if inside any modal with native formatter toolbar
+      const modalContainer = textarea.closest('.m-auto.shadow-lg');
+      if (modalContainer) {
+        // Check for native formatter buttons in the modal
+        const nativeButtons = modalContainer.querySelectorAll('.rounded-sm button, .flex.gap-1 button');
+        if (nativeButtons.length >= 3) {
+          return false; // Modal has native formatter, skip
+        }
+      }
       return true;
     }
 

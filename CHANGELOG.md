@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed content tiles incorrectly getting popup shadows
 - Fixed native formatter detection for custom fields in labels
 - Fixed Text Formatter not appearing in New Job Message popup modal
+- Fixed dark mode color picker buttons having poor contrast (A letters now visible)
+- Fixed sidebar/panel embedded toolbar not hiding when clicking away from textarea
+- Fixed dark mode overflow dropdown not matching toolbar styling
+- Fixed duplicate formatter toolbar appearing in JobTread's native ADD ALERT modal
+- Removed redundant built-in toolbar from extension's Alert Builder modal (uses secondary toolbar on focus instead)
 
 ---
 
