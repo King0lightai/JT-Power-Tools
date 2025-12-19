@@ -700,12 +700,107 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Position embedded toolbar with sticky behavior
+   * The toolbar starts in document flow above the textarea, becomes sticky when
+   * it would scroll out of view, and stops at the bottom of the textarea.
+   * @param {HTMLElement} toolbar
+   * @param {HTMLTextAreaElement} field
+   */
+  function positionEmbeddedToolbar(toolbar, field) {
+    if (!toolbar || !field) return;
+
+    // Check if this is a modal/popup field - these should NOT have sticky behavior
+    // Modals have .m-auto.shadow-lg pattern or are inside fixed overlays
+    const isInModal = field.closest('.m-auto.shadow-lg') !== null ||
+                      field.closest('[class*="modal"]') !== null ||
+                      field.getAttribute('placeholder') === 'Message';
+
+    if (isInModal) {
+      // For modals/popups, just keep toolbar in normal document flow - no sticky behavior
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      toolbar.style.display = 'flex';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+      return;
+    }
+
+    // Find the scrollable container (sidebar or form)
+    const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, [style*="overflow"]');
+    if (!scrollContainer) {
+      // No scroll container - just keep toolbar in normal flow
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      return;
+    }
+
+    const toolbarHeight = toolbar.offsetHeight || 36;
+    const padding = 8;
+
+    // Get positions relative to viewport
+    const fieldRect = field.getBoundingClientRect();
+    const scrollRect = scrollContainer.getBoundingClientRect();
+
+    // The sticky position should be at the top of the scroll container (sidebar)
+    // Plus a small padding for visual spacing
+    const stickyTop = scrollRect.top + padding;
+
+    // Calculate where the top of the toolbar would be if it were in normal flow
+    // When in relative position, the toolbar sits right above the field
+    const naturalToolbarTop = fieldRect.top - toolbarHeight - 8; // 8px is margin-bottom
+
+    // Calculate the bottom boundary - toolbar shouldn't go past the bottom of the textarea
+    const maxToolbarTop = fieldRect.bottom - toolbarHeight - padding;
+
+    // Hide toolbar if field is completely out of view
+    if (fieldRect.bottom < scrollRect.top || fieldRect.top > scrollRect.bottom) {
+      toolbar.style.display = 'none';
+      return;
+    }
+    toolbar.style.display = 'flex';
+
+    if (naturalToolbarTop >= stickyTop) {
+      // Toolbar is visible in its natural position - use relative positioning
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+    } else if (stickyTop <= maxToolbarTop) {
+      // Toolbar would scroll out of view but field is still visible - make it sticky
+      // Position at top of scroll container
+      toolbar.style.position = 'fixed';
+      toolbar.style.top = `${stickyTop}px`;
+      toolbar.style.left = `${scrollRect.left + padding}px`;
+      toolbar.style.width = `${scrollRect.width - (padding * 2)}px`;
+      toolbar.classList.add('jt-toolbar-sticky-active');
+    } else {
+      // Field is mostly scrolled out - position toolbar at bottom of field
+      toolbar.style.position = 'fixed';
+      toolbar.style.top = `${maxToolbarTop}px`;
+      toolbar.style.left = `${scrollRect.left + padding}px`;
+      toolbar.style.width = `${scrollRect.width - (padding * 2)}px`;
+      toolbar.classList.add('jt-toolbar-sticky-active');
+    }
+  }
+
+  /**
    * Position toolbar relative to field with sticky behavior
    * For budget Description fields, docks in the sticky header row
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
    */
   function positionToolbar(toolbar, field) {
+    // Handle embedded toolbar sticky positioning
+    if (toolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+      toolbar.style.display = 'flex';
+      positionEmbeddedToolbar(toolbar, field);
+      return;
+    }
+
     const rect = field.getBoundingClientRect();
     const toolbarHeight = toolbar.offsetHeight || 36;
     const padding = 8;
@@ -1541,20 +1636,24 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
-    // Check if this is a sidebar field - use embedded toolbar
-    // IMPORTANT: Check sidebar FIRST, before modal detection
-    // Sidebar embedded toolbars should always be available
-    const isSidebar = isSidebarField(field) && !isBudgetDescriptionField(field);
-    if (isSidebar) {
-      // For sidebar fields, embed the toolbar in the DOM (not floating)
+    // Budget Description fields get the EXPANDED FLOATING toolbar (all buttons visible)
+    // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
+    const isBudgetField = isBudgetDescriptionField(field);
+
+    if (!isBudgetField) {
+      // For ALL non-budget fields, use embedded toolbar for consistent compact styling
+      // This includes: sidebar fields, modal fields, Message fields, custom fields, etc.
       const embeddedToolbar = embedToolbarForField(field);
       if (embeddedToolbar) {
-        // Hide any active floating toolbar (but don't remove it)
+        // Hide any active floating toolbar
         if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.style.display = 'none';
+          activeToolbar.remove();
+          activeToolbar = null;
         }
         // Hide other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
+        // Make sure THIS toolbar is visible
+        embeddedToolbar.style.display = 'flex';
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1563,37 +1662,18 @@ const FormatterToolbar = (() => {
       }
     }
 
-    // For modal fields (like NEW JOB MESSAGE popup), use embedded toolbar
-    // instead of floating toolbar to avoid awkward positioning issues
-    if (isModalField(field)) {
-      const embeddedToolbar = embedToolbarForField(field);
-      if (embeddedToolbar) {
-        // Hide any active floating toolbar
-        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.style.display = 'none';
-        }
-        // Hide other embedded toolbars
-        hideAllEmbeddedToolbars(embeddedToolbar);
-        activeToolbar = embeddedToolbar;
-        activeField = field;
-        updateToolbarState(field, embeddedToolbar);
-        return;
-      }
-    }
-
-    // For non-sidebar/non-modal fields (like budget Description), use floating toolbar
+    // For Budget Description fields ONLY - use floating EXPANDED toolbar
     // Hide all embedded toolbars since we're using a floating one
     hideAllEmbeddedToolbars(null);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
     }
 
-    // Check if this is a budget Description field (needs expanded toolbar)
-    const needsExpanded = isBudgetDescriptionField(field);
+    // Budget fields always need expanded toolbar
     const hasExpanded = activeToolbar && activeToolbar.classList.contains('jt-formatter-expanded');
 
-    // If toolbar type doesn't match what we need, recreate it
-    if (activeToolbar && needsExpanded !== hasExpanded) {
+    // If we have a non-expanded toolbar, recreate it as expanded
+    if (activeToolbar && !hasExpanded) {
       activeToolbar.remove();
       activeToolbar = null;
     }
@@ -1606,7 +1686,8 @@ const FormatterToolbar = (() => {
       positionToolbar(activeToolbar, field);
       updateToolbarState(field, activeToolbar);
     } else {
-      const toolbar = createToolbar(field, { expanded: needsExpanded });
+      // Always create expanded toolbar for budget fields
+      const toolbar = createToolbar(field, { expanded: true });
       positionToolbar(toolbar, field);
       updateToolbarState(field, toolbar);
       activeToolbar = toolbar;
