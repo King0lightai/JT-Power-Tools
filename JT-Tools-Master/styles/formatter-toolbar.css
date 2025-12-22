@@ -14,9 +14,11 @@
   transition: top 0.1s ease-out, opacity 0.15s ease, visibility 0.15s ease;
 }
 
-/* Hidden state - use class instead of inline style to override display: flex !important */
+/* Hidden state - use visibility instead of display to prevent layout shift when toolbar appears */
 .jt-formatter-toolbar.jt-toolbar-hidden {
-  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
 
 /* Sticky toolbar state - slightly enhanced shadow for visibility */
