@@ -285,6 +285,8 @@ const FormatterFeature = (() => {
         field.addEventListener('input', () => handleFieldInput(field), { signal });
         field.addEventListener('click', () => handleFieldClick(field), { signal });
         field.addEventListener('keyup', () => handleFieldKeyup(field), { signal });
+        // Use select event for more reliable cursor/selection change detection
+        field.addEventListener('select', () => handleFieldSelectionChange(field), { signal });
       }
     });
   }
@@ -353,6 +355,14 @@ const FormatterFeature = (() => {
     }
   }
 
+  function handleFieldSelectionChange(field) {
+    const activeToolbar = Toolbar().getActiveToolbar();
+    const activeField = Toolbar().getActiveField();
+    if (activeToolbar && activeField === field) {
+      Toolbar().updateToolbarState(field, activeToolbar);
+    }
+  }
+
   function handleScroll() {
     const activeToolbar = Toolbar().getActiveToolbar();
     const activeField = Toolbar().getActiveField();
@@ -379,8 +389,6 @@ const FormatterFeature = (() => {
             document.body.contains(toolbar) &&
             document.body.contains(field)) {
           Toolbar().positionToolbar(toolbar, field);
-          toolbar.style.display = 'flex';
-          toolbar.style.visibility = 'visible';
         }
       }, 100);
     }
@@ -407,9 +415,11 @@ const FormatterFeature = (() => {
   function handleGlobalClick(e) {
     const clickedElement = e.target;
 
-    // Don't hide if clicking on a formatter field or the toolbar
-    if (Detection().isFormatterField(clickedElement) ||
-        clickedElement.closest('.jt-formatter-toolbar')) {
+    // Don't hide if clicking on a formatter-ready field or the toolbar
+    // Use data-formatter-ready attribute for more reliable detection
+    if (clickedElement.closest('[data-formatter-ready="true"]') ||
+        clickedElement.closest('.jt-formatter-toolbar') ||
+        clickedElement.closest('.jt-formatter-toolbar-embedded')) {
       return;
     }
 

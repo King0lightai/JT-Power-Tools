@@ -106,8 +106,11 @@ const FreezeHeaderFeature = (() => {
     /* Only apply to job-page sidebars, NOT global overlays like Time Clock */
     /* Global sidebars have top: ~48px (just below header), job sidebars have top: ~100px+ (below tabs) */
     /* We exclude sidebars with top: 48-50px as these are global overlays that should stay at header level */
+    /* We also exclude sidebar headers with top: 0 (e.g., "COST ITEM DETAILS", "Update Task") */
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky) {
+    /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
+    /* These excluded elements keep their native JobTread positioning */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
@@ -270,6 +273,28 @@ const FreezeHeaderFeature = (() => {
    */
   function isSchedulePage() {
     return window.location.pathname.match(/^\/jobs\/[^/]+\/schedule/);
+  }
+
+  /**
+   * Check if an element is inside a popup container
+   * Popups are identified by shadow-lg class on a container element
+   * This is used to prevent marking elements inside popups with freeze header classes
+   */
+  function isInsidePopup(element) {
+    // Check if element is inside a popup container
+    // Popups typically have shadow-lg class combined with other styling
+    const popupContainer = element.closest('.shadow-lg');
+    if (!popupContainer) return false;
+
+    // Make sure it's not the main content area (shadow-lg is also used elsewhere)
+    // Popup containers typically have: shadow-lg + (rounded-sm or overflow-hidden) + (bg-white or border)
+    // Also check if it's in a fixed/absolute positioned container (modal overlay)
+    const hasPopupStyling = popupContainer.classList.contains('rounded-sm') ||
+                           popupContainer.classList.contains('overflow-hidden') ||
+                           popupContainer.closest('.fixed') ||
+                           popupContainer.closest('[class*="m-auto"]');
+
+    return hasPopupStyling;
   }
 
   /**
@@ -662,6 +687,9 @@ const FreezeHeaderFeature = (() => {
       if (container.classList.contains('jt-action-toolbar')) continue;
       if (container.classList.contains('jt-schedule-header-container')) continue;
 
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(container)) continue;
+
       const text = container.textContent;
 
       // Check for folder navigation indicators
@@ -703,6 +731,9 @@ const FreezeHeaderFeature = (() => {
       if (container.classList.contains('jt-action-toolbar')) continue;
       if (container.classList.contains('jt-schedule-header-container')) continue;
 
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(container)) continue;
+
       const headerText = container.textContent;
 
       // Check for file list column headers
@@ -726,6 +757,9 @@ const FreezeHeaderFeature = (() => {
       if (flexHeader.closest('.jt-files-list-header')) continue;
       if (flexHeader.closest('.jt-schedule-header-container')) continue;
       if (flexHeader.closest('.jt-budget-header-container')) continue;
+
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(flexHeader)) continue;
 
       const headerText = flexHeader.textContent;
 
@@ -773,6 +807,9 @@ const FreezeHeaderFeature = (() => {
       // Skip if already marked as something else
       if (sidebar.classList.contains('jt-top-header')) continue;
       if (sidebar.classList.contains('jt-job-tabs-container')) continue;
+
+      // Skip if inside a popup (e.g., files popup from budget view)
+      if (isInsidePopup(sidebar)) continue;
 
       const text = sidebar.textContent;
 

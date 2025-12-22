@@ -229,6 +229,27 @@ const AlertModal = (() => {
         }
       });
 
+      // Handle keyboard shortcuts in message textarea - reuse existing FormatterFormats module
+      messageTextarea.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+        if (!modifier) return;
+
+        let format = null;
+        switch(e.key.toLowerCase()) {
+          case 'b': format = 'bold'; break;
+          case 'i': format = 'italic'; break;
+          case 'u': format = 'underline'; break;
+        }
+
+        if (format && window.FormatterFormats) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.FormatterFormats.applyFormat(messageTextarea, format);
+        }
+      });
+
       // Close modal on overlay click
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
