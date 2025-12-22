@@ -226,7 +226,8 @@ const FormatterToolbar = (() => {
     // Check if already embedded
     let toolbar = findEmbeddedToolbar(field);
     if (toolbar) {
-      toolbar.style.display = 'flex';
+      // Remove hidden class to show (class-based since CSS has display: flex !important)
+      toolbar.classList.remove('jt-toolbar-hidden');
       // Re-run overflow check in case width changed
       requestAnimationFrame(() => updateToolbarOverflow(toolbar));
       return toolbar;
@@ -721,7 +722,8 @@ const FormatterToolbar = (() => {
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
-      toolbar.style.display = 'flex';
+      // Use class-based visibility since CSS has display: flex !important
+      toolbar.classList.remove('jt-toolbar-hidden');
       toolbar.classList.remove('jt-toolbar-sticky-active');
       return;
     }
@@ -757,10 +759,12 @@ const FormatterToolbar = (() => {
 
     // Hide toolbar if field is completely out of view
     if (fieldRect.bottom < scrollRect.top || fieldRect.top > scrollRect.bottom) {
-      toolbar.style.display = 'none';
+      // Use class-based visibility since CSS has display: flex !important
+      toolbar.classList.add('jt-toolbar-hidden');
       return;
     }
-    toolbar.style.display = 'flex';
+    // Use class-based visibility since CSS has display: flex !important
+    toolbar.classList.remove('jt-toolbar-hidden');
 
     if (naturalToolbarTop >= stickyTop) {
       // Toolbar is visible in its natural position - use relative positioning
@@ -796,7 +800,8 @@ const FormatterToolbar = (() => {
   function positionToolbar(toolbar, field) {
     // Handle embedded toolbar sticky positioning
     if (toolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-      toolbar.style.display = 'flex';
+      // Use class-based visibility since CSS has display: flex !important
+      toolbar.classList.remove('jt-toolbar-hidden');
       positionEmbeddedToolbar(toolbar, field);
       return;
     }
@@ -1622,7 +1627,13 @@ const FormatterToolbar = (() => {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
-        toolbar.style.display = 'none';
+        // Use class to hide since CSS has display: flex !important
+        toolbar.classList.add('jt-toolbar-hidden');
+        // Also close any open overflow dropdowns in this toolbar
+        const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
+        if (overflowDropdown) {
+          overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+        }
       }
     });
   }
@@ -1652,8 +1663,8 @@ const FormatterToolbar = (() => {
         }
         // Hide other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
-        // Make sure THIS toolbar is visible
-        embeddedToolbar.style.display = 'flex';
+        // Make sure THIS toolbar is visible (use class-based since CSS has display: flex !important)
+        embeddedToolbar.classList.remove('jt-toolbar-hidden');
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1705,9 +1716,16 @@ const FormatterToolbar = (() => {
     hideAllEmbeddedToolbars(null);
 
     if (activeToolbar) {
+      // Close any open overflow dropdown in the active toolbar
+      const overflowDropdown = activeToolbar.querySelector('.jt-overflow-dropdown');
+      if (overflowDropdown) {
+        overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+      }
+
       // For embedded toolbars, just hide them (don't remove from DOM)
       if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-        activeToolbar.style.display = 'none';
+        // Use class to hide since CSS has display: flex !important
+        activeToolbar.classList.add('jt-toolbar-hidden');
       } else {
         // For floating toolbars, remove from DOM
         activeToolbar.remove();
