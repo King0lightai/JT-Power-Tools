@@ -226,8 +226,6 @@ const FormatterToolbar = (() => {
     // Check if already embedded
     let toolbar = findEmbeddedToolbar(field);
     if (toolbar) {
-      // Remove hidden class to show (class-based since CSS has display: flex !important)
-      toolbar.classList.remove('jt-toolbar-hidden');
       // Re-run overflow check in case width changed
       requestAnimationFrame(() => updateToolbarOverflow(toolbar));
       return toolbar;
@@ -704,11 +702,11 @@ const FormatterToolbar = (() => {
    * Position embedded toolbar with sticky behavior
    * The toolbar starts in document flow above the textarea, becomes sticky when
    * it would scroll out of view, and stops at the bottom of the textarea.
+   * Note: Embedded toolbars are always visible
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
-   * @param {boolean} allowHide - If true, allow hiding based on scroll position (only during scroll events)
    */
-  function positionEmbeddedToolbar(toolbar, field, allowHide = false) {
+  function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
 
     // Check if this is a modal/popup field - these should NOT have sticky behavior
@@ -723,8 +721,6 @@ const FormatterToolbar = (() => {
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
-      // Use class-based visibility since CSS has display: flex !important
-      toolbar.classList.remove('jt-toolbar-hidden');
       toolbar.classList.remove('jt-toolbar-sticky-active');
       return;
     }
@@ -737,8 +733,6 @@ const FormatterToolbar = (() => {
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
-      // Use class-based visibility since CSS has display: flex !important
-      toolbar.classList.remove('jt-toolbar-hidden');
       return;
     }
 
@@ -759,15 +753,6 @@ const FormatterToolbar = (() => {
 
     // Calculate the bottom boundary - toolbar shouldn't go past the bottom of the textarea
     const maxToolbarTop = fieldRect.bottom - toolbarHeight - padding;
-
-    // Only hide based on scroll position during scroll events, not during initial show
-    if (allowHide && (fieldRect.bottom < scrollRect.top || fieldRect.top > scrollRect.bottom)) {
-      // Use class-based visibility since CSS has display: flex !important
-      toolbar.classList.add('jt-toolbar-hidden');
-      return;
-    }
-    // Use class-based visibility since CSS has display: flex !important
-    toolbar.classList.remove('jt-toolbar-hidden');
 
     if (naturalToolbarTop >= stickyTop) {
       // Toolbar is visible in its natural position - use relative positioning
@@ -799,17 +784,11 @@ const FormatterToolbar = (() => {
    * For budget Description fields, docks in the sticky header row
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
-   * @param {Object} options - Positioning options
-   * @param {boolean} options.allowHide - If true, allow scroll-based hiding (only during scroll events)
    */
-  function positionToolbar(toolbar, field, options = {}) {
-    const { allowHide = false } = options;
-
+  function positionToolbar(toolbar, field) {
     // Handle embedded toolbar sticky positioning
     if (toolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-      // Use class-based visibility since CSS has display: flex !important
-      toolbar.classList.remove('jt-toolbar-hidden');
-      positionEmbeddedToolbar(toolbar, field, allowHide);
+      positionEmbeddedToolbar(toolbar, field);
       return;
     }
 
@@ -1627,16 +1606,15 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Hide all embedded toolbars except one
-   * @param {HTMLElement|null} exceptToolbar - Toolbar to keep visible (or null to hide all)
+   * Close overflow dropdowns on all embedded toolbars except one
+   * Note: Embedded toolbars are always visible, we just close their dropdowns
+   * @param {HTMLElement|null} exceptToolbar - Toolbar to skip (or null to close all)
    */
   function hideAllEmbeddedToolbars(exceptToolbar = null) {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
-        // Use class to hide since CSS has display: flex !important
-        toolbar.classList.add('jt-toolbar-hidden');
-        // Also close any open overflow dropdowns in this toolbar
+        // Embedded toolbars stay visible, just close any open overflow dropdowns
         const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
         if (overflowDropdown) {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
@@ -1668,10 +1646,8 @@ const FormatterToolbar = (() => {
           activeToolbar.remove();
           activeToolbar = null;
         }
-        // Hide other embedded toolbars
+        // Close overflow dropdowns on other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
-        // Make sure THIS toolbar is visible (use class-based since CSS has display: flex !important)
-        embeddedToolbar.classList.remove('jt-toolbar-hidden');
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1681,7 +1657,7 @@ const FormatterToolbar = (() => {
     }
 
     // For Budget Description fields ONLY - use floating EXPANDED toolbar
-    // Hide all embedded toolbars since we're using a floating one
+    // Close overflow dropdowns on embedded toolbars
     hideAllEmbeddedToolbars(null);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
@@ -1719,7 +1695,7 @@ const FormatterToolbar = (() => {
   function hideToolbar() {
     clearHideTimeout();
 
-    // Hide all embedded toolbars (they persist in DOM but should be hidden when not active)
+    // Close overflow dropdowns on all embedded toolbars
     hideAllEmbeddedToolbars(null);
 
     if (activeToolbar) {
@@ -1729,11 +1705,8 @@ const FormatterToolbar = (() => {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
 
-      // For embedded toolbars, just hide them (don't remove from DOM)
-      if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-        // Use class to hide since CSS has display: flex !important
-        activeToolbar.classList.add('jt-toolbar-hidden');
-      } else {
+      // Embedded toolbars stay visible, only floating toolbars are removed
+      if (!activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
         // For floating toolbars, remove from DOM
         activeToolbar.remove();
       }
