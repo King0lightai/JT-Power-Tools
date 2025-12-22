@@ -706,8 +706,9 @@ const FormatterToolbar = (() => {
    * it would scroll out of view, and stops at the bottom of the textarea.
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
+   * @param {boolean} allowHide - If true, allow hiding based on scroll position (only during scroll events)
    */
-  function positionEmbeddedToolbar(toolbar, field) {
+  function positionEmbeddedToolbar(toolbar, field, allowHide = false) {
     if (!toolbar || !field) return;
 
     // Check if this is a modal/popup field - these should NOT have sticky behavior
@@ -728,8 +729,8 @@ const FormatterToolbar = (() => {
       return;
     }
 
-    // Find the scrollable container (sidebar or form)
-    const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, [style*="overflow"]');
+    // Find the scrollable container (sidebar or form) - be more specific to avoid matching overflow:hidden
+    const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
     if (!scrollContainer) {
       // No scroll container - just keep toolbar in normal flow
       toolbar.style.position = 'relative';
@@ -759,8 +760,8 @@ const FormatterToolbar = (() => {
     // Calculate the bottom boundary - toolbar shouldn't go past the bottom of the textarea
     const maxToolbarTop = fieldRect.bottom - toolbarHeight - padding;
 
-    // Hide toolbar if field is completely out of view
-    if (fieldRect.bottom < scrollRect.top || fieldRect.top > scrollRect.bottom) {
+    // Only hide based on scroll position during scroll events, not during initial show
+    if (allowHide && (fieldRect.bottom < scrollRect.top || fieldRect.top > scrollRect.bottom)) {
       // Use class-based visibility since CSS has display: flex !important
       toolbar.classList.add('jt-toolbar-hidden');
       return;
@@ -798,13 +799,17 @@ const FormatterToolbar = (() => {
    * For budget Description fields, docks in the sticky header row
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
+   * @param {Object} options - Positioning options
+   * @param {boolean} options.allowHide - If true, allow scroll-based hiding (only during scroll events)
    */
-  function positionToolbar(toolbar, field) {
+  function positionToolbar(toolbar, field, options = {}) {
+    const { allowHide = false } = options;
+
     // Handle embedded toolbar sticky positioning
     if (toolbar.classList.contains('jt-formatter-toolbar-embedded')) {
       // Use class-based visibility since CSS has display: flex !important
       toolbar.classList.remove('jt-toolbar-hidden');
-      positionEmbeddedToolbar(toolbar, field);
+      positionEmbeddedToolbar(toolbar, field, allowHide);
       return;
     }
 
