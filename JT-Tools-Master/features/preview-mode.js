@@ -348,6 +348,34 @@ const PreviewModeFeature = (() => {
     showPreview(textarea, button);
   }
 
+  // Detect if JobTread is in dark mode (by checking body background color)
+  function isJobTreadDarkMode() {
+    const body = document.body;
+    if (!body) return false;
+
+    // Check for dark mode class on body or html
+    if (body.classList.contains('dark') || document.documentElement.classList.contains('dark')) {
+      return true;
+    }
+
+    // Check body background color
+    const bgColor = window.getComputedStyle(body).backgroundColor;
+    if (bgColor) {
+      // Parse RGB values
+      const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+      if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        // Calculate luminance - dark mode if less than 50
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+        return luminance < 80;
+      }
+    }
+
+    return false;
+  }
+
   // Detect and apply theme
   function detectAndApplyTheme(element) {
     if (!element) return;
@@ -359,8 +387,8 @@ const PreviewModeFeature = (() => {
       // Remove existing theme classes
       element.classList.remove('dark-theme', 'custom-theme');
 
-      // Check if dark mode is enabled
-      if (settings.darkMode) {
+      // Check if dark mode is enabled (either via settings OR JobTread's native dark mode)
+      if (settings.darkMode || isJobTreadDarkMode()) {
         element.classList.add('dark-theme');
         return;
       }
@@ -499,49 +527,119 @@ const PreviewModeFeature = (() => {
       }, 100);
     };
 
+    // Scroll handler to reposition preview
+    const handleScroll = () => {
+      if (preview && document.body.contains(preview) && document.body.contains(textarea)) {
+        positionPreview(preview, textarea, button);
+      }
+    };
+
     textarea.addEventListener('input', updatePreview);
     textarea.addEventListener('blur', handleBlur);
+    window.addEventListener('scroll', handleScroll, true);
     preview._updateHandler = updatePreview;
     preview._blurHandler = handleBlur;
+    preview._scrollHandler = handleScroll;
     preview._textarea = textarea;
+    preview._button = button;
 
     console.log('Premium Formatter: Preview shown');
   }
 
-  // Position preview panel intelligently
+  // Get sticky header offset for preview positioning (mirrors toolbar logic)
+  function getPreviewStickyOffset(textarea) {
+    const fieldRect = textarea.getBoundingClientRect();
+    let maxOffset = 0;
+
+    // Check elements with sticky class
+    const stickyClassElements = document.querySelectorAll('.sticky');
+    stickyClassElements.forEach(el => {
+      const style = window.getComputedStyle(el);
+      if (style.position === 'sticky') {
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom <= fieldRect.top + 50 && rect.height > 15 && rect.height < 150) {
+          if (rect.bottom > maxOffset) {
+            maxOffset = rect.bottom;
+          }
+        }
+      }
+    });
+
+    return maxOffset;
+  }
+
+  // Position preview panel intelligently - prefer LEFT side, NEVER overlap textarea
   function positionPreview(preview, textarea, button) {
     const textareaRect = textarea.getBoundingClientRect();
-    const buttonRect = button.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
+    const stickyOffset = getPreviewStickyOffset(textarea);
 
-    const previewWidth = 400;
-    const previewMaxHeight = 300;
+    const previewWidth = 380;
+    const previewMaxHeight = 280;
+    const padding = 12;
+    const gap = 16; // Gap between textarea and preview
 
-    // Try to position to the right of the textarea
-    let left = textareaRect.right + 12;
-    let top = textareaRect.top;
+    // Calculate available space on each side of the textarea
+    const spaceOnLeft = textareaRect.left - padding;
+    const spaceOnRight = viewportWidth - textareaRect.right - padding;
 
-    // If not enough space on the right, position to the left
-    if (left + previewWidth > viewportWidth - 20) {
-      left = textareaRect.left - previewWidth - 12;
+    let left, top;
+    let placedSide = false;
+
+    // PREFER positioning to the LEFT of the textarea (user requested)
+    if (spaceOnLeft >= previewWidth + gap) {
+      left = textareaRect.left - previewWidth - gap;
+      top = textareaRect.top;
+      placedSide = true;
+    }
+    // Otherwise try positioning to the RIGHT
+    else if (spaceOnRight >= previewWidth + gap) {
+      left = textareaRect.right + gap;
+      top = textareaRect.top;
+      placedSide = true;
+    }
+    // If not enough space on either side, try a smaller width on LEFT
+    else if (spaceOnLeft >= 250) {
+      left = padding;
+      top = textareaRect.top;
+      preview.style.width = `${spaceOnLeft - gap}px`;
+      placedSide = true;
     }
 
-    // If still not enough space, position below
-    if (left < 20) {
-      left = textareaRect.left;
-      top = textareaRect.bottom + 12;
+    // If neither side works, position BELOW the textarea (never overlap!)
+    if (!placedSide) {
+      left = Math.max(padding, Math.min(textareaRect.left, viewportWidth - previewWidth - padding));
+      top = textareaRect.bottom + gap;
+
+      // If not enough room below, position ABOVE the textarea
+      if (top + previewMaxHeight > viewportHeight - padding) {
+        top = textareaRect.top - previewMaxHeight - gap;
+      }
+
+      // If still no room above, clamp to viewport bottom
+      if (top < stickyOffset + padding) {
+        top = stickyOffset + padding;
+      }
     }
 
-    // If would go off bottom, position above
-    if (top + previewMaxHeight > viewportHeight - 20) {
-      top = Math.max(20, textareaRect.top - previewMaxHeight - 12);
+    // If placed on the side, adjust vertical position to stay in viewport
+    if (placedSide) {
+      // Account for sticky headers
+      const minTop = stickyOffset + padding;
+      const maxTop = viewportHeight - previewMaxHeight - padding;
+
+      // Try to align with textarea top, but clamp to viewport
+      top = Math.max(minTop, Math.min(top, maxTop));
     }
 
-    // Apply position
-    preview.style.left = `${left + window.scrollX}px`;
-    preview.style.top = `${top + window.scrollY}px`;
-    preview.style.width = `${previewWidth}px`;
+    // Use fixed positioning for consistent behavior
+    preview.style.position = 'fixed';
+    preview.style.left = `${left}px`;
+    preview.style.top = `${top}px`;
+    if (!preview.style.width) {
+      preview.style.width = `${previewWidth}px`;
+    }
     preview.style.maxHeight = `${previewMaxHeight}px`;
 
     // Add show class for animation
@@ -563,6 +661,11 @@ const PreviewModeFeature = (() => {
       // Remove blur listener
       if (activePreview._blurHandler && activePreview._textarea) {
         activePreview._textarea.removeEventListener('blur', activePreview._blurHandler);
+      }
+
+      // Remove scroll listener
+      if (activePreview._scrollHandler) {
+        window.removeEventListener('scroll', activePreview._scrollHandler, true);
       }
 
       activePreview.classList.remove('show');
@@ -785,14 +888,14 @@ const PreviewModeFeature = (() => {
 
   // Render a single alert
   function renderAlert(color, icon, subject, body) {
-    // Color mappings
+    // Color mappings - use JT-specific classes that work with dark theme
     const colorMap = {
-      blue: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-500' },
-      yellow: { border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-500' },
-      red: { border: 'border-red-500', bg: 'bg-red-50', text: 'text-red-500' },
-      green: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-500' },
-      orange: { border: 'border-jtOrange', bg: 'bg-orange-50', text: 'text-jtOrange' },
-      purple: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-500' }
+      blue: { border: 'jt-alert-border-blue', bg: 'jt-alert-bg-blue', text: 'jt-alert-text-blue' },
+      yellow: { border: 'jt-alert-border-yellow', bg: 'jt-alert-bg-yellow', text: 'jt-alert-text-yellow' },
+      red: { border: 'jt-alert-border-red', bg: 'jt-alert-bg-red', text: 'jt-alert-text-red' },
+      green: { border: 'jt-alert-border-green', bg: 'jt-alert-bg-green', text: 'jt-alert-text-green' },
+      orange: { border: 'jt-alert-border-orange', bg: 'jt-alert-bg-orange', text: 'jt-alert-text-orange' },
+      purple: { border: 'jt-alert-border-purple', bg: 'jt-alert-bg-purple', text: 'jt-alert-text-purple' }
     };
 
     // Icon SVG paths
@@ -806,16 +909,20 @@ const PreviewModeFeature = (() => {
     };
 
     const colors = colorMap[color] || colorMap.blue;
-    const iconSVG = iconMap[icon] || iconMap.lightbulb;
+    const iconSVG = iconMap[icon] || iconMap.infoCircle;
 
     // Process body inline formatting
     const processedBody = processInlineFormatting(body);
 
-    return `<div class="border-l-4 px-4 py-2 rounded-r-sm ${colors.border} ${colors.bg}">
-  <div class="font-bold text-base ${colors.text}">
-    <div>${escapeHTML(subject)}</div>
+    // Build the icon SVG element
+    const iconElement = `<svg class="jt-alert-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconSVG}</svg>`;
+
+    return `<div class="jt-alert-box ${colors.border} ${colors.bg}">
+  <div class="jt-alert-subject ${colors.text}">
+    ${iconElement}
+    <span>${escapeHTML(subject)}</span>
   </div>
-  <div class="text-gray-900 dark:text-gray-100">${processedBody}</div>
+  <div class="jt-alert-body">${processedBody}</div>
 </div>`;
   }
 

@@ -102,7 +102,7 @@
 
 /* Preview Content */
 .jt-preview-content {
-  padding: 16px 16px 24px 16px;
+  padding: 16px 16px 32px 16px;
   max-height: 280px;
   overflow-y: auto;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -191,11 +191,11 @@
 }
 
 .jt-preview-content blockquote {
-  border-left: 4px solid #e5e7eb;
+  border-left: 4px solid #9ca3af; /* Gray like JobTread */
   padding-left: 12px;
   margin: 8px 0;
-  color: #6b7280 !important;
-  font-style: italic;
+  color: #374151 !important;
+  font-style: normal;
 }
 
 .jt-preview-content a {
@@ -488,8 +488,8 @@
   }
 
   .jt-preview-content blockquote {
-    border-left-color: #4b5563;
-    color: #9ca3af;
+    border-left-color: #6b7280; /* Gray in dark mode */
+    color: #d1d5db;
   }
 
   .jt-preview-content::-webkit-scrollbar-track {
@@ -554,7 +554,15 @@
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content * {
-  color: #d1d5db;
+  color: #e5e7eb !important;
+}
+
+/* Ensure all text in dark theme is light - override any inherited styles */
+.jt-preview-panel.dark-theme .jt-preview-content,
+.jt-preview-panel.dark-theme .jt-preview-content p,
+.jt-preview-panel.dark-theme .jt-preview-content span,
+.jt-preview-panel.dark-theme .jt-preview-content div {
+  color: #e5e7eb !important;
 }
 
 .jt-preview-panel.dark-theme .jt-preview-empty {
@@ -587,8 +595,8 @@
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content blockquote {
-  border-left-color: #464646;
-  color: #9ca3af !important;
+  border-left-color: #6b7280; /* Gray in dark mode */
+  color: #d1d5db !important;
 }
 
 .jt-preview-panel.dark-theme .jt-preview-content a {
@@ -777,8 +785,8 @@
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content blockquote {
-  border-left-color: var(--jt-preview-border, #e5e7eb);
-  color: var(--jt-preview-text-muted, #6b7280) !important;
+  border-left-color: var(--jt-preview-blockquote-border, #9ca3af);
+  color: var(--jt-preview-text, #374151) !important;
 }
 
 .jt-preview-panel.custom-theme .jt-preview-content a {
@@ -882,6 +890,86 @@
 .jt-preview-panel.custom-theme .jt-preview-content::-webkit-scrollbar-thumb:hover {
   background: var(--jt-preview-scrollbar-thumb-hover, #9ca3af);
 }
+
+/* ========================================
+   Alert Box Styles (Theme-aware)
+   ======================================== */
+
+.jt-preview-content .jt-alert-box {
+  margin: 8px 0;
+  padding: 0.75rem 1rem;
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.jt-preview-content .jt-alert-subject {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.jt-preview-content .jt-alert-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.jt-preview-content .jt-alert-body {
+  color: #374151;
+  margin-left: 26px; /* Align with text after icon */
+}
+
+/* Alert color variants - Light theme */
+.jt-preview-content .jt-alert-border-blue { border-left-color: #3b82f6; }
+.jt-preview-content .jt-alert-bg-blue { background-color: #eff6ff; }
+.jt-preview-content .jt-alert-text-blue { color: #3b82f6; }
+
+.jt-preview-content .jt-alert-border-yellow { border-left-color: #f59e0b; }
+.jt-preview-content .jt-alert-bg-yellow { background-color: #fffbeb; }
+.jt-preview-content .jt-alert-text-yellow { color: #f59e0b; }
+
+.jt-preview-content .jt-alert-border-red { border-left-color: #ef4444; }
+.jt-preview-content .jt-alert-bg-red { background-color: #fef2f2; }
+.jt-preview-content .jt-alert-text-red { color: #ef4444; }
+
+.jt-preview-content .jt-alert-border-green { border-left-color: #10b981; }
+.jt-preview-content .jt-alert-bg-green { background-color: #f0fdf4; }
+.jt-preview-content .jt-alert-text-green { color: #10b981; }
+
+.jt-preview-content .jt-alert-border-orange { border-left-color: #f97316; }
+.jt-preview-content .jt-alert-bg-orange { background-color: #fff7ed; }
+.jt-preview-content .jt-alert-text-orange { color: #f97316; }
+
+.jt-preview-content .jt-alert-border-purple { border-left-color: #8b5cf6; }
+.jt-preview-content .jt-alert-bg-purple { background-color: #faf5ff; }
+.jt-preview-content .jt-alert-text-purple { color: #8b5cf6; }
+
+/* Alert color variants - Dark theme */
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-body {
+  color: #e5e7eb !important;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-blue { background-color: rgba(59, 130, 246, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-blue { color: #60a5fa !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-yellow { background-color: rgba(245, 158, 11, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-yellow { color: #fbbf24 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-red { background-color: rgba(239, 68, 68, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-red { color: #f87171 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-green { background-color: rgba(16, 185, 129, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-green { color: #34d399 !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-orange { background-color: rgba(249, 115, 22, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-orange { color: #fb923c !important; }
+
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-purple { background-color: rgba(139, 92, 246, 0.15); }
+.jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-purple { color: #a78bfa !important; }
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
