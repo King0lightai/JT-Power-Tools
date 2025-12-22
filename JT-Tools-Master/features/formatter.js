@@ -377,7 +377,8 @@ const FormatterFeature = (() => {
     }
 
     if (activeToolbar && activeField) {
-      Toolbar().positionToolbar(activeToolbar, activeField);
+      // Allow scroll-based hiding during scroll events
+      Toolbar().positionToolbar(activeToolbar, activeField, { allowHide: true });
 
       if (scrollTimeout) {
         clearTimeout(scrollTimeout);
@@ -388,9 +389,9 @@ const FormatterFeature = (() => {
         if (toolbar && field &&
             document.body.contains(toolbar) &&
             document.body.contains(field)) {
-          Toolbar().positionToolbar(toolbar, field);
-          toolbar.style.display = 'flex';
-          toolbar.style.visibility = 'visible';
+          Toolbar().positionToolbar(toolbar, field, { allowHide: true });
+          // Use class-based visibility since CSS has display: flex !important
+          toolbar.classList.remove('jt-toolbar-hidden');
         }
       }, 100);
     }
