@@ -736,6 +736,8 @@ const FormatterToolbar = (() => {
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
+      // Use class-based visibility since CSS has display: flex !important
+      toolbar.classList.remove('jt-toolbar-hidden');
       return;
     }
 
