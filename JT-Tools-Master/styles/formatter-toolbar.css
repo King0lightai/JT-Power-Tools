@@ -1293,7 +1293,7 @@
 /* Sticky-active state - when toolbar becomes fixed during scroll */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
   position: fixed !important;
-  z-index: 9999; /* Above other content when sticky */
+  z-index: 50; /* Below JobTread's headers (usually z-index 100+) but above content */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-color: #d1d5db;
   margin-bottom: 0; /* Remove margin when fixed */
