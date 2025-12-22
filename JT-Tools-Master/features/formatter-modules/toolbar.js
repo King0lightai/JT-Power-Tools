@@ -1635,15 +1635,20 @@ const FormatterToolbar = (() => {
    * Close overflow dropdowns on all embedded toolbars except one
    * Note: Embedded toolbars are always visible, we just close their dropdowns
    * @param {HTMLElement|null} exceptToolbar - Toolbar to skip (or null to close all)
+   * @param {boolean} actuallyHide - If true, actually hide the toolbars (for budget field focus)
    */
-  function hideAllEmbeddedToolbars(exceptToolbar = null) {
+  function hideAllEmbeddedToolbars(exceptToolbar = null, actuallyHide = false) {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
-        // Embedded toolbars stay visible, just close any open overflow dropdowns
+        // Close any open overflow dropdowns
         const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
         if (overflowDropdown) {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+        }
+        // If actuallyHide is true, hide the toolbar (used when budget field is focused)
+        if (actuallyHide) {
+          toolbar.classList.add('jt-toolbar-hidden');
         }
       }
     });
@@ -1674,6 +1679,8 @@ const FormatterToolbar = (() => {
         }
         // Close overflow dropdowns on other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
+        // Ensure this toolbar is visible (may have been hidden when budget field was focused)
+        embeddedToolbar.classList.remove('jt-toolbar-hidden');
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1683,8 +1690,8 @@ const FormatterToolbar = (() => {
     }
 
     // For Budget Description fields ONLY - use floating EXPANDED toolbar
-    // Close overflow dropdowns on embedded toolbars
-    hideAllEmbeddedToolbars(null);
+    // Hide all embedded toolbars when budget field is focused
+    hideAllEmbeddedToolbars(null, true);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
     }
