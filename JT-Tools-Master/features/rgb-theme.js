@@ -403,6 +403,42 @@ const CustomThemeFeature = (() => {
         color: ${primaryText} !important;
       }
 
+      /* Overflow dropdown (compact toolbar "..." menu) */
+      .jt-overflow-dropdown {
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.default} !important;
+        box-shadow: 0 10px 25px ${p.shadows.colorStrong} !important;
+      }
+
+      .jt-overflow-dropdown .jt-toolbar-item {
+        background: ${p.background.elevated} !important;
+        border-color: ${p.border.subtle} !important;
+        color: ${p.text.primary} !important;
+      }
+
+      .jt-overflow-dropdown .jt-toolbar-item:hover {
+        background: ${p.states.hover} !important;
+        border-color: ${p.border.default} !important;
+        color: ${p.text.primary} !important;
+      }
+
+      .jt-overflow-dropdown .jt-toolbar-item.active {
+        background: ${p.primary.base} !important;
+        border-color: ${p.primary.base} !important;
+        color: ${primaryText} !important;
+      }
+
+      /* Color buttons in overflow dropdown */
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-green { color: #10b981 !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow { color: #f59e0b !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-blue { color: #3b82f6 !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-red { color: #ef4444 !important; }
+
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-green.active { background: #10b981 !important; color: ${greenText} !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow.active { background: #f59e0b !important; color: ${yellowText} !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-blue.active { background: #3b82f6 !important; color: ${blueText} !important; }
+      .jt-overflow-dropdown .jt-toolbar-item.jt-color-red.active { background: #ef4444 !important; color: ${redText} !important; }
+
       /* === Background Color Hierarchy === */
       .bg-white,
       .bg-slate-50 {
