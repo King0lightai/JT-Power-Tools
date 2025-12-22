@@ -478,11 +478,11 @@ const QuickJobSwitcherFeature = (() => {
   async function applyFilter() {
     const statusDiv = document.getElementById('jt-cf-status');
 
-    if (!activeFilters.fieldId || !activeFilters.value) {
+    if (!activeFilters.fieldName || !activeFilters.value) {
       return;
     }
 
-    console.log('QuickJobSwitcher: Applying filter:', activeFilters.fieldName, '(', activeFilters.fieldId, ') =', activeFilters.value);
+    console.log('QuickJobSwitcher: Applying filter:', activeFilters.fieldName, '=', activeFilters.value);
 
     if (statusDiv) {
       statusDiv.style.display = 'block';
@@ -491,9 +491,9 @@ const QuickJobSwitcherFeature = (() => {
     }
 
     try {
-      // Fetch jobs filtered by custom field value
+      // Fetch jobs filtered by custom field value (server-side using Pave 'with' clause)
       const jobs = await JobTreadAPI.fetchJobsByCustomField(
-        activeFilters.fieldId,
+        activeFilters.fieldName,
         activeFilters.value
       );
 

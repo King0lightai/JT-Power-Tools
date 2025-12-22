@@ -489,38 +489,96 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Fetch jobs filtered by custom field value (client-side filtering)
-   * @param {string} fieldId - Custom field ID to filter by
+   * Fetch jobs filtered by custom field value using Pave 'with' clause (server-side filtering)
+   * @param {string} fieldName - Custom field name to filter by
    * @param {string} fieldValue - Value to match
    * @returns {Promise<Array>} Filtered list of jobs
    */
-  async function fetchJobsByCustomField(fieldId, fieldValue) {
-    // API max is 100 per page, fetch multiple pages to get more jobs
-    const allJobs = [];
-    const pageSize = 100;
-    const maxPages = 5; // Get up to 500 jobs total
+  async function fetchJobsByCustomField(fieldName, fieldValue) {
+    // Use single filter version
+    return fetchJobsWithFilters([{ fieldName, value: fieldValue }]);
+  }
 
-    for (let page = 0; page < maxPages; page++) {
-      const jobs = await fetchJobs({ limit: pageSize, offset: page * pageSize });
-      allJobs.push(...jobs);
-
-      // Stop if we got fewer than requested (no more pages)
-      if (jobs.length < pageSize) break;
+  /**
+   * Fetch jobs filtered by multiple custom field values using Pave 'with' clause
+   * Supports AND logic for multiple filters
+   * @param {Array} filters - Array of { fieldName, value } objects
+   * @returns {Promise<Array>} Filtered list of jobs
+   */
+  async function fetchJobsWithFilters(filters = []) {
+    let orgId = await getOrgId();
+    if (!orgId) {
+      throw new Error('Organization ID not configured');
     }
 
-    console.log('JobTreadAPI: Fetched total jobs:', allJobs.length);
+    // If no filters, return all jobs
+    if (!filters || filters.length === 0) {
+      return fetchJobs({ limit: 100 });
+    }
 
-    // Filter client-side by custom field value
-    const filteredJobs = allJobs.filter(job => {
-      const cfValues = job.customFieldValues?.nodes || [];
-      return cfValues.some(cfv =>
-        cfv.customField?.id === fieldId &&
-        cfv.value === fieldValue
-      );
+    // Build "with" clauses for each filter
+    const withClauses = {};
+    filters.forEach((filter, index) => {
+      const key = `filter${index}`;
+      withClauses[key] = {
+        _: 'customFieldValues',
+        $: {
+          where: [['customField', 'name'], '=', filter.fieldName]
+        },
+        values: { $: { field: 'value' } }
+      };
     });
 
-    console.log('JobTreadAPI: Filtered to', filteredJobs.length, 'jobs with', fieldId, '=', fieldValue);
-    return filteredJobs;
+    // Build where conditions
+    const whereConditions = filters.map((filter, index) => {
+      return [[`filter${index}`, 'values'], '=', filter.value];
+    });
+
+    // Single filter vs multiple filters (AND logic)
+    const whereClause = whereConditions.length === 1
+      ? whereConditions[0]
+      : { and: whereConditions };
+
+    // Build the query
+    const query = {
+      organization: {
+        $: { id: orgId },
+        jobs: {
+          $: {
+            size: 100,
+            with: withClauses,
+            where: whereClause,
+            sortBy: [{ field: 'name' }]
+          },
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            customFieldValues: {
+              nodes: {
+                value: {},
+                customField: {
+                  id: {},
+                  name: {}
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    try {
+      console.log('JobTreadAPI: Fetching jobs with filters:', filters);
+      const result = await paveQuery(query);
+      const jobs = result.organization?.jobs?.nodes || [];
+      console.log('JobTreadAPI: Server-side filtered to', jobs.length, 'jobs');
+      return jobs;
+    } catch (error) {
+      console.error('JobTreadAPI: Failed to fetch filtered jobs:', error);
+      throw error;
+    }
   }
 
   /**
@@ -685,6 +743,7 @@ const JobTreadAPI = (() => {
     fetchCustomFieldDefinitions,
     fetchJobs,
     fetchJobsByCustomField,
+    fetchJobsWithFilters,
     getCustomFieldValues,
 
     // Raw query access
