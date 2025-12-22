@@ -48,14 +48,14 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is a budget table Description field
+   * Check if a field is inside the budget table (ANY field - Name, Description, etc.)
+   * ALL budget table fields should use the floating expanded toolbar, not embedded
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
-  function isBudgetDescriptionField(field) {
-    if (!field || field.getAttribute('placeholder') !== 'Description') {
-      return false;
-    }
+  function isBudgetTableField(field) {
+    if (!field) return false;
+
     // Check if it's inside a budget table (has the characteristic row structure)
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
@@ -63,6 +63,18 @@ const FormatterToolbar = (() => {
     // Check for budget table indicators - parent should have overflow-auto
     const scrollContainer = row.closest('.overflow-auto');
     return scrollContainer !== null;
+  }
+
+  /**
+   * Check if a field is a budget table Description field (for positioning logic)
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isBudgetDescriptionField(field) {
+    if (!field || field.getAttribute('placeholder') !== 'Description') {
+      return false;
+    }
+    return isBudgetTableField(field);
   }
 
   /**
@@ -180,37 +192,30 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a toolbar is already embedded for this field
+   * Find an embedded toolbar for a specific field (if it exists)
+   * Uses data-for-field attribute to ensure we only find the toolbar for THIS field
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
   function findEmbeddedToolbar(field) {
-    // Check if there's already an embedded toolbar before this field
-    let sibling = field.previousElementSibling;
-    while (sibling) {
-      if (sibling.classList.contains('jt-formatter-toolbar-embedded')) {
-        return sibling;
-      }
-      sibling = sibling.previousElementSibling;
+    // Generate a unique ID for this field if it doesn't have one
+    if (!field.dataset.formatterId) {
+      field.dataset.formatterId = 'fmt-' + Math.random().toString(36).substr(2, 9);
+    }
+    const fieldId = field.dataset.formatterId;
+
+    // First, look for a toolbar with matching field ID (most reliable)
+    const matchingToolbar = document.querySelector(`.jt-formatter-toolbar-embedded[data-for-field="${fieldId}"]`);
+    if (matchingToolbar) {
+      return matchingToolbar;
     }
 
-    // Also check parent's children
-    const parent = field.parentElement;
-    if (parent) {
-      const embedded = parent.querySelector('.jt-formatter-toolbar-embedded');
-      if (embedded) return embedded;
-
-      // Also check before the parent (for JobTread's relative/absolute container)
-      const parentStyle = window.getComputedStyle(parent);
-      if (parentStyle.position === 'relative') {
-        let parentSibling = parent.previousElementSibling;
-        while (parentSibling) {
-          if (parentSibling.classList.contains('jt-formatter-toolbar-embedded')) {
-            return parentSibling;
-          }
-          parentSibling = parentSibling.previousElementSibling;
-        }
-      }
+    // Check if there's an embedded toolbar immediately before this field (direct sibling only)
+    const sibling = field.previousElementSibling;
+    if (sibling && sibling.classList.contains('jt-formatter-toolbar-embedded') && !sibling.dataset.forField) {
+      // Associate this unassociated toolbar with this field
+      sibling.dataset.forField = fieldId;
+      return sibling;
     }
 
     return null;
@@ -219,11 +224,19 @@ const FormatterToolbar = (() => {
   /**
    * Create and embed toolbar between label and field for sidebar fields
    * Uses responsive overflow - buttons that don't fit go into the ... menu
+   * NOTE: This should NEVER be called for budget description fields
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
   function embedToolbarForField(field) {
-    // Check if already embedded
+    // CRITICAL: Never create embedded toolbar for ANY budget table field
+    // Budget table uses the floating expanded toolbar exclusively
+    if (isBudgetTableField(field)) {
+      console.log('Formatter: Blocked embedded toolbar creation for budget table field');
+      return null;
+    }
+
+    // Check if already embedded for THIS specific field
     let toolbar = findEmbeddedToolbar(field);
     if (toolbar) {
       // Re-run overflow check in case width changed
@@ -329,6 +342,10 @@ const FormatterToolbar = (() => {
         }
       }
     }
+
+    // Associate toolbar with this specific field using data attribute
+    // This ensures findEmbeddedToolbar returns the correct toolbar for this field
+    toolbar.dataset.forField = field.dataset.formatterId;
 
     // Insert toolbar before the target
     if (insertParent) {
@@ -823,11 +840,11 @@ const FormatterToolbar = (() => {
     const padding = 8;
     const viewportHeight = window.innerHeight;
 
-    // Check if this is a budget Description field - use bottom positioning
-    const isBudgetField = isBudgetDescriptionField(field);
+    // Check if this is a budget table field - use footer bar docking for positioning
+    const isBudgetField = isBudgetTableField(field);
 
     if (isBudgetField) {
-      // For budget Description fields, dock toolbar inside the footer bar row
+      // For budget table fields, dock toolbar inside the footer bar row
       // The footer bar with + Item / + Group is always visible at the bottom
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
@@ -1663,9 +1680,9 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
-    // Budget Description fields get the EXPANDED FLOATING toolbar (all buttons visible)
+    // Budget table fields (ALL fields, not just Description) get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
-    const isBudgetField = isBudgetDescriptionField(field);
+    const isBudgetField = isBudgetTableField(field);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
