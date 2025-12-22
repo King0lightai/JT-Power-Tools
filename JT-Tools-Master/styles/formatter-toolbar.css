@@ -1299,6 +1299,14 @@
   margin-bottom: 0; /* Remove margin when fixed */
 }
 
+/* Toolbar placed BELOW the textarea (Message fields) */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-below {
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+  border-radius: 0 0 0.25rem 0.25rem; /* Rounded bottom corners only */
+  border-top: 1px solid #e5e7eb;
+}
+
 /* Responsive toolbar - flat button layout like JobTread */
 .jt-formatter-toolbar.jt-responsive-toolbar {
   display: flex;

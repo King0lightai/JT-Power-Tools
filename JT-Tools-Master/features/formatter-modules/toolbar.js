@@ -211,11 +211,18 @@ const FormatterToolbar = (() => {
     }
 
     // Check if there's an embedded toolbar immediately before this field (direct sibling only)
-    const sibling = field.previousElementSibling;
-    if (sibling && sibling.classList.contains('jt-formatter-toolbar-embedded') && !sibling.dataset.forField) {
+    const prevSibling = field.previousElementSibling;
+    if (prevSibling && prevSibling.classList.contains('jt-formatter-toolbar-embedded') && !prevSibling.dataset.forField) {
       // Associate this unassociated toolbar with this field
-      sibling.dataset.forField = fieldId;
-      return sibling;
+      prevSibling.dataset.forField = fieldId;
+      return prevSibling;
+    }
+
+    // Also check next sibling (for Message fields where toolbar is placed below)
+    const nextSibling = field.nextElementSibling;
+    if (nextSibling && nextSibling.classList.contains('jt-formatter-toolbar-embedded') && !nextSibling.dataset.forField) {
+      nextSibling.dataset.forField = fieldId;
+      return nextSibling;
     }
 
     return null;
@@ -324,6 +331,9 @@ const FormatterToolbar = (() => {
       setupPreviewButton(toolbar, field);
     }
 
+    // Check if this is a Message field - these get toolbar BELOW the textarea
+    const isMessageField = field.getAttribute('placeholder') === 'Message';
+
     // Find the right insertion point - need to insert OUTSIDE any relative/absolute container
     // JobTread uses a relative container with absolute textarea + preview div overlay
     let insertTarget = field;
@@ -336,7 +346,7 @@ const FormatterToolbar = (() => {
         // Check if the field is absolute positioned inside
         const fieldStyle = window.getComputedStyle(field);
         if (fieldStyle.position === 'absolute') {
-          // Insert before the relative container, not inside it
+          // Insert outside the relative container
           insertTarget = insertParent;
           insertParent = insertParent.parentElement;
         }
@@ -347,8 +357,27 @@ const FormatterToolbar = (() => {
     // This ensures findEmbeddedToolbar returns the correct toolbar for this field
     toolbar.dataset.forField = field.dataset.formatterId;
 
-    // Insert toolbar before the target
-    if (insertParent) {
+    // Insert toolbar - AFTER for Message fields (below textarea), BEFORE for others (above)
+    if (isMessageField) {
+      // For Message fields, insert toolbar AFTER the scroll container
+      // The scroll container has max-h-[20vh] overflow-auto class
+      // We need to insert OUTSIDE this container so toolbar is always visible
+      const scrollContainer = field.closest('.overflow-auto, .overflow-y-auto');
+      toolbar.classList.add('jt-toolbar-below');
+
+      if (scrollContainer && scrollContainer.parentElement) {
+        // Insert after the scroll container
+        if (scrollContainer.nextSibling) {
+          scrollContainer.parentElement.insertBefore(toolbar, scrollContainer.nextSibling);
+        } else {
+          scrollContainer.parentElement.appendChild(toolbar);
+        }
+      } else if (insertTarget.nextSibling) {
+        insertParent.insertBefore(toolbar, insertTarget.nextSibling);
+      } else {
+        insertParent.appendChild(toolbar);
+      }
+    } else if (insertParent) {
       insertParent.insertBefore(toolbar, insertTarget);
     } else {
       // Fallback: insert before the field
@@ -725,6 +754,17 @@ const FormatterToolbar = (() => {
    */
   function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
+
+    // Check if toolbar is placed BELOW the textarea (Message fields)
+    // These don't need sticky positioning - they stay in normal document flow
+    if (toolbar.classList.contains('jt-toolbar-below')) {
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+      return;
+    }
 
     // Check if this is a modal/popup field (but NOT Message fields - they get special handling)
     // Modals have .m-auto.shadow-lg pattern or are inside fixed overlays
