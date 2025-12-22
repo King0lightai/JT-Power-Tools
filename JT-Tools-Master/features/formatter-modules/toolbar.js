@@ -709,11 +709,10 @@ const FormatterToolbar = (() => {
   function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
 
-    // Check if this is a modal/popup field - these should NOT have sticky behavior
+    // Check if this is a modal/popup field (but NOT Message fields - they get special handling)
     // Modals have .m-auto.shadow-lg pattern or are inside fixed overlays
     const isInModal = field.closest('.m-auto.shadow-lg') !== null ||
-                      field.closest('[class*="modal"]') !== null ||
-                      field.getAttribute('placeholder') === 'Message';
+                      field.closest('[class*="modal"]') !== null;
 
     if (isInModal) {
       // For modals/popups, just keep toolbar in normal document flow - no sticky behavior
@@ -725,8 +724,21 @@ const FormatterToolbar = (() => {
       return;
     }
 
-    // Find the scrollable container (sidebar or form) - be more specific to avoid matching overflow:hidden
-    const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
+    // Check if this is a Message field - these have their own scroll container
+    const isMessageField = field.getAttribute('placeholder') === 'Message';
+
+    // Find the scrollable container
+    // For Message fields, look for the immediate scrollable parent (the message input area)
+    // For other fields, look for the sidebar/form scroll container
+    let scrollContainer;
+    if (isMessageField) {
+      // Message fields: find the closest scrollable ancestor (could be the textarea wrapper)
+      scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll') ||
+                        field.parentElement?.closest('.overflow-y-auto, .overflow-auto');
+    } else {
+      scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
+    }
+
     if (!scrollContainer) {
       // No scroll container - just keep toolbar in normal flow
       toolbar.style.position = 'relative';
@@ -743,9 +755,23 @@ const FormatterToolbar = (() => {
     const fieldRect = field.getBoundingClientRect();
     const scrollRect = scrollContainer.getBoundingClientRect();
 
-    // The sticky position should be at the top of the scroll container (sidebar)
-    // Plus a small padding for visual spacing
-    const stickyTop = scrollRect.top + padding;
+    // Find any sticky headers within the scroll container and account for their height
+    // Look for common sticky header patterns in JobTread
+    let stickyHeaderHeight = 0;
+    const stickyHeaders = scrollContainer.querySelectorAll('.sticky, [class*="sticky"]');
+    stickyHeaders.forEach(header => {
+      const headerStyle = window.getComputedStyle(header);
+      if (headerStyle.position === 'sticky' || header.classList.contains('sticky')) {
+        const headerRect = header.getBoundingClientRect();
+        // Only count headers that are at the top of the scroll container
+        if (headerRect.top <= scrollRect.top + 50) {
+          stickyHeaderHeight = Math.max(stickyHeaderHeight, headerRect.height);
+        }
+      }
+    });
+
+    // The sticky position should be below any sticky headers
+    const stickyTop = scrollRect.top + padding + stickyHeaderHeight;
 
     // Calculate where the top of the toolbar would be if it were in normal flow
     // When in relative position, the toolbar sits right above the field
@@ -763,7 +789,7 @@ const FormatterToolbar = (() => {
       toolbar.classList.remove('jt-toolbar-sticky-active');
     } else if (stickyTop <= maxToolbarTop) {
       // Toolbar would scroll out of view but field is still visible - make it sticky
-      // Position at top of scroll container
+      // Position below any sticky headers
       toolbar.style.position = 'fixed';
       toolbar.style.top = `${stickyTop}px`;
       toolbar.style.left = `${scrollRect.left + padding}px`;
@@ -1609,15 +1635,20 @@ const FormatterToolbar = (() => {
    * Close overflow dropdowns on all embedded toolbars except one
    * Note: Embedded toolbars are always visible, we just close their dropdowns
    * @param {HTMLElement|null} exceptToolbar - Toolbar to skip (or null to close all)
+   * @param {boolean} actuallyHide - If true, actually hide the toolbars (for budget field focus)
    */
-  function hideAllEmbeddedToolbars(exceptToolbar = null) {
+  function hideAllEmbeddedToolbars(exceptToolbar = null, actuallyHide = false) {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
-        // Embedded toolbars stay visible, just close any open overflow dropdowns
+        // Close any open overflow dropdowns
         const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
         if (overflowDropdown) {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
+        }
+        // If actuallyHide is true, hide the toolbar (used when budget field is focused)
+        if (actuallyHide) {
+          toolbar.classList.add('jt-toolbar-hidden');
         }
       }
     });
@@ -1648,6 +1679,8 @@ const FormatterToolbar = (() => {
         }
         // Close overflow dropdowns on other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
+        // Ensure this toolbar is visible (may have been hidden when budget field was focused)
+        embeddedToolbar.classList.remove('jt-toolbar-hidden');
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
@@ -1657,8 +1690,8 @@ const FormatterToolbar = (() => {
     }
 
     // For Budget Description fields ONLY - use floating EXPANDED toolbar
-    // Close overflow dropdowns on embedded toolbars
-    hideAllEmbeddedToolbars(null);
+    // Hide all embedded toolbars when budget field is focused
+    hideAllEmbeddedToolbars(null, true);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;
     }
