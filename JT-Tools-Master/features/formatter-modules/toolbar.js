@@ -151,6 +151,59 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Find the containing column/panel for a field to use for toolbar width constraints
+   * This handles sidebar fields, job overview columns, and other contained layouts
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findContainingColumn(field) {
+    if (!field) return null;
+
+    // Try drag-scroll-boundary first (JobTread sidebars)
+    const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
+    if (dragScrollContainer) return dragScrollContainer;
+
+    // Try common sidebar/panel patterns
+    const sidebar = field.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
+    if (sidebar) return sidebar;
+
+    // Look for a parent container that has constrained width
+    // This catches job overview columns and similar layouts
+    let parent = field.parentElement;
+    const viewportWidth = window.innerWidth;
+
+    while (parent && parent !== document.body) {
+      const rect = parent.getBoundingClientRect();
+      const style = window.getComputedStyle(parent);
+
+      // Look for containers that:
+      // 1. Have a width less than 90% of viewport (constrained column)
+      // 2. Are tall enough to be a meaningful container (not just a small wrapper)
+      // 3. Have overflow handling or are a scroll container
+      const isConstrainedWidth = rect.width < viewportWidth * 0.9;
+      const isTallEnough = rect.height > 150;
+      const hasOverflow = style.overflowY === 'auto' || style.overflowY === 'scroll' ||
+                          style.overflow === 'auto' || style.overflow === 'scroll';
+      const isFlexColumn = style.display === 'flex' && style.flexDirection === 'column';
+
+      if (isConstrainedWidth && isTallEnough && (hasOverflow || isFlexColumn)) {
+        return parent;
+      }
+
+      // Also check for fixed/absolute positioned containers
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        if (rect.width < viewportWidth * 0.8 && rect.height > 200) {
+          return parent;
+        }
+      }
+
+      parent = parent.parentElement;
+    }
+
+    return null;
+  }
+
+  /**
    * Find the label element for a field (to embed toolbar after it)
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
@@ -781,6 +834,13 @@ const FormatterToolbar = (() => {
       return;
     }
 
+    // Check if this is a sidebar field - use sidebar container for width constraints
+    const isSidebar = isSidebarField(field);
+    const sidebarContainer = isSidebar ? findSidebarContainer(field) : null;
+
+    // For non-sidebar fields, try to find a containing column (job overview columns, etc.)
+    const containingColumn = sidebarContainer || findContainingColumn(field);
+
     // Check if this is a Message field - these have their own scroll container
     const isMessageField = field.getAttribute('placeholder') === 'Message';
 
@@ -811,6 +871,10 @@ const FormatterToolbar = (() => {
     // Get positions relative to viewport
     const fieldRect = field.getBoundingClientRect();
     const scrollRect = scrollContainer.getBoundingClientRect();
+
+    // For contained fields (sidebars, job columns), use container bounds for width constraints
+    // This prevents toolbar from expanding across the entire viewport
+    const constraintRect = containingColumn ? containingColumn.getBoundingClientRect() : scrollRect;
 
     // Find any sticky headers within the scroll container and account for their height
     // Look for common sticky header patterns in JobTread
@@ -847,17 +911,19 @@ const FormatterToolbar = (() => {
     } else if (stickyTop <= maxToolbarTop) {
       // Toolbar would scroll out of view but field is still visible - make it sticky
       // Position below any sticky headers
+      // Use constraint rect (column/sidebar bounds) for left/width to keep toolbar within container
       toolbar.style.position = 'fixed';
       toolbar.style.top = `${stickyTop}px`;
-      toolbar.style.left = `${scrollRect.left + padding}px`;
-      toolbar.style.width = `${scrollRect.width - (padding * 2)}px`;
+      toolbar.style.left = `${constraintRect.left + padding}px`;
+      toolbar.style.width = `${constraintRect.width - (padding * 2)}px`;
       toolbar.classList.add('jt-toolbar-sticky-active');
     } else {
       // Field is mostly scrolled out - position toolbar at bottom of field
+      // Use constraint rect (column/sidebar bounds) for left/width to keep toolbar within container
       toolbar.style.position = 'fixed';
       toolbar.style.top = `${maxToolbarTop}px`;
-      toolbar.style.left = `${scrollRect.left + padding}px`;
-      toolbar.style.width = `${scrollRect.width - (padding * 2)}px`;
+      toolbar.style.left = `${constraintRect.left + padding}px`;
+      toolbar.style.width = `${constraintRect.width - (padding * 2)}px`;
       toolbar.classList.add('jt-toolbar-sticky-active');
     }
   }
