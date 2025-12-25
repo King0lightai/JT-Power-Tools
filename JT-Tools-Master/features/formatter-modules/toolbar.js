@@ -841,6 +841,17 @@ const FormatterToolbar = (() => {
     // For non-sidebar fields, try to find a containing column (job overview columns, etc.)
     const containingColumn = sidebarContainer || findContainingColumn(field);
 
+    // For non-sidebar column fields (like job overview columns), keep toolbar in normal document flow
+    // These fields should have the toolbar embedded without sticky behavior
+    if (!isSidebar && containingColumn) {
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+      return;
+    }
+
     // Check if this is a Message field - these have their own scroll container
     const isMessageField = field.getAttribute('placeholder') === 'Message';
 
