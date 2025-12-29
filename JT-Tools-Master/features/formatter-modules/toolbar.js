@@ -62,7 +62,40 @@ const FormatterToolbar = (() => {
 
     // Check for budget table indicators - parent should have overflow-auto
     const scrollContainer = row.closest('.overflow-auto');
-    return scrollContainer !== null;
+    if (!scrollContainer) return false;
+
+    // CRITICAL: Distinguish budget tables from custom field columned layouts
+    // Budget tables have specific footer buttons (+ Item, + Group) or header structure
+    // Custom fields in columned layouts should NEVER use the expanded floating toolbar
+
+    // Check if this is actually a budget table by looking for budget-specific indicators:
+    // 1. Check for the presence of budget footer buttons (+ Item / + Group)
+    const hasFooterButtons = Array.from(document.querySelectorAll('[role="button"].bg-gray-700, button.bg-gray-700')).some(btn => {
+      const btnText = btn.textContent;
+      if ((btnText.includes('Item') || btnText.includes('Group')) && btn.closest('.flex.min-w-max')) {
+        // Check if this button's container is related to our scroll container
+        const btnRow = btn.closest('.flex.min-w-max');
+        return btnRow && (scrollContainer.contains(btnRow) || btnRow.parentElement === scrollContainer.parentElement);
+      }
+      return false;
+    });
+
+    // 2. Check for budget table header (has "Name" and "Description" columns)
+    const hasBudgetHeader = Array.from(scrollContainer.querySelectorAll('.flex.min-w-max, .sticky')).some(el => {
+      const text = el.textContent;
+      // Budget headers have both "Name" and "Description" text
+      // But exclude if it also has custom field indicators like C.O.P.S., What Went Well, etc.
+      return text.includes('Name') && text.includes('Description') &&
+             !text.includes('C.O.P.S.') && !text.includes('What Went Well') && !text.includes('What needs Improving');
+    });
+
+    // 3. Additional check: Exclude fields inside label elements (custom fields)
+    if (field.closest('label')) {
+      return false;
+    }
+
+    // Only return true if we have clear budget table indicators
+    return hasFooterButtons || hasBudgetHeader;
   }
 
   /**
@@ -811,6 +844,17 @@ const FormatterToolbar = (() => {
     // Check if toolbar is placed BELOW the textarea (Message fields)
     // These don't need sticky positioning - they stay in normal document flow
     if (toolbar.classList.contains('jt-toolbar-below')) {
+      toolbar.style.position = 'relative';
+      toolbar.style.top = 'auto';
+      toolbar.style.left = 'auto';
+      toolbar.style.width = '100%';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+      return;
+    }
+
+    // CRITICAL: Custom fields (fields inside <label> elements) should NEVER use sticky positioning
+    // They should always stay embedded in normal document flow, locked in under the field label
+    if (field.closest('label')) {
       toolbar.style.position = 'relative';
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
@@ -1818,6 +1862,8 @@ const FormatterToolbar = (() => {
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
+        // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
+        positionToolbar(embeddedToolbar, field);
         updateToolbarState(field, embeddedToolbar);
         return;
       }
