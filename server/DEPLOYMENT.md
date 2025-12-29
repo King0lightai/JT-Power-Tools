@@ -1,317 +1,167 @@
-# License Proxy Server Deployment Guide
+# JobTread Tools Pro - Deployment Guide
 
-This guide explains how to deploy the secure license validation proxy for JT Power Tools.
+This guide explains how to deploy the secure Cloudflare Worker for JobTread Tools Pro.
 
-## Why We Need This
+## Architecture Overview
 
-The license validation proxy solves critical security issues:
+```
+Browser Extension → Cloudflare Worker → JobTread API
+                          ↓
+                    ┌─────┴─────┐
+                    ↓           ↓
+              Gumroad API    D1 Database
+              (License)      (Users/Devices)
+```
 
-1. **Keeps Product ID Secret** - Your Gumroad product ID is no longer exposed in client code
-2. **Prevents License Bypass** - Validation happens server-side where users can't modify it
-3. **Rate Limiting** - Prevents abuse and API hammering
-4. **License Revocation** - Can check if licenses have been refunded/disabled
-5. **Analytics** - Track license validation attempts
+## Security Model: Proof of Org
 
-## Deployment Options
+Licenses are locked to a single JobTread organization to prevent sharing:
 
-### Option 1: Cloudflare Workers (Recommended)
-
-**Pros:**
-- ✅ Free tier (100,000 requests/day)
-- ✅ Global edge network (fast response times)
-- ✅ Zero server maintenance
-- ✅ Easy deployment via dashboard or CLI
-- ✅ Built-in rate limiting and DDoS protection
-
-**Cost:** Free for up to 100k requests/day, then $5/month for 10M requests
-
-#### Step-by-Step Deployment
-
-1. **Create Cloudflare Account**
-   - Go to https://dash.cloudflare.com
-   - Sign up for free account
-
-2. **Create New Worker**
-   - Navigate to "Workers & Pages" in sidebar
-   - Click "Create Application"
-   - Select "Create Worker"
-   - Name it: `jt-tools-license-proxy`
-
-3. **Deploy Worker Code**
-   - Copy contents of `cloudflare-worker-license-proxy.js`
-   - Paste into the worker editor
-   - Click "Save and Deploy"
-
-4. **Configure Environment Variables**
-   - In worker settings, go to "Settings" → "Variables"
-   - Add these environment variables:
-     ```
-     GUMROAD_PRODUCT_ID = x2GbSvLBfUSQcwVGDRSj1w==
-     SIGNATURE_SECRET = [generate a random 32-char string]
-     RATE_LIMIT_MAX = 100
-     ALLOWED_ORIGINS = chrome-extension://YOUR_EXTENSION_ID
-     ```
-   - To generate a random secret:
-     ```bash
-     node -e "console.log(require('crypto').randomBytes(16).toString('hex'))"
-     ```
-
-5. **Get Your Worker URL**
-   - After deployment, copy your worker URL
-   - Example: `https://jt-tools-license-proxy.your-subdomain.workers.dev`
-   - You'll need this URL for the extension
-
-6. **Update Extension Code**
-   - Open `JT-Tools-Master/services/license.js`
-   - Update the `LICENSE_PROXY_URL` constant with your worker URL
-
-7. **Test the Proxy**
-   ```bash
-   curl -X POST https://jt-tools-license-proxy.your-subdomain.workers.dev \
-     -H "Content-Type: application/json" \
-     -H "Origin: chrome-extension://YOUR_EXTENSION_ID" \
-     -d '{"licenseKey":"TEST_KEY","action":"verify"}'
-   ```
+1. **First user** activates license → enters Grant Key → license gets LOCKED to that Org ID
+2. **Additional users** with same license must provide Grant Key that belongs to SAME org
+3. **Each browser/device** gets a unique ID and must be authorized
+4. **Wrong org** = blocked immediately (can't use stolen license in different company)
 
 ---
 
-### Option 2: Node.js/Express Server
+## Prerequisites
 
-If you prefer a traditional server, use the Express.js version:
-
-**Pros:**
-- ✅ Full control over server
-- ✅ Can add custom database logging
-- ✅ Easier to debug locally
-
-**Cons:**
-- ❌ Requires server hosting (AWS, DigitalOcean, etc.)
-- ❌ Monthly hosting costs ($5-20/month)
-- ❌ Need to manage security, SSL, updates
-
-#### Quick Start
-
-1. **Install dependencies:**
-   ```bash
-   cd server
-   npm install express cors helmet express-rate-limit
-   ```
-
-2. **Create `.env` file:**
-   ```env
-   GUMROAD_PRODUCT_ID=x2GbSvLBfUSQcwVGDRSj1w==
-   SIGNATURE_SECRET=your_random_32_char_secret
-   ALLOWED_ORIGINS=chrome-extension://YOUR_EXTENSION_ID
-   PORT=3000
-   ```
-
-3. **Run server:**
-   ```bash
-   node express-license-proxy.js
-   ```
-
-4. **Deploy to hosting:**
-   - Use Railway, Render, or Heroku for easy deployment
-   - All have free tiers with SSL included
+- [Cloudflare account](https://dash.cloudflare.com) (free tier works)
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed
+- Gumroad product with license keys enabled
 
 ---
-
-## Security Checklist
-
-After deployment, verify:
-
-- [ ] Environment variables are set correctly
-- [ ] `SIGNATURE_SECRET` is a strong random string (not default)
-- [ ] `ALLOWED_ORIGINS` is set to your actual extension ID
-- [ ] Rate limiting is enabled
-- [ ] HTTPS/SSL is working
-- [ ] Test both valid and invalid license keys
-- [ ] Monitor error logs for issues
-
----
-
-## Getting Your Extension ID
-
-### For Development (Unpacked Extension):
-1. Go to `chrome://extensions`
-2. Enable Developer Mode
-3. Your extension ID is shown under the extension name
-4. Example: `abcdefghijklmnopqrstuvwxyz123456`
-
-### For Production (Chrome Web Store):
-1. After publishing to Chrome Web Store
-2. The extension ID remains the same
-3. Update the worker's `ALLOWED_ORIGINS` with the production ID
-
----
-
-## Monitoring & Maintenance
-
-### Cloudflare Workers Dashboard
-- View request analytics
-- Monitor error rates
-- Check for abuse attempts
-- Upgrade plan if needed
-
-### Recommended Alerts
-Set up notifications for:
-- High error rates (>5%)
-- Rate limit triggers
-- Unusual traffic patterns
-
----
-
-## Cost Estimates
-
-### Cloudflare Workers
-- **Free tier:** 100,000 requests/day
-- **Paid tier:** $5/month for 10M requests
-- **For 1000 users:** ~3,000 requests/day (well within free tier)
-- **For 10,000 users:** ~30,000 requests/day (still free)
-
-### Traditional Server
-- **Railway/Render:** $5-7/month (free tier available)
-- **DigitalOcean Droplet:** $6/month
-- **AWS EC2 t3.micro:** ~$8/month
-
----
-
-## Troubleshooting
-
-### Error: "Unauthorized origin"
-- Check that `ALLOWED_ORIGINS` matches your extension ID
-- Verify extension is sending correct Origin header
-
-### Error: "Too many requests"
-- User hit rate limit (100 requests/hour by default)
-- Check if extension is calling verify too frequently
-
-### Error: "Unable to verify license with Gumroad"
-- Gumroad API might be down (check status.gumroad.com)
-- Verify `GUMROAD_PRODUCT_ID` is correct
-
-### Extension still showing license error
-- Clear extension storage: `chrome.storage.sync.clear()`
-- Reload extension
-- Try entering license key again
-
----
-
-## Next Steps
-
-After deploying the proxy:
-
-1. ✅ Update `license.js` with your proxy URL
-2. ✅ Test license activation with real key
-3. ✅ Test with invalid key
-4. ✅ Implement re-validation in extension
-5. ✅ Add encryption to stored license data
-6. ✅ Bundle and obfuscate extension code
-
----
-
-## Support
-
-If you run into issues deploying:
-- Cloudflare Workers Docs: https://developers.cloudflare.com/workers
-- Express.js Docs: https://expressjs.com
-- Gumroad API Docs: https://help.gumroad.com/article/76-license-keys
-
-## Alternative: Gumroad Webhooks
-
-For advanced users, consider implementing Gumroad webhooks to:
-- Detect refunds and auto-revoke licenses
-- Track sales in real-time
-- Build custom analytics
-
-See: https://help.gumroad.com/article/266-gumroad-webhooks
-
----
-
-# JobTread API Proxy Worker
-
-This worker provides secure access to the JobTread Pave API for the Smart Job Filter feature.
-
-## Features
-
-- **Secure API Key Storage** - Grant Key stored in Cloudflare environment variables
-- **Response Caching** - Uses KV to cache responses (2 min for jobs, 1 hour for custom fields)
-- **Server-Side Filtering** - Uses Pave `with` clause for efficient job filtering
-- **Multi-Filter Support** - AND logic for combining multiple custom field filters
-- **CORS Handling** - Proper CORS headers for browser extension requests
 
 ## Deployment Steps
 
-### 1. Create KV Namespace
-
-```bash
-# Using Wrangler CLI
-wrangler kv:namespace create "JOBTREAD_CACHE"
-```
-
-Or create via Cloudflare Dashboard:
-- Go to Workers & Pages → KV
-- Create a namespace named `JOBTREAD_CACHE`
-- Copy the namespace ID
-
-### 2. Update wrangler.toml
-
-Edit `server/wrangler.toml` and replace `YOUR_KV_NAMESPACE_ID` with your actual KV namespace ID.
-
-### 3. Set Secrets
+### 1. Create D1 Database
 
 ```bash
 cd server
-
-# Set your JobTread Grant Key
-wrangler secret put JOBTREAD_GRANT_KEY
-# Enter: your_grant_key_here
-
-# Set your Organization ID
-wrangler secret put ORG_ID
-# Enter: your_org_id_here
-
-# Set extension authentication secret
-wrangler secret put EXTENSION_SECRET
-# Enter: (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+wrangler d1 create jobtread-extension-users
 ```
 
-### 4. Deploy Worker
+**Save the output!** You'll need the `database_id`.
+
+### 2. Run Database Schema
 
 ```bash
-cd server
+wrangler d1 execute jobtread-extension-users --file=./schema.sql
+```
+
+This creates the `users`, `authorized_devices`, and `api_usage` tables.
+
+### 3. Create KV Namespace
+
+```bash
+wrangler kv:namespace create "CACHE"
+```
+
+**Save the output!** You'll need the namespace `id`.
+
+### 4. Update wrangler.toml
+
+Edit `server/wrangler.toml` and replace the placeholder IDs:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "jobtread-extension-users"
+database_id = "YOUR_ACTUAL_DATABASE_ID"  # From step 1
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_ACTUAL_KV_NAMESPACE_ID"  # From step 3
+```
+
+### 5. Set Gumroad Secret
+
+```bash
+wrangler secret put GUMROAD_PRODUCT_ID
+# Paste your Gumroad product ID when prompted
+```
+
+### 6. Deploy Worker
+
+```bash
 wrangler deploy
 ```
 
-Your worker will be available at: `https://jt-power-tools-api.YOUR_SUBDOMAIN.workers.dev`
+Your worker will be available at: `https://jobtread-tools-pro.YOUR_SUBDOMAIN.workers.dev`
 
-### 5. Update Extension
+---
 
-After deploying, update the extension to use the worker URL instead of direct API calls.
+## API Reference
 
-## API Endpoints
+All requests are POST to the worker URL with JSON body.
 
-All requests are POST to the worker URL with JSON body:
+### Public Actions (No Auth Required)
 
-### Test Connection
+#### Verify License
 ```json
-{ "action": "testConnection" }
+{
+  "action": "verifyLicense",
+  "licenseKey": "XXXX-XXXX-XXXX-XXXX"
+}
 ```
 
-### Get Custom Fields
+#### Register User / Check Device Status
 ```json
-{ "action": "getCustomFields" }
+{
+  "action": "registerUser",
+  "licenseKey": "XXXX-XXXX-XXXX-XXXX",
+  "deviceId": "dev_abc123...",
+  "deviceName": "Chrome on Windows"
+}
 ```
 
-### Get All Jobs
+#### Verify Org Access (Proof of Org)
 ```json
-{ "action": "getAllJobs" }
+{
+  "action": "verifyOrgAccess",
+  "licenseKey": "XXXX-XXXX-XXXX-XXXX",
+  "deviceId": "dev_abc123...",
+  "grantKey": "YOUR_JOBTREAD_GRANT_KEY"
+}
 ```
 
-### Get Filtered Jobs
+### Protected Actions (Require Device Authorization)
+
+All protected actions require `licenseKey` and `deviceId`.
+
+#### Get User Status
+```json
+{
+  "action": "getStatus",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
+```
+
+#### Get Custom Fields
+```json
+{
+  "action": "getCustomFields",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
+```
+
+#### Get All Jobs
+```json
+{
+  "action": "getAllJobs",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
+```
+
+#### Get Filtered Jobs
 ```json
 {
   "action": "getFilteredJobs",
+  "licenseKey": "...",
+  "deviceId": "...",
   "filters": [
     { "fieldName": "Status", "value": "Construction" },
     { "fieldName": "Job Type", "value": "Residential" }
@@ -319,39 +169,100 @@ All requests are POST to the worker URL with JSON body:
 }
 ```
 
-### Get Field Values
+#### Raw Pave Query
 ```json
 {
-  "action": "getFieldValues",
-  "fieldId": "abc123"
+  "action": "rawQuery",
+  "licenseKey": "...",
+  "deviceId": "...",
+  "query": {
+    "jobs": {
+      "$": { "size": 10 },
+      "nodes": { "id": {}, "name": {} }
+    }
+  }
 }
 ```
 
-## Request Headers
+#### Clear Cache
+```json
+{
+  "action": "clearCache",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
+```
 
-All requests must include:
+#### Disconnect JobTread
+```json
+{
+  "action": "disconnect",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
 ```
-Content-Type: application/json
-X-Extension-Key: your_extension_secret
+
+#### List Devices
+```json
+{
+  "action": "listDevices",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
 ```
+
+#### Revoke Device
+```json
+{
+  "action": "revokeDevice",
+  "licenseKey": "...",
+  "deviceId": "...",
+  "targetDeviceId": "dev_xyz789..."
+}
+```
+
+#### Transfer License (Unlock Org)
+```json
+{
+  "action": "transferLicense",
+  "licenseKey": "...",
+  "deviceId": "..."
+}
+```
+
+---
 
 ## Response Format
 
-Success:
+### Success Response
 ```json
 {
+  "success": true,
   "jobs": [...],
-  "filters": [...],
-  "_cached": true  // indicates response was from cache
+  "_cached": true  // Indicates response was from cache
 }
 ```
 
-Error:
+### Error Response
 ```json
 {
-  "error": "Error message"
+  "error": "Error message",
+  "code": "ERROR_CODE"
 }
 ```
+
+### Error Codes
+
+| Code | HTTP | Meaning |
+|------|------|---------|
+| `LICENSE_NOT_FOUND` | 401 | License not registered |
+| `LICENSE_INVALID` | 401 | License revoked/refunded |
+| `DEVICE_NOT_AUTHORIZED` | 403 | Device needs org verification |
+| `ORG_MISMATCH` | 403 | Grant Key org doesn't match license org |
+| `JOBTREAD_NOT_CONNECTED` | 403 | Need to connect JobTread first |
+| `INVALID_GRANT_KEY` | 400 | Grant Key failed to authenticate |
+
+---
 
 ## Cache TTLs
 
@@ -359,7 +270,37 @@ Error:
 |-----------|-----|
 | Custom Fields | 1 hour |
 | Job Lists | 2 minutes |
-| Field Values | 5 minutes |
+
+---
+
+## Database Schema
+
+### users
+- `id` - Primary key
+- `email` - From Gumroad
+- `gumroad_license_key` - License key (unique)
+- `jobtread_grant_key` - Encrypted Grant Key
+- `jobtread_org_id` - Locked organization ID
+- `jobtread_org_name` - Organization name for display
+- `org_locked` - Whether org is locked
+- `license_valid` - Whether license is still valid
+
+### authorized_devices
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `device_id` - Unique device identifier
+- `device_name` - Human-readable name
+- `verified_at` - When device was authorized
+- `last_active_at` - Last activity timestamp
+
+### api_usage
+- `id` - Auto-increment
+- `user_id` - Foreign key to users
+- `action` - API action called
+- `cached` - Whether response was from cache
+- `created_at` - Timestamp
+
+---
 
 ## Local Development
 
@@ -369,3 +310,85 @@ wrangler dev
 ```
 
 This starts a local development server at `http://localhost:8787`
+
+Note: Local dev requires D1 local database. Run:
+```bash
+wrangler d1 execute jobtread-extension-users --file=./schema.sql --local
+```
+
+---
+
+## Monitoring
+
+### View Logs
+```bash
+wrangler tail
+```
+
+### Query Database
+```bash
+# List all users
+wrangler d1 execute jobtread-extension-users --command "SELECT * FROM users"
+
+# Check device count per user
+wrangler d1 execute jobtread-extension-users --command "SELECT user_id, COUNT(*) FROM authorized_devices GROUP BY user_id"
+
+# View recent API usage
+wrangler d1 execute jobtread-extension-users --command "SELECT * FROM api_usage ORDER BY created_at DESC LIMIT 20"
+```
+
+---
+
+## Security Checklist
+
+- [ ] D1 database created and schema applied
+- [ ] KV namespace created for caching
+- [ ] GUMROAD_PRODUCT_ID set as secret
+- [ ] wrangler.toml has correct database and KV IDs
+- [ ] Worker deployed successfully
+- [ ] Test new license activation
+- [ ] Test device authorization on second browser
+- [ ] Test org mismatch rejection
+- [ ] Monitor for unusual patterns
+
+---
+
+## Troubleshooting
+
+### Error: "License not found"
+- Verify GUMROAD_PRODUCT_ID is correct
+- Check license key format
+
+### Error: "Device not authorized"
+- User needs to verify org access with Grant Key
+- Check if org is locked and matches
+
+### Error: "Organization mismatch"
+- User's Grant Key belongs to different org than license
+- This is a security block - intentional
+
+### Error: "JobTread not connected"
+- User hasn't provided Grant Key yet
+- Show connection form in extension
+
+### Cache not working
+- Verify KV namespace ID in wrangler.toml
+- Check worker logs for KV errors
+
+---
+
+## Cost Estimates
+
+### Cloudflare Workers
+- **Free tier:** 100,000 requests/day
+- **Paid tier:** $5/month for 10M requests
+
+### D1 Database
+- **Free tier:** 5GB storage, 5M rows read/day
+- **Paid tier:** $0.75/million rows read
+
+### KV Storage
+- **Free tier:** 100,000 reads/day, 1,000 writes/day
+- **Paid tier:** $0.50/million reads
+
+For most extensions, free tier is sufficient.

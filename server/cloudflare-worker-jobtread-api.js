@@ -1,23 +1,18 @@
 /**
- * JobTread Smart Filter Proxy Worker
+ * JobTread Tools Pro - Cloudflare Worker
  *
- * Cloudflare Worker that proxies requests to the JobTread Pave API
- * - Securely stores Grant Key in environment variables
- * - Caches responses in KV for performance
- * - Handles CORS for browser extension requests
+ * Multi-tenant API proxy with Gumroad license validation and "Proof of Org" security.
+ * Licenses are locked to a single JobTread organization to prevent sharing.
  *
- * Required Environment Variables:
- *   - JOBTREAD_GRANT_KEY: Your JobTread API grant key
- *   - ORG_ID: Your JobTread organization ID
- *   - EXTENSION_SECRET: Secret key for authenticating extension requests
- *
- * Required KV Namespace Binding:
- *   - JOBTREAD_CACHE: KV namespace for caching responses
+ * Required Environment:
+ *   - GUMROAD_PRODUCT_ID: Your Gumroad product ID (secret)
+ *   - DB: D1 database binding
+ *   - CACHE: KV namespace binding
  */
 
 const JOBTREAD_API = 'https://api.jobtread.com/pave';
 const CACHE_TTL_JOBS = 120;        // 2 min for job lists
-const CACHE_TTL_FIELDS = 3600;     // 1 hour for custom fields (rarely change)
+const CACHE_TTL_FIELDS = 3600;     // 1 hour for custom fields
 
 export default {
   async fetch(request, env, ctx) {
@@ -32,30 +27,51 @@ export default {
     }
 
     try {
-      // Validate extension authentication
-      const extensionKey = request.headers.get('X-Extension-Key');
-      if (extensionKey !== env.EXTENSION_SECRET) {
-        return jsonResponse({ error: 'Unauthorized' }, 401);
-      }
-
       const body = await request.json();
-      const { action, filters, fieldId } = body;
+      const { action } = body;
 
+      // Route to appropriate handler
       switch (action) {
+        // --- Public actions (no auth required) ---
+        case 'verifyLicense':
+          return await handleVerifyLicense(env, body);
+
+        case 'registerUser':
+          return await handleRegisterUser(env, body);
+
+        case 'verifyOrgAccess':
+          return await handleVerifyOrgAccess(env, body);
+
+        // --- Protected actions (require device authorization) ---
+        case 'getStatus':
+          return await withAuth(env, body, handleGetStatus);
+
         case 'getCustomFields':
-          return await getCustomFields(env, ctx);
+          return await withAuth(env, body, (env, user) => handleGetCustomFields(env, ctx, user));
 
         case 'getFilteredJobs':
-          return await getFilteredJobs(env, ctx, filters);
+          return await withAuth(env, body, (env, user) => handleGetFilteredJobs(env, ctx, user, body.filters));
 
         case 'getAllJobs':
-          return await getAllJobs(env, ctx);
+          return await withAuth(env, body, (env, user) => handleGetAllJobs(env, ctx, user));
 
-        case 'getFieldValues':
-          return await getFieldValues(env, ctx, fieldId);
+        case 'rawQuery':
+          return await withAuth(env, body, (env, user) => handleRawQuery(env, user, body.query));
 
-        case 'testConnection':
-          return await testConnection(env);
+        case 'clearCache':
+          return await withAuth(env, body, (env, user) => handleClearCache(env, user));
+
+        case 'disconnect':
+          return await withAuth(env, body, handleDisconnect);
+
+        case 'listDevices':
+          return await withAuth(env, body, handleListDevices);
+
+        case 'revokeDevice':
+          return await withAuth(env, body, (env, user) => handleRevokeDevice(env, user, body.targetDeviceId));
+
+        case 'transferLicense':
+          return await withAuth(env, body, handleTransferLicense);
 
         default:
           return jsonResponse({ error: 'Unknown action' }, 400);
@@ -68,55 +84,264 @@ export default {
   }
 };
 
+// =============================================================================
+// Authentication Middleware
+// =============================================================================
+
 /**
- * Test API connection
+ * Wrapper for protected actions - verifies license and device authorization
  */
-async function testConnection(env) {
-  const query = {
-    query: {
-      $: { grantKey: env.JOBTREAD_GRANT_KEY },
-      organization: {
-        $: { id: env.ORG_ID },
-        id: {},
-        name: {}
-      }
-    }
-  };
+async function withAuth(env, body, handler) {
+  const { licenseKey, deviceId } = body;
 
-  const data = await jobtreadRequest(env, query);
-
-  if (data.organization) {
-    return jsonResponse({
-      success: true,
-      organization: {
-        id: data.organization.id,
-        name: data.organization.name
-      }
-    });
+  if (!licenseKey || !deviceId) {
+    return jsonResponse({ error: 'Missing licenseKey or deviceId', code: 'MISSING_CREDENTIALS' }, 400);
   }
 
-  return jsonResponse({ success: false, error: 'No organization data' }, 400);
+  // Get user by license key
+  const user = await getUser(env, licenseKey);
+  if (!user) {
+    return jsonResponse({ error: 'License not found', code: 'LICENSE_NOT_FOUND' }, 401);
+  }
+
+  if (!user.license_valid) {
+    return jsonResponse({ error: 'License invalid or expired', code: 'LICENSE_INVALID' }, 401);
+  }
+
+  // Check device authorization
+  const isAuthorized = await isDeviceAuthorized(env, user.id, deviceId);
+  if (!isAuthorized) {
+    return jsonResponse({
+      error: 'Device not authorized',
+      code: 'DEVICE_NOT_AUTHORIZED',
+      needsOrgVerification: true,
+      organizationName: user.jobtread_org_name
+    }, 403);
+  }
+
+  // Check if JobTread is connected
+  if (!user.jobtread_grant_key) {
+    return jsonResponse({
+      error: 'JobTread not connected',
+      code: 'JOBTREAD_NOT_CONNECTED',
+      needsJobTreadConnection: true
+    }, 403);
+  }
+
+  // Update last active
+  await updateLastActive(env, user.id, deviceId);
+
+  // Call the actual handler
+  return handler(env, user);
+}
+
+// =============================================================================
+// Public Action Handlers
+// =============================================================================
+
+/**
+ * Verify a Gumroad license key
+ */
+async function handleVerifyLicense(env, body) {
+  const { licenseKey } = body;
+
+  if (!licenseKey) {
+    return jsonResponse({ error: 'Missing licenseKey' }, 400);
+  }
+
+  const result = await verifyGumroadLicense(env, licenseKey);
+  return jsonResponse(result);
 }
 
 /**
- * Get job custom fields with options
+ * Register user and check device status
  */
-async function getCustomFields(env, ctx) {
-  const cacheKey = 'customFields:job';
+async function handleRegisterUser(env, body) {
+  const { licenseKey, deviceId, deviceName } = body;
+
+  if (!licenseKey || !deviceId) {
+    return jsonResponse({ error: 'Missing licenseKey or deviceId' }, 400);
+  }
+
+  // 1. Verify license with Gumroad
+  const licenseResult = await verifyGumroadLicense(env, licenseKey);
+  if (!licenseResult.valid) {
+    return jsonResponse({
+      error: licenseResult.error || 'Invalid license',
+      code: 'LICENSE_INVALID'
+    }, 401);
+  }
+
+  // 2. Check if user exists
+  let user = await getUser(env, licenseKey);
+
+  if (!user) {
+    // NEW USER: Create and auto-authorize first device
+    user = await createUser(env, licenseKey, licenseResult);
+    await authorizeDevice(env, user.id, deviceId, deviceName);
+
+    return jsonResponse({
+      success: true,
+      deviceAuthorized: true,
+      needsJobTreadConnection: true,
+      message: 'License activated! Please connect your JobTread account.'
+    });
+  }
+
+  // Update license validity (in case it was re-validated)
+  if (!user.license_valid) {
+    await env.DB.prepare('UPDATE users SET license_valid = true WHERE id = ?').bind(user.id).run();
+    user.license_valid = true;
+  }
+
+  // EXISTING USER: Check if device is already authorized
+  const isAuthorized = await isDeviceAuthorized(env, user.id, deviceId);
+
+  if (isAuthorized) {
+    // Check if JobTread is connected
+    if (!user.jobtread_grant_key) {
+      return jsonResponse({
+        success: true,
+        deviceAuthorized: true,
+        needsJobTreadConnection: true
+      });
+    }
+
+    return jsonResponse({
+      success: true,
+      deviceAuthorized: true,
+      organizationName: user.jobtread_org_name,
+      orgId: user.jobtread_org_id
+    });
+  }
+
+  // DEVICE NOT AUTHORIZED: Check if org is locked
+  if (user.org_locked && user.jobtread_org_id) {
+    // Require org verification for new device
+    return jsonResponse({
+      success: true,
+      deviceAuthorized: false,
+      needsOrgVerification: true,
+      organizationName: user.jobtread_org_name,
+      message: 'This license is registered to ' + user.jobtread_org_name + '. Please verify your access.'
+    });
+  }
+
+  // Org not locked yet - authorize device and ask for JobTread connection
+  await authorizeDevice(env, user.id, deviceId, deviceName);
+  return jsonResponse({
+    success: true,
+    deviceAuthorized: true,
+    needsJobTreadConnection: true
+  });
+}
+
+/**
+ * Verify org access with Grant Key - implements "Proof of Org"
+ */
+async function handleVerifyOrgAccess(env, body) {
+  const { licenseKey, deviceId, grantKey, deviceName } = body;
+
+  if (!licenseKey || !deviceId || !grantKey) {
+    return jsonResponse({ error: 'Missing required fields' }, 400);
+  }
+
+  const user = await getUser(env, licenseKey);
+  if (!user) {
+    return jsonResponse({ error: 'License not found', code: 'LICENSE_NOT_FOUND' }, 401);
+  }
+
+  // 1. Test the Grant Key with JobTread API
+  const orgInfo = await testGrantKey(grantKey);
+  if (!orgInfo.success) {
+    return jsonResponse({
+      error: 'Invalid Grant Key',
+      code: 'INVALID_GRANT_KEY',
+      message: orgInfo.error || 'Could not connect to JobTread with this Grant Key'
+    }, 400);
+  }
+
+  // 2. If license is already locked to an org, verify it matches
+  if (user.org_locked && user.jobtread_org_id) {
+    if (orgInfo.id !== user.jobtread_org_id) {
+      // SECURITY BLOCK: Different org!
+      return jsonResponse({
+        error: 'Organization mismatch',
+        code: 'ORG_MISMATCH',
+        message: 'This license is registered to "' + user.jobtread_org_name + '". Your Grant Key belongs to a different organization.',
+        expectedOrg: user.jobtread_org_name
+      }, 403);
+    }
+  }
+
+  // 3. Authorize this device
+  await authorizeDevice(env, user.id, deviceId, deviceName);
+
+  // 4. Lock to org if not already locked
+  if (!user.org_locked) {
+    await lockUserToOrg(env, user.id, grantKey, orgInfo);
+  } else {
+    // Update grant key (user might be using a different key for same org)
+    await env.DB.prepare(
+      'UPDATE users SET jobtread_grant_key = ?, last_active_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(grantKey, user.id).run();
+  }
+
+  return jsonResponse({
+    success: true,
+    deviceAuthorized: true,
+    organizationName: orgInfo.name,
+    orgId: orgInfo.id,
+    message: 'Successfully connected to ' + orgInfo.name
+  });
+}
+
+// =============================================================================
+// Protected Action Handlers
+// =============================================================================
+
+/**
+ * Get user status
+ */
+async function handleGetStatus(env, user) {
+  const devices = await env.DB.prepare(
+    'SELECT id, device_name, last_active_at FROM authorized_devices WHERE user_id = ?'
+  ).bind(user.id).all();
+
+  return jsonResponse({
+    success: true,
+    user: {
+      email: user.email,
+      organizationName: user.jobtread_org_name,
+      orgId: user.jobtread_org_id,
+      orgLocked: user.org_locked,
+      createdAt: user.created_at,
+      lastActiveAt: user.last_active_at
+    },
+    devices: devices.results || []
+  });
+}
+
+/**
+ * Get custom fields for jobs
+ */
+async function handleGetCustomFields(env, ctx, user) {
+  const cacheKey = `cf:${user.jobtread_org_id}`;
 
   // Check cache first
-  if (env.JOBTREAD_CACHE) {
-    const cached = await env.JOBTREAD_CACHE.get(cacheKey, 'json');
+  if (env.CACHE) {
+    const cached = await env.CACHE.get(cacheKey, 'json');
     if (cached) {
+      await trackUsage(env, user.id, 'getCustomFields', true);
       return jsonResponse({ ...cached, _cached: true });
     }
   }
 
   const query = {
     query: {
-      $: { grantKey: env.JOBTREAD_GRANT_KEY },
+      $: { grantKey: user.jobtread_grant_key },
       organization: {
-        $: { id: env.ORG_ID },
+        $: { id: user.jobtread_org_id },
         customFields: {
           $: {
             where: ['targetType', '=', 'job'],
@@ -133,67 +358,65 @@ async function getCustomFields(env, ctx) {
     }
   };
 
-  const data = await jobtreadRequest(env, query);
+  const data = await jobtreadRequest(query);
   const fields = data.organization?.customFields?.nodes || [];
-
   const result = { fields };
 
   // Cache for 1 hour
-  if (env.JOBTREAD_CACHE) {
+  if (env.CACHE) {
     ctx.waitUntil(
-      env.JOBTREAD_CACHE.put(cacheKey, JSON.stringify(result), {
-        expirationTtl: CACHE_TTL_FIELDS
-      })
+      env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: CACHE_TTL_FIELDS })
     );
   }
 
+  await trackUsage(env, user.id, 'getCustomFields', false);
   return jsonResponse(result);
 }
 
 /**
  * Get jobs filtered by custom field values
  */
-async function getFilteredJobs(env, ctx, filters) {
+async function handleGetFilteredJobs(env, ctx, user, filters) {
   // If no filters, return all jobs
   if (!filters || filters.length === 0) {
-    return getAllJobs(env, ctx);
+    return handleGetAllJobs(env, ctx, user);
   }
 
   // Generate cache key from filters
   const filterKey = filters.map(f => `${f.fieldName}:${f.value}`).sort().join('|');
-  const cacheKey = `jobs:filtered:${await hashString(filterKey)}`;
+  const cacheKey = `jobs:${user.jobtread_org_id}:${await hashString(filterKey)}`;
 
   // Check cache
-  if (env.JOBTREAD_CACHE) {
-    const cached = await env.JOBTREAD_CACHE.get(cacheKey, 'json');
+  if (env.CACHE) {
+    const cached = await env.CACHE.get(cacheKey, 'json');
     if (cached) {
+      await trackUsage(env, user.id, 'getFilteredJobs', true);
       return jsonResponse({ ...cached, _cached: true });
     }
   }
 
-  // Build dynamic query with 'with' clauses
-  const query = buildFilteredJobsQuery(env, filters);
-  const data = await jobtreadRequest(env, query);
+  // Build query with 'with' clauses for server-side filtering
+  const query = buildFilteredJobsQuery(user, filters);
+  const data = await jobtreadRequest(query);
   const jobs = data.organization?.jobs?.nodes || [];
 
   const result = { jobs, filters };
 
   // Cache for 2 minutes
-  if (env.JOBTREAD_CACHE) {
+  if (env.CACHE) {
     ctx.waitUntil(
-      env.JOBTREAD_CACHE.put(cacheKey, JSON.stringify(result), {
-        expirationTtl: CACHE_TTL_JOBS
-      })
+      env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: CACHE_TTL_JOBS })
     );
   }
 
+  await trackUsage(env, user.id, 'getFilteredJobs', false);
   return jsonResponse(result);
 }
 
 /**
- * Build Pave query for filtered jobs using 'with' clause
+ * Build Pave query with 'with' clause for server-side filtering
  */
-function buildFilteredJobsQuery(env, filters) {
+function buildFilteredJobsQuery(user, filters) {
   // Build "with" clauses for each filter
   const withClauses = {};
   filters.forEach((filter, index) => {
@@ -219,9 +442,9 @@ function buildFilteredJobsQuery(env, filters) {
 
   return {
     query: {
-      $: { grantKey: env.JOBTREAD_GRANT_KEY },
+      $: { grantKey: user.jobtread_grant_key },
       organization: {
-        $: { id: env.ORG_ID },
+        $: { id: user.jobtread_org_id },
         jobs: {
           $: {
             size: 100,
@@ -253,22 +476,23 @@ function buildFilteredJobsQuery(env, filters) {
 /**
  * Get all jobs (unfiltered)
  */
-async function getAllJobs(env, ctx) {
-  const cacheKey = 'jobs:all';
+async function handleGetAllJobs(env, ctx, user) {
+  const cacheKey = `jobs:${user.jobtread_org_id}:all`;
 
   // Check cache
-  if (env.JOBTREAD_CACHE) {
-    const cached = await env.JOBTREAD_CACHE.get(cacheKey, 'json');
+  if (env.CACHE) {
+    const cached = await env.CACHE.get(cacheKey, 'json');
     if (cached) {
+      await trackUsage(env, user.id, 'getAllJobs', true);
       return jsonResponse({ ...cached, _cached: true });
     }
   }
 
   const query = {
     query: {
-      $: { grantKey: env.JOBTREAD_GRANT_KEY },
+      $: { grantKey: user.jobtread_grant_key },
       organization: {
-        $: { id: env.ORG_ID },
+        $: { id: user.jobtread_org_id },
         jobs: {
           $: {
             size: 100,
@@ -294,101 +518,300 @@ async function getAllJobs(env, ctx) {
     }
   };
 
-  const data = await jobtreadRequest(env, query);
+  const data = await jobtreadRequest(query);
   const jobs = data.organization?.jobs?.nodes || [];
-
   const result = { jobs };
 
   // Cache for 2 minutes
-  if (env.JOBTREAD_CACHE) {
+  if (env.CACHE) {
     ctx.waitUntil(
-      env.JOBTREAD_CACHE.put(cacheKey, JSON.stringify(result), {
-        expirationTtl: CACHE_TTL_JOBS
-      })
+      env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: CACHE_TTL_JOBS })
     );
   }
 
+  await trackUsage(env, user.id, 'getAllJobs', false);
   return jsonResponse(result);
 }
 
 /**
- * Get unique values for a specific custom field
+ * Execute a raw Pave query
  */
-async function getFieldValues(env, ctx, fieldId) {
-  if (!fieldId) {
-    return jsonResponse({ error: 'fieldId required' }, 400);
+async function handleRawQuery(env, user, paveQuery) {
+  if (!paveQuery) {
+    return jsonResponse({ error: 'Missing query' }, 400);
   }
 
-  const cacheKey = `fieldValues:${fieldId}`;
-
-  // Check cache
-  if (env.JOBTREAD_CACHE) {
-    const cached = await env.JOBTREAD_CACHE.get(cacheKey, 'json');
-    if (cached) {
-      return jsonResponse({ ...cached, _cached: true });
-    }
-  }
-
-  // Get all jobs to extract unique values
+  // Inject grant key and org ID into query
   const query = {
     query: {
-      $: { grantKey: env.JOBTREAD_GRANT_KEY },
+      $: { grantKey: user.jobtread_grant_key },
       organization: {
-        $: { id: env.ORG_ID },
-        jobs: {
-          $: { size: 100 },
-          nodes: {
-            customFieldValues: {
-              nodes: {
-                value: {},
-                customField: {
-                  id: {}
-                }
-              }
-            }
-          }
-        }
+        $: { id: user.jobtread_org_id },
+        ...paveQuery
       }
     }
   };
 
-  const data = await jobtreadRequest(env, query);
-  const jobs = data.organization?.jobs?.nodes || [];
+  const data = await jobtreadRequest(query);
+  await trackUsage(env, user.id, 'rawQuery', false);
+  return jsonResponse({ data: data.organization });
+}
 
-  // Extract unique values for this field
-  const values = new Set();
-  jobs.forEach(job => {
-    const fieldValues = job.customFieldValues?.nodes || [];
-    fieldValues.forEach(fv => {
-      if (fv.customField?.id === fieldId && fv.value) {
-        values.add(fv.value);
-      }
-    });
-  });
-
-  const result = { values: Array.from(values).sort(), fieldId };
-
-  // Cache for 5 minutes
-  if (env.JOBTREAD_CACHE) {
-    ctx.waitUntil(
-      env.JOBTREAD_CACHE.put(cacheKey, JSON.stringify(result), {
-        expirationTtl: 300
-      })
-    );
+/**
+ * Clear cached data for this user
+ */
+async function handleClearCache(env, user) {
+  if (!env.CACHE) {
+    return jsonResponse({ success: true, message: 'No cache configured' });
   }
 
-  return jsonResponse(result);
+  // List and delete all keys for this org
+  const prefix = `jobs:${user.jobtread_org_id}`;
+  const list = await env.CACHE.list({ prefix });
+
+  for (const key of list.keys) {
+    await env.CACHE.delete(key.name);
+  }
+
+  // Also clear custom fields cache
+  await env.CACHE.delete(`cf:${user.jobtread_org_id}`);
+
+  return jsonResponse({ success: true, message: 'Cache cleared' });
+}
+
+/**
+ * Disconnect JobTread (removes grant key but keeps org lock)
+ */
+async function handleDisconnect(env, user) {
+  await env.DB.prepare(
+    'UPDATE users SET jobtread_grant_key = NULL, last_active_at = CURRENT_TIMESTAMP WHERE id = ?'
+  ).bind(user.id).run();
+
+  return jsonResponse({
+    success: true,
+    message: 'JobTread disconnected. License remains locked to ' + user.jobtread_org_name
+  });
+}
+
+/**
+ * List authorized devices
+ */
+async function handleListDevices(env, user) {
+  const devices = await env.DB.prepare(
+    'SELECT id, device_id, device_name, verified_at, last_active_at FROM authorized_devices WHERE user_id = ?'
+  ).bind(user.id).all();
+
+  return jsonResponse({
+    success: true,
+    devices: devices.results || []
+  });
+}
+
+/**
+ * Revoke a device
+ */
+async function handleRevokeDevice(env, user, targetDeviceId) {
+  if (!targetDeviceId) {
+    return jsonResponse({ error: 'Missing targetDeviceId' }, 400);
+  }
+
+  await env.DB.prepare(
+    'DELETE FROM authorized_devices WHERE user_id = ? AND device_id = ?'
+  ).bind(user.id, targetDeviceId).run();
+
+  return jsonResponse({ success: true, message: 'Device revoked' });
+}
+
+/**
+ * Transfer license (unlock org - for legitimate transfers)
+ */
+async function handleTransferLicense(env, user) {
+  // Remove all devices and unlock org
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM authorized_devices WHERE user_id = ?').bind(user.id),
+    env.DB.prepare(
+      'UPDATE users SET jobtread_grant_key = NULL, jobtread_org_id = NULL, jobtread_org_name = NULL, org_locked = false WHERE id = ?'
+    ).bind(user.id)
+  ]);
+
+  return jsonResponse({
+    success: true,
+    message: 'License transferred. All devices removed. License can now be activated on a new organization.'
+  });
+}
+
+// =============================================================================
+// Database Helpers
+// =============================================================================
+
+/**
+ * Get user by license key
+ */
+async function getUser(env, licenseKey) {
+  const result = await env.DB.prepare(
+    'SELECT * FROM users WHERE gumroad_license_key = ?'
+  ).bind(licenseKey).first();
+  return result;
+}
+
+/**
+ * Create a new user
+ */
+async function createUser(env, licenseKey, licenseResult) {
+  const id = generateId('usr');
+
+  await env.DB.prepare(`
+    INSERT INTO users (id, email, gumroad_license_key, gumroad_product_id, license_valid)
+    VALUES (?, ?, ?, ?, true)
+  `).bind(id, licenseResult.email, licenseKey, licenseResult.productId).run();
+
+  return { id, email: licenseResult.email, license_valid: true };
+}
+
+/**
+ * Check if device is authorized
+ */
+async function isDeviceAuthorized(env, userId, deviceId) {
+  const result = await env.DB.prepare(
+    'SELECT id FROM authorized_devices WHERE user_id = ? AND device_id = ?'
+  ).bind(userId, deviceId).first();
+  return !!result;
+}
+
+/**
+ * Authorize a device
+ */
+async function authorizeDevice(env, userId, deviceId, deviceName) {
+  const id = generateId('dev');
+
+  // Upsert - update if exists, insert if not
+  await env.DB.prepare(`
+    INSERT INTO authorized_devices (id, user_id, device_id, device_name)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(user_id, device_id) DO UPDATE SET
+      device_name = excluded.device_name,
+      last_active_at = CURRENT_TIMESTAMP
+  `).bind(id, userId, deviceId, deviceName || 'Unknown Device').run();
+}
+
+/**
+ * Lock user to organization
+ */
+async function lockUserToOrg(env, userId, grantKey, orgInfo) {
+  await env.DB.prepare(`
+    UPDATE users SET
+      jobtread_grant_key = ?,
+      jobtread_org_id = ?,
+      jobtread_org_name = ?,
+      org_locked = true,
+      last_active_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(grantKey, orgInfo.id, orgInfo.name, userId).run();
+}
+
+/**
+ * Update last active timestamps
+ */
+async function updateLastActive(env, userId, deviceId) {
+  await env.DB.batch([
+    env.DB.prepare('UPDATE users SET last_active_at = CURRENT_TIMESTAMP WHERE id = ?').bind(userId),
+    env.DB.prepare('UPDATE authorized_devices SET last_active_at = CURRENT_TIMESTAMP WHERE user_id = ? AND device_id = ?').bind(userId, deviceId)
+  ]);
+}
+
+/**
+ * Track API usage
+ */
+async function trackUsage(env, userId, action, cached) {
+  await env.DB.prepare(
+    'INSERT INTO api_usage (user_id, action, cached) VALUES (?, ?, ?)'
+  ).bind(userId, action, cached).run();
+}
+
+// =============================================================================
+// External API Helpers
+// =============================================================================
+
+/**
+ * Verify license with Gumroad API
+ */
+async function verifyGumroadLicense(env, licenseKey) {
+  try {
+    const response = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        product_id: env.GUMROAD_PRODUCT_ID,
+        license_key: licenseKey
+      })
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      return { valid: false, error: 'Invalid license key' };
+    }
+
+    if (data.purchase.refunded) {
+      return { valid: false, error: 'License has been refunded' };
+    }
+
+    if (data.purchase.chargebacked) {
+      return { valid: false, error: 'License has been chargebacked' };
+    }
+
+    return {
+      valid: true,
+      email: data.purchase.email,
+      productId: data.purchase.product_id
+    };
+  } catch (error) {
+    console.error('Gumroad API error:', error);
+    return { valid: false, error: 'Could not verify license' };
+  }
+}
+
+/**
+ * Test a Grant Key with JobTread API
+ */
+async function testGrantKey(grantKey) {
+  try {
+    const query = {
+      query: {
+        $: { grantKey },
+        viewer: {
+          organization: {
+            id: {},
+            name: {}
+          }
+        }
+      }
+    };
+
+    const data = await jobtreadRequest(query);
+
+    if (data.viewer?.organization) {
+      return {
+        success: true,
+        id: data.viewer.organization.id,
+        name: data.viewer.organization.name
+      };
+    }
+
+    return { success: false, error: 'Could not get organization info' };
+  } catch (error) {
+    console.error('JobTread API error:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 /**
  * Make request to JobTread Pave API
  */
-async function jobtreadRequest(env, query) {
+async function jobtreadRequest(query) {
   const response = await fetch(JOBTREAD_API, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(query)
   });
 
@@ -398,6 +821,19 @@ async function jobtreadRequest(env, query) {
   }
 
   return response.json();
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Generate a unique ID with prefix
+ */
+function generateId(prefix) {
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).substring(2, 10);
+  return `${prefix}_${timestamp}${randomPart}`;
 }
 
 /**
@@ -422,7 +858,7 @@ function handleCORS() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Extension-Key',
+      'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400'
     }
   });

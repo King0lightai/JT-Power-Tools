@@ -1,29 +1,36 @@
-# Cloudflare Worker Configuration for JobTread API Proxy
+# Cloudflare Worker Configuration for JobTread Tools Pro
 # Deploy with: wrangler deploy
 
-name = "jt-power-tools-api"
+name = "jobtread-tools-pro"
 main = "cloudflare-worker-jobtread-api.js"
 compatibility_date = "2024-01-01"
 
-# KV Namespace binding - create this in Cloudflare dashboard first
-# Then update the id with your actual KV namespace ID
+# D1 Database binding - create with:
+# wrangler d1 create jobtread-extension-users
+# Then update the database_id with your actual ID
+[[d1_databases]]
+binding = "DB"
+database_name = "jobtread-extension-users"
+database_id = "YOUR_D1_DATABASE_ID"  # Replace with actual ID from wrangler d1 create
+
+# KV Namespace binding - create with:
+# wrangler kv:namespace create "CACHE"
+# Then update the id with your actual namespace ID
 [[kv_namespaces]]
-binding = "JOBTREAD_CACHE"
+binding = "CACHE"
 id = "YOUR_KV_NAMESPACE_ID"  # Replace with actual ID
 
-# Environment variables (secrets) - set via wrangler or dashboard
-# wrangler secret put JOBTREAD_GRANT_KEY
-# wrangler secret put ORG_ID
-# wrangler secret put EXTENSION_SECRET
+# Environment variables (secrets) - set via wrangler:
+# wrangler secret put GUMROAD_PRODUCT_ID
 
 [vars]
 # Non-secret variables can go here
-# JOBTREAD_GRANT_KEY, ORG_ID, and EXTENSION_SECRET should be secrets
+# GUMROAD_PRODUCT_ID should be a secret
 
 # Production environment
 [env.production]
-name = "jt-power-tools-api"
+name = "jobtread-tools-pro"
 
 # Development/staging environment
 [env.staging]
-name = "jt-power-tools-api-staging"
+name = "jobtread-tools-pro-staging"
