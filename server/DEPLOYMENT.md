@@ -225,3 +225,147 @@ For advanced users, consider implementing Gumroad webhooks to:
 - Build custom analytics
 
 See: https://help.gumroad.com/article/266-gumroad-webhooks
+
+---
+
+# JobTread API Proxy Worker
+
+This worker provides secure access to the JobTread Pave API for the Smart Job Filter feature.
+
+## Features
+
+- **Secure API Key Storage** - Grant Key stored in Cloudflare environment variables
+- **Response Caching** - Uses KV to cache responses (2 min for jobs, 1 hour for custom fields)
+- **Server-Side Filtering** - Uses Pave `with` clause for efficient job filtering
+- **Multi-Filter Support** - AND logic for combining multiple custom field filters
+- **CORS Handling** - Proper CORS headers for browser extension requests
+
+## Deployment Steps
+
+### 1. Create KV Namespace
+
+```bash
+# Using Wrangler CLI
+wrangler kv:namespace create "JOBTREAD_CACHE"
+```
+
+Or create via Cloudflare Dashboard:
+- Go to Workers & Pages → KV
+- Create a namespace named `JOBTREAD_CACHE`
+- Copy the namespace ID
+
+### 2. Update wrangler.toml
+
+Edit `server/wrangler.toml` and replace `YOUR_KV_NAMESPACE_ID` with your actual KV namespace ID.
+
+### 3. Set Secrets
+
+```bash
+cd server
+
+# Set your JobTread Grant Key
+wrangler secret put JOBTREAD_GRANT_KEY
+# Enter: your_grant_key_here
+
+# Set your Organization ID
+wrangler secret put ORG_ID
+# Enter: your_org_id_here
+
+# Set extension authentication secret
+wrangler secret put EXTENSION_SECRET
+# Enter: (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+```
+
+### 4. Deploy Worker
+
+```bash
+cd server
+wrangler deploy
+```
+
+Your worker will be available at: `https://jt-power-tools-api.YOUR_SUBDOMAIN.workers.dev`
+
+### 5. Update Extension
+
+After deploying, update the extension to use the worker URL instead of direct API calls.
+
+## API Endpoints
+
+All requests are POST to the worker URL with JSON body:
+
+### Test Connection
+```json
+{ "action": "testConnection" }
+```
+
+### Get Custom Fields
+```json
+{ "action": "getCustomFields" }
+```
+
+### Get All Jobs
+```json
+{ "action": "getAllJobs" }
+```
+
+### Get Filtered Jobs
+```json
+{
+  "action": "getFilteredJobs",
+  "filters": [
+    { "fieldName": "Status", "value": "Construction" },
+    { "fieldName": "Job Type", "value": "Residential" }
+  ]
+}
+```
+
+### Get Field Values
+```json
+{
+  "action": "getFieldValues",
+  "fieldId": "abc123"
+}
+```
+
+## Request Headers
+
+All requests must include:
+```
+Content-Type: application/json
+X-Extension-Key: your_extension_secret
+```
+
+## Response Format
+
+Success:
+```json
+{
+  "jobs": [...],
+  "filters": [...],
+  "_cached": true  // indicates response was from cache
+}
+```
+
+Error:
+```json
+{
+  "error": "Error message"
+}
+```
+
+## Cache TTLs
+
+| Data Type | TTL |
+|-----------|-----|
+| Custom Fields | 1 hour |
+| Job Lists | 2 minutes |
+| Field Values | 5 minutes |
+
+## Local Development
+
+```bash
+cd server
+wrangler dev
+```
+
+This starts a local development server at `http://localhost:8787`
