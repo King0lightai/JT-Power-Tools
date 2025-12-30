@@ -48,11 +48,11 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside the budget table (ANY field - Name, Description, etc.)
-   * ALL budget table fields should use the floating expanded toolbar, not embedded
+   * Check if a field is inside the budget table or documents edit items table
+   * ALL budget/document item table fields should use the floating expanded toolbar, not embedded
    * CRITICAL: BOTH conditions must be met:
    *   1. placeholder="Description"
-   *   2. URL ends with '/budget'
+   *   2. URL ends with '/budget' OR contains '/documents' (for edit items view)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
@@ -63,12 +63,14 @@ const FormatterToolbar = (() => {
     console.log('Field:', field);
     console.log('Placeholder:', field.getAttribute('placeholder'));
 
-    // CRITICAL CHECK 1: Must be on the budget page first
-    // URL must end with '/budget'
-    const onBudgetPage = window.location.pathname.endsWith('/budget');
-    console.log('On budget page:', onBudgetPage);
-    if (!onBudgetPage) {
-      return false; // Not on budget page - definitely not a budget field
+    // CRITICAL CHECK 1: Must be on a page with item editing table
+    // URL must end with '/budget' OR contain '/documents' (for ADD/EDIT ITEMS view)
+    const pathname = window.location.pathname;
+    const onBudgetPage = pathname.endsWith('/budget');
+    const onDocumentsPage = pathname.includes('/documents');
+    console.log('On budget page:', onBudgetPage, 'On documents page:', onDocumentsPage);
+    if (!onBudgetPage && !onDocumentsPage) {
+      return false; // Not on budget or documents page - definitely not an item table field
     }
 
     // Exclude custom fields in job overview form (rounded-sm border divide-y)
