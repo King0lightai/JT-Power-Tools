@@ -50,30 +50,34 @@ const FormatterToolbar = (() => {
   /**
    * Check if a field is inside the budget table (ANY field - Name, Description, etc.)
    * ALL budget table fields should use the floating expanded toolbar, not embedded
+   * CRITICAL: BOTH conditions must be met:
+   *   1. placeholder="Description"
+   *   2. URL ends with '/budget'
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    // Budget table Description fields always have placeholder="Description"
-    // This is the most reliable indicator - custom fields never have this placeholder
+    // CRITICAL CHECK 1: Must have placeholder="Description"
+    // Budget table fields ALWAYS have this placeholder
+    // Custom fields NEVER have this placeholder
     const placeholder = field.getAttribute('placeholder');
     if (placeholder !== 'Description') {
-      return false; // Not a Description field, so not a budget field
+      return false;
     }
 
-    // Check if we're on the budget page - URL always ends with 'budget'
+    // CRITICAL CHECK 2: Must be on the budget page
+    // URL must end with '/budget'
     const onBudgetPage = window.location.pathname.endsWith('/budget');
     if (!onBudgetPage) {
-      return false; // Not on budget page
+      return false;
     }
 
-    // Check if it's inside a budget table (has the characteristic row structure)
+    // BOTH critical conditions are met - verify DOM structure
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
 
-    // Check for budget table indicators - parent should have overflow-auto
     const scrollContainer = row.closest('.overflow-auto');
     return scrollContainer !== null;
   }
