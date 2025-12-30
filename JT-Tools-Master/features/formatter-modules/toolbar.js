@@ -508,7 +508,7 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Find the budget table footer bar
+   * Find the budget/documents table footer bar
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
@@ -517,6 +517,20 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
+    // Strategy 1: Look for sticky footer bar at bottom (Documents ADD/EDIT ITEMS view)
+    // Structure: div.sticky.border-t with bottom: 0px containing Item/Group buttons
+    const stickyElements = scrollContainer.parentElement?.querySelectorAll('.sticky') || [];
+    for (const sticky of stickyElements) {
+      const style = sticky.getAttribute('style') || '';
+      if (style.includes('bottom: 0') || style.includes('bottom:0')) {
+        const hasItemText = sticky.textContent.includes('Item') && sticky.textContent.includes('Group');
+        if (hasItemText) {
+          return sticky;
+        }
+      }
+    }
+
+    // Strategy 2: Original - look for flex.min-w-max rows (Budget page)
     // The footer bar is a sibling flex row that contains buttons (+ Item, + Group)
     // It's typically the last .flex.min-w-max that has buttons inside
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
@@ -1062,7 +1076,12 @@ const FormatterToolbar = (() => {
           const allButtons = document.querySelectorAll('[role="button"].bg-gray-700');
           for (const btn of allButtons) {
             if (btn.textContent.includes('Item') || btn.textContent.includes('Group')) {
+              // Try budget-style footer first (.flex.min-w-max)
               footerBar = btn.closest('.flex.min-w-max');
+              // If not found, try documents-style footer (.sticky with bottom: 0)
+              if (!footerBar) {
+                footerBar = btn.closest('.sticky');
+              }
               break;
             }
           }
@@ -1075,23 +1094,41 @@ const FormatterToolbar = (() => {
           const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
 
           // Position horizontally: after the + Item / + Group buttons
-          // Find the container with the buttons (usually the second cell with width 300px)
-          const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
-                                  footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
+          // Find the container with the buttons
           let left;
 
+          // Strategy 1: Budget-style footer with shrink-0.sticky cells
+          const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
+                                  footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
           if (buttonContainer) {
             const containerRect = buttonContainer.getBoundingClientRect();
             left = containerRect.right + 16; // Position after the button container
           } else {
-            // Fallback: find the last button and position after it
-            const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
-            if (footerButtons.length > 0) {
-              const lastButton = footerButtons[footerButtons.length - 1];
-              const lastButtonRect = lastButton.getBoundingClientRect();
-              left = lastButtonRect.right + 16;
+            // Strategy 2: Documents-style footer with flex gap-1 button groups
+            // Find the first button group (contains Item/Group/Close buttons)
+            const firstButtonGroup = footerBar.querySelector('.flex.gap-1');
+            if (firstButtonGroup) {
+              const groupRect = firstButtonGroup.getBoundingClientRect();
+              left = groupRect.right + 16; // Position after the first button group
             } else {
-              left = footerRect.left + 350; // Approximate position after Name column
+              // Fallback: find the last Item/Group button and position after it
+              const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+              let lastItemButton = null;
+              for (const btn of footerButtons) {
+                if (btn.textContent.includes('Item') || btn.textContent.includes('Group') || btn.textContent.includes('Close')) {
+                  lastItemButton = btn;
+                }
+              }
+              if (lastItemButton) {
+                const btnRect = lastItemButton.getBoundingClientRect();
+                left = btnRect.right + 16;
+              } else if (footerButtons.length > 0) {
+                const lastButton = footerButtons[footerButtons.length - 1];
+                const lastButtonRect = lastButton.getBoundingClientRect();
+                left = lastButtonRect.right + 16;
+              } else {
+                left = footerRect.left + 350; // Approximate position after Name column
+              }
             }
           }
 
