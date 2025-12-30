@@ -263,16 +263,18 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude "Prepared by" / "Prepared for" document header fields
+      // Exclude "Prepared by" / "Prepared for" document header fields (on documents page)
       // These are contact info fields that don't need rich text formatting
-      const gridContainer = field.closest('div.grid.grid-cols-2');
-      if (gridContainer && gridContainer.classList.contains('border-b-2')) {
-        // Check if this is a Prepared by/for section by looking for the header
-        const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
-        if (preparedHeader) {
-          const headerText = preparedHeader.textContent.trim().toLowerCase();
-          if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
-            return false; // Exclude document header contact fields
+      if (path.includes('/documents')) {
+        const gridContainer = field.closest('div.grid.grid-cols-2');
+        if (gridContainer && gridContainer.classList.contains('border-b-2')) {
+          // Check if this is a Prepared by/for section by looking for the header
+          const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
+          if (preparedHeader) {
+            const headerText = preparedHeader.textContent.trim().toLowerCase();
+            if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
+              return false; // Exclude document header contact fields
+            }
           }
         }
       }
