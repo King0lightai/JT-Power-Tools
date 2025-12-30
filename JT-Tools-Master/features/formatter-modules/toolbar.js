@@ -216,6 +216,14 @@ const FormatterToolbar = (() => {
   function findContainingColumn(field) {
     if (!field) return null;
 
+    // Check for custom field form first - these fields are in constrained columns
+    const customFieldForm = field.closest('form.rounded-sm');
+    if (customFieldForm && customFieldForm.classList.contains('border') &&
+        customFieldForm.classList.contains('divide-y')) {
+      console.log('Found custom field form as containing column');
+      return customFieldForm;
+    }
+
     // Try drag-scroll-boundary first (JobTread sidebars)
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
     if (dragScrollContainer) return dragScrollContainer;
