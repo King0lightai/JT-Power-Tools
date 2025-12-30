@@ -62,6 +62,12 @@ const FormatterToolbar = (() => {
       return false; // Not on budget page, so definitely not a budget field
     }
 
+    // Exclude sidebar/panel fields - these are custom fields in job overview
+    // The sidebar has data-is-drag-scroll-boundary attribute
+    if (field.closest('[data-is-drag-scroll-boundary="true"]')) {
+      return false;
+    }
+
     // Exclude custom fields - they are inside <label> elements
     // Budget table fields are never inside labels
     if (field.closest('label')) {
