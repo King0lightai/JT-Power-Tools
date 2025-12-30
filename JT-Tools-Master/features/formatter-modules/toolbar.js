@@ -74,32 +74,29 @@ const FormatterToolbar = (() => {
     // Exclude custom fields in job overview form (rounded-sm border divide-y)
     // These fields are inside <form class="rounded-sm border divide-y">
     // Check this BEFORE placeholder because form structure is stable
-    const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
+    const customFieldForm = field.closest('form.rounded-sm');
     console.log('Custom field form found:', customFieldForm);
-    if (customFieldForm) {
-      console.log('REJECTED: Inside custom field form');
+    if (customFieldForm && customFieldForm.classList.contains('border') &&
+        customFieldForm.classList.contains('divide-y')) {
+      console.log('REJECTED: Inside custom field form (rounded-sm border divide-y)');
       return false; // This is a custom field, not a budget field
     }
 
     // Exclude custom fields in job overview - they have .font-bold sibling with field name
+    // This is a DEFINITIVE indicator of custom fields - budget fields NEVER have this structure
     // Check this BEFORE placeholder because DOM structure is more reliable
     const parent = field.parentElement;
     console.log('Parent element:', parent);
     if (parent) {
       const boldSibling = parent.querySelector('.font-bold');
-      console.log('Bold sibling:', boldSibling);
+      console.log('Bold sibling found:', boldSibling);
       if (boldSibling) {
-        const text = boldSibling.textContent;
-        console.log('Bold sibling text:', text);
-        // Check for common custom field names
-        if (text.includes('Sales Rep') || text.includes('Job Supervisor') ||
-            text.includes('C.O.P.S.') || text.includes('Project Manager') ||
-            text.includes('Designer') || text.includes('Permit') ||
-            text.includes('Square Footage') || text.includes('Remodel Type') ||
-            text.includes('Job Type') || text.includes('Status')) {
-          console.log('REJECTED: Has custom field label');
-          return false; // Has custom field label
-        }
+        const boldText = boldSibling.textContent.trim();
+        console.log('Bold sibling text:', boldText);
+        // ANY field with a .font-bold sibling is a custom field
+        // Budget table fields NEVER have .font-bold siblings in their parent
+        console.log('REJECTED: Has .font-bold sibling - this is a custom field');
+        return false;
       }
     }
 
