@@ -263,6 +263,20 @@ const FormatterFeature = (() => {
         }
       }
 
+      // Exclude "Prepared by" / "Prepared for" document header fields
+      // These are contact info fields that don't need rich text formatting
+      const gridContainer = field.closest('div.grid.grid-cols-2');
+      if (gridContainer && gridContainer.classList.contains('border-b-2')) {
+        // Check if this is a Prepared by/for section by looking for the header
+        const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
+        if (preparedHeader) {
+          const headerText = preparedHeader.textContent.trim().toLowerCase();
+          if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
+            return false; // Exclude document header contact fields
+          }
+        }
+      }
+
       // Extra guard: ensure no native formatter exists (using Detection module)
       return !Detection().hasNativeFormatter(field);
     });
