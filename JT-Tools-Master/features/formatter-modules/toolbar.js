@@ -1868,6 +1868,8 @@ const FormatterToolbar = (() => {
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
+        // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
+        positionToolbar(embeddedToolbar, field);
         updateToolbarState(field, embeddedToolbar);
         return;
       }
