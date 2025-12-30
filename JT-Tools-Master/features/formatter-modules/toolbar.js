@@ -56,6 +56,12 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
+    // Exclude custom fields - they are inside <label> elements
+    // Budget table fields are never inside labels
+    if (field.closest('label')) {
+      return false;
+    }
+
     // Check if it's inside a budget table (has the characteristic row structure)
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
