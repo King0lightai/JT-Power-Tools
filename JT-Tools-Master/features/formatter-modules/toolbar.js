@@ -56,6 +56,18 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
+    // Check if we're on the budget page - URL always ends with 'budget'
+    const onBudgetPage = window.location.pathname.endsWith('/budget');
+    if (!onBudgetPage) {
+      return false; // Not on budget page, so definitely not a budget field
+    }
+
+    // Exclude custom fields - they are inside <label> elements
+    // Budget table fields are never inside labels
+    if (field.closest('label')) {
+      return false;
+    }
+
     // Check if it's inside a budget table (has the characteristic row structure)
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
