@@ -59,18 +59,12 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    // Exclude custom fields in job overview form (rounded-sm border divide-y)
-    // These fields are inside <form class="rounded-sm border divide-y">
-    const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
-    if (customFieldForm) {
-      return false; // This is a custom field, not a budget field
-    }
-
     // CRITICAL CHECK 1: Must have placeholder="Description"
     // Budget table fields ALWAYS have this placeholder
     // Custom fields NEVER have this placeholder
     const placeholder = field.getAttribute('placeholder');
     if (placeholder !== 'Description') {
+      console.log('Formatter: Not budget field - placeholder is', placeholder);
       return false;
     }
 
@@ -78,15 +72,47 @@ const FormatterToolbar = (() => {
     // URL must end with '/budget'
     const onBudgetPage = window.location.pathname.endsWith('/budget');
     if (!onBudgetPage) {
+      console.log('Formatter: Not budget field - not on budget page');
       return false;
+    }
+
+    // Exclude custom fields in job overview form (rounded-sm border divide-y)
+    // These fields are inside <form class="rounded-sm border divide-y">
+    const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
+    if (customFieldForm) {
+      console.log('Formatter: Not budget field - inside custom field form');
+      return false;
+    }
+
+    // Exclude custom fields in job overview - they have .font-bold sibling with field name
+    const parent = field.parentElement;
+    if (parent) {
+      const boldSibling = parent.querySelector('.font-bold');
+      if (boldSibling) {
+        const text = boldSibling.textContent;
+        // Check for common custom field names
+        if (text.includes('Sales Rep') || text.includes('Job Supervisor') ||
+            text.includes('C.O.P.S.') || text.includes('Project Manager') ||
+            text.includes('Designer') || text.includes('Permit') ||
+            text.includes('Square Footage') || text.includes('Remodel Type') ||
+            text.includes('Job Type') || text.includes('Status')) {
+          console.log('Formatter: Not budget field - has custom field label:', text);
+          return false;
+        }
+      }
     }
 
     // BOTH critical conditions are met - verify DOM structure
     const row = field.closest('.flex.min-w-max');
-    if (!row) return false;
+    if (!row) {
+      console.log('Formatter: Not budget field - no .flex.min-w-max row');
+      return false;
+    }
 
     const scrollContainer = row.closest('.overflow-auto');
-    return scrollContainer !== null;
+    const isBudget = scrollContainer !== null;
+    console.log('Formatter: Budget field check result:', isBudget);
+    return isBudget;
   }
 
   /**
