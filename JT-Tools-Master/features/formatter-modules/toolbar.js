@@ -48,103 +48,51 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside the budget table or documents edit items table
-   * ALL budget/document item table fields should use the floating expanded toolbar, not embedded
+   * Check if a field is inside the budget table
+   * Budget table fields use the floating expanded toolbar, not embedded
    * CRITICAL: BOTH conditions must be met:
    *   1. placeholder="Description"
-   *   2. URL ends with '/budget' OR contains '/documents' (for edit items view)
+   *   2. URL ends with '/budget'
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    console.log('=== isBudgetTableField called ===');
-    console.log('Field:', field);
-    console.log('Placeholder:', field.getAttribute('placeholder'));
-
-    // CRITICAL CHECK 1: Must be on a page with item editing table
-    // URL must end with '/budget' OR contain '/documents' (for ADD/EDIT ITEMS view)
-    const pathname = window.location.pathname;
-    const onBudgetPage = pathname.endsWith('/budget');
-    const onDocumentsPage = pathname.includes('/documents');
-    console.log('On budget page:', onBudgetPage, 'On documents page:', onDocumentsPage);
-    if (!onBudgetPage && !onDocumentsPage) {
-      return false; // Not on budget or documents page - definitely not an item table field
+    // CRITICAL CHECK 1: Must be on the budget page
+    const onBudgetPage = window.location.pathname.endsWith('/budget');
+    if (!onBudgetPage) {
+      return false;
     }
 
     // Exclude custom fields in job overview form (rounded-sm border divide-y)
-    // These fields are inside <form class="rounded-sm border divide-y">
-    // Check this BEFORE placeholder because form structure is stable
     const customFieldForm = field.closest('form.rounded-sm');
-    console.log('Custom field form found:', customFieldForm);
     if (customFieldForm && customFieldForm.classList.contains('border') &&
         customFieldForm.classList.contains('divide-y')) {
-      console.log('REJECTED: Inside custom field form (rounded-sm border divide-y)');
-      return false; // This is a custom field, not a budget field
+      return false;
     }
 
-    // Exclude custom fields in job overview - they have .font-bold sibling with field name
-    // This is a DEFINITIVE indicator of custom fields - budget fields NEVER have this structure
-    // Check this BEFORE placeholder because DOM structure is more reliable
+    // Exclude custom fields - they have .font-bold sibling with field name
     const parent = field.parentElement;
-    console.log('Parent element:', parent);
     if (parent) {
       const boldSibling = parent.querySelector('.font-bold');
-      console.log('Bold sibling found:', boldSibling);
       if (boldSibling) {
-        const boldText = boldSibling.textContent.trim();
-        console.log('Bold sibling text:', boldText);
-        // ANY field with a .font-bold sibling is a custom field
-        // Budget table fields NEVER have .font-bold siblings in their parent
-        console.log('REJECTED: Has .font-bold sibling - this is a custom field');
         return false;
       }
     }
 
     // CRITICAL CHECK 2: Must have placeholder="Description"
-    // Budget table fields ALWAYS have this placeholder
-    // Custom fields NEVER have this placeholder
-    // NOTE: Check this LAST because placeholder may be added dynamically
     const placeholder = field.getAttribute('placeholder');
     if (placeholder !== 'Description') {
-      console.log('REJECTED: Placeholder is not Description');
-      return false; // Not a Description field
+      return false;
     }
 
-    // All checks passed - verify DOM structure
-    // Strategy 1: Budget page uses .flex.min-w-max rows inside .overflow-auto
+    // Verify DOM structure - budget page uses .flex.min-w-max rows inside .overflow-auto
     const row = field.closest('.flex.min-w-max');
-    console.log('Row found (flex.min-w-max):', row);
-    if (row) {
-      const scrollContainer = row.closest('.overflow-auto');
-      console.log('Scroll container found:', scrollContainer);
-      if (scrollContainer) {
-        console.log('FINAL RESULT: BUDGET FIELD (flex.min-w-max structure)');
-        return true;
-      }
-    }
+    if (!row) return false;
 
-    // Strategy 2: Documents ADD/EDIT ITEMS uses different structure
-    // Check if we're on documents page with a table-like structure
-    if (onDocumentsPage) {
-      // Look for the ADD/EDIT ITEMS view - has a sticky footer with Item/Group buttons
-      const stickyFooter = document.querySelector('.sticky[style*="bottom: 0"]');
-      const hasItemButtons = stickyFooter && stickyFooter.textContent.includes('Item');
-      console.log('Documents sticky footer found:', stickyFooter, 'has Item buttons:', hasItemButtons);
-      if (hasItemButtons) {
-        // Verify field is in a table-like structure (has overflow-auto ancestor or similar)
-        const tableContainer = field.closest('.overflow-auto') || field.closest('.overflow-x-auto');
-        console.log('Documents table container:', tableContainer);
-        if (tableContainer) {
-          console.log('FINAL RESULT: DOCUMENTS EDIT ITEMS FIELD');
-          return true;
-        }
-      }
-    }
-
-    console.log('FINAL RESULT: NOT BUDGET/DOCUMENTS FIELD');
-    return false;
+    const scrollContainer = row.closest('.overflow-auto');
+    return scrollContainer !== null;
   }
 
   /**
@@ -531,7 +479,7 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Find the budget/documents table footer bar
+   * Find the budget table footer bar
    * @param {HTMLTextAreaElement} field
    * @returns {HTMLElement|null}
    */
@@ -540,25 +488,9 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // Strategy 1: Look for sticky footer bar at bottom (Documents ADD/EDIT ITEMS view)
-    // Structure: div.sticky.border-t with bottom: 0px containing Item/Group buttons
-    const stickyElements = scrollContainer.parentElement?.querySelectorAll('.sticky') || [];
-    for (const sticky of stickyElements) {
-      const style = sticky.getAttribute('style') || '';
-      if (style.includes('bottom: 0') || style.includes('bottom:0')) {
-        const hasItemText = sticky.textContent.includes('Item') && sticky.textContent.includes('Group');
-        if (hasItemText) {
-          return sticky;
-        }
-      }
-    }
-
-    // Strategy 2: Original - look for flex.min-w-max rows (Budget page)
-    // The footer bar is a sibling flex row that contains buttons (+ Item, + Group)
-    // It's typically the last .flex.min-w-max that has buttons inside
+    // Look for flex.min-w-max rows containing + Item / + Group buttons
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
     for (const row of allRows) {
-      // Look for the row with "+ Item" button
       const hasAddButtons = row.querySelector('button, [role="button"]');
       const hasItemText = row.textContent.includes('Item') && row.textContent.includes('Group');
       if (hasAddButtons && hasItemText) {
@@ -1095,16 +1027,10 @@ const FormatterToolbar = (() => {
 
         // If not found inside, look for it as the last visible row with the buttons
         if (!footerBar) {
-          // Try finding the footer bar by looking for the bg-gray-700 buttons
           const allButtons = document.querySelectorAll('[role="button"].bg-gray-700');
           for (const btn of allButtons) {
             if (btn.textContent.includes('Item') || btn.textContent.includes('Group')) {
-              // Try budget-style footer first (.flex.min-w-max)
               footerBar = btn.closest('.flex.min-w-max');
-              // If not found, try documents-style footer (.sticky with bottom: 0)
-              if (!footerBar) {
-                footerBar = btn.closest('.sticky');
-              }
               break;
             }
           }
@@ -1117,41 +1043,21 @@ const FormatterToolbar = (() => {
           const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
 
           // Position horizontally: after the + Item / + Group buttons
-          // Find the container with the buttons
           let left;
-
-          // Strategy 1: Budget-style footer with shrink-0.sticky cells
           const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
                                   footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
           if (buttonContainer) {
             const containerRect = buttonContainer.getBoundingClientRect();
-            left = containerRect.right + 16; // Position after the button container
+            left = containerRect.right + 16;
           } else {
-            // Strategy 2: Documents-style footer with flex gap-1 button groups
-            // Find the first button group (contains Item/Group/Close buttons)
-            const firstButtonGroup = footerBar.querySelector('.flex.gap-1');
-            if (firstButtonGroup) {
-              const groupRect = firstButtonGroup.getBoundingClientRect();
-              left = groupRect.right + 16; // Position after the first button group
+            // Fallback: find the last button and position after it
+            const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
+            if (footerButtons.length > 0) {
+              const lastButton = footerButtons[footerButtons.length - 1];
+              const lastButtonRect = lastButton.getBoundingClientRect();
+              left = lastButtonRect.right + 16;
             } else {
-              // Fallback: find the last Item/Group button and position after it
-              const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
-              let lastItemButton = null;
-              for (const btn of footerButtons) {
-                if (btn.textContent.includes('Item') || btn.textContent.includes('Group') || btn.textContent.includes('Close')) {
-                  lastItemButton = btn;
-                }
-              }
-              if (lastItemButton) {
-                const btnRect = lastItemButton.getBoundingClientRect();
-                left = btnRect.right + 16;
-              } else if (footerButtons.length > 0) {
-                const lastButton = footerButtons[footerButtons.length - 1];
-                const lastButtonRect = lastButton.getBoundingClientRect();
-                left = lastButtonRect.right + 16;
-              } else {
-                left = footerRect.left + 350; // Approximate position after Name column
-              }
+              left = footerRect.left + 350;
             }
           }
 

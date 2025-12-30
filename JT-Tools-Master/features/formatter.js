@@ -263,18 +263,27 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude "Prepared by" / "Prepared for" document header fields (on documents page)
-      // These are contact info fields that don't need rich text formatting
+      // Exclude all fields in Documents ADD/EDIT ITEMS view
+      // Users can use the sidebar for formatting instead
       if (path.includes('/documents')) {
+        // Exclude "Prepared by" / "Prepared for" document header fields
         const gridContainer = field.closest('div.grid.grid-cols-2');
         if (gridContainer && gridContainer.classList.contains('border-b-2')) {
-          // Check if this is a Prepared by/for section by looking for the header
           const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
           if (preparedHeader) {
             const headerText = preparedHeader.textContent.trim().toLowerCase();
             if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
-              return false; // Exclude document header contact fields
+              return false;
             }
+          }
+        }
+
+        // Exclude Description fields in the ADD/EDIT ITEMS table view
+        // Check for sticky footer with Item/Group buttons (indicates edit items view)
+        if (placeholder === 'Description') {
+          const stickyFooter = document.querySelector('.sticky[style*="bottom: 0"]');
+          if (stickyFooter && stickyFooter.textContent.includes('Item')) {
+            return false; // Exclude - user can use sidebar for formatting
           }
         }
       }
