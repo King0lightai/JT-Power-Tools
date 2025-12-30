@@ -59,32 +59,23 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    // CRITICAL CHECK 1: Must have placeholder="Description"
-    // Budget table fields ALWAYS have this placeholder
-    // Custom fields NEVER have this placeholder
-    const placeholder = field.getAttribute('placeholder');
-    if (placeholder !== 'Description') {
-      console.log('Formatter: Not budget field - placeholder is', placeholder);
-      return false;
-    }
-
-    // CRITICAL CHECK 2: Must be on the budget page
+    // CRITICAL CHECK 1: Must be on the budget page first
     // URL must end with '/budget'
     const onBudgetPage = window.location.pathname.endsWith('/budget');
     if (!onBudgetPage) {
-      console.log('Formatter: Not budget field - not on budget page');
-      return false;
+      return false; // Not on budget page - definitely not a budget field
     }
 
     // Exclude custom fields in job overview form (rounded-sm border divide-y)
     // These fields are inside <form class="rounded-sm border divide-y">
+    // Check this BEFORE placeholder because form structure is stable
     const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
     if (customFieldForm) {
-      console.log('Formatter: Not budget field - inside custom field form');
-      return false;
+      return false; // This is a custom field, not a budget field
     }
 
     // Exclude custom fields in job overview - they have .font-bold sibling with field name
+    // Check this BEFORE placeholder because DOM structure is more reliable
     const parent = field.parentElement;
     if (parent) {
       const boldSibling = parent.querySelector('.font-bold');
@@ -96,23 +87,26 @@ const FormatterToolbar = (() => {
             text.includes('Designer') || text.includes('Permit') ||
             text.includes('Square Footage') || text.includes('Remodel Type') ||
             text.includes('Job Type') || text.includes('Status')) {
-          console.log('Formatter: Not budget field - has custom field label:', text);
-          return false;
+          return false; // Has custom field label
         }
       }
     }
 
-    // BOTH critical conditions are met - verify DOM structure
-    const row = field.closest('.flex.min-w-max');
-    if (!row) {
-      console.log('Formatter: Not budget field - no .flex.min-w-max row');
-      return false;
+    // CRITICAL CHECK 2: Must have placeholder="Description"
+    // Budget table fields ALWAYS have this placeholder
+    // Custom fields NEVER have this placeholder
+    // NOTE: Check this LAST because placeholder may be added dynamically
+    const placeholder = field.getAttribute('placeholder');
+    if (placeholder !== 'Description') {
+      return false; // Not a Description field
     }
 
+    // All checks passed - verify DOM structure
+    const row = field.closest('.flex.min-w-max');
+    if (!row) return false;
+
     const scrollContainer = row.closest('.overflow-auto');
-    const isBudget = scrollContainer !== null;
-    console.log('Formatter: Budget field check result:', isBudget);
-    return isBudget;
+    return scrollContainer !== null;
   }
 
   /**
