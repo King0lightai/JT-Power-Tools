@@ -50,58 +50,76 @@ const FormatterToolbar = (() => {
   /**
    * Check if a field is inside the budget table (ANY field - Name, Description, etc.)
    * ALL budget table fields should use the floating expanded toolbar, not embedded
+   * CRITICAL: BOTH conditions must be met:
+   *   1. placeholder="Description"
+   *   2. URL ends with '/budget'
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    // Exclude custom fields - they are inside <label> elements
-    // Budget table fields are never inside labels
-    if (field.closest('label')) {
-      return false;
+    console.log('=== isBudgetTableField called ===');
+    console.log('Field:', field);
+    console.log('Placeholder:', field.getAttribute('placeholder'));
+
+    // CRITICAL CHECK 1: Must be on the budget page first
+    // URL must end with '/budget'
+    const onBudgetPage = window.location.pathname.endsWith('/budget');
+    console.log('On budget page:', onBudgetPage);
+    if (!onBudgetPage) {
+      return false; // Not on budget page - definitely not a budget field
     }
 
-    // Check if it's inside a budget table (has the characteristic row structure)
+    // Exclude custom fields in job overview form (rounded-sm border divide-y)
+    // These fields are inside <form class="rounded-sm border divide-y">
+    // Check this BEFORE placeholder because form structure is stable
+    const customFieldForm = field.closest('form.rounded-sm');
+    console.log('Custom field form found:', customFieldForm);
+    if (customFieldForm && customFieldForm.classList.contains('border') &&
+        customFieldForm.classList.contains('divide-y')) {
+      console.log('REJECTED: Inside custom field form (rounded-sm border divide-y)');
+      return false; // This is a custom field, not a budget field
+    }
+
+    // Exclude custom fields in job overview - they have .font-bold sibling with field name
+    // This is a DEFINITIVE indicator of custom fields - budget fields NEVER have this structure
+    // Check this BEFORE placeholder because DOM structure is more reliable
+    const parent = field.parentElement;
+    console.log('Parent element:', parent);
+    if (parent) {
+      const boldSibling = parent.querySelector('.font-bold');
+      console.log('Bold sibling found:', boldSibling);
+      if (boldSibling) {
+        const boldText = boldSibling.textContent.trim();
+        console.log('Bold sibling text:', boldText);
+        // ANY field with a .font-bold sibling is a custom field
+        // Budget table fields NEVER have .font-bold siblings in their parent
+        console.log('REJECTED: Has .font-bold sibling - this is a custom field');
+        return false;
+      }
+    }
+
+    // CRITICAL CHECK 2: Must have placeholder="Description"
+    // Budget table fields ALWAYS have this placeholder
+    // Custom fields NEVER have this placeholder
+    // NOTE: Check this LAST because placeholder may be added dynamically
+    const placeholder = field.getAttribute('placeholder');
+    if (placeholder !== 'Description') {
+      console.log('REJECTED: Placeholder is not Description');
+      return false; // Not a Description field
+    }
+
+    // All checks passed - verify DOM structure
     const row = field.closest('.flex.min-w-max');
+    console.log('Row found:', row);
     if (!row) return false;
 
-    // Check for budget table indicators - parent should have overflow-auto
     const scrollContainer = row.closest('.overflow-auto');
-    if (!scrollContainer) return false;
-
-    // CRITICAL: Distinguish budget tables from custom field columned layouts
-    // Budget tables have specific footer buttons (+ Item, + Group) or header structure
-    // Custom fields in columned layouts should NEVER use the expanded floating toolbar
-
-    // Check if this is actually a budget table by looking for budget-specific indicators:
-    // 1. Check for the presence of budget footer buttons (+ Item / + Group)
-    const hasFooterButtons = Array.from(document.querySelectorAll('[role="button"].bg-gray-700, button.bg-gray-700')).some(btn => {
-      const btnText = btn.textContent;
-      if ((btnText.includes('Item') || btnText.includes('Group')) && btn.closest('.flex.min-w-max')) {
-        // Check if this button's container is related to our scroll container
-        const btnRow = btn.closest('.flex.min-w-max');
-        return btnRow && (scrollContainer.contains(btnRow) || btnRow.parentElement === scrollContainer.parentElement);
-      }
-      return false;
-    });
-
-    // 2. Check for budget table header (has "Name" and "Description" columns)
-    const hasBudgetHeader = Array.from(scrollContainer.querySelectorAll('.flex.min-w-max, .sticky')).some(el => {
-      const text = el.textContent;
-      // Budget headers have both "Name" and "Description" text
-      // But exclude if it also has custom field indicators like C.O.P.S., What Went Well, etc.
-      return text.includes('Name') && text.includes('Description') &&
-             !text.includes('C.O.P.S.') && !text.includes('What Went Well') && !text.includes('What needs Improving');
-    });
-
-    // 3. Additional check: Exclude fields inside label elements (custom fields)
-    if (field.closest('label')) {
-      return false;
-    }
-
-    // Only return true if we have clear budget table indicators
-    return hasFooterButtons || hasBudgetHeader;
+    console.log('Scroll container found:', scrollContainer);
+    const result = scrollContainer !== null;
+    console.log('FINAL RESULT:', result ? 'BUDGET FIELD' : 'NOT BUDGET FIELD');
+    return result;
   }
 
   /**
@@ -197,6 +215,14 @@ const FormatterToolbar = (() => {
    */
   function findContainingColumn(field) {
     if (!field) return null;
+
+    // Check for custom field form first - these fields are in constrained columns
+    const customFieldForm = field.closest('form.rounded-sm');
+    if (customFieldForm && customFieldForm.classList.contains('border') &&
+        customFieldForm.classList.contains('divide-y')) {
+      console.log('Found custom field form as containing column');
+      return customFieldForm;
+    }
 
     // Try drag-scroll-boundary first (JobTread sidebars)
     const dragScrollContainer = field.closest('[data-is-drag-scroll-boundary="true"]');
@@ -1854,11 +1880,16 @@ const FormatterToolbar = (() => {
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
 
+    console.log('>>> showToolbar called for field:', field);
+    console.log('>>> Field placeholder:', field.getAttribute('placeholder'));
+    console.log('>>> Current URL:', window.location.pathname);
+
     clearHideTimeout();
 
     // Budget table fields (ALL fields, not just Description) get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
     const isBudgetField = isBudgetTableField(field);
+    console.log('>>> isBudgetField result:', isBudgetField);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
