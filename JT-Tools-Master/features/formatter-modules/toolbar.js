@@ -59,6 +59,13 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
+    // Exclude custom fields in job overview form (rounded-sm border divide-y)
+    // These fields are inside <form class="rounded-sm border divide-y">
+    const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
+    if (customFieldForm) {
+      return false; // This is a custom field, not a budget field
+    }
+
     // CRITICAL CHECK 1: Must have placeholder="Description"
     // Budget table fields ALWAYS have this placeholder
     // Custom fields NEVER have this placeholder
