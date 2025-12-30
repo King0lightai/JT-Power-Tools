@@ -278,8 +278,14 @@ const FormatterFeature = (() => {
           }
         }
 
-        // Exclude all Description fields on documents page (ADD/EDIT ITEMS table)
+        // Exclude Description fields on documents page (ADD/EDIT ITEMS table)
         if (placeholder === 'Description') {
+          return false;
+        }
+
+        // Exclude caret-black textareas in the edit items table (they don't have placeholder)
+        // These are the table cells in the ADD/EDIT ITEMS view
+        if (field.classList.contains('caret-black') && field.classList.contains('absolute')) {
           return false;
         }
       }
