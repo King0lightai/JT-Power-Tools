@@ -873,6 +873,12 @@ const FormatterToolbar = (() => {
   function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
 
+    // CRITICAL: If toolbar is already marked as a custom field toolbar, skip all repositioning
+    // Custom field toolbars should never have their positioning changed after initial setup
+    if (toolbar.dataset.customField === 'true') {
+      return;
+    }
+
     // Check if toolbar is placed BELOW the textarea (Message fields)
     // These don't need sticky positioning - they stay in normal document flow
     if (toolbar.classList.contains('jt-toolbar-below')) {
@@ -880,6 +886,20 @@ const FormatterToolbar = (() => {
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
+      toolbar.classList.remove('jt-toolbar-sticky-active');
+      return;
+    }
+
+    // CRITICAL: Custom fields (fields inside <label> elements) should NEVER use sticky positioning
+    // They should always stay embedded in normal document flow, locked in under the field label
+    if (field.closest('label')) {
+      // Mark this toolbar as a custom field toolbar so it's never processed for sticky positioning
+      toolbar.dataset.customField = 'true';
+      // Use !important to override CSS .jt-toolbar-sticky-active { position: fixed !important; }
+      toolbar.style.setProperty('position', 'relative', 'important');
+      toolbar.style.setProperty('top', 'auto', 'important');
+      toolbar.style.setProperty('left', 'auto', 'important');
+      toolbar.style.setProperty('width', '100%', 'important');
       toolbar.classList.remove('jt-toolbar-sticky-active');
       return;
     }
@@ -1888,6 +1908,8 @@ const FormatterToolbar = (() => {
         // Set activeToolbar to embedded toolbar so state updates work
         activeToolbar = embeddedToolbar;
         activeField = field;
+        // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
+        positionToolbar(embeddedToolbar, field);
         updateToolbarState(field, embeddedToolbar);
         return;
       }
