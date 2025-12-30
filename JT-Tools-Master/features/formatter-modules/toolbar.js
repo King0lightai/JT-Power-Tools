@@ -56,22 +56,17 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
+    // Budget table Description fields always have placeholder="Description"
+    // This is the most reliable indicator - custom fields never have this placeholder
+    const placeholder = field.getAttribute('placeholder');
+    if (placeholder !== 'Description') {
+      return false; // Not a Description field, so not a budget field
+    }
+
     // Check if we're on the budget page - URL always ends with 'budget'
     const onBudgetPage = window.location.pathname.endsWith('/budget');
     if (!onBudgetPage) {
-      return false; // Not on budget page, so definitely not a budget field
-    }
-
-    // Exclude sidebar/panel fields - these are custom fields in job overview
-    // The sidebar has data-is-drag-scroll-boundary attribute
-    if (field.closest('[data-is-drag-scroll-boundary="true"]')) {
-      return false;
-    }
-
-    // Exclude custom fields - they are inside <label> elements
-    // Budget table fields are never inside labels
-    if (field.closest('label')) {
-      return false;
+      return false; // Not on budget page
     }
 
     // Check if it's inside a budget table (has the characteristic row structure)
