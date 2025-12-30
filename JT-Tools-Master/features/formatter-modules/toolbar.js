@@ -56,8 +56,8 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    // Exclude custom fields in columned layouts - they're always inside label elements
-    // Custom fields should ALWAYS use the compact embedded toolbar, never the expanded floating toolbar
+    // Exclude custom fields - they are inside <label> elements
+    // Budget table fields are never inside labels
     if (field.closest('label')) {
       return false;
     }
