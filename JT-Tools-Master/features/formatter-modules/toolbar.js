@@ -113,15 +113,38 @@ const FormatterToolbar = (() => {
     }
 
     // All checks passed - verify DOM structure
+    // Strategy 1: Budget page uses .flex.min-w-max rows inside .overflow-auto
     const row = field.closest('.flex.min-w-max');
-    console.log('Row found:', row);
-    if (!row) return false;
+    console.log('Row found (flex.min-w-max):', row);
+    if (row) {
+      const scrollContainer = row.closest('.overflow-auto');
+      console.log('Scroll container found:', scrollContainer);
+      if (scrollContainer) {
+        console.log('FINAL RESULT: BUDGET FIELD (flex.min-w-max structure)');
+        return true;
+      }
+    }
 
-    const scrollContainer = row.closest('.overflow-auto');
-    console.log('Scroll container found:', scrollContainer);
-    const result = scrollContainer !== null;
-    console.log('FINAL RESULT:', result ? 'BUDGET FIELD' : 'NOT BUDGET FIELD');
-    return result;
+    // Strategy 2: Documents ADD/EDIT ITEMS uses different structure
+    // Check if we're on documents page with a table-like structure
+    if (onDocumentsPage) {
+      // Look for the ADD/EDIT ITEMS view - has a sticky footer with Item/Group buttons
+      const stickyFooter = document.querySelector('.sticky[style*="bottom: 0"]');
+      const hasItemButtons = stickyFooter && stickyFooter.textContent.includes('Item');
+      console.log('Documents sticky footer found:', stickyFooter, 'has Item buttons:', hasItemButtons);
+      if (hasItemButtons) {
+        // Verify field is in a table-like structure (has overflow-auto ancestor or similar)
+        const tableContainer = field.closest('.overflow-auto') || field.closest('.overflow-x-auto');
+        console.log('Documents table container:', tableContainer);
+        if (tableContainer) {
+          console.log('FINAL RESULT: DOCUMENTS EDIT ITEMS FIELD');
+          return true;
+        }
+      }
+    }
+
+    console.log('FINAL RESULT: NOT BUDGET/DOCUMENTS FIELD');
+    return false;
   }
 
   /**
