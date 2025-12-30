@@ -90,6 +90,12 @@ const FreezeHeaderFeature = (() => {
       z-index: 41 !important;
     }
 
+    /* Sticky scroll containers with overscroll-contain (sidebar panels like Cost Item Details) */
+    /* These sidebars don't use data-is-drag-scroll-boundary but need z-index above frozen headers */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain {
+      z-index: 41 !important;
+    }
+
     /* Main content area should have lower z-index than sidebars */
     /* Target the container that holds both content and sidebars */
     .jt-freeze-header-active .relative.grow.min-w-0.flex.flex-col {
@@ -143,6 +149,12 @@ const FreezeHeaderFeature = (() => {
     /* These are headers like "Update Task" that should stick at the top of their scrollable parent */
     /* Note: Repeated attribute selector boosts specificity to beat the :not() selectors above */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"][data-is-drag-scroll-boundary="true"][data-is-drag-scroll-boundary="true"] .sticky .sticky {
+      top: 0px !important;
+    }
+
+    /* Reset sticky headers inside overscroll-contain sidebar panels (Cost Item Details header) */
+    /* The inner sticky header should stay at top: 0 relative to its scroll container */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain > .sticky {
       top: 0px !important;
     }
 
