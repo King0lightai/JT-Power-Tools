@@ -59,9 +59,14 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
+    console.log('=== isBudgetTableField called ===');
+    console.log('Field:', field);
+    console.log('Placeholder:', field.getAttribute('placeholder'));
+
     // CRITICAL CHECK 1: Must be on the budget page first
     // URL must end with '/budget'
     const onBudgetPage = window.location.pathname.endsWith('/budget');
+    console.log('On budget page:', onBudgetPage);
     if (!onBudgetPage) {
       return false; // Not on budget page - definitely not a budget field
     }
@@ -70,23 +75,29 @@ const FormatterToolbar = (() => {
     // These fields are inside <form class="rounded-sm border divide-y">
     // Check this BEFORE placeholder because form structure is stable
     const customFieldForm = field.closest('form.rounded-sm.border.divide-y');
+    console.log('Custom field form found:', customFieldForm);
     if (customFieldForm) {
+      console.log('REJECTED: Inside custom field form');
       return false; // This is a custom field, not a budget field
     }
 
     // Exclude custom fields in job overview - they have .font-bold sibling with field name
     // Check this BEFORE placeholder because DOM structure is more reliable
     const parent = field.parentElement;
+    console.log('Parent element:', parent);
     if (parent) {
       const boldSibling = parent.querySelector('.font-bold');
+      console.log('Bold sibling:', boldSibling);
       if (boldSibling) {
         const text = boldSibling.textContent;
+        console.log('Bold sibling text:', text);
         // Check for common custom field names
         if (text.includes('Sales Rep') || text.includes('Job Supervisor') ||
             text.includes('C.O.P.S.') || text.includes('Project Manager') ||
             text.includes('Designer') || text.includes('Permit') ||
             text.includes('Square Footage') || text.includes('Remodel Type') ||
             text.includes('Job Type') || text.includes('Status')) {
+          console.log('REJECTED: Has custom field label');
           return false; // Has custom field label
         }
       }
@@ -98,15 +109,20 @@ const FormatterToolbar = (() => {
     // NOTE: Check this LAST because placeholder may be added dynamically
     const placeholder = field.getAttribute('placeholder');
     if (placeholder !== 'Description') {
+      console.log('REJECTED: Placeholder is not Description');
       return false; // Not a Description field
     }
 
     // All checks passed - verify DOM structure
     const row = field.closest('.flex.min-w-max');
+    console.log('Row found:', row);
     if (!row) return false;
 
     const scrollContainer = row.closest('.overflow-auto');
-    return scrollContainer !== null;
+    console.log('Scroll container found:', scrollContainer);
+    const result = scrollContainer !== null;
+    console.log('FINAL RESULT:', result ? 'BUDGET FIELD' : 'NOT BUDGET FIELD');
+    return result;
   }
 
   /**
@@ -1839,11 +1855,16 @@ const FormatterToolbar = (() => {
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
 
+    console.log('>>> showToolbar called for field:', field);
+    console.log('>>> Field placeholder:', field.getAttribute('placeholder'));
+    console.log('>>> Current URL:', window.location.pathname);
+
     clearHideTimeout();
 
     // Budget table fields (ALL fields, not just Description) get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
     const isBudgetField = isBudgetTableField(field);
+    console.log('>>> isBudgetField result:', isBudgetField);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
