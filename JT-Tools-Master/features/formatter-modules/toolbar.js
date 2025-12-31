@@ -51,7 +51,7 @@ const FormatterToolbar = (() => {
    * Check if a field is inside the budget table
    * Budget table fields use the floating expanded toolbar, not embedded
    * CRITICAL: BOTH conditions must be met:
-   *   1. placeholder="Description"
+   *   1. placeholder="Description" or "Name"
    *   2. URL ends with '/budget'
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
@@ -81,9 +81,9 @@ const FormatterToolbar = (() => {
       }
     }
 
-    // CRITICAL CHECK 2: Must have placeholder="Description"
+    // CRITICAL CHECK 2: Must have placeholder="Description" or "Name"
     const placeholder = field.getAttribute('placeholder');
-    if (placeholder !== 'Description') {
+    if (placeholder !== 'Description' && placeholder !== 'Name') {
       return false;
     }
 
