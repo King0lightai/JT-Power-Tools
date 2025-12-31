@@ -96,6 +96,27 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is inside the budget table structure (regardless of placeholder)
+   * Used to prevent ANY embedded toolbar in the budget table
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isInBudgetTableStructure(field) {
+    if (!field) return false;
+
+    // Must be on the budget page
+    const onBudgetPage = window.location.pathname.endsWith('/budget');
+    if (!onBudgetPage) return false;
+
+    // Must be in .flex.min-w-max row inside .overflow-auto (budget table structure)
+    const row = field.closest('.flex.min-w-max');
+    if (!row) return false;
+
+    const scrollContainer = row.closest('.overflow-auto');
+    return scrollContainer !== null;
+  }
+
+  /**
    * Check if a field is a budget table Description field (for positioning logic)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
@@ -327,9 +348,10 @@ const FormatterToolbar = (() => {
    * @returns {HTMLElement|null}
    */
   function embedToolbarForField(field) {
-    // CRITICAL: Never create embedded toolbar for ANY budget table field
-    // Budget table uses the floating expanded toolbar exclusively
-    if (isBudgetTableField(field)) {
+    // CRITICAL: Never create embedded toolbar for ANY field in budget table structure
+    // This includes Name, Description, AND custom fields
+    // Only Name/Description get the expanded toolbar; custom fields get no toolbar
+    if (isInBudgetTableStructure(field)) {
       console.log('Formatter: Blocked embedded toolbar creation for budget table field');
       return null;
     }
