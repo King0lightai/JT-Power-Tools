@@ -263,6 +263,38 @@ const FormatterFeature = (() => {
         }
       }
 
+      // Exclude fields in Documents ADD/EDIT ITEMS table (but NOT the sidebar)
+      if (path.includes('/documents')) {
+        // Check if field is inside the Cost Item Details sidebar
+        // Sidebar has overscroll-contain class on a sticky container
+        const isInSidebar = field.closest('div.sticky.overflow-y-auto.overscroll-contain') !== null;
+
+        // Exclude "Prepared by" / "Prepared for" document header fields
+        const gridContainer = field.closest('div.grid.grid-cols-2');
+        if (gridContainer && gridContainer.classList.contains('border-b-2')) {
+          const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
+          if (preparedHeader) {
+            const headerText = preparedHeader.textContent.trim().toLowerCase();
+            if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
+              return false;
+            }
+          }
+        }
+
+        // Only exclude table fields, NOT sidebar fields
+        if (!isInSidebar) {
+          // Exclude Description fields in the ADD/EDIT ITEMS table
+          if (placeholder === 'Description') {
+            return false;
+          }
+
+          // Exclude caret-black textareas in the edit items table (they don't have placeholder)
+          if (field.classList.contains('caret-black') && field.classList.contains('absolute')) {
+            return false;
+          }
+        }
+      }
+
       // Extra guard: ensure no native formatter exists (using Detection module)
       return !Detection().hasNativeFormatter(field);
     });
