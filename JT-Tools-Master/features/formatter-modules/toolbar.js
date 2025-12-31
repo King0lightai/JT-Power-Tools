@@ -48,8 +48,8 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside the budget table (ANY field - Name, Description, etc.)
-   * ALL budget table fields should use the floating expanded toolbar, not embedded
+   * Check if a field is inside the budget table
+   * Budget table fields use the floating expanded toolbar, not embedded
    * CRITICAL: BOTH conditions must be met:
    *   1. placeholder="Description"
    *   2. URL ends with '/budget'
@@ -59,67 +59,40 @@ const FormatterToolbar = (() => {
   function isBudgetTableField(field) {
     if (!field) return false;
 
-    console.log('=== isBudgetTableField called ===');
-    console.log('Field:', field);
-    console.log('Placeholder:', field.getAttribute('placeholder'));
-
-    // CRITICAL CHECK 1: Must be on the budget page first
-    // URL must end with '/budget'
+    // CRITICAL CHECK 1: Must be on the budget page
     const onBudgetPage = window.location.pathname.endsWith('/budget');
-    console.log('On budget page:', onBudgetPage);
     if (!onBudgetPage) {
-      return false; // Not on budget page - definitely not a budget field
+      return false;
     }
 
     // Exclude custom fields in job overview form (rounded-sm border divide-y)
-    // These fields are inside <form class="rounded-sm border divide-y">
-    // Check this BEFORE placeholder because form structure is stable
     const customFieldForm = field.closest('form.rounded-sm');
-    console.log('Custom field form found:', customFieldForm);
     if (customFieldForm && customFieldForm.classList.contains('border') &&
         customFieldForm.classList.contains('divide-y')) {
-      console.log('REJECTED: Inside custom field form (rounded-sm border divide-y)');
-      return false; // This is a custom field, not a budget field
+      return false;
     }
 
-    // Exclude custom fields in job overview - they have .font-bold sibling with field name
-    // This is a DEFINITIVE indicator of custom fields - budget fields NEVER have this structure
-    // Check this BEFORE placeholder because DOM structure is more reliable
+    // Exclude custom fields - they have .font-bold sibling with field name
     const parent = field.parentElement;
-    console.log('Parent element:', parent);
     if (parent) {
       const boldSibling = parent.querySelector('.font-bold');
-      console.log('Bold sibling found:', boldSibling);
       if (boldSibling) {
-        const boldText = boldSibling.textContent.trim();
-        console.log('Bold sibling text:', boldText);
-        // ANY field with a .font-bold sibling is a custom field
-        // Budget table fields NEVER have .font-bold siblings in their parent
-        console.log('REJECTED: Has .font-bold sibling - this is a custom field');
         return false;
       }
     }
 
     // CRITICAL CHECK 2: Must have placeholder="Description"
-    // Budget table fields ALWAYS have this placeholder
-    // Custom fields NEVER have this placeholder
-    // NOTE: Check this LAST because placeholder may be added dynamically
     const placeholder = field.getAttribute('placeholder');
     if (placeholder !== 'Description') {
-      console.log('REJECTED: Placeholder is not Description');
-      return false; // Not a Description field
+      return false;
     }
 
-    // All checks passed - verify DOM structure
+    // Verify DOM structure - budget page uses .flex.min-w-max rows inside .overflow-auto
     const row = field.closest('.flex.min-w-max');
-    console.log('Row found:', row);
     if (!row) return false;
 
     const scrollContainer = row.closest('.overflow-auto');
-    console.log('Scroll container found:', scrollContainer);
-    const result = scrollContainer !== null;
-    console.log('FINAL RESULT:', result ? 'BUDGET FIELD' : 'NOT BUDGET FIELD');
-    return result;
+    return scrollContainer !== null;
   }
 
   /**
@@ -515,11 +488,9 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // The footer bar is a sibling flex row that contains buttons (+ Item, + Group)
-    // It's typically the last .flex.min-w-max that has buttons inside
+    // Look for flex.min-w-max rows containing + Item / + Group buttons
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
     for (const row of allRows) {
-      // Look for the row with "+ Item" button
       const hasAddButtons = row.querySelector('button, [role="button"]');
       const hasItemText = row.textContent.includes('Item') && row.textContent.includes('Group');
       if (hasAddButtons && hasItemText) {
@@ -1056,7 +1027,6 @@ const FormatterToolbar = (() => {
 
         // If not found inside, look for it as the last visible row with the buttons
         if (!footerBar) {
-          // Try finding the footer bar by looking for the bg-gray-700 buttons
           const allButtons = document.querySelectorAll('[role="button"].bg-gray-700');
           for (const btn of allButtons) {
             if (btn.textContent.includes('Item') || btn.textContent.includes('Group')) {
@@ -1073,14 +1043,12 @@ const FormatterToolbar = (() => {
           const top = footerRect.top + (footerRect.height - toolbarHeight) / 2;
 
           // Position horizontally: after the + Item / + Group buttons
-          // Find the container with the buttons (usually the second cell with width 300px)
+          let left;
           const buttonContainer = footerBar.querySelector('.shrink-0.sticky[style*="width: 300px"]') ||
                                   footerBar.querySelector('.shrink-0.sticky:nth-child(2)');
-          let left;
-
           if (buttonContainer) {
             const containerRect = buttonContainer.getBoundingClientRect();
-            left = containerRect.right + 16; // Position after the button container
+            left = containerRect.right + 16;
           } else {
             // Fallback: find the last button and position after it
             const footerButtons = footerBar.querySelectorAll('button, [role="button"]');
@@ -1089,7 +1057,7 @@ const FormatterToolbar = (() => {
               const lastButtonRect = lastButton.getBoundingClientRect();
               left = lastButtonRect.right + 16;
             } else {
-              left = footerRect.left + 350; // Approximate position after Name column
+              left = footerRect.left + 350;
             }
           }
 
