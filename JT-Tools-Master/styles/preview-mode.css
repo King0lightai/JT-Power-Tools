@@ -311,6 +311,12 @@
   text-align: right;
 }
 
+/* Paragraph breaks (empty lines) */
+.jt-preview-content .jt-paragraph-break {
+  display: block;
+  height: 0.75em;
+}
+
 /* Inline Icons */
 .jt-preview-content .jt-inline-icon {
   display: inline-block;
