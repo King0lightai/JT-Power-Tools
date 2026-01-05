@@ -1069,6 +1069,19 @@ const PreviewModeFeature = (() => {
       }
     });
 
+    // Combine consecutive blockquotes into a single blockquote
+    // This ensures "> line1" and "> line2" render as one continuous blockquote
+    result = result.replace(/(<blockquote>[\s\S]*?<\/blockquote>\n?)+/g, (match) => {
+      // Extract content from each blockquote and join with <br>
+      const contents = [];
+      const blockquoteRegex = /<blockquote>([\s\S]*?)<\/blockquote>/g;
+      let blockMatch;
+      while ((blockMatch = blockquoteRegex.exec(match)) !== null) {
+        contents.push(blockMatch[1]);
+      }
+      return `<blockquote>${contents.join('<br>')}</blockquote>`;
+    });
+
     // Preserve line breaks
     result = result.replace(/\n/g, '<br>');
     // But remove breaks inside block elements
