@@ -898,18 +898,8 @@ const PreviewModeFeature = (() => {
       purple: { border: 'jt-alert-border-purple', bg: 'jt-alert-bg-purple', text: 'jt-alert-text-purple' }
     };
 
-    // Icon SVG paths
-    const iconMap = {
-      lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"></path>',
-      infoCircle: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
-      info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
-      exclamationTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>',
-      checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path>',
-      octogonAlert: '<path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z"></path><path d="M12 8v4M12 16h.01"></path>'
-    };
-
     const colors = colorMap[color] || colorMap.blue;
-    const iconSVG = iconMap[icon] || iconMap.infoCircle;
+    const iconSVG = ICON_MAP[icon] || ICON_MAP.infoCircle;
 
     // Process body inline formatting
     const processedBody = processInlineFormatting(body);
@@ -926,12 +916,28 @@ const PreviewModeFeature = (() => {
 </div>`;
   }
 
+  // Icon SVG paths - shared between alerts and inline icons
+  const ICON_MAP = {
+    lightbulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"></path>',
+    infoCircle: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
+    info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path>',
+    exclamationTriangle: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01"></path>',
+    checkCircle: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><path d="m9 11 3 3L22 4"></path>',
+    octogonAlert: '<path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86z"></path><path d="M12 8v4M12 16h.01"></path>'
+  };
+
+  // Helper to render an inline SVG icon
+  function renderInlineIcon(iconName) {
+    const iconPath = ICON_MAP[iconName] || ICON_MAP.infoCircle;
+    return `<svg class="jt-inline-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>`;
+  }
+
   // Process inline formatting (can be nested inside block elements)
   function processInlineFormatting(text) {
     let result = text;
 
-    // Icons [!icon:name] - process before inline formatting
-    result = result.replace(/\[!icon:(\w+)\]/g, '<span class="jt-icon jt-icon-$1">⚠</span>');
+    // Icons [!icon:name] - render as actual SVG icons
+    result = result.replace(/\[!icon:(\w+)\]/g, (match, iconName) => renderInlineIcon(iconName));
 
     // Inline colors [!color:green] text - process before other formatting
     result = result.replace(/\[!color:(\w+)\]\s*(.+?)(?=\[!color:|$)/g, '<span class="jt-color-$1">$2</span>');
