@@ -1075,6 +1075,10 @@ const PreviewModeFeature = (() => {
       }
     });
 
+    // FIRST: Preserve paragraph breaks (double+ newlines) with a placeholder
+    // This must happen before blockquote combining to prevent newlines being eaten
+    result = result.replace(/\n\n+/g, '___PARA_BREAK___');
+
     // Combine consecutive blockquotes into a single blockquote
     // This ensures "> line1" and "> line2" render as one continuous blockquote
     result = result.replace(/(<blockquote>[\s\S]*?<\/blockquote>\n?)+/g, (match) => {
@@ -1088,8 +1092,8 @@ const PreviewModeFeature = (() => {
       return `<blockquote>${contents.join('<br>')}</blockquote>`;
     });
 
-    // Convert empty lines (double+ newlines) to paragraph breaks with spacing
-    result = result.replace(/\n\n+/g, '<div class="jt-paragraph-break"></div>');
+    // Restore paragraph breaks
+    result = result.replace(/___PARA_BREAK___/g, '<div class="jt-paragraph-break"></div>');
 
     // Preserve remaining single line breaks
     result = result.replace(/\n/g, '<br>');
