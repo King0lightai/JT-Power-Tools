@@ -101,14 +101,16 @@ const FreezeHeaderFeature = (() => {
     /* Sticky scroll containers with overscroll-contain (sidebar panels like Cost Item Details) */
     /* These sidebars don't use data-is-drag-scroll-boundary but need positioning below frozen headers */
     /* Adjust top position to be below the frozen toolbar, not just below the main header */
-    /* EXCLUDE global sidebars (Time Clock, Daily Log) which should stay at native header-level position */
-    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar) {
+    /* EXCLUDE global sidebars via: class .jt-global-sidebar OR inline style top: 48px */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 48"]) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       z-index: 41 !important;
     }
 
     /* Global sidebars (Time Clock, Daily Log, Notifications) - keep at native position just below main header */
-    .jt-freeze-header-active .jt-global-sidebar {
+    /* Use both class-based and attribute-based selectors for reliability */
+    .jt-freeze-header-active .jt-global-sidebar,
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain[style*="top: 48"] {
       top: 48px !important;
       z-index: 41 !important;
     }
