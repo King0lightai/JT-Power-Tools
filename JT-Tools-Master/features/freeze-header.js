@@ -86,8 +86,10 @@ const FreezeHeaderFeature = (() => {
 
     /* Files page left sidebar - direct selector for sidebars using overflow-auto (not overflow-y-auto) */
     /* This catches the filter sidebar that has inline top: 48px and overflow-auto */
+    /* Also set max-height to prevent sidebar from extending past viewport when top is adjusted */
     .jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
       top: var(--jt-toolbar-bottom, 138px) !important;
+      max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
     }
 
     /* Right-side sidebars (Daily Log, Task Details, Job Switcher, etc.) */
