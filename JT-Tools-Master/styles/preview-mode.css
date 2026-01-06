@@ -117,7 +117,7 @@
 .jt-preview-content::after {
   content: '';
   display: block;
-  height: 16px;
+  height: 32px;
   width: 100%;
 }
 
