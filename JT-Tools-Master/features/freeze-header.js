@@ -93,8 +93,15 @@ const FreezeHeaderFeature = (() => {
     /* Sticky scroll containers with overscroll-contain (sidebar panels like Cost Item Details) */
     /* These sidebars don't use data-is-drag-scroll-boundary but need positioning below frozen headers */
     /* Adjust top position to be below the frozen toolbar, not just below the main header */
-    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain {
+    /* EXCLUDE global sidebars (Time Clock, Daily Log) which should stay at native header-level position */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar) {
       top: var(--jt-toolbar-bottom, 138px) !important;
+      z-index: 41 !important;
+    }
+
+    /* Global sidebars (Time Clock, Daily Log) - keep at native position just below main header */
+    .jt-freeze-header-active .jt-global-sidebar {
+      /* Don't override top position - let it stay at native ~48px */
       z-index: 41 !important;
     }
 
@@ -848,6 +855,52 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark global sidebars (Time Clock, Daily Log) that should NOT be affected by freeze header
+   * These sidebars are global overlays that appear on any page and should stay at their native
+   * position just below the main header (~48px), not pushed down below frozen tabs/toolbar
+   */
+  function findAndMarkGlobalSidebars() {
+    // Find all sticky sidebars with overflow-y-auto and overscroll-contain
+    const sidebars = document.querySelectorAll('div.sticky.overflow-y-auto.overscroll-contain');
+
+    for (const sidebar of sidebars) {
+      // Skip if already marked
+      if (sidebar.classList.contains('jt-global-sidebar')) continue;
+
+      // Skip if this is a job-specific sidebar (Cost Item Details, Task Details, etc.)
+      // Job-specific sidebars are typically inside the main content area
+      if (sidebar.closest('.jt-job-tabs-container') ||
+          sidebar.closest('.jt-action-toolbar') ||
+          sidebar.closest('.jt-budget-header-container')) {
+        continue;
+      }
+
+      const text = sidebar.textContent || '';
+
+      // Detect global sidebars by their characteristic content
+      const isTimeClock = text.includes('TIME CLOCK') ||
+                          text.includes('CLOCKED OUT') ||
+                          text.includes('CLOCKED IN') ||
+                          text.includes('Clock In') ||
+                          text.includes('Clock Out');
+
+      const isDailyLog = text.includes('NEW DAILY LOG') ||
+                         text.includes('DAILY LOG') ||
+                         (text.includes('Weather') && text.includes('Notes') && text.includes('Unplanned Tasks'));
+
+      // Also check computed top position - global sidebars have top ~48-52px
+      const computedStyle = window.getComputedStyle(sidebar);
+      const topValue = parseInt(computedStyle.top, 10);
+      const isNearHeaderLevel = !isNaN(topValue) && topValue >= 40 && topValue <= 60;
+
+      if (isTimeClock || isDailyLog || isNearHeaderLevel) {
+        sidebar.classList.add('jt-global-sidebar');
+        console.log('FreezeHeader: Marked global sidebar:', isTimeClock ? 'Time Clock' : isDailyLog ? 'Daily Log' : 'Header-level sidebar');
+      }
+    }
+  }
+
+  /**
    * Calculate and set the correct top positions based on actual element heights
    */
   function updatePositions() {
@@ -1043,6 +1096,7 @@ const FreezeHeaderFeature = (() => {
     findAndMarkFilesFolderBar();
     findAndMarkFilesListHeader();
     findAndMarkFilesSidebar();
+    findAndMarkGlobalSidebars();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
     console.log('FreezeHeader: Applied');
@@ -1078,6 +1132,9 @@ const FreezeHeaderFeature = (() => {
     });
     document.querySelectorAll('.jt-files-sidebar').forEach(el => {
       el.classList.remove('jt-files-sidebar');
+    });
+    document.querySelectorAll('.jt-global-sidebar').forEach(el => {
+      el.classList.remove('jt-global-sidebar');
     });
 
     // Remove CSS custom properties
@@ -1155,6 +1212,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkFilesFolderBar();
           findAndMarkFilesListHeader();
           findAndMarkFilesSidebar();
+          findAndMarkGlobalSidebars();
           updatePositions();
         }, 200);
       }
@@ -1172,8 +1230,8 @@ const FreezeHeaderFeature = (() => {
       if (location.href !== lastUrl) {
         lastUrl = location.href;
         // Remove old markings and re-apply
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
         });
         setTimeout(() => {
           findAndMarkTopHeader();
@@ -1185,6 +1243,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkFilesFolderBar();
           findAndMarkFilesListHeader();
           findAndMarkFilesSidebar();
+          findAndMarkGlobalSidebars();
           updatePositions();
         }, 300);
       }
