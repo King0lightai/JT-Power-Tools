@@ -84,6 +84,12 @@ const FreezeHeaderFeature = (() => {
       top: var(--jt-toolbar-bottom, 138px) !important;
     }
 
+    /* Files page left sidebar - direct selector for sidebars using overflow-auto (not overflow-y-auto) */
+    /* This catches the filter sidebar that has inline top: 48px and overflow-auto */
+    .jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+    }
+
     /* Right-side sidebars (Daily Log, Task Details, Job Switcher, etc.) */
     /* All sidebars get z-index 41 to appear above frozen tabs (40) and toolbar (39) */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] {
@@ -194,7 +200,8 @@ const FreezeHeaderFeature = (() => {
     body.jt-dark-mode.jt-freeze-header-active .jt-files-folder-bar,
     body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header,
     body.jt-dark-mode.jt-freeze-header-active .jt-files-list-header > div,
-    body.jt-dark-mode.jt-freeze-header-active .jt-files-sidebar {
+    body.jt-dark-mode.jt-freeze-header-active .jt-files-sidebar,
+    body.jt-dark-mode.jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
       background-color: #2c2c2c !important;
       border-color: #464646 !important;
     }
@@ -226,7 +233,8 @@ const FreezeHeaderFeature = (() => {
     body.jt-custom-theme.jt-freeze-header-active .jt-files-folder-bar,
     body.jt-custom-theme.jt-freeze-header-active .jt-files-list-header,
     body.jt-custom-theme.jt-freeze-header-active .jt-files-list-header > div,
-    body.jt-custom-theme.jt-freeze-header-active .jt-files-sidebar {
+    body.jt-custom-theme.jt-freeze-header-active .jt-files-sidebar,
+    body.jt-custom-theme.jt-freeze-header-active div.sticky.border-r.w-64.overflow-auto.overscroll-contain {
       background-color: var(--jt-theme-background, white) !important;
     }
 
