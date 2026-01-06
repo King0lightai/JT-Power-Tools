@@ -107,9 +107,9 @@ const FreezeHeaderFeature = (() => {
       z-index: 41 !important;
     }
 
-    /* Global sidebars (Time Clock, Daily Log) - keep at native position just below main header */
+    /* Global sidebars (Time Clock, Daily Log, Notifications) - keep at native position just below main header */
     .jt-freeze-header-active .jt-global-sidebar {
-      /* Don't override top position - let it stay at native ~48px */
+      top: 48px !important;
       z-index: 41 !important;
     }
 
