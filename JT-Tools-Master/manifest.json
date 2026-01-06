@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.3.91",
+  "version": "3.3.10",
   "description": "Supercharge JobTread with drag & drop scheduling, dark mode, text formatting, and 12+ productivity features for contractors.",
   "icons": {
     "16": "icons/icon16-light.png",
@@ -43,6 +43,7 @@
         "features/drag-drop-modules/date-utils.js",
         "features/drag-drop-modules/weekend-utils.js",
         "features/drag-drop-modules/ui-utils.js",
+        "features/drag-drop-modules/todo-drag-drop.js",
         "features/drag-drop-modules/sidebar-manager.js",
         "features/drag-drop-modules/date-changer.js",
         "features/drag-drop-modules/event-handlers.js",
