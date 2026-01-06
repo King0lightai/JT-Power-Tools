@@ -5,6 +5,33 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.10] - 2026-01-06 (Beta)
+
+### Added
+
+#### New Feature: ToDo Drag & Drop
+- Drag and drop To-Dos in month calendar view to change due dates
+- Works on To-Dos pages (URL contains "to-dos")
+- Uses the "Due" date field for To-Dos (unlike tasks which have Start/End dates)
+- Seamless integration with existing drag & drop infrastructure
+
+### Improved
+
+#### Preview Mode Enhancements
+- Fixed last line getting cut off when scrolling in preview pane
+- Fixed blockquotes rendering as separate elements with gaps
+- Fixed inline icons showing as placeholder characters - now renders actual SVG icons
+- Simplified alert box styling to match JobTread rendering
+- Improved paragraph spacing consistency
+
+#### Freeze Header Improvements
+- Fixed Time Clock and Daily Log global sidebars appearing too low on page
+- Fixed Notifications sidebar positioning to stay at native header level
+- Fixed Files page left sidebar sliding under frozen action bar
+- Added max-height constraint to Files sidebar to prevent scroll jump at bottom of page
+
+---
+
 ## [3.3.6] - 2025-12-XX (Beta)
 
 ### Added
@@ -353,6 +380,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
+[3.3.10]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.10
 [3.3.6]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.6
 [3.3.4]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.4
 [3.3.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.3
