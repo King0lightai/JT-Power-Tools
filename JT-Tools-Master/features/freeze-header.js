@@ -865,7 +865,7 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Find and mark global sidebars (Time Clock, Daily Log) that should NOT be affected by freeze header
+   * Find and mark global sidebars (Time Clock, Daily Log, Notifications) that should NOT be affected by freeze header
    * These sidebars are global overlays that appear on any page and should stay at their native
    * position just below the main header (~48px), not pushed down below frozen tabs/toolbar
    */
@@ -898,14 +898,17 @@ const FreezeHeaderFeature = (() => {
                          text.includes('DAILY LOG') ||
                          (text.includes('Weather') && text.includes('Notes') && text.includes('Unplanned Tasks'));
 
+      const isNotifications = text.includes('NOTIFICATIONS') &&
+                              (text.includes('Unread') || text.includes('Mark All As Read') || text.includes('RSVPs'));
+
       // Also check computed top position - global sidebars have top ~48-52px
       const computedStyle = window.getComputedStyle(sidebar);
       const topValue = parseInt(computedStyle.top, 10);
       const isNearHeaderLevel = !isNaN(topValue) && topValue >= 40 && topValue <= 60;
 
-      if (isTimeClock || isDailyLog || isNearHeaderLevel) {
+      if (isTimeClock || isDailyLog || isNotifications || isNearHeaderLevel) {
         sidebar.classList.add('jt-global-sidebar');
-        console.log('FreezeHeader: Marked global sidebar:', isTimeClock ? 'Time Clock' : isDailyLog ? 'Daily Log' : 'Header-level sidebar');
+        console.log('FreezeHeader: Marked global sidebar:', isTimeClock ? 'Time Clock' : isDailyLog ? 'Daily Log' : isNotifications ? 'Notifications' : 'Header-level sidebar');
       }
     }
   }
