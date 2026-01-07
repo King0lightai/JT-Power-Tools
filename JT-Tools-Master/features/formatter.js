@@ -227,6 +227,11 @@ const FormatterFeature = (() => {
         return false; // Exclude time entry notes
       }
 
+      // Exclude Name field in budget table
+      if (placeholder === 'Name') {
+        return false;
+      }
+
       // Exclude subtask/checklist fields
       if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
         return false;
