@@ -247,6 +247,15 @@ const FormatterFeature = (() => {
         return false;
       }
 
+      // Exclude fields in Job Parameters popup
+      const jobParamsPopup = field.closest('div.shadow-lg.rounded-sm.bg-white');
+      if (jobParamsPopup) {
+        const popupHeader = jobParamsPopup.querySelector('div.font-bold.text-cyan-500.uppercase');
+        if (popupHeader && popupHeader.textContent.trim() === 'Job Parameters') {
+          return false;
+        }
+      }
+
       // Exclude Notes field in Time Clock sidebar
       const label = field.closest('label');
       if (label) {
