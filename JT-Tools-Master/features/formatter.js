@@ -133,7 +133,7 @@ const FormatterFeature = (() => {
 
     // Skip if on excluded paths
     const path = window.location.pathname;
-    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings')) {
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
       console.log('Formatter: Skipping excluded path:', path);
       return;
     }
