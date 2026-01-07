@@ -133,7 +133,7 @@ const FormatterFeature = (() => {
 
     // Skip if on excluded paths
     const path = window.location.pathname;
-    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings')) {
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
       console.log('Formatter: Skipping excluded path:', path);
       return;
     }
@@ -227,6 +227,11 @@ const FormatterFeature = (() => {
         return false; // Exclude time entry notes
       }
 
+      // Exclude Name field in budget table
+      if (placeholder === 'Name') {
+        return false;
+      }
+
       // Exclude subtask/checklist fields
       if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
         return false;
@@ -245,6 +250,15 @@ const FormatterFeature = (() => {
       // Exclude subtask fields by small padding (p-1 without p-2)
       if (field.classList.contains('p-1') && !field.classList.contains('p-2') && field.style.color === 'transparent') {
         return false;
+      }
+
+      // Exclude fields in Job Parameters popup
+      const jobParamsPopup = field.closest('div.shadow-lg.rounded-sm.bg-white');
+      if (jobParamsPopup) {
+        const popupHeader = jobParamsPopup.querySelector('div.font-bold.text-cyan-500.uppercase');
+        if (popupHeader && popupHeader.textContent.trim() === 'Job Parameters') {
+          return false;
+        }
       }
 
       // Exclude Notes field in Time Clock sidebar
