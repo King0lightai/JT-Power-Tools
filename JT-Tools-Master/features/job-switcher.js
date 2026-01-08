@@ -272,22 +272,23 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    // Check if JobTreadAPI is available and configured
-    if (typeof JobTreadAPI === 'undefined') {
-      console.log('QuickJobSwitcher: JobTreadAPI not available, skipping filter UI');
-      return;
+    // Check if API is configured (Worker or Direct)
+    let isApiConfigured = false;
+
+    // Check Worker API first (Pro Service)
+    if (typeof JobTreadProService !== 'undefined') {
+      isApiConfigured = await JobTreadProService.isConfigured();
+      console.log('QuickJobSwitcher: Pro Service configured =', isApiConfigured);
     }
-    console.log('QuickJobSwitcher: JobTreadAPI is available');
 
-    const isConfigured = await JobTreadAPI.isFullyConfigured();
-    console.log('QuickJobSwitcher: isFullyConfigured =', isConfigured);
+    // Fall back to Direct API if Worker not configured
+    if (!isApiConfigured && typeof JobTreadAPI !== 'undefined') {
+      isApiConfigured = await JobTreadAPI.isFullyConfigured();
+      console.log('QuickJobSwitcher: Direct API configured =', isApiConfigured);
+    }
 
-    if (!isConfigured) {
-      console.log('QuickJobSwitcher: API not configured, skipping filter UI');
-      // Log what's missing
-      const hasKey = await JobTreadAPI.isConfigured();
-      const orgId = await JobTreadAPI.getOrgId();
-      console.log('QuickJobSwitcher: hasApiKey =', hasKey, ', orgId =', orgId);
+    if (!isApiConfigured) {
+      console.log('QuickJobSwitcher: No API configured (neither Worker nor Direct), skipping filter UI');
       return;
     }
 
