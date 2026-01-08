@@ -448,7 +448,7 @@ function buildFilteredJobsQuery(user, filters) {
         $: { id: user.jobtread_org_id },
         jobs: {
           $: {
-            size: 100,
+            size: 50,  // Reduced from 100 to avoid 413 errors
             with: withClauses,
             where: whereClause,
             sortBy: [{ field: 'name' }]
@@ -457,16 +457,9 @@ function buildFilteredJobsQuery(user, filters) {
             id: {},
             name: {},
             number: {},
-            status: {},
-            customFieldValues: {
-              nodes: {
-                value: {},
-                customField: {
-                  id: {},
-                  name: {}
-                }
-              }
-            }
+            status: {}
+            // Removed customFieldValues to reduce response size
+            // We're filtering server-side, so we don't need them in response
           }
         }
       }
@@ -496,23 +489,15 @@ async function handleGetAllJobs(env, ctx, user) {
         $: { id: user.jobtread_org_id },
         jobs: {
           $: {
-            size: 100,
+            size: 50,  // Reduced from 100 to avoid 413 errors
             sortBy: [{ field: 'name' }]
           },
           nodes: {
             id: {},
             name: {},
             number: {},
-            status: {},
-            customFieldValues: {
-              nodes: {
-                value: {},
-                customField: {
-                  id: {},
-                  name: {}
-                }
-              }
-            }
+            status: {}
+            // Removed customFieldValues to reduce response size
           }
         }
       }
