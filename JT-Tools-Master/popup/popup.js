@@ -91,6 +91,8 @@ async function checkApiStatus() {
   const statusText = apiStatus.querySelector('.status-text');
   const apiKeyInput = document.getElementById('apiKey');
   const orgIdInput = document.getElementById('orgId');
+  const customFieldFilterToggle = document.getElementById('customFieldFilter');
+  const customFieldFilterFeature = document.getElementById('customFieldFilterFeature');
 
   // Check if Pro Service is configured (uses Worker)
   const isProConfigured = await JobTreadProService.isConfigured();
@@ -102,6 +104,13 @@ async function checkApiStatus() {
     apiKeyInput.placeholder = '••••••••••••';
     orgIdInput.placeholder = orgInfo.orgId || 'Org ID';
     orgIdInput.value = '';
+
+    // Enable Custom Field Filter toggle
+    customFieldFilterToggle.disabled = false;
+    if (customFieldFilterFeature) {
+      customFieldFilterFeature.classList.remove('disabled');
+      customFieldFilterFeature.title = '';
+    }
   } else {
     // Fall back to check old direct API configuration
     const isDirectConfigured = await JobTreadAPI.isFullyConfigured();
@@ -112,11 +121,26 @@ async function checkApiStatus() {
       statusText.textContent = 'API configured (Direct)';
       apiKeyInput.placeholder = '••••••••••••';
       orgIdInput.placeholder = storedOrgId || 'Org ID';
+
+      // Enable Custom Field Filter toggle
+      customFieldFilterToggle.disabled = false;
+      if (customFieldFilterFeature) {
+        customFieldFilterFeature.classList.remove('disabled');
+        customFieldFilterFeature.title = '';
+      }
     } else {
       apiStatus.className = 'api-status inactive';
       statusText.textContent = 'API not configured';
       apiKeyInput.placeholder = 'Grant Key';
       orgIdInput.placeholder = 'Org ID (auto)';
+
+      // Disable Custom Field Filter toggle and uncheck it
+      customFieldFilterToggle.disabled = true;
+      customFieldFilterToggle.checked = false;
+      if (customFieldFilterFeature) {
+        customFieldFilterFeature.classList.add('disabled');
+        customFieldFilterFeature.title = 'Connect your JobTread API first (enter Grant Key below)';
+      }
     }
   }
 }
