@@ -223,14 +223,28 @@ const SidebarManager = (() => {
   }
 
   /**
-   * Find the date field in the sidebar (Start or End)
+   * Find the date field in the sidebar (Start, End, or Due)
    * @param {HTMLElement} sidebar - The sidebar element
    * @param {Object} sourceDateInfo - The source date info for year inference
-   * @param {string} fieldType - "Start" or "End" - which date field to find
+   * @param {string} fieldType - "Start", "End", or "Due" - which date field to find
+   *                             For ToDos, use "Due" (ToDos only have a due date)
    * @returns {Object} {startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts}
    */
   function findDateField(sidebar, sourceDateInfo, fieldType = 'Start') {
     console.log(`SidebarManager: findDateField - Looking for "${fieldType}" date field`);
+
+    // For ToDos, use the ToDoDragDrop module if available for better detection
+    if (fieldType === 'Due' && window.ToDoDragDrop) {
+      console.log('SidebarManager: Using ToDoDragDrop module for Due field');
+      const result = window.ToDoDragDrop.findDueDateField(sidebar, sourceDateInfo);
+      // Map the result to expected format (dueDateParent -> startDateParent for compatibility)
+      return {
+        startDateParent: result.dueDateParent,
+        sidebarSourceYear: result.sidebarSourceYear,
+        sidebarSourceMonth: result.sidebarSourceMonth,
+        fieldTexts: result.fieldTexts
+      };
+    }
 
     // Find the label (Start or End)
     const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
