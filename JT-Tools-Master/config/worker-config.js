@@ -4,8 +4,8 @@
  */
 
 const WORKER_CONFIG = {
-  // Replace with your actual Cloudflare Worker URL
-  WORKER_URL: 'https://jobtread-tools-pro.YOUR_SUBDOMAIN.workers.dev',
+  // Your Cloudflare Worker URL
+  WORKER_URL: 'https://jobtread-tools-pro.king0light-ai.workers.dev',
 
   // Enable to use Worker API, disable to use direct API (for testing)
   USE_WORKER: true
