@@ -95,24 +95,37 @@ const JobTreadProService = (() => {
     try {
       // Get Gumroad license key from existing license system
       const licenseData = await getLicenseKey();
+      console.log('JobTreadProService: License data:', licenseData ? 'Found' : 'Missing');
+
       if (!licenseData) {
         throw new Error('No Gumroad license found. Please activate your license first.');
       }
 
       // Get device ID
       const deviceId = await getDeviceId();
+      console.log('JobTreadProService: Device ID:', deviceId ? 'Generated' : 'Missing');
+
+      const requestBody = {
+        action,
+        licenseKey: licenseData.licenseKey,
+        deviceId,
+        ...params
+      };
+
+      console.log('JobTreadProService: Sending request to Worker:', {
+        action,
+        hasLicenseKey: !!licenseData.licenseKey,
+        hasDeviceId: !!deviceId,
+        hasGrantKey: !!params.grantKey,
+        workerUrl
+      });
 
       const response = await fetch(workerUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          action,
-          licenseKey: licenseData.licenseKey,
-          deviceId,
-          ...params
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
@@ -144,13 +157,21 @@ const JobTreadProService = (() => {
       // Check if LicenseService is available
       if (typeof LicenseService !== 'undefined') {
         const licenseData = await LicenseService.getLicenseData();
-        if (licenseData && licenseData.valid) {
+        console.log('JobTreadProService: License data from LicenseService:', licenseData ? {
+          valid: licenseData.valid,
+          hasKey: !!licenseData.key,
+          email: licenseData.purchaseEmail
+        } : 'null');
+
+        if (licenseData && licenseData.valid && licenseData.key) {
           return {
-            licenseKey: licenseData.licenseKey,
+            licenseKey: licenseData.key,  // Fix: use 'key' not 'licenseKey'
             email: licenseData.purchaseEmail
           };
         }
       }
+
+      console.log('JobTreadProService: No valid license found');
       return null;
     } catch (error) {
       console.error('JobTreadProService: Error getting license:', error);
