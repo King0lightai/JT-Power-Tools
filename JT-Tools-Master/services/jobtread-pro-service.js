@@ -180,11 +180,47 @@ const JobTreadProService = (() => {
   }
 
   /**
+   * Register user with Worker (creates user in DB if needed)
+   */
+  async function registerUser() {
+    try {
+      console.log('JobTreadProService: Registering user with Worker...');
+      const result = await workerRequest('registerUser', {
+        deviceName: getDeviceName()
+      });
+
+      console.log('JobTreadProService: Registration result:', result);
+      return result;
+    } catch (error) {
+      console.error('JobTreadProService: registerUser failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Verify organization access with Grant Key
    * This connects the JobTread API and locks the license to the org
    */
   async function verifyOrgAccess(grantKey) {
     try {
+      // First, ensure user is registered in Worker's database
+      console.log('JobTreadProService: Ensuring user is registered...');
+      const registerResult = await registerUser();
+
+      if (!registerResult.success && registerResult.code !== 'DEVICE_NOT_AUTHORIZED') {
+        console.error('JobTreadProService: Registration failed:', registerResult);
+        return {
+          success: false,
+          error: registerResult.error || 'Failed to register with Worker',
+          code: registerResult.code
+        };
+      }
+
+      // Now verify org access
+      console.log('JobTreadProService: Verifying org access...');
       const result = await workerRequest('verifyOrgAccess', {
         grantKey: grantKey.trim(),
         deviceName: getDeviceName()
