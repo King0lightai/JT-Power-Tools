@@ -607,13 +607,64 @@ const QuickJobSwitcherFeature = (() => {
 
     console.log('QuickJobSwitcher: Closing sidebar...');
 
-    // Find and click the close button
+    // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
     if (sidebar) {
-      const closeButton = sidebar.querySelector('div[role="button"]');
-      if (closeButton && (closeButton.textContent.includes('Close') || closeButton.querySelector('path[d*="M18 6"]'))) {
+      // Strategy 1: Find the close button by looking for X icon or Close text
+      const allButtons = sidebar.querySelectorAll('div[role="button"]');
+      let closeButton = null;
+
+      for (const button of allButtons) {
+        const text = button.textContent.trim();
+        // Look for close button indicators
+        if (text === 'Close' || text === '×' || text === 'X') {
+          closeButton = button;
+          break;
+        }
+        // Check for X icon SVG (close icon typically has M18 6 or similar path for X shape)
+        const svg = button.querySelector('svg');
+        if (svg) {
+          const paths = svg.querySelectorAll('path');
+          for (const path of paths) {
+            const d = path.getAttribute('d') || '';
+            // Common X/close icon path patterns
+            if (d.includes('M18 6') || d.includes('m18 6') ||
+                d.includes('M6 18') || d.includes('m6 18') ||
+                (d.includes('18') && d.includes('6') && d.length < 50)) {
+              closeButton = button;
+              break;
+            }
+          }
+          if (closeButton) break;
+        }
+      }
+
+      if (closeButton) {
         closeButton.click();
-        console.log('QuickJobSwitcher: ✅ Closed sidebar');
+        console.log('QuickJobSwitcher: ✅ Closed sidebar via close button');
+      } else {
+        // Strategy 2: Try clicking outside the sidebar (on the overlay)
+        const overlay = document.querySelector('div.z-30.absolute.inset-0:not(.top-0)') ||
+                       document.querySelector('div.z-20.fixed.inset-0') ||
+                       document.querySelector('[class*="backdrop"]') ||
+                       document.querySelector('[class*="overlay"]');
+        if (overlay) {
+          overlay.click();
+          console.log('QuickJobSwitcher: ✅ Closed sidebar via overlay click');
+        } else {
+          // Strategy 3: Dispatch Escape key to close
+          console.log('QuickJobSwitcher: Trying Escape key to close sidebar');
+          const escEvent = new KeyboardEvent('keydown', {
+            key: 'Escape',
+            code: 'Escape',
+            keyCode: 27,
+            which: 27,
+            bubbles: true,
+            cancelable: true
+          });
+          sidebar.dispatchEvent(escEvent);
+          document.dispatchEvent(escEvent);
+        }
       }
     }
 
@@ -636,31 +687,44 @@ const QuickJobSwitcherFeature = (() => {
 
     let selectedButton = null;
 
-    // Strategy 1: Check for visually highlighted items (arrow key navigation often uses visual highlighting)
-    // Look for items with highlight classes like bg-blue-50, bg-blue-100, bg-gray-100, etc.
-    const highlightedItems = sidebar.querySelectorAll(
-      'div[role="button"][class*="bg-blue-"], ' +
-      'div[role="button"][class*="bg-gray-100"], ' +
-      'div[role="button"][aria-selected="true"], ' +
-      'div[role="button"][data-highlighted], ' +
-      'div[role="button"][data-selected], ' +
-      'div[role="button"].highlighted, ' +
-      'div[role="button"].selected'
-    );
+    // Strategy 1: Check for visually highlighted items (arrow key navigation uses visual highlighting)
+    // JobTread uses various highlight classes - check for common patterns
+    const allJobButtons = sidebar.querySelectorAll('div[role="button"]');
 
-    for (const item of highlightedItems) {
-      const text = item.textContent.trim();
-      // Skip non-job items
-      if (text.includes('Close') || text.includes('×') || text.includes('Job Switcher') ||
-          item.querySelector('path[d*="M18 6"]')) {
+    for (const button of allJobButtons) {
+      const text = button.textContent.trim();
+      // Skip non-job items (close button, header, etc.)
+      if (text === 'Close' || text === '×' || text === 'X' ||
+          text.includes('Job Switcher') ||
+          button.querySelector('path[d*="M18 6"]') ||
+          button.querySelector('path[d*="M6 18"]')) {
         continue;
       }
-      selectedButton = item;
-      console.log(`QuickJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
-      break;
+
+      // Check for highlight indicators
+      const classList = button.className || '';
+      const hasHighlight = classList.includes('bg-blue-') ||
+                          classList.includes('bg-cyan-') ||
+                          classList.includes('bg-gray-100') ||
+                          classList.includes('bg-gray-200') ||
+                          classList.includes('highlighted') ||
+                          classList.includes('selected') ||
+                          classList.includes('active') ||
+                          classList.includes('focus') ||
+                          button.getAttribute('aria-selected') === 'true' ||
+                          button.getAttribute('data-highlighted') === 'true' ||
+                          button.getAttribute('data-selected') === 'true' ||
+                          button.matches(':focus') ||
+                          button.matches(':focus-visible');
+
+      if (hasHighlight) {
+        selectedButton = button;
+        console.log(`QuickJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
+        break;
+      }
     }
 
-    // Strategy 2: Check if there's a currently focused job button (from arrow key navigation)
+    // Strategy 2: Check if there's a currently focused element that's a job
     if (!selectedButton) {
       const activeElement = document.activeElement;
 
@@ -671,8 +735,7 @@ const QuickJobSwitcherFeature = (() => {
           activeElement.tagName !== 'INPUT') {
         const text = activeElement.textContent.trim();
         // Make sure it's not the close button or header
-        if (!text.includes('Close') &&
-            !text.includes('×') &&
+        if (text !== 'Close' && text !== '×' && text !== 'X' &&
             !text.includes('Job Switcher') &&
             !activeElement.querySelector('path[d*="M18 6"]')) {
           selectedButton = activeElement;
@@ -681,23 +744,31 @@ const QuickJobSwitcherFeature = (() => {
       }
     }
 
-    // Strategy 3: Fall back to finding the top job
+    // Strategy 3: Fall back to finding the top job in the list
     if (!selectedButton) {
-      // Find all job buttons
-      const jobButtons = sidebar.querySelectorAll('div[role="button"][tabindex="0"]');
+      // Find the scrollable job list container
+      const jobList = sidebar.querySelector('.overflow-y-auto') || sidebar;
+      const jobButtons = jobList.querySelectorAll('div[role="button"][tabindex="0"]');
       console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
 
-      // Find the first job (skip close button and header)
+      // Find the first actual job (skip close button and header)
       for (const button of jobButtons) {
         const text = button.textContent.trim();
 
         // Skip close button
-        if (text.includes('Close') || text.includes('×') || button.querySelector('path[d*="M18 6"]')) {
+        if (text === 'Close' || text === '×' || text === 'X' ||
+            button.querySelector('path[d*="M18 6"]') ||
+            button.querySelector('path[d*="M6 18"]')) {
           continue;
         }
 
         // Skip header
         if (text.includes('Job Switcher')) {
+          continue;
+        }
+
+        // Skip if it's just whitespace or very short (likely an icon-only button)
+        if (text.length < 3) {
           continue;
         }
 
@@ -714,12 +785,12 @@ const QuickJobSwitcherFeature = (() => {
       // Click the job button to navigate
       selectedButton.click();
 
-      // Close sidebar immediately after clicking
+      // Close sidebar after clicking - use a slightly longer delay to let click process
       // If navigation happens, sidebar will be removed anyway
       // If it doesn't navigate (same job), we want it to close
       setTimeout(() => {
         closeSidebar();
-      }, 50);
+      }, 100);
     } else {
       console.log('QuickJobSwitcher: No jobs found, just closing sidebar');
       closeSidebar();
