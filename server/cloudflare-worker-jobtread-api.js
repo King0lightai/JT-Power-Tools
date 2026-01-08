@@ -217,22 +217,23 @@ async function handleRegisterUser(env, body) {
 
   // DEVICE NOT AUTHORIZED: Check if org is locked
   if (user.org_locked && user.jobtread_org_id) {
-    // Require org verification for new device
+    // Require org verification for new device (team member joining)
     return jsonResponse({
       success: true,
       deviceAuthorized: false,
       needsOrgVerification: true,
       organizationName: user.jobtread_org_name,
-      message: 'This license is registered to ' + user.jobtread_org_name + '. Please verify your access.'
+      message: '👥 Team license registered to "' + user.jobtread_org_name + '". Enter your Grant Key to verify you\'re part of this organization.'
     });
   }
 
-  // Org not locked yet - authorize device and ask for JobTread connection
+  // Org not locked yet - authorize device and ask for JobTread connection (first setup)
   await authorizeDevice(env, user.id, deviceId, deviceName);
   return jsonResponse({
     success: true,
     deviceAuthorized: true,
-    needsJobTreadConnection: true
+    needsJobTreadConnection: true,
+    message: '🚀 License activated! Setup API access for your team by entering your Grant Key below.'
   });
 }
 
