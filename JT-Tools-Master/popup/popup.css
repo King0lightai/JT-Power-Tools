@@ -314,6 +314,21 @@ input:checked + .slider:before {
   pointer-events: none;
 }
 
+/* Disabled Features (e.g., API not configured) */
+.feature-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.feature-item.disabled .toggle {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.feature-item.disabled .feature-info {
+  color: #999;
+}
+
 /* Theme Customization */
 .theme-customization {
   padding: 0 20px 20px 20px;
@@ -861,6 +876,10 @@ body.dark-theme .feature-info h3 {
 
 body.dark-theme .feature-info p {
   color: #999;
+}
+
+body.dark-theme .feature-item.disabled .feature-info {
+  color: #666;
 }
 
 body.dark-theme .badge {
