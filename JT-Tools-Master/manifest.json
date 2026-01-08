@@ -40,6 +40,8 @@
         "utils/sanitizer.js",
         "utils/color-utils.js",
         "utils/debounce.js",
+        "config/worker-config.js",
+        "services/jobtread-pro-service.js",
         "services/jobtread-api.js",
         "features/drag-drop-modules/view-detector.js",
         "features/drag-drop-modules/date-utils.js",

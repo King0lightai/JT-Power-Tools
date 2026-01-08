@@ -349,7 +349,18 @@ const QuickJobSwitcherFeature = (() => {
 
     try {
       console.log('QuickJobSwitcher: Loading custom field definitions...');
-      customFieldDefinitions = await JobTreadAPI.fetchCustomFieldDefinitions();
+
+      // Try Pro Service first (uses Cloudflare Worker)
+      let fieldsData;
+      if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
+        console.log('QuickJobSwitcher: Using Pro Service (Worker API)');
+        fieldsData = await JobTreadProService.getCustomFields();
+        customFieldDefinitions = fieldsData.fields || [];
+      } else {
+        // Fall back to direct API
+        console.log('QuickJobSwitcher: Using direct API');
+        customFieldDefinitions = await JobTreadAPI.fetchCustomFieldDefinitions();
+      }
 
       console.log('QuickJobSwitcher: Loaded', customFieldDefinitions.length, 'job custom fields');
 
@@ -492,10 +503,25 @@ const QuickJobSwitcherFeature = (() => {
 
     try {
       // Fetch jobs filtered by custom field value (server-side using Pave 'with' clause)
-      const jobs = await JobTreadAPI.fetchJobsByCustomField(
-        activeFilters.fieldName,
-        activeFilters.value
-      );
+      let jobs;
+
+      // Try Pro Service first (uses Cloudflare Worker)
+      if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
+        console.log('QuickJobSwitcher: Filtering via Pro Service (Worker API)');
+        const filters = [{
+          fieldName: activeFilters.fieldName,
+          value: activeFilters.value
+        }];
+        const result = await JobTreadProService.getFilteredJobs(filters);
+        jobs = result.jobs || [];
+      } else {
+        // Fall back to direct API
+        console.log('QuickJobSwitcher: Filtering via direct API');
+        jobs = await JobTreadAPI.fetchJobsByCustomField(
+          activeFilters.fieldName,
+          activeFilters.value
+        );
+      }
 
       console.log('QuickJobSwitcher: Found', jobs.length, 'matching jobs');
 
