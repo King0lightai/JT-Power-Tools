@@ -130,7 +130,16 @@ async function checkApiStatus() {
       }
     } else {
       apiStatus.className = 'api-status inactive';
-      statusText.textContent = 'API not configured';
+
+      // Check if license is activated to provide better messaging
+      const licenseData = await LicenseService.getLicenseData();
+      if (licenseData && licenseData.valid) {
+        // Has license but no API configured - guide them to setup
+        statusText.textContent = '🚀 Setup API access for your team';
+      } else {
+        statusText.textContent = 'API not configured';
+      }
+
       apiKeyInput.placeholder = 'Grant Key';
       orgIdInput.placeholder = 'Org ID (auto)';
 
