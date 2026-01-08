@@ -92,19 +92,32 @@ async function checkApiStatus() {
   const apiKeyInput = document.getElementById('apiKey');
   const orgIdInput = document.getElementById('orgId');
 
-  const isFullyConfigured = await JobTreadAPI.isFullyConfigured();
-  const storedOrgId = await JobTreadAPI.getOrgId();
+  // Check if Pro Service is configured (uses Worker)
+  const isProConfigured = await JobTreadProService.isConfigured();
 
-  if (isFullyConfigured) {
+  if (isProConfigured) {
+    const orgInfo = await JobTreadProService.getOrgInfo();
     apiStatus.className = 'api-status active';
-    statusText.textContent = 'API configured';
+    statusText.textContent = `API configured (${orgInfo.orgName || 'Connected'})`;
     apiKeyInput.placeholder = '••••••••••••';
-    orgIdInput.placeholder = storedOrgId || 'Org ID';
+    orgIdInput.placeholder = orgInfo.orgId || 'Org ID';
+    orgIdInput.value = '';
   } else {
-    apiStatus.className = 'api-status inactive';
-    statusText.textContent = 'API not configured';
-    apiKeyInput.placeholder = 'Grant Key';
-    orgIdInput.placeholder = 'Org ID';
+    // Fall back to check old direct API configuration
+    const isDirectConfigured = await JobTreadAPI.isFullyConfigured();
+
+    if (isDirectConfigured) {
+      const storedOrgId = await JobTreadAPI.getOrgId();
+      apiStatus.className = 'api-status active';
+      statusText.textContent = 'API configured (Direct)';
+      apiKeyInput.placeholder = '••••••••••••';
+      orgIdInput.placeholder = storedOrgId || 'Org ID';
+    } else {
+      apiStatus.className = 'api-status inactive';
+      statusText.textContent = 'API not configured';
+      apiKeyInput.placeholder = 'Grant Key';
+      orgIdInput.placeholder = 'Org ID (auto)';
+    }
   }
 }
 
@@ -114,68 +127,71 @@ async function testApiKey() {
   const orgIdInput = document.getElementById('orgId');
   const testBtn = document.getElementById('testApiBtn');
 
-  const apiKey = apiKeyInput.value.trim();
-  const orgId = orgIdInput.value.trim();
+  const grantKey = apiKeyInput.value.trim();
 
-  // If no new API key entered, use existing
-  let useApiKey = apiKey;
-  if (!useApiKey) {
-    useApiKey = await JobTreadAPI.getApiKey();
-  }
-
-  // Validate we have API key
-  if (!useApiKey) {
+  // Validate Grant Key is provided
+  if (!grantKey) {
     showStatus('Grant Key is required', 'error');
     return;
   }
 
-  // Save API key before testing (org ID will be auto-discovered if not provided)
-  if (apiKey) {
-    await JobTreadAPI.setApiKey(apiKey);
-  }
-  if (orgId) {
-    await JobTreadAPI.setOrgId(orgId);
+  // Check if user has activated Gumroad license
+  const licenseData = await LicenseService.getLicenseData();
+  if (!licenseData || !licenseData.valid) {
+    showStatus('Please activate your Gumroad license first in the Premium License section below', 'error');
+    return;
   }
 
   // Disable button during test
   testBtn.disabled = true;
-  testBtn.textContent = 'Testing...';
+  testBtn.textContent = 'Connecting...';
 
   try {
-    // Pass org ID if manually provided, otherwise let it auto-discover
-    const result = await JobTreadAPI.testConnection(orgId || null);
+    // Use Pro Service to verify org access through Worker
+    console.log('Testing API via Cloudflare Worker...');
+    const result = await JobTreadProService.verifyOrgAccess(grantKey);
 
     if (result.success) {
-      const orgName = result.organization?.name || 'Unknown';
-      showStatus(`Connected to ${orgName}!`, 'success');
+      const orgName = result.organizationName || 'Unknown';
+      showStatus(`✓ Connected to ${orgName}!`, 'success');
       apiKeyInput.value = '';
       orgIdInput.value = '';
 
-      // Clear old cache data when API is reconnected
-      await JobTreadAPI.clearCache();
-      console.log('JobTreadAPI: Cache cleared after successful connection');
-
       await checkApiStatus();
 
-      // Try to fetch custom fields for debugging
-      console.log('JobTreadAPI: Fetching custom fields...');
+      // Try to fetch custom fields to verify full connectivity
+      console.log('JobTreadProService: Fetching custom fields...');
       try {
-        const customFields = await JobTreadAPI.fetchCustomFieldDefinitions();
-        console.log('JobTreadAPI: Custom field definitions:', customFields);
+        const fieldsResult = await JobTreadProService.getCustomFields();
+        if (fieldsResult.fields) {
+          console.log('JobTreadProService: Successfully fetched', fieldsResult.fields.length, 'custom fields');
+        }
       } catch (cfError) {
-        console.log('JobTreadAPI: Custom fields fetch failed:', cfError.message);
+        console.log('JobTreadProService: Custom fields fetch warning:', cfError.message);
       }
     } else {
-      showStatus(result.message || 'API connection failed', 'error');
-      // If test failed and we just set new credentials, clear them
-      if (apiKey) {
-        await JobTreadAPI.clearConfig();
-        await checkApiStatus();
+      // Handle specific error codes
+      if (result.code === 'ORG_MISMATCH') {
+        showStatus(`❌ ${result.message || 'This license is registered to a different organization'}`, 'error');
+      } else if (result.code === 'INVALID_GRANT_KEY') {
+        showStatus('❌ Invalid Grant Key. Please check your key and try again.', 'error');
+      } else {
+        showStatus(result.message || result.error || 'Connection failed', 'error');
       }
+
+      console.error('API connection failed:', result);
     }
   } catch (error) {
     console.error('Error testing API:', error);
-    showStatus('Error testing API connection', 'error');
+
+    // Check if it's a Worker configuration error
+    if (error.message.includes('Worker not configured') || error.message.includes('WORKER_URL')) {
+      showStatus('⚠️  Worker not configured. Please update worker-config.js', 'error');
+    } else if (error.message.includes('No Gumroad license')) {
+      showStatus('Please activate your Gumroad license first', 'error');
+    } else {
+      showStatus('Error connecting to Worker API', 'error');
+    }
   } finally {
     testBtn.disabled = false;
     testBtn.textContent = 'Test';
