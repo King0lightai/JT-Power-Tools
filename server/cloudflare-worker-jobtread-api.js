@@ -779,10 +779,18 @@ async function testGrantKey(grantKey) {
     const query = {
       query: {
         $: { grantKey },
-        viewer: {
-          organization: {
+        currentGrant: {
+          id: {},
+          user: {
             id: {},
-            name: {}
+            memberships: {
+              nodes: {
+                organization: {
+                  id: {},
+                  name: {}
+                }
+              }
+            }
           }
         }
       }
@@ -790,11 +798,15 @@ async function testGrantKey(grantKey) {
 
     const data = await jobtreadRequest(query);
 
-    if (data.viewer?.organization) {
+    // Get the organization from currentGrant -> user -> memberships
+    const memberships = data.currentGrant?.user?.memberships?.nodes || [];
+
+    if (memberships.length > 0 && memberships[0].organization) {
+      const org = memberships[0].organization;
       return {
         success: true,
-        id: data.viewer.organization.id,
-        name: data.viewer.organization.name
+        id: org.id,
+        name: org.name
       };
     }
 
