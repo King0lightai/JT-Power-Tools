@@ -449,7 +449,7 @@ function buildFilteredJobsQuery(orgId, filters) {
       $: { id: orgId },
       jobs: {
         $: {
-          size: 100,
+          size: 500,  // Increased to support larger orgs (minimal data = safe)
           with: withClauses,
           where: whereClause,
           sortBy: [{ field: 'name' }]
@@ -486,7 +486,7 @@ async function handleGetAllJobs(env, ctx, user) {
       $: { id: user.jobtread_org_id },
       jobs: {
         $: {
-          size: 100,
+          size: 500,  // Increased to support larger orgs (minimal data = safe)
           sortBy: [{ field: 'name' }]
         },
         nodes: {
