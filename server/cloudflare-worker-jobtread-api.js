@@ -429,13 +429,13 @@ function buildFilteredJobsQuery(user, filters) {
         where: [['customField', 'name'], '=', filter.fieldName],
         size: 1  // Only need one value to check against
       },
-      value: {}  // Only get the value field, nothing else
+      values: {}  // Get the values array (minimal - just the computed values)
     };
   });
 
   // Build where conditions
   const whereConditions = filters.map((filter, index) => {
-    return [[`filter${index}`, 'value'], '=', filter.value];
+    return [[`filter${index}`, 'values'], '=', filter.value];
   });
 
   // Single filter vs multiple filters (AND logic)
@@ -450,7 +450,7 @@ function buildFilteredJobsQuery(user, filters) {
         $: { id: user.jobtread_org_id },
         jobs: {
           $: {
-            size: 100,  // Back to 100 since we're not loading all custom field data
+            size: 100,  // Back to 100 since we're limiting custom field data
             with: withClauses,
             where: whereClause,
             sortBy: [{ field: 'name' }]
