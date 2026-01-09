@@ -338,28 +338,26 @@ async function handleGetCustomFields(env, ctx, user) {
     }
   }
 
-  const query = {
-    query: {
-      $: { grantKey: user.jobtread_grant_key },
-      organization: {
-        $: { id: user.jobtread_org_id },
-        customFields: {
-          $: {
-            where: ['targetType', '=', 'job'],
-            sortBy: [{ field: 'position' }]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            type: {},
-            options: {}
-          }
+  // Fixed: No "query" wrapper, pass grantKey separately
+  const paveQuery = {
+    organization: {
+      $: { id: user.jobtread_org_id },
+      customFields: {
+        $: {
+          where: ['targetType', '=', 'job'],
+          sortBy: [{ field: 'position' }]
+        },
+        nodes: {
+          id: {},
+          name: {},
+          type: {},
+          options: {}
         }
       }
     }
   };
 
-  const data = await jobtreadRequest(query);
+  const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
   const fields = data.organization?.customFields?.nodes || [];
   const result = { fields };
 
@@ -397,8 +395,8 @@ async function handleGetFilteredJobs(env, ctx, user, filters) {
   }
 
   // Build query with 'with' clauses for server-side filtering
-  const query = buildFilteredJobsQuery(user, filters);
-  const data = await jobtreadRequest(query);
+  const paveQuery = buildFilteredJobsQuery(user.jobtread_org_id, filters);
+  const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
   const jobs = data.organization?.jobs?.nodes || [];
 
   const result = { jobs, filters };
@@ -416,10 +414,10 @@ async function handleGetFilteredJobs(env, ctx, user, filters) {
 
 /**
  * Build Pave query with 'with' clause for server-side filtering
- * Optimized to only load the specific custom field being filtered
+ * Fixed to use proper Pave structure without "query" wrapper
  */
-function buildFilteredJobsQuery(user, filters) {
-  // Build "with" clauses for each filter - only request the specific field value
+function buildFilteredJobsQuery(orgId, filters) {
+  // Build "with" clauses for each filter
   const withClauses = {};
   filters.forEach((filter, index) => {
     const key = `filter${index}`;
@@ -427,10 +425,10 @@ function buildFilteredJobsQuery(user, filters) {
       _: 'customFieldValues',
       $: {
         where: [['customField', 'name'], '=', filter.fieldName],
-        size: 1  // Only get 1 matching customFieldValue (minimal data)
+        size: 1
       },
       nodes: {
-        value: {}  // Only get the value field from that one node
+        value: {}
       }
     };
   });
@@ -445,25 +443,22 @@ function buildFilteredJobsQuery(user, filters) {
     ? whereConditions[0]
     : { and: whereConditions };
 
+  // Fixed: Return just the paveQuery portion, no "query" wrapper
   return {
-    query: {
-      $: { grantKey: user.jobtread_grant_key },
-      organization: {
-        $: { id: user.jobtread_org_id },
-        jobs: {
-          $: {
-            size: 100,  // Back to 100 since we're limiting custom field data
-            with: withClauses,
-            where: whereClause,
-            sortBy: [{ field: 'name' }]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            number: {},
-            status: {}
-            // Still no customFieldValues in response - not needed for display
-          }
+    organization: {
+      $: { id: orgId },
+      jobs: {
+        $: {
+          size: 100,
+          with: withClauses,
+          where: whereClause,
+          sortBy: [{ field: 'name' }]
+        },
+        nodes: {
+          id: {},
+          name: {},
+          number: {},
+          status: {}
         }
       }
     }
@@ -485,29 +480,26 @@ async function handleGetAllJobs(env, ctx, user) {
     }
   }
 
-  const query = {
-    query: {
-      $: { grantKey: user.jobtread_grant_key },
-      organization: {
-        $: { id: user.jobtread_org_id },
-        jobs: {
-          $: {
-            size: 100,  // No custom field data = smaller response
-            sortBy: [{ field: 'name' }]
-          },
-          nodes: {
-            id: {},
-            name: {},
-            number: {},
-            status: {}
-            // No customFieldValues - not needed for Job Switcher display
-          }
+  // Fixed: No "query" wrapper, pass grantKey separately
+  const paveQuery = {
+    organization: {
+      $: { id: user.jobtread_org_id },
+      jobs: {
+        $: {
+          size: 100,
+          sortBy: [{ field: 'name' }]
+        },
+        nodes: {
+          id: {},
+          name: {},
+          number: {},
+          status: {}
         }
       }
     }
   };
 
-  const data = await jobtreadRequest(query);
+  const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
   const jobs = data.organization?.jobs?.nodes || [];
   const result = { jobs };
 
@@ -524,26 +516,19 @@ async function handleGetAllJobs(env, ctx, user) {
 
 /**
  * Execute a raw Pave query
+ * Fixed: Don't force-nest inside organization - let caller control structure
  */
 async function handleRawQuery(env, user, paveQuery) {
   if (!paveQuery) {
     return jsonResponse({ error: 'Missing query' }, 400);
   }
 
-  // Inject grant key and org ID into query
-  const query = {
-    query: {
-      $: { grantKey: user.jobtread_grant_key },
-      organization: {
-        $: { id: user.jobtread_org_id },
-        ...paveQuery
-      }
-    }
-  };
+  // Fixed: Pass the paveQuery directly - caller decides structure
+  // If they want organization data, they should include it in their query
+  const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
 
-  const data = await jobtreadRequest(query);
   await trackUsage(env, user.id, 'rawQuery', false);
-  return jsonResponse({ data: data.organization });
+  return jsonResponse({ data });
 }
 
 /**
@@ -765,19 +750,17 @@ async function verifyGumroadLicense(env, licenseKey) {
  */
 async function testGrantKey(grantKey) {
   try {
-    const query = {
-      query: {
-        $: { grantKey },
-        currentGrant: {
+    // Fixed: No "query" wrapper, pass grantKey separately
+    const paveQuery = {
+      currentGrant: {
+        id: {},
+        user: {
           id: {},
-          user: {
-            id: {},
-            memberships: {
-              nodes: {
-                organization: {
-                  id: {},
-                  name: {}
-                }
+          memberships: {
+            nodes: {
+              organization: {
+                id: {},
+                name: {}
               }
             }
           }
@@ -785,7 +768,7 @@ async function testGrantKey(grantKey) {
       }
     };
 
-    const data = await jobtreadRequest(query);
+    const data = await jobtreadRequest(paveQuery, grantKey);
 
     // Get the organization from currentGrant -> user -> memberships
     const memberships = data.currentGrant?.user?.memberships?.nodes || [];
@@ -808,20 +791,47 @@ async function testGrantKey(grantKey) {
 
 /**
  * Make request to JobTread Pave API
+ * Fixed to properly handle Pave query structure and error detection
  */
-async function jobtreadRequest(query) {
+async function jobtreadRequest(paveQuery, grantKey) {
+  // Build the request body - grantKey in $, then spread the paveQuery
+  const body = {
+    $: { grantKey },
+    ...paveQuery
+  };
+
+  console.log('JobTread Request:', JSON.stringify(body, null, 2));
+
   const response = await fetch(JOBTREAD_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(query)
+    body: JSON.stringify(body)
   });
 
+  const responseText = await response.text();
+
+  console.log('JobTread Response Status:', response.status);
+  console.log('JobTread Response Body:', responseText.slice(0, 500));
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`JobTread API error: ${response.status} - ${errorText}`);
+    throw new Error(`JobTread API HTTP error: ${response.status} - ${responseText}`);
   }
 
-  return response.json();
+  // Parse JSON
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    throw new Error(`JobTread API returned invalid JSON: ${responseText.slice(0, 200)}`);
+  }
+
+  // CHECK FOR PAVE-LEVEL ERRORS (these come with 200 OK status)
+  if (data.errors && data.errors.length > 0) {
+    const errorMessages = data.errors.map(e => e.message || JSON.stringify(e)).join('; ');
+    throw new Error(`JobTread Pave error: ${errorMessages}`);
+  }
+
+  return data;
 }
 
 // =============================================================================
