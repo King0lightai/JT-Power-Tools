@@ -427,15 +427,17 @@ function buildFilteredJobsQuery(user, filters) {
       _: 'customFieldValues',
       $: {
         where: [['customField', 'name'], '=', filter.fieldName],
-        size: 1  // Only need one value to check against
+        size: 1  // Only get 1 matching customFieldValue (minimal data)
       },
-      values: {}  // Get the values array (minimal - just the computed values)
+      nodes: {
+        value: {}  // Only get the value field from that one node
+      }
     };
   });
 
-  // Build where conditions
+  // Build where conditions - check the first node's value
   const whereConditions = filters.map((filter, index) => {
-    return [[`filter${index}`, 'values'], '=', filter.value];
+    return [[`filter${index}`, 'nodes', 0, 'value'], '=', filter.value];
   });
 
   // Single filter vs multiple filters (AND logic)
