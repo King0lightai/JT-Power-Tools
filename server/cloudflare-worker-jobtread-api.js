@@ -416,24 +416,26 @@ async function handleGetFilteredJobs(env, ctx, user, filters) {
 
 /**
  * Build Pave query with 'with' clause for server-side filtering
+ * Optimized to only load the specific custom field being filtered
  */
 function buildFilteredJobsQuery(user, filters) {
-  // Build "with" clauses for each filter
+  // Build "with" clauses for each filter - only request the specific field value
   const withClauses = {};
   filters.forEach((filter, index) => {
     const key = `filter${index}`;
     withClauses[key] = {
       _: 'customFieldValues',
       $: {
-        where: [['customField', 'name'], '=', filter.fieldName]
+        where: [['customField', 'name'], '=', filter.fieldName],
+        size: 1  // Only need one value to check against
       },
-      values: { $: { field: 'value' } }
+      value: {}  // Only get the value field, nothing else
     };
   });
 
   // Build where conditions
   const whereConditions = filters.map((filter, index) => {
-    return [[`filter${index}`, 'values'], '=', filter.value];
+    return [[`filter${index}`, 'value'], '=', filter.value];
   });
 
   // Single filter vs multiple filters (AND logic)
@@ -448,7 +450,7 @@ function buildFilteredJobsQuery(user, filters) {
         $: { id: user.jobtread_org_id },
         jobs: {
           $: {
-            size: 50,  // Reduced from 100 to avoid 413 errors
+            size: 100,  // Back to 100 since we're not loading all custom field data
             with: withClauses,
             where: whereClause,
             sortBy: [{ field: 'name' }]
@@ -458,8 +460,7 @@ function buildFilteredJobsQuery(user, filters) {
             name: {},
             number: {},
             status: {}
-            // Removed customFieldValues to reduce response size
-            // We're filtering server-side, so we don't need them in response
+            // Still no customFieldValues in response - not needed for display
           }
         }
       }
@@ -489,7 +490,7 @@ async function handleGetAllJobs(env, ctx, user) {
         $: { id: user.jobtread_org_id },
         jobs: {
           $: {
-            size: 50,  // Reduced from 100 to avoid 413 errors
+            size: 100,  // No custom field data = smaller response
             sortBy: [{ field: 'name' }]
           },
           nodes: {
@@ -497,7 +498,7 @@ async function handleGetAllJobs(env, ctx, user) {
             name: {},
             number: {},
             status: {}
-            // Removed customFieldValues to reduce response size
+            // No customFieldValues - not needed for Job Switcher display
           }
         }
       }
