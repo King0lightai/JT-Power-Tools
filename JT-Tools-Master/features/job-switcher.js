@@ -604,8 +604,20 @@ const QuickJobSwitcherFeature = (() => {
     jobListContainer.querySelectorAll('[data-job-id]').forEach(item => {
       item.addEventListener('click', () => {
         const jobId = item.dataset.jobId;
-        // Navigate to job page
-        window.location.href = `/jobs/${jobId}`;
+
+        // Smart navigation: preserve current section (budget, schedule, etc.)
+        const currentPath = window.location.pathname;
+        const jobSectionMatch = currentPath.match(/^\/jobs\/[^\/]+\/(.+)$/);
+
+        if (jobSectionMatch) {
+          // Currently in a specific section (e.g., /jobs/123/budget)
+          // Navigate to the same section of the new job
+          const section = jobSectionMatch[1];
+          window.location.href = `/jobs/${jobId}/${section}`;
+        } else {
+          // Currently on job overview page, navigate to overview of new job
+          window.location.href = `/jobs/${jobId}`;
+        }
       });
     });
   }
