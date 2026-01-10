@@ -67,11 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed dark mode overflow dropdown not matching toolbar styling
 - Fixed duplicate formatter toolbar appearing in JobTread's native ADD ALERT modal
 - Removed redundant built-in toolbar from extension's Alert Builder modal (uses secondary toolbar on focus instead)
-- Changed job/location custom fields to use compact embedded toolbar with overflow menu instead of full-width floating toolbar
-- Fixed color picker 'A' buttons not showing colors in light mode overflow dropdown
-- Fixed embedded toolbar being hidden by positionToolbar when field visibility check failed
-- Made ALL non-budget fields use consistent compact embedded toolbar (Message fields, sidebar fields, modal fields, custom fields)
-- Added sticky behavior for embedded toolbar in sidebars - toolbar stays visible at top when scrolling large text fields
+- Fixed sidebar scrollbar being cut off at the bottom when Freeze Header is active and page is scrolled
 
 ---
 
