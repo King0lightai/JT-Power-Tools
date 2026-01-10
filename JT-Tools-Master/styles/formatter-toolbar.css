@@ -14,6 +14,13 @@
   transition: top 0.1s ease-out, opacity 0.15s ease, visibility 0.15s ease;
 }
 
+/* Hidden state - use visibility instead of display to prevent layout shift when toolbar appears */
+.jt-formatter-toolbar.jt-toolbar-hidden {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
 /* Sticky toolbar state - slightly enhanced shadow for visibility */
 .jt-formatter-toolbar.jt-toolbar-sticky {
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.12);
@@ -1268,9 +1275,9 @@
 
 /* Embedded toolbar - appears above textarea */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded {
-  position: relative !important;
-  top: auto !important;
-  left: auto !important;
+  position: relative;
+  top: auto;
+  left: auto;
   width: 100%;
   margin-bottom: 0.5rem;
   background: #ffffff;
@@ -1283,14 +1290,21 @@
   gap: 2px;
 }
 
-/* Sidebar embedded toolbar - flows with content, no sticky behavior
-   This prevents the toolbar from overlapping textarea fields like Message */
-.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-sidebar-sticky {
-  position: relative !important;
-  top: auto !important;
-  z-index: 9; /* Below sidebar header (z-10) but above content */
-  background: #ffffff;
-  /* Toolbar stays in document flow above the textarea, pushing content down naturally */
+/* Sticky-active state - when toolbar becomes fixed during scroll */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
+  position: fixed !important;
+  z-index: 50; /* Below JobTread's headers (usually z-index 100+) but above content */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-color: #d1d5db;
+  margin-bottom: 0; /* Remove margin when fixed */
+}
+
+/* Toolbar placed BELOW the textarea (Message fields) */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-below {
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+  border-radius: 0 0 0.25rem 0.25rem; /* Rounded bottom corners only */
+  border-top: 1px solid #e5e7eb;
 }
 
 /* Responsive toolbar - flat button layout like JobTread */
@@ -1513,6 +1527,51 @@
   justify-content: center;
   background: #f0fdf4;
   border-color: #bbf7d0;
+}
+
+/* Color buttons in overflow dropdown - Light mode */
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-green {
+  color: #10b981 !important;
+  font-weight: 700;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-green:hover {
+  background: #d1fae5 !important;
+  border-color: #a7f3d0 !important;
+  color: #10b981 !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow {
+  color: #f59e0b !important;
+  font-weight: 700;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-yellow:hover {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #f59e0b !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-blue {
+  color: #3b82f6 !important;
+  font-weight: 700;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-blue:hover {
+  background: #dbeafe !important;
+  border-color: #bfdbfe !important;
+  color: #3b82f6 !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-red {
+  color: #ef4444 !important;
+  font-weight: 700;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item.jt-color-red:hover {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+  color: #ef4444 !important;
 }
 
 /* Legacy embedded toolbar styles (for backwards compatibility) */
@@ -1755,11 +1814,14 @@
   border-color: #374151;
 }
 
-/* Dark mode for sidebar sticky toolbar */
-.dark .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
-[data-theme="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky,
-[data-mode="dark"] .jt-formatter-toolbar-embedded.jt-sidebar-sticky {
+/* Dark mode for sticky-active toolbar */
+.dark .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active,
+[data-theme="dark"] .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active,
+[data-mode="dark"] .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active,
+.jt-dark-mode .jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
   background: #1f2937;
+  border-color: #4b5563;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Dark mode for overflow dropdown */

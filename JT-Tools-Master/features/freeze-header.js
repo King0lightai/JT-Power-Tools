@@ -112,6 +112,8 @@ const FreezeHeaderFeature = (() => {
     /* These excluded elements keep their native JobTread positioning */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
+      /* Also fix max-height so sidebar scrollbar reaches viewport bottom */
+      max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
     }
 
     /* Exclude popup/modal sticky elements from freeze header positioning */

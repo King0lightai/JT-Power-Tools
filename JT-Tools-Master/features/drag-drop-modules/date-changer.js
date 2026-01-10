@@ -77,11 +77,19 @@ const DateChanger = (() => {
           if (sidebar) {
             console.log('DateChanger: attemptDateChange - Sidebar found, processing date change...');
 
-            // Determine which field to change based on Alt key
-            const fieldType = changeEndDate ? 'End' : 'Start';
+            // Determine which field to change based on context
+            // For ToDos (URL contains "to-dos" or sidebar shows ToDo pattern), use 'Due'
+            // For other items, use 'Start' or 'End' based on Alt key
+            let fieldType;
+            if (window.ToDoDragDrop && window.ToDoDragDrop.shouldUseToDoDragDrop(sidebar)) {
+              fieldType = 'Due';
+              console.log('DateChanger: ToDo detected, using "Due" field (ignoring Alt key for ToDos)');
+            } else {
+              fieldType = changeEndDate ? 'End' : 'Start';
+            }
             console.log(`DateChanger: Looking for "${fieldType}" date field`);
 
-            // Find date field (Start or End)
+            // Find date field (Start, End, or Due for ToDos)
             const fieldResult = window.SidebarManager
               ? window.SidebarManager.findDateField(sidebar, sourceDateInfo, fieldType)
               : { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
