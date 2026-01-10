@@ -133,7 +133,7 @@ const FormatterFeature = (() => {
 
     // Skip if on excluded paths
     const path = window.location.pathname;
-    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings')) {
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
       console.log('Formatter: Skipping excluded path:', path);
       return;
     }
@@ -227,6 +227,11 @@ const FormatterFeature = (() => {
         return false; // Exclude time entry notes
       }
 
+      // Exclude Name field in budget table
+      if (placeholder === 'Name') {
+        return false;
+      }
+
       // Exclude subtask/checklist fields
       if (placeholder === 'Add an item...' || placeholder === 'Add an item') {
         return false;
@@ -247,6 +252,15 @@ const FormatterFeature = (() => {
         return false;
       }
 
+      // Exclude fields in Job Parameters popup
+      const jobParamsPopup = field.closest('div.shadow-lg.rounded-sm.bg-white');
+      if (jobParamsPopup) {
+        const popupHeader = jobParamsPopup.querySelector('div.font-bold.text-cyan-500.uppercase');
+        if (popupHeader && popupHeader.textContent.trim() === 'Job Parameters') {
+          return false;
+        }
+      }
+
       // Exclude Notes field in Time Clock sidebar
       const label = field.closest('label');
       if (label) {
@@ -259,6 +273,38 @@ const FormatterFeature = (() => {
             if (timeClockHeader && timeClockHeader.textContent.trim() === 'Time Clock') {
               return false; // Exclude Time Clock Notes field
             }
+          }
+        }
+      }
+
+      // Exclude fields in Documents ADD/EDIT ITEMS table (but NOT the sidebar)
+      if (path.includes('/documents')) {
+        // Check if field is inside the Cost Item Details sidebar
+        // Sidebar has overscroll-contain class on a sticky container
+        const isInSidebar = field.closest('div.sticky.overflow-y-auto.overscroll-contain') !== null;
+
+        // Exclude "Prepared by" / "Prepared for" document header fields
+        const gridContainer = field.closest('div.grid.grid-cols-2');
+        if (gridContainer && gridContainer.classList.contains('border-b-2')) {
+          const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
+          if (preparedHeader) {
+            const headerText = preparedHeader.textContent.trim().toLowerCase();
+            if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
+              return false;
+            }
+          }
+        }
+
+        // Only exclude table fields, NOT sidebar fields
+        if (!isInSidebar) {
+          // Exclude Description fields in the ADD/EDIT ITEMS table
+          if (placeholder === 'Description') {
+            return false;
+          }
+
+          // Exclude caret-black textareas in the edit items table (they don't have placeholder)
+          if (field.classList.contains('caret-black') && field.classList.contains('absolute')) {
+            return false;
           }
         }
       }
@@ -389,8 +435,6 @@ const FormatterFeature = (() => {
             document.body.contains(toolbar) &&
             document.body.contains(field)) {
           Toolbar().positionToolbar(toolbar, field);
-          toolbar.style.display = 'flex';
-          toolbar.style.visibility = 'visible';
         }
       }, 100);
     }
