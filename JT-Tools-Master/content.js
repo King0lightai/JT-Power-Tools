@@ -96,6 +96,11 @@ const featureModules = {
     name: 'Auto-Collapse Full Groups',
     feature: () => window.AutoCollapseGroupsFeature,
     instance: null
+  },
+  pdfMarkupTools: {
+    name: 'PDF Markup Tools',
+    feature: () => window.PDFMarkupToolsFeature,
+    instance: null
   }
 };
 
