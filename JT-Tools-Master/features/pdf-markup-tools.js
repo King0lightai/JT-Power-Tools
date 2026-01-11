@@ -558,6 +558,13 @@ const PDFMarkupToolsFeature = (() => {
       // Add more as we identify them
     };
 
+    // Also find the delete button (separate selector - has different classes)
+    const deleteBtn = document.querySelector('.inline-block.align-bottom.relative.cursor-pointer.select-none.truncate.py-2.px-4.shadow-xs.text-red-500');
+    if (deleteBtn) {
+      jtNativeButtons.delete = deleteBtn;
+      console.log('PDF Markup Tools: Found delete button');
+    }
+
     return jtNativeButtons;
   }
 
@@ -779,7 +786,7 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Handle eraser tool click
-   * Note: For now, this is informational since we can't identify which JobTread button is the eraser
+   * Activates JobTread's delete mode by clicking their delete button
    */
   function handleEraserClick() {
     console.log('PDF Markup Tools: Eraser tool clicked');
@@ -787,14 +794,37 @@ const PDFMarkupToolsFeature = (() => {
     const eraserBtn = document.querySelector('[data-jt-tool="eraser"]');
     if (!eraserBtn) return;
 
-    // Simply inform the user to use JobTread's native eraser/delete function
-    showNotification('To erase: Select an annotation and press Delete, or use JobTread\'s eraser tool');
+    const wasActive = eraserBtn.classList.contains('active');
 
-    // Don't toggle active state since we're not providing custom functionality
-    // Just show the tip and reset
-    setTimeout(() => {
+    if (!wasActive) {
+      // Try to activate JobTread's delete button
+      const buttons = findJobTreadButtons();
+
+      if (buttons && buttons.delete) {
+        console.log('PDF Markup Tools: Clicking JobTread delete button');
+        buttons.delete.click();
+
+        deactivateOtherTools('eraser');
+        eraserBtn.classList.add('active');
+        showNotification('Eraser mode active - Click annotations to delete them');
+      } else {
+        // Fallback if delete button not found
+        console.warn('PDF Markup Tools: Delete button not found');
+        showNotification('Select an annotation and press Delete key to erase', 'info');
+        setTimeout(() => {
+          eraserBtn.classList.remove('active');
+        }, 100);
+      }
+    } else {
+      // Deactivate
       eraserBtn.classList.remove('active');
-    }, 100);
+      const buttons = findJobTreadButtons();
+      if (buttons && buttons.delete) {
+        // Click again to deactivate delete mode
+        buttons.delete.click();
+      }
+      showNotification('Eraser mode deactivated');
+    }
   }
 
   /**
