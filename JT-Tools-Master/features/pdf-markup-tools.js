@@ -604,19 +604,38 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Find and click JobTread's color picker button to set a specific color
+   * Find and click JobTread's color picker to set a specific color
    */
   function setJobTreadColor(color) {
-    // Look for color picker - this will need to be investigated
-    // For now, just log the attempt
     console.log(`PDF Markup Tools: Attempting to set color to ${color}`);
 
-    // TODO: Find and interact with JobTread's color picker
-    // This may require:
-    // 1. Finding the color picker button/input
-    // 2. Opening it
-    // 3. Setting the color value
-    // 4. Confirming the selection
+    // Look for the color picker button (appears when a drawing tool is active)
+    // Structure: div.w-7.h-7.border with background-color style
+    const colorPicker = document.querySelector('.w-7.h-7.border.flex.items-center.justify-center.rounded-sm.border-gray-300.shadow-xs.self-center.cursor-pointer');
+
+    if (colorPicker) {
+      console.log('PDF Markup Tools: Found color picker, clicking to open...');
+      colorPicker.click();
+
+      // Wait for color picker dialog to open, then try to set the color
+      setTimeout(() => {
+        // Look for color input field or color selection buttons
+        // This may require finding the color picker modal/dropdown
+        const colorInput = document.querySelector('input[type="color"]');
+        if (colorInput) {
+          colorInput.value = color;
+          colorInput.dispatchEvent(new Event('input', { bubbles: true }));
+          colorInput.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log(`PDF Markup Tools: Set color to ${color}`);
+        } else {
+          console.log('PDF Markup Tools: Color picker opened but input field not found');
+          // User will need to manually select yellow color
+          showNotification('Please select yellow color from the color picker');
+        }
+      }, 100);
+    } else {
+      console.log('PDF Markup Tools: Color picker not found (tool may not be active yet)');
+    }
   }
 
   /**
