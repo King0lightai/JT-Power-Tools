@@ -492,37 +492,232 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
+   * Get the active SVG plan element
+   */
+  function getActiveSVG() {
+    return document.querySelector('svg[cursor="crosshair"]');
+  }
+
+  /**
    * Apply a stamp to the PDF
-   * Note: This will need to integrate with JobTread's existing annotation system
    */
   function applyStamp(stamp) {
     console.log('PDF Markup Tools: Applying stamp:', stamp);
 
-    // TODO: Integrate with JobTread's PDF annotation API
-    // For now, this is a placeholder that shows what would be called
+    const svg = getActiveSVG();
+    if (!svg) {
+      console.warn('No active SVG found');
+      return;
+    }
 
-    // The actual implementation would need to:
-    // 1. Get the current PDF canvas/drawing context
-    // 2. Create a stamp annotation with the stamp properties
-    // 3. Add it to the PDF's annotation layer
+    // Create SVG group for the stamp
+    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    group.classList.add('jt-stamp-annotation');
+    group.setAttribute('data-jt-tool', 'stamp');
 
-    alert(`Stamp "${stamp.name}" would be applied here.\n\nThis requires integration with JobTread's PDF annotation system.`);
+    // Position at center of view (user can adjust)
+    const viewBox = svg.viewBox.baseVal;
+    const x = viewBox.width / 2;
+    const y = viewBox.height / 2;
+
+    // Create background rectangle
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', x - 40);
+    rect.setAttribute('y', y - 20);
+    rect.setAttribute('width', '80');
+    rect.setAttribute('height', '40');
+    rect.setAttribute('fill', stamp.color);
+    rect.setAttribute('stroke', '#000');
+    rect.setAttribute('stroke-width', '2');
+    rect.setAttribute('rx', '5');
+
+    // Create text element
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', x);
+    text.setAttribute('y', y + 5);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('fill', stamp.textColor);
+    text.setAttribute('font-size', '16');
+    text.setAttribute('font-weight', 'bold');
+    text.textContent = stamp.icon + ' ' + stamp.name.replace(/_/g, ' ');
+
+    // Add date if needed
+    if (stamp.includeDate) {
+      const date = new Date().toLocaleDateString();
+      const dateText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      dateText.setAttribute('x', x);
+      dateText.setAttribute('y', y + 20);
+      dateText.setAttribute('text-anchor', 'middle');
+      dateText.setAttribute('fill', stamp.textColor);
+      dateText.setAttribute('font-size', '10');
+      dateText.textContent = date;
+      group.appendChild(dateText);
+    }
+
+    group.appendChild(rect);
+    group.appendChild(text);
+
+    // Make draggable (simple implementation)
+    makeDraggable(group);
+
+    svg.appendChild(group);
+    console.log('Stamp added to SVG');
   }
 
   /**
-   * Handle highlight tool click
+   * Make an SVG element draggable
+   */
+  function makeDraggable(element) {
+    let isDragging = false;
+    let startX, startY, initialX, initialY;
+
+    element.style.cursor = 'move';
+
+    element.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      const svg = getActiveSVG();
+      if (!svg) return;
+
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      startX = svgPt.x;
+      startY = svgPt.y;
+
+      // Get current transform
+      const transform = element.getAttribute('transform') || '';
+      const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+      initialX = match ? parseFloat(match[1]) : 0;
+      initialY = match ? parseFloat(match[2]) : 0;
+
+      e.stopPropagation();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      const svg = getActiveSVG();
+      if (!svg) return;
+
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      const dx = svgPt.x - startX;
+      const dy = svgPt.y - startY;
+
+      element.setAttribute('transform', `translate(${initialX + dx}, ${initialY + dy})`);
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+  }
+
+  /**
+   * Handle highlight tool click - enables click-and-drag highlighting
    */
   function handleHighlightClick() {
     console.log('PDF Markup Tools: Highlight tool clicked');
 
-    // Toggle active state
     const highlightBtn = document.querySelector('[data-jt-tool="highlight"]');
-    if (highlightBtn) {
-      highlightBtn.classList.toggle('active');
-    }
+    const svg = getActiveSVG();
 
-    // TODO: Integrate with JobTread's PDF annotation system
-    alert('Highlight tool activated!\n\nThis requires integration with JobTread\'s PDF annotation system.');
+    if (!svg || !highlightBtn) return;
+
+    const isActive = highlightBtn.classList.toggle('active');
+
+    if (isActive) {
+      enableHighlightMode(svg);
+    } else {
+      disableHighlightMode(svg);
+    }
+  }
+
+  /**
+   * Enable highlight drawing mode
+   */
+  function enableHighlightMode(svg) {
+    let isDrawing = false;
+    let startPt = null;
+    let currentRect = null;
+
+    const onMouseDown = (e) => {
+      isDrawing = true;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      // Create highlight rectangle
+      currentRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      currentRect.classList.add('jt-highlight-annotation');
+      currentRect.setAttribute('data-jt-tool', 'highlight');
+      currentRect.setAttribute('fill', '#FFFF00');
+      currentRect.setAttribute('fill-opacity', '0.4');
+      currentRect.setAttribute('stroke', '#FFD700');
+      currentRect.setAttribute('stroke-width', '1');
+      currentRect.setAttribute('x', startPt.x);
+      currentRect.setAttribute('y', startPt.y);
+      currentRect.setAttribute('width', '0');
+      currentRect.setAttribute('height', '0');
+
+      svg.appendChild(currentRect);
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDrawing || !currentRect) return;
+
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const currentPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      const width = currentPt.x - startPt.x;
+      const height = currentPt.y - startPt.y;
+
+      if (width < 0) {
+        currentRect.setAttribute('x', currentPt.x);
+        currentRect.setAttribute('width', Math.abs(width));
+      } else {
+        currentRect.setAttribute('width', width);
+      }
+
+      if (height < 0) {
+        currentRect.setAttribute('y', currentPt.y);
+        currentRect.setAttribute('height', Math.abs(height));
+      } else {
+        currentRect.setAttribute('height', height);
+      }
+    };
+
+    const onMouseUp = () => {
+      isDrawing = false;
+      currentRect = null;
+    };
+
+    svg.addEventListener('mousedown', onMouseDown);
+    svg.addEventListener('mousemove', onMouseMove);
+    svg.addEventListener('mouseup', onMouseUp);
+
+    // Store listeners for cleanup
+    svg._jtHighlightListeners = { onMouseDown, onMouseMove, onMouseUp };
+  }
+
+  /**
+   * Disable highlight drawing mode
+   */
+  function disableHighlightMode(svg) {
+    if (svg._jtHighlightListeners) {
+      const { onMouseDown, onMouseMove, onMouseUp } = svg._jtHighlightListeners;
+      svg.removeEventListener('mousedown', onMouseDown);
+      svg.removeEventListener('mousemove', onMouseMove);
+      svg.removeEventListener('mouseup', onMouseUp);
+      delete svg._jtHighlightListeners;
+    }
   }
 
   /**
@@ -532,12 +727,84 @@ const PDFMarkupToolsFeature = (() => {
     console.log('PDF Markup Tools: Line tool clicked');
 
     const lineBtn = document.querySelector('[data-jt-tool="line"]');
-    if (lineBtn) {
-      lineBtn.classList.toggle('active');
-    }
+    const svg = getActiveSVG();
 
-    // TODO: Integrate with JobTread's PDF annotation system
-    alert('Line tool activated!\n\nThis requires integration with JobTread\'s PDF annotation system.');
+    if (!svg || !lineBtn) return;
+
+    const isActive = lineBtn.classList.toggle('active');
+
+    if (isActive) {
+      enableLineMode(svg);
+    } else {
+      disableLineMode(svg);
+    }
+  }
+
+  /**
+   * Enable line drawing mode
+   */
+  function enableLineMode(svg) {
+    let isDrawing = false;
+    let startPt = null;
+    let currentLine = null;
+
+    const onMouseDown = (e) => {
+      isDrawing = true;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      // Create line
+      currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      currentLine.classList.add('jt-line-annotation');
+      currentLine.setAttribute('data-jt-tool', 'line');
+      currentLine.setAttribute('x1', startPt.x);
+      currentLine.setAttribute('y1', startPt.y);
+      currentLine.setAttribute('x2', startPt.x);
+      currentLine.setAttribute('y2', startPt.y);
+      currentLine.setAttribute('stroke', '#FF0000');
+      currentLine.setAttribute('stroke-width', '3');
+
+      svg.appendChild(currentLine);
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDrawing || !currentLine) return;
+
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const currentPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      currentLine.setAttribute('x2', currentPt.x);
+      currentLine.setAttribute('y2', currentPt.y);
+    };
+
+    const onMouseUp = () => {
+      isDrawing = false;
+      currentLine = null;
+    };
+
+    svg.addEventListener('mousedown', onMouseDown);
+    svg.addEventListener('mousemove', onMouseMove);
+    svg.addEventListener('mouseup', onMouseUp);
+
+    // Store listeners for cleanup
+    svg._jtLineListeners = { onMouseDown, onMouseMove, onMouseUp };
+  }
+
+  /**
+   * Disable line drawing mode
+   */
+  function disableLineMode(svg) {
+    if (svg._jtLineListeners) {
+      const { onMouseDown, onMouseMove, onMouseUp } = svg._jtLineListeners;
+      svg.removeEventListener('mousedown', onMouseDown);
+      svg.removeEventListener('mousemove', onMouseMove);
+      svg.removeEventListener('mouseup', onMouseUp);
+      delete svg._jtLineListeners;
+    }
   }
 
   /**
@@ -547,12 +814,60 @@ const PDFMarkupToolsFeature = (() => {
     console.log('PDF Markup Tools: Eraser tool clicked');
 
     const eraserBtn = document.querySelector('[data-jt-tool="eraser"]');
-    if (eraserBtn) {
-      eraserBtn.classList.toggle('active');
-    }
+    const svg = getActiveSVG();
 
-    // TODO: Integrate with JobTread's PDF annotation system
-    alert('Eraser tool activated!\n\nThis requires integration with JobTread\'s PDF annotation system.');
+    if (!svg || !eraserBtn) return;
+
+    const isActive = eraserBtn.classList.toggle('active');
+
+    if (isActive) {
+      enableEraserMode(svg);
+    } else {
+      disableEraserMode(svg);
+    }
+  }
+
+  /**
+   * Enable eraser mode - click on annotations to remove them
+   */
+  function enableEraserMode(svg) {
+    const onClick = (e) => {
+      const target = e.target;
+
+      // Check if clicked element is a JT annotation
+      if (target.classList.contains('jt-stamp-annotation') ||
+          target.classList.contains('jt-highlight-annotation') ||
+          target.classList.contains('jt-line-annotation') ||
+          target.getAttribute('data-jt-tool')) {
+
+        // If it's a child element, find the parent group
+        let elementToRemove = target;
+        if (target.tagName !== 'g' && target.parentElement.tagName === 'g') {
+          elementToRemove = target.parentElement;
+        }
+
+        elementToRemove.remove();
+        console.log('Annotation removed');
+        e.stopPropagation();
+      }
+    };
+
+    svg.addEventListener('click', onClick, true);
+    svg.style.cursor = 'not-allowed';
+
+    // Store listener for cleanup
+    svg._jtEraserListener = onClick;
+  }
+
+  /**
+   * Disable eraser mode
+   */
+  function disableEraserMode(svg) {
+    if (svg._jtEraserListener) {
+      svg.removeEventListener('click', svg._jtEraserListener, true);
+      delete svg._jtEraserListener;
+      svg.style.cursor = '';
+    }
   }
 
   /**
