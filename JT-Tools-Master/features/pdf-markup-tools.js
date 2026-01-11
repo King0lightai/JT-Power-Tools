@@ -981,6 +981,44 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
+   * Handle Delete key press to remove selected annotations
+   */
+  function handleDeleteKey(e) {
+    // Only handle Delete/Backspace keys
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+
+    // Don't interfere with input fields
+    const target = e.target;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
+    const svg = getActiveSVG();
+    if (!svg) return;
+
+    // Find selected annotation (look for elements with certain attributes or classes that indicate selection)
+    // JobTread might mark selected items differently - we'll try a few approaches
+    const selectedAnnotation = svg.querySelector('[data-selected="true"]') ||
+                               svg.querySelector('.selected') ||
+                               svg.querySelector('[aria-selected="true"]');
+
+    if (selectedAnnotation) {
+      console.log('PDF Markup Tools: Deleting selected annotation via Delete key');
+      e.preventDefault();
+
+      // Try to trigger JobTread's delete button
+      const buttons = findJobTreadButtons();
+      if (buttons && buttons.delete) {
+        buttons.delete.click();
+      } else {
+        // Fallback: directly remove the element (may not persist)
+        selectedAnnotation.remove();
+        showNotification('Annotation deleted');
+      }
+    }
+  }
+
+  /**
    * Initialize the feature
    */
   function init() {
@@ -1011,6 +1049,9 @@ const PDFMarkupToolsFeature = (() => {
 
       // Handle clicks outside stamp selector
       document.addEventListener('click', handleDocumentClick, true);
+
+      // Handle Delete key for removing annotations
+      document.addEventListener('keydown', handleDeleteKey);
 
       console.log('PDF Markup Tools: Feature loaded successfully');
     } catch (error) {
@@ -1046,6 +1087,7 @@ const PDFMarkupToolsFeature = (() => {
 
     // Remove event listeners
     document.removeEventListener('click', handleDocumentClick, true);
+    document.removeEventListener('keydown', handleDeleteKey);
 
     // Remove injected CSS
     if (styleElement) {
