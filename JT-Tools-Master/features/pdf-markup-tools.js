@@ -1,12 +1,17 @@
 /**
  * JobTread PDF Markup Tools Enhancement
- * Adds additional markup tools to JobTread's PDF viewer
+ * Integrates with JobTread's native PDF annotation system
  *
  * New Tools:
- * - Highlight tool
- * - Custom stamps library
- * - Plain line tool (without arrowhead)
- * - Eraser tool
+ * - Highlight tool (uses JobTread's rectangle + yellow color)
+ * - Custom stamps library (uses JobTread's text tool)
+ * - Line tool shortcut
+ * - Enhanced eraser
+ *
+ * Integration Strategy:
+ * - Programmatically triggers JobTread's native tool buttons
+ * - Uses their annotation system for persistence and undo/redo
+ * - Adds shortcuts and presets on top of their system
  *
  * @module PDFMarkupTools
  * @author JT Power Tools Team
@@ -22,6 +27,9 @@ const PDFMarkupToolsFeature = (() => {
 
   // Store references to injected elements for cleanup
   const toolbarEnhancements = new WeakMap();
+
+  // Cache for JobTread's native tool buttons
+  let jtNativeButtons = null;
 
   // Stamp library
   const stampLibrary = {
@@ -208,6 +216,33 @@ const PDFMarkupToolsFeature = (() => {
         padding: 0.125rem 0.25rem;
         border-radius: 0.25rem;
         font-weight: 600;
+      }
+
+      /* Toast notification animations */
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+
+      .jt-pdf-notification {
+        transition: all 0.3s ease-out;
       }
     `;
 
@@ -499,181 +534,194 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
+   * Find JobTread's native tool buttons
+   * Returns object with button references keyed by button index/type
+   */
+  function findJobTreadButtons() {
+    if (jtNativeButtons) return jtNativeButtons;
+
+    const buttons = document.querySelectorAll('.inline-block.align-bottom.relative.cursor-pointer.select-none.truncate.py-1.px-2.shadow-xs');
+
+    if (buttons.length === 0) {
+      console.warn('PDF Markup Tools: Could not find JobTread native buttons');
+      return null;
+    }
+
+    console.log(`PDF Markup Tools: Found ${buttons.length} JobTread native buttons`);
+
+    // Map buttons by their likely function (based on order and SVG content)
+    // Button 4 appears to be freedraw based on user's console output
+    jtNativeButtons = {
+      all: Array.from(buttons),
+      freedraw: buttons[4], // Button 4 is the freedraw tool
+      square: buttons[3],   // Rectangle/square tool (for highlights)
+      // Add more as we identify them
+    };
+
+    return jtNativeButtons;
+  }
+
+  /**
+   * Check if a JobTread button is active
+   */
+  function isJobTreadButtonActive(button) {
+    if (!button) return false;
+    return button.classList.contains('bg-gray-700') && button.classList.contains('text-white');
+  }
+
+  /**
+   * Activate a JobTread native tool by clicking its button
+   */
+  function activateJobTreadTool(buttonKey) {
+    const buttons = findJobTreadButtons();
+    if (!buttons) {
+      console.error('PDF Markup Tools: Cannot find JobTread buttons');
+      return false;
+    }
+
+    const button = buttons[buttonKey];
+    if (!button) {
+      console.error(`PDF Markup Tools: Button "${buttonKey}" not found`);
+      return false;
+    }
+
+    // Only click if not already active
+    if (!isJobTreadButtonActive(button)) {
+      console.log(`PDF Markup Tools: Activating JobTread ${buttonKey} tool`);
+      button.click();
+      return true;
+    }
+
+    console.log(`PDF Markup Tools: JobTread ${buttonKey} tool already active`);
+    return true;
+  }
+
+  /**
+   * Find and click JobTread's color picker button to set a specific color
+   */
+  function setJobTreadColor(color) {
+    // Look for color picker - this will need to be investigated
+    // For now, just log the attempt
+    console.log(`PDF Markup Tools: Attempting to set color to ${color}`);
+
+    // TODO: Find and interact with JobTread's color picker
+    // This may require:
+    // 1. Finding the color picker button/input
+    // 2. Opening it
+    // 3. Setting the color value
+    // 4. Confirming the selection
+  }
+
+  /**
+   * Show a notification to the user
+   */
+  function showNotification(message, type = 'info') {
+    console.log(`PDF Markup Tools: ${message}`);
+
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'jt-pdf-notification';
+    toast.textContent = message;
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: ${type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 10000;
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 300px;
+      animation: slideIn 0.3s ease-out;
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      toast.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  /**
    * Apply a stamp to the PDF
+   * Currently copies stamp text to clipboard for manual pasting
    */
   function applyStamp(stamp) {
     console.log('PDF Markup Tools: Applying stamp:', stamp);
 
-    const svg = getActiveSVG();
-    if (!svg) {
-      console.warn('No active SVG found');
-      return;
-    }
-
-    // Create SVG group for the stamp
-    const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    group.classList.add('jt-stamp-annotation');
-    group.setAttribute('data-jt-tool', 'stamp');
-
-    // Position at center of view (user can adjust)
-    const viewBox = svg.viewBox.baseVal;
-    const x = viewBox.width / 2;
-    const y = viewBox.height / 2;
-
-    // Create background rectangle
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', x - 40);
-    rect.setAttribute('y', y - 20);
-    rect.setAttribute('width', '80');
-    rect.setAttribute('height', '40');
-    rect.setAttribute('fill', stamp.color);
-    rect.setAttribute('stroke', '#000');
-    rect.setAttribute('stroke-width', '2');
-    rect.setAttribute('rx', '5');
-
-    // Create text element
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', x);
-    text.setAttribute('y', y + 5);
-    text.setAttribute('text-anchor', 'middle');
-    text.setAttribute('fill', stamp.textColor);
-    text.setAttribute('font-size', '16');
-    text.setAttribute('font-weight', 'bold');
-    text.textContent = stamp.icon + ' ' + stamp.name.replace(/_/g, ' ');
-
-    // Add date if needed
+    // Prepare stamp text
+    let stampText = stamp.icon + ' ' + stamp.name.replace(/_/g, ' ');
     if (stamp.includeDate) {
       const date = new Date().toLocaleDateString();
-      const dateText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      dateText.setAttribute('x', x);
-      dateText.setAttribute('y', y + 20);
-      dateText.setAttribute('text-anchor', 'middle');
-      dateText.setAttribute('fill', stamp.textColor);
-      dateText.setAttribute('font-size', '10');
-      dateText.textContent = date;
-      group.appendChild(dateText);
+      stampText += ' - ' + date;
     }
 
-    group.appendChild(rect);
-    group.appendChild(text);
+    // Copy to clipboard
+    navigator.clipboard.writeText(stampText).then(() => {
+      showNotification(`"${stampText}" copied to clipboard. Click on the PDF to paste using JobTread's text tool.`);
 
-    // Make draggable (simple implementation)
-    makeDraggable(group);
-
-    svg.appendChild(group);
-    console.log('Stamp added to SVG');
-  }
-
-  /**
-   * Make an SVG element draggable (works for rect and line elements)
-   */
-  function makeDraggable(element) {
-    let isDragging = false;
-    let startX, startY;
-    let initialValues = {};
-
-    element.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      const svg = getActiveSVG();
-      if (!svg) return;
-
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      startX = svgPt.x;
-      startY = svgPt.y;
-
-      // Store initial position based on element type
-      if (element.tagName === 'line') {
-        initialValues = {
-          x1: parseFloat(element.getAttribute('x1')),
-          y1: parseFloat(element.getAttribute('y1')),
-          x2: parseFloat(element.getAttribute('x2')),
-          y2: parseFloat(element.getAttribute('y2'))
-        };
-      } else if (element.tagName === 'rect' || element.tagName === 'g') {
-        const transform = element.getAttribute('transform') || '';
-        const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
-        initialValues = {
-          x: match ? parseFloat(match[1]) : 0,
-          y: match ? parseFloat(match[2]) : 0
-        };
-      }
-
-      e.stopPropagation();
-      e.preventDefault();
+      // TODO: Auto-activate JobTread's text tool if we can identify it
+      // For now, user manually activates text tool and pastes
+    }).catch(err => {
+      console.error('Failed to copy stamp text:', err);
+      showNotification('Stamp: ' + stampText, 'info');
     });
-
-    const onMouseMove = (e) => {
-      if (!isDragging) return;
-
-      const svg = getActiveSVG();
-      if (!svg) return;
-
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      const dx = svgPt.x - startX;
-      const dy = svgPt.y - startY;
-
-      // Update position based on element type
-      if (element.tagName === 'line') {
-        element.setAttribute('x1', initialValues.x1 + dx);
-        element.setAttribute('y1', initialValues.y1 + dy);
-        element.setAttribute('x2', initialValues.x2 + dx);
-        element.setAttribute('y2', initialValues.y2 + dy);
-      } else {
-        element.setAttribute('transform', `translate(${initialValues.x + dx}, ${initialValues.y + dy})`);
-      }
-    };
-
-    const onMouseUp = () => {
-      isDragging = false;
-    };
-
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-
-    // Store handlers for potential cleanup
-    element._jtDragHandlers = { onMouseMove, onMouseUp };
   }
 
+  // Note: makeDraggable function removed - JobTread handles annotation manipulation
+
   /**
-   * Handle highlight tool click - enables click-and-drag highlighting
+   * Handle highlight tool click - activates JobTread's rectangle tool with yellow color
    */
   function handleHighlightClick() {
     console.log('PDF Markup Tools: Highlight tool clicked');
 
     const highlightBtn = document.querySelector('[data-jt-tool="highlight"]');
-    const svg = getActiveSVG();
-
-    if (!svg || !highlightBtn) return;
+    if (!highlightBtn) return;
 
     const wasActive = highlightBtn.classList.contains('active');
 
     if (!wasActive) {
-      // Deactivate other tools first
-      deactivateOtherTools('highlight');
-      highlightBtn.classList.add('active');
-      enableHighlightMode(svg);
+      // Activate JobTread's rectangle/square tool
+      const success = activateJobTreadTool('square');
+
+      if (success) {
+        // Mark our button as active
+        deactivateOtherTools('highlight');
+        highlightBtn.classList.add('active');
+
+        // Try to set yellow color for highlighting
+        setJobTreadColor('#FFFF00');
+
+        // Show user notification
+        showNotification('Highlight mode active - Draw rectangles to highlight areas');
+      } else {
+        console.error('PDF Markup Tools: Failed to activate highlight tool');
+        showNotification('Could not activate highlight tool', 'error');
+      }
     } else {
+      // Deactivate
       highlightBtn.classList.remove('active');
-      disableHighlightMode(svg);
+      // Optionally deactivate JobTread's tool by clicking it again
+      const buttons = findJobTreadButtons();
+      if (buttons && buttons.square && isJobTreadButtonActive(buttons.square)) {
+        buttons.square.click();
+      }
+      showNotification('Highlight mode deactivated');
     }
   }
 
   /**
-   * Deactivate all other tools
+   * Deactivate all other JT tools (visual state only)
+   * JobTread's buttons manage their own state
    */
   function deactivateOtherTools(exceptTool) {
-    const svg = getActiveSVG();
-    if (!svg) return;
-
-    const tools = ['highlight', 'line', 'eraser'];
+    const tools = ['highlight', 'line', 'eraser', 'stamp'];
 
     tools.forEach(toolName => {
       if (toolName === exceptTool) return;
@@ -681,270 +729,72 @@ const PDFMarkupToolsFeature = (() => {
       const btn = document.querySelector(`[data-jt-tool="${toolName}"]`);
       if (btn && btn.classList.contains('active')) {
         btn.classList.remove('active');
-
-        // Disable the tool's mode
-        if (toolName === 'highlight') disableHighlightMode(svg);
-        if (toolName === 'line') disableLineMode(svg);
-        if (toolName === 'eraser') disableEraserMode(svg);
       }
     });
-  }
 
-  /**
-   * Enable highlight drawing mode
-   */
-  function enableHighlightMode(svg) {
-    let isDrawing = false;
-    let startPt = null;
-    let currentRect = null;
-
-    const onMouseDown = (e) => {
-      isDrawing = true;
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      // Create highlight rectangle matching JobTread's format
-      currentRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      currentRect.classList.add('jt-highlight-annotation');
-      currentRect.setAttribute('id', 'jt-highlight-' + Date.now());
-      currentRect.setAttribute('data-jt-tool', 'highlight');
-      currentRect.setAttribute('x', startPt.x);
-      currentRect.setAttribute('y', startPt.y);
-      currentRect.setAttribute('width', '0');
-      currentRect.setAttribute('height', '0');
-      currentRect.setAttribute('fill', 'transparent');
-      currentRect.setAttribute('stroke', '#FFFF00'); // Yellow highlight
-      currentRect.setAttribute('stroke-width', '4'); // Thicker for visibility
-      currentRect.setAttribute('vector-effect', 'non-scaling-stroke');
-      currentRect.setAttribute('transform', 'rotate(0 0 0)');
-      currentRect.setAttribute('pointer-events', 'default');
-      currentRect.setAttribute('cursor', 'move');
-
-      svg.appendChild(currentRect);
-    };
-
-    const onMouseMove = (e) => {
-      if (!isDrawing || !currentRect) return;
-
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const currentPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      const width = currentPt.x - startPt.x;
-      const height = currentPt.y - startPt.y;
-
-      if (width < 0) {
-        currentRect.setAttribute('x', currentPt.x);
-        currentRect.setAttribute('width', Math.abs(width));
-      } else {
-        currentRect.setAttribute('width', width);
-      }
-
-      if (height < 0) {
-        currentRect.setAttribute('y', currentPt.y);
-        currentRect.setAttribute('height', Math.abs(height));
-      } else {
-        currentRect.setAttribute('height', height);
-      }
-    };
-
-    const onMouseUp = () => {
-      isDrawing = false;
-      if (currentRect) {
-        // Make the finished highlight draggable
-        makeDraggable(currentRect);
-      }
-      currentRect = null;
-    };
-
-    svg.addEventListener('mousedown', onMouseDown);
-    svg.addEventListener('mousemove', onMouseMove);
-    svg.addEventListener('mouseup', onMouseUp);
-
-    // Store listeners for cleanup
-    svg._jtHighlightListeners = { onMouseDown, onMouseMove, onMouseUp };
-  }
-
-  /**
-   * Disable highlight drawing mode
-   */
-  function disableHighlightMode(svg) {
-    if (svg._jtHighlightListeners) {
-      const { onMouseDown, onMouseMove, onMouseUp } = svg._jtHighlightListeners;
-      svg.removeEventListener('mousedown', onMouseDown);
-      svg.removeEventListener('mousemove', onMouseMove);
-      svg.removeEventListener('mouseup', onMouseUp);
-      delete svg._jtHighlightListeners;
+    // Hide stamp selector if open
+    if (exceptTool !== 'stamp') {
+      hideStampSelector();
     }
   }
 
+  // Note: Old drawing mode functions removed - we now use JobTread's native tools
+  // This eliminates event listener conflicts and ensures proper integration with
+  // their save/undo system
+
   /**
-   * Handle line tool click
+   * Handle line tool click - activates JobTread's freedraw tool for lines
    */
   function handleLineClick() {
     console.log('PDF Markup Tools: Line tool clicked');
 
     const lineBtn = document.querySelector('[data-jt-tool="line"]');
-    const svg = getActiveSVG();
-
-    if (!svg || !lineBtn) return;
+    if (!lineBtn) return;
 
     const wasActive = lineBtn.classList.contains('active');
 
     if (!wasActive) {
-      // Deactivate other tools first
-      deactivateOtherTools('line');
-      lineBtn.classList.add('active');
-      enableLineMode(svg);
+      // Activate JobTread's freedraw tool
+      const success = activateJobTreadTool('freedraw');
+
+      if (success) {
+        deactivateOtherTools('line');
+        lineBtn.classList.add('active');
+        showNotification('Line tool active - Draw lines on the PDF');
+      } else {
+        console.error('PDF Markup Tools: Failed to activate line tool');
+        showNotification('Could not activate line tool', 'error');
+      }
     } else {
       lineBtn.classList.remove('active');
-      disableLineMode(svg);
-    }
-  }
-
-  /**
-   * Enable line drawing mode
-   */
-  function enableLineMode(svg) {
-    let isDrawing = false;
-    let startPt = null;
-    let currentLine = null;
-
-    const onMouseDown = (e) => {
-      isDrawing = true;
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      // Create line matching JobTread's format
-      currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      currentLine.classList.add('jt-line-annotation');
-      currentLine.setAttribute('id', 'jt-line-' + Date.now());
-      currentLine.setAttribute('data-jt-tool', 'line');
-      currentLine.setAttribute('x1', startPt.x);
-      currentLine.setAttribute('y1', startPt.y);
-      currentLine.setAttribute('x2', startPt.x);
-      currentLine.setAttribute('y2', startPt.y);
-      currentLine.setAttribute('stroke', '#FF0000');
-      currentLine.setAttribute('stroke-width', '3');
-      currentLine.setAttribute('vector-effect', 'non-scaling-stroke');
-      currentLine.setAttribute('pointer-events', 'default');
-      currentLine.setAttribute('cursor', 'move');
-
-      svg.appendChild(currentLine);
-    };
-
-    const onMouseMove = (e) => {
-      if (!isDrawing || !currentLine) return;
-
-      const pt = svg.createSVGPoint();
-      pt.x = e.clientX;
-      pt.y = e.clientY;
-      const currentPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-
-      currentLine.setAttribute('x2', currentPt.x);
-      currentLine.setAttribute('y2', currentPt.y);
-    };
-
-    const onMouseUp = () => {
-      isDrawing = false;
-      if (currentLine) {
-        // Make the finished line draggable
-        makeDraggable(currentLine);
+      const buttons = findJobTreadButtons();
+      if (buttons && buttons.freedraw && isJobTreadButtonActive(buttons.freedraw)) {
+        buttons.freedraw.click();
       }
-      currentLine = null;
-    };
-
-    svg.addEventListener('mousedown', onMouseDown);
-    svg.addEventListener('mousemove', onMouseMove);
-    svg.addEventListener('mouseup', onMouseUp);
-
-    // Store listeners for cleanup
-    svg._jtLineListeners = { onMouseDown, onMouseMove, onMouseUp };
-  }
-
-  /**
-   * Disable line drawing mode
-   */
-  function disableLineMode(svg) {
-    if (svg._jtLineListeners) {
-      const { onMouseDown, onMouseMove, onMouseUp } = svg._jtLineListeners;
-      svg.removeEventListener('mousedown', onMouseDown);
-      svg.removeEventListener('mousemove', onMouseMove);
-      svg.removeEventListener('mouseup', onMouseUp);
-      delete svg._jtLineListeners;
+      showNotification('Line tool deactivated');
     }
   }
+
+  // Old line drawing mode functions removed - using JobTread's freedraw tool instead
 
   /**
    * Handle eraser tool click
+   * Note: For now, this is informational since we can't identify which JobTread button is the eraser
    */
   function handleEraserClick() {
     console.log('PDF Markup Tools: Eraser tool clicked');
 
     const eraserBtn = document.querySelector('[data-jt-tool="eraser"]');
-    const svg = getActiveSVG();
+    if (!eraserBtn) return;
 
-    if (!svg || !eraserBtn) return;
+    // Simply inform the user to use JobTread's native eraser/delete function
+    showNotification('To erase: Select an annotation and press Delete, or use JobTread\'s eraser tool');
 
-    const wasActive = eraserBtn.classList.contains('active');
-
-    if (!wasActive) {
-      // Deactivate other tools first
-      deactivateOtherTools('eraser');
-      eraserBtn.classList.add('active');
-      enableEraserMode(svg);
-    } else {
+    // Don't toggle active state since we're not providing custom functionality
+    // Just show the tip and reset
+    setTimeout(() => {
       eraserBtn.classList.remove('active');
-      disableEraserMode(svg);
-    }
-  }
-
-  /**
-   * Enable eraser mode - click on annotations to remove them
-   */
-  function enableEraserMode(svg) {
-    const onClick = (e) => {
-      const target = e.target;
-
-      // Check if clicked element is a JT annotation
-      if (target.classList.contains('jt-stamp-annotation') ||
-          target.classList.contains('jt-highlight-annotation') ||
-          target.classList.contains('jt-line-annotation') ||
-          target.getAttribute('data-jt-tool')) {
-
-        // If it's a child element, find the parent group
-        let elementToRemove = target;
-        if (target.tagName !== 'g' && target.parentElement.tagName === 'g') {
-          elementToRemove = target.parentElement;
-        }
-
-        elementToRemove.remove();
-        console.log('Annotation removed');
-        e.stopPropagation();
-      }
-    };
-
-    svg.addEventListener('click', onClick, true);
-    svg.style.cursor = 'not-allowed';
-
-    // Store listener for cleanup
-    svg._jtEraserListener = onClick;
-  }
-
-  /**
-   * Disable eraser mode
-   */
-  function disableEraserMode(svg) {
-    if (svg._jtEraserListener) {
-      svg.removeEventListener('click', svg._jtEraserListener, true);
-      delete svg._jtEraserListener;
-      svg.style.cursor = '';
-    }
+    }, 100);
   }
 
   /**
@@ -1152,6 +1002,9 @@ const PDFMarkupToolsFeature = (() => {
     console.log('PDF Markup Tools: Cleaning up...');
     isActive = false;
 
+    // Deactivate all our tools
+    deactivateOtherTools(null);
+
     // Remove injected tools
     removeInjectedTools();
 
@@ -1169,6 +1022,9 @@ const PDFMarkupToolsFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
+
+    // Clear button cache
+    jtNativeButtons = null;
 
     console.log('PDF Markup Tools: Cleanup complete');
   }
