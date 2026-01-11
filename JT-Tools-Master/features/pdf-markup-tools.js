@@ -565,13 +565,12 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Make an SVG element draggable
+   * Make an SVG element draggable (works for rect and line elements)
    */
   function makeDraggable(element) {
     let isDragging = false;
-    let startX, startY, initialX, initialY;
-
-    element.style.cursor = 'move';
+    let startX, startY;
+    let initialValues = {};
 
     element.addEventListener('mousedown', (e) => {
       isDragging = true;
@@ -586,16 +585,28 @@ const PDFMarkupToolsFeature = (() => {
       startX = svgPt.x;
       startY = svgPt.y;
 
-      // Get current transform
-      const transform = element.getAttribute('transform') || '';
-      const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
-      initialX = match ? parseFloat(match[1]) : 0;
-      initialY = match ? parseFloat(match[2]) : 0;
+      // Store initial position based on element type
+      if (element.tagName === 'line') {
+        initialValues = {
+          x1: parseFloat(element.getAttribute('x1')),
+          y1: parseFloat(element.getAttribute('y1')),
+          x2: parseFloat(element.getAttribute('x2')),
+          y2: parseFloat(element.getAttribute('y2'))
+        };
+      } else if (element.tagName === 'rect' || element.tagName === 'g') {
+        const transform = element.getAttribute('transform') || '';
+        const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
+        initialValues = {
+          x: match ? parseFloat(match[1]) : 0,
+          y: match ? parseFloat(match[2]) : 0
+        };
+      }
 
       e.stopPropagation();
+      e.preventDefault();
     });
 
-    document.addEventListener('mousemove', (e) => {
+    const onMouseMove = (e) => {
       if (!isDragging) return;
 
       const svg = getActiveSVG();
@@ -609,12 +620,26 @@ const PDFMarkupToolsFeature = (() => {
       const dx = svgPt.x - startX;
       const dy = svgPt.y - startY;
 
-      element.setAttribute('transform', `translate(${initialX + dx}, ${initialY + dy})`);
-    });
+      // Update position based on element type
+      if (element.tagName === 'line') {
+        element.setAttribute('x1', initialValues.x1 + dx);
+        element.setAttribute('y1', initialValues.y1 + dy);
+        element.setAttribute('x2', initialValues.x2 + dx);
+        element.setAttribute('y2', initialValues.y2 + dy);
+      } else {
+        element.setAttribute('transform', `translate(${initialValues.x + dx}, ${initialValues.y + dy})`);
+      }
+    };
 
-    document.addEventListener('mouseup', () => {
+    const onMouseUp = () => {
       isDragging = false;
-    });
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    // Store handlers for potential cleanup
+    element._jtDragHandlers = { onMouseMove, onMouseUp };
   }
 
   /**
@@ -628,13 +653,41 @@ const PDFMarkupToolsFeature = (() => {
 
     if (!svg || !highlightBtn) return;
 
-    const isActive = highlightBtn.classList.toggle('active');
+    const wasActive = highlightBtn.classList.contains('active');
 
-    if (isActive) {
+    if (!wasActive) {
+      // Deactivate other tools first
+      deactivateOtherTools('highlight');
+      highlightBtn.classList.add('active');
       enableHighlightMode(svg);
     } else {
+      highlightBtn.classList.remove('active');
       disableHighlightMode(svg);
     }
+  }
+
+  /**
+   * Deactivate all other tools
+   */
+  function deactivateOtherTools(exceptTool) {
+    const svg = getActiveSVG();
+    if (!svg) return;
+
+    const tools = ['highlight', 'line', 'eraser'];
+
+    tools.forEach(toolName => {
+      if (toolName === exceptTool) return;
+
+      const btn = document.querySelector(`[data-jt-tool="${toolName}"]`);
+      if (btn && btn.classList.contains('active')) {
+        btn.classList.remove('active');
+
+        // Disable the tool's mode
+        if (toolName === 'highlight') disableHighlightMode(svg);
+        if (toolName === 'line') disableLineMode(svg);
+        if (toolName === 'eraser') disableEraserMode(svg);
+      }
+    });
   }
 
   /**
@@ -652,18 +705,22 @@ const PDFMarkupToolsFeature = (() => {
       pt.y = e.clientY;
       startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-      // Create highlight rectangle
+      // Create highlight rectangle matching JobTread's format
       currentRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
       currentRect.classList.add('jt-highlight-annotation');
+      currentRect.setAttribute('id', 'jt-highlight-' + Date.now());
       currentRect.setAttribute('data-jt-tool', 'highlight');
-      currentRect.setAttribute('fill', '#FFFF00');
-      currentRect.setAttribute('fill-opacity', '0.4');
-      currentRect.setAttribute('stroke', '#FFD700');
-      currentRect.setAttribute('stroke-width', '1');
       currentRect.setAttribute('x', startPt.x);
       currentRect.setAttribute('y', startPt.y);
       currentRect.setAttribute('width', '0');
       currentRect.setAttribute('height', '0');
+      currentRect.setAttribute('fill', 'transparent');
+      currentRect.setAttribute('stroke', '#FFFF00'); // Yellow highlight
+      currentRect.setAttribute('stroke-width', '4'); // Thicker for visibility
+      currentRect.setAttribute('vector-effect', 'non-scaling-stroke');
+      currentRect.setAttribute('transform', 'rotate(0 0 0)');
+      currentRect.setAttribute('pointer-events', 'default');
+      currentRect.setAttribute('cursor', 'move');
 
       svg.appendChild(currentRect);
     };
@@ -696,6 +753,10 @@ const PDFMarkupToolsFeature = (() => {
 
     const onMouseUp = () => {
       isDrawing = false;
+      if (currentRect) {
+        // Make the finished highlight draggable
+        makeDraggable(currentRect);
+      }
       currentRect = null;
     };
 
@@ -731,11 +792,15 @@ const PDFMarkupToolsFeature = (() => {
 
     if (!svg || !lineBtn) return;
 
-    const isActive = lineBtn.classList.toggle('active');
+    const wasActive = lineBtn.classList.contains('active');
 
-    if (isActive) {
+    if (!wasActive) {
+      // Deactivate other tools first
+      deactivateOtherTools('line');
+      lineBtn.classList.add('active');
       enableLineMode(svg);
     } else {
+      lineBtn.classList.remove('active');
       disableLineMode(svg);
     }
   }
@@ -755,9 +820,10 @@ const PDFMarkupToolsFeature = (() => {
       pt.y = e.clientY;
       startPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-      // Create line
+      // Create line matching JobTread's format
       currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       currentLine.classList.add('jt-line-annotation');
+      currentLine.setAttribute('id', 'jt-line-' + Date.now());
       currentLine.setAttribute('data-jt-tool', 'line');
       currentLine.setAttribute('x1', startPt.x);
       currentLine.setAttribute('y1', startPt.y);
@@ -765,6 +831,9 @@ const PDFMarkupToolsFeature = (() => {
       currentLine.setAttribute('y2', startPt.y);
       currentLine.setAttribute('stroke', '#FF0000');
       currentLine.setAttribute('stroke-width', '3');
+      currentLine.setAttribute('vector-effect', 'non-scaling-stroke');
+      currentLine.setAttribute('pointer-events', 'default');
+      currentLine.setAttribute('cursor', 'move');
 
       svg.appendChild(currentLine);
     };
@@ -783,6 +852,10 @@ const PDFMarkupToolsFeature = (() => {
 
     const onMouseUp = () => {
       isDrawing = false;
+      if (currentLine) {
+        // Make the finished line draggable
+        makeDraggable(currentLine);
+      }
       currentLine = null;
     };
 
@@ -818,11 +891,15 @@ const PDFMarkupToolsFeature = (() => {
 
     if (!svg || !eraserBtn) return;
 
-    const isActive = eraserBtn.classList.toggle('active');
+    const wasActive = eraserBtn.classList.contains('active');
 
-    if (isActive) {
+    if (!wasActive) {
+      // Deactivate other tools first
+      deactivateOtherTools('eraser');
+      eraserBtn.classList.add('active');
       enableEraserMode(svg);
     } else {
+      eraserBtn.classList.remove('active');
       disableEraserMode(svg);
     }
   }
