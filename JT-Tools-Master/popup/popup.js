@@ -73,6 +73,7 @@ const defaultSettings = {
   characterCounter: false,
   kanbanTypeFilter: false,
   autoCollapseGroups: false,
+  pdfMarkupTools: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
