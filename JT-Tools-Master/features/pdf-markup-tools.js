@@ -606,8 +606,15 @@ const PDFMarkupToolsFeature = (() => {
   /**
    * Find and click JobTread's color picker to set a specific color
    */
-  function setJobTreadColor(color) {
-    console.log(`PDF Markup Tools: Attempting to set color to ${color}`);
+  function setJobTreadColor(hexColor) {
+    console.log(`PDF Markup Tools: Attempting to set color to ${hexColor}`);
+
+    // Convert hex to RGB
+    const rgb = hexToRgb(hexColor);
+    if (!rgb) {
+      console.error('PDF Markup Tools: Invalid hex color');
+      return;
+    }
 
     // Look for the color picker button (appears when a drawing tool is active)
     // Structure: div.w-7.h-7.border with background-color style
@@ -617,25 +624,89 @@ const PDFMarkupToolsFeature = (() => {
       console.log('PDF Markup Tools: Found color picker, clicking to open...');
       colorPicker.click();
 
-      // Wait for color picker dialog to open, then try to set the color
+      // Wait for color picker modal to open and render RGB inputs
       setTimeout(() => {
-        // Look for color input field or color selection buttons
-        // This may require finding the color picker modal/dropdown
-        const colorInput = document.querySelector('input[type="color"]');
-        if (colorInput) {
-          colorInput.value = color;
-          colorInput.dispatchEvent(new Event('input', { bubbles: true }));
-          colorInput.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log(`PDF Markup Tools: Set color to ${color}`);
-        } else {
-          console.log('PDF Markup Tools: Color picker opened but input field not found');
-          // User will need to manually select yellow color
-          showNotification('Please select yellow color from the color picker');
-        }
-      }, 100);
+        setRgbValues(rgb.r, rgb.g, rgb.b);
+      }, 200);
     } else {
       console.log('PDF Markup Tools: Color picker not found (tool may not be active yet)');
     }
+  }
+
+  /**
+   * Convert hex color to RGB
+   */
+  function hexToRgb(hex) {
+    // Remove # if present
+    hex = hex.replace('#', '');
+
+    // Parse hex values
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      return null;
+    }
+
+    return { r, g, b };
+  }
+
+  /**
+   * Set RGB values in JobTread's color picker
+   */
+  function setRgbValues(r, g, b) {
+    console.log(`PDF Markup Tools: Setting RGB values: R=${r}, G=${g}, B=${b}`);
+
+    // Find all number inputs in the color picker area
+    const allInputs = Array.from(document.querySelectorAll('input[type="number"], input[type="text"]'));
+
+    // Filter to likely RGB inputs (value should be 0-255)
+    const rgbInputs = allInputs.filter(input => {
+      const value = parseInt(input.value);
+      return !isNaN(value) && value >= 0 && value <= 255 && input.parentElement;
+    });
+
+    console.log(`PDF Markup Tools: Found ${rgbInputs.length} potential RGB inputs`);
+
+    if (rgbInputs.length >= 3) {
+      // Assume first 3 inputs are R, G, B in order
+      const [rInput, gInput, bInput] = rgbInputs.slice(0, 3);
+
+      setInputValue(rInput, r);
+      setInputValue(gInput, g);
+      setInputValue(bInput, b);
+
+      console.log('PDF Markup Tools: Successfully set RGB values');
+      showNotification(`Color set to yellow (RGB: ${r}, ${g}, ${b})`);
+    } else {
+      console.warn('PDF Markup Tools: Could not find RGB inputs');
+      showNotification('Please manually select yellow color', 'info');
+    }
+  }
+
+  /**
+   * Set input value and trigger React events
+   */
+  function setInputValue(input, value) {
+    // Set the value using React's way
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    ).set;
+
+    nativeInputValueSetter.call(input, value);
+
+    // Dispatch events to trigger React's change detection
+    const inputEvent = new Event('input', { bubbles: true });
+    input.dispatchEvent(inputEvent);
+
+    const changeEvent = new Event('change', { bubbles: true });
+    input.dispatchEvent(changeEvent);
+
+    // Also trigger blur to ensure value is committed
+    const blurEvent = new Event('blur', { bubbles: true });
+    input.dispatchEvent(blurEvent);
   }
 
   /**
