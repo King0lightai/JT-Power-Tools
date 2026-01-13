@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT Power Tools</title>
+  <!-- Theme-aware favicons -->
+  <link rel="icon" href="../icons/icon16-light.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" href="../icons/icon16-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-content">
+        <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
+        <h1>JT Power Tools</h1>
+        <span class="version">v3.4.02 BETA</span>
+        <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
+          <span class="theme-icon light-icon">☀️</span>
+          <span class="theme-icon dark-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Features List -->
+    <div class="features-section">
+
+      <!-- Schedule & Calendar Category -->
+      <div class="feature-category">
+        <div class="category-header collapsed" data-category="schedule">
+          <span class="category-icon">🗓️</span>
+          <span class="category-title">Schedule & Calendar</span>
+          <span class="category-count">3</span>
+          <span class="category-toggle">▼</span>
+        </div>
+        <div class="category-features collapsed" data-category-content="schedule">
+          <div class="feature-item premium" id="dragDropFeature">
+            <div class="feature-info">
+              <h3>Schedule Drag & Drop <span class="badge">Premium</span></h3>
+              <p>Change schedule dates in month view</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="dragDrop" data-feature="dragDrop">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Kanban Type Filter</h3>
+              <p>Hide empty type columns in Kanban view when filtering</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="kanbanTypeFilter" data-feature="kanbanTypeFilter">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Auto Collapse Completed Groups</h3>
+              <p>Collapse 100% complete groups on page load</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Productivity Tools Category -->
+      <div class="feature-category">
+        <div class="category-header collapsed" data-category="productivity">
+          <span class="category-icon">⚡</span>
+          <span class="category-title">Productivity Tools</span>
+          <span class="category-count">7</span>
+          <span class="category-toggle">▼</span>
+        </div>
+        <div class="category-features collapsed" data-category-content="productivity">
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Text Formatter</h3>
+              <p>Rich text toolbar for budgets, logs & tasks</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="formatter" data-feature="formatter">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Quick Job Switcher</h3>
+              <p>Alt+J or J+S to open, type to search, Enter to select/close</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="quickJobSwitcher" data-feature="quickJobSwitcher">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Quick Notes</h3>
+              <p>Persistent notepad accessible from any page (Q+N)</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="quickNotes" data-feature="quickNotes">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item premium" id="previewModeFeature">
+            <div class="feature-info">
+              <h3>Preview Mode <span class="badge">Premium</span></h3>
+              <p>Click the preview button to see your formatted text rendered beautifully!</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="previewMode" data-feature="previewMode">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Freeze Header</h3>
+              <p>Keep job info and tabs visible while scrolling</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="freezeHeader" data-feature="freezeHeader">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Message Character Counter</h3>
+              <p>See character count in messages as you type</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="characterCounter" data-feature="characterCounter">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>PDF Markup Tools <span class="badge new">New</span></h3>
+              <p>Highlight, stamps, line, and eraser tools for PDFs</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="pdfMarkupTools" data-feature="pdfMarkupTools">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appearance & Themes Category -->
+      <div class="feature-category">
+        <div class="category-header collapsed" data-category="appearance">
+          <span class="category-icon">🎨</span>
+          <span class="category-title">Appearance & Themes</span>
+          <span class="category-count">4</span>
+          <span class="category-toggle">▼</span>
+        </div>
+        <div class="category-features collapsed" data-category-content="appearance">
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Contrast Fix</h3>
+              <p>Better text readability in schedule view</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Budget Hierarchy Shading</h3>
+              <p>Visual shading for nested budget groups</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item">
+            <div class="feature-info">
+              <h3>Dark Mode</h3>
+              <p>Dark theme for JobTread interface</p>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="darkMode" data-feature="darkMode">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="feature-item premium" id="rgbThemeFeature">
+            <div class="feature-info">
+              <h3>Custom Theme <span class="badge">Premium</span></h3>
+              <p>Create your own custom color theme</p>
+              <button class="customize-btn" id="customizeThemeBtn" style="display: none;">
+                <span>Customize</span>
+                <span class="arrow">▼</span>
+              </button>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Custom Theme Panel -->
+    <div class="theme-customization" id="themeCustomization" style="display: none;">
+      <div class="section-label">Theme Customization</div>
+
+      <div class="color-pickers">
+        <div class="color-group">
+          <label>Primary Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="primaryColorPicker" value="#3B82F6">
+              <span class="color-value" id="primaryColorValue">#3B82F6</span>
+            </div>
+            <div class="preview-box primary" id="previewPrimary">Primary</div>
+          </div>
+        </div>
+
+        <div class="color-group">
+          <label>Background Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="backgroundColorPicker" value="#F3E8FF">
+              <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
+            </div>
+            <div class="preview-box background" id="previewBackground">Background</div>
+          </div>
+        </div>
+
+        <div class="color-group">
+          <label>Text Color</label>
+          <div class="color-row">
+            <div class="color-input-wrapper">
+              <input type="color" id="textColorPicker" value="#1F1B29">
+              <span class="color-value" id="textColorValue">#1F1B29</span>
+            </div>
+            <div class="preview-box text" id="previewText">Text</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
+
+      <!-- Saved Themes -->
+      <div class="saved-themes">
+        <div class="preview-label">Saved Themes</div>
+        <div class="theme-slots">
+          <div class="theme-slot" data-slot="0">
+            <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
+            <div class="theme-colors">
+              <span class="color-dot" id="slot0Primary"></span>
+              <span class="color-dot" id="slot0Background"></span>
+              <span class="color-dot" id="slot0Text"></span>
+            </div>
+            <button class="save-theme-btn" data-slot="0">Save</button>
+            <button class="load-theme-btn" data-slot="0" style="display: none;">Load</button>
+          </div>
+          <div class="theme-slot" data-slot="1">
+            <input type="text" class="theme-name" id="themeName1" placeholder="Theme 2" maxlength="20">
+            <div class="theme-colors">
+              <span class="color-dot" id="slot1Primary"></span>
+              <span class="color-dot" id="slot1Background"></span>
+              <span class="color-dot" id="slot1Text"></span>
+            </div>
+            <button class="save-theme-btn" data-slot="1">Save</button>
+            <button class="load-theme-btn" data-slot="1" style="display: none;">Load</button>
+          </div>
+          <div class="theme-slot" data-slot="2">
+            <input type="text" class="theme-name" id="themeName2" placeholder="Theme 3" maxlength="20">
+            <div class="theme-colors">
+              <span class="color-dot" id="slot2Primary"></span>
+              <span class="color-dot" id="slot2Background"></span>
+              <span class="color-dot" id="slot2Text"></span>
+            </div>
+            <button class="save-theme-btn" data-slot="2">Save</button>
+            <button class="load-theme-btn" data-slot="2" style="display: none;">Load</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-section">
+      <button id="refreshBtn" class="btn-secondary">Refresh Current Tab</button>
+      <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <!-- License Section -->
+    <div class="license-section">
+      <div class="section-label">Premium License</div>
+
+      <div id="licenseStatus" class="license-status">
+        <p class="status-text"></p>
+      </div>
+
+      <div class="license-input">
+        <input type="text" id="licenseKey" placeholder="Enter license key">
+        <button id="verifyBtn" class="btn-verify">Verify</button>
+      </div>
+
+      <p class="license-link">
+        <a href="premium.jtpowertools.com" target="_blank">Purchase a license to share with your team!</a>
+      </p>
+    </div>
+
+    <!-- Footer Links -->
+    <div class="footer-section">
+      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version">📋 What's New</a>
+      <span class="footer-separator">•</span>
+      <a href="mailto:king0light.ai@gmail.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank">💬 Send Feedback</a>
+      <span class="footer-separator">•</span>
+      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank">👥 Join us on FB</a>
+    </div>
+  </div>
+
+  <script src="../services/license.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
