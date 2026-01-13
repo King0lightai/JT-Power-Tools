@@ -73,6 +73,7 @@ const defaultSettings = {
   characterCounter: false,
   kanbanTypeFilter: false,
   autoCollapseGroups: false,
+  pdfMarkupTools: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -183,6 +184,7 @@ async function loadSettings() {
     document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
     document.getElementById('kanbanTypeFilter').checked = settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false;
     document.getElementById('autoCollapseGroups').checked = settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false;
+    document.getElementById('pdfMarkupTools').checked = settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -293,6 +295,7 @@ async function getCurrentSettings() {
     characterCounter: document.getElementById('characterCounter').checked,
     kanbanTypeFilter: document.getElementById('kanbanTypeFilter').checked,
     autoCollapseGroups: document.getElementById('autoCollapseGroups').checked,
+    pdfMarkupTools: document.getElementById('pdfMarkupTools').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
   };
