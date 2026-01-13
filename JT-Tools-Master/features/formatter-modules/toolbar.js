@@ -108,6 +108,40 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Check if a field is a budget custom field (custom fields on the budget page)
+   * Budget custom fields should use floating expanded toolbar, not embedded compact toolbar
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isBudgetCustomField(field) {
+    if (!field) return false;
+
+    // Must be on the budget page
+    const onBudgetPage = window.location.pathname.endsWith('/budget');
+    if (!onBudgetPage) {
+      return false;
+    }
+
+    // Check for custom field form (rounded-sm border divide-y)
+    const customFieldForm = field.closest('form.rounded-sm');
+    if (customFieldForm && customFieldForm.classList.contains('border') &&
+        customFieldForm.classList.contains('divide-y')) {
+      return true;
+    }
+
+    // Check for custom fields with .font-bold sibling (field label)
+    const parent = field.parentElement;
+    if (parent) {
+      const boldSibling = parent.querySelector('.font-bold');
+      if (boldSibling) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Check if a field is inside a sidebar/panel (NOT a modal)
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
@@ -331,6 +365,13 @@ const FormatterToolbar = (() => {
     // Budget table uses the floating expanded toolbar exclusively
     if (isBudgetTableField(field)) {
       console.log('Formatter: Blocked embedded toolbar creation for budget table field');
+      return null;
+    }
+
+    // CRITICAL: Never create embedded toolbar for budget custom fields
+    // Budget custom fields use the floating expanded toolbar, like budget table fields
+    if (isBudgetCustomField(field)) {
+      console.log('Formatter: Blocked embedded toolbar creation for budget custom field');
       return null;
     }
 
@@ -1854,14 +1895,14 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
-    // Budget table fields (ALL fields, not just Description) get the EXPANDED FLOATING toolbar
+    // Budget table fields AND budget custom fields get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
-    const isBudgetField = isBudgetTableField(field);
+    const isBudgetField = isBudgetTableField(field) || isBudgetCustomField(field);
     console.log('>>> isBudgetField result:', isBudgetField);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
-      // This includes: sidebar fields, modal fields, Message fields, custom fields, etc.
+      // This includes: sidebar fields, modal fields, Message fields, etc.
       const embeddedToolbar = embedToolbarForField(field);
       if (embeddedToolbar) {
         // Hide any active floating toolbar
