@@ -96,6 +96,11 @@ const featureModules = {
     name: 'Auto-Collapse Full Groups',
     feature: () => window.AutoCollapseGroupsFeature,
     instance: null
+  },
+  pdfMarkupTools: {
+    name: 'PDF Markup Tools',
+    feature: () => window.PDFMarkupToolsFeature,
+    instance: null
   }
 };
 
@@ -108,6 +113,7 @@ let currentSettings = window.JTDefaults
       darkMode: false, rgbTheme: false, quickJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
+      pdfMarkupTools: true,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
