@@ -106,6 +106,7 @@ const PDFMarkupToolsFeature = (() => {
       /* PDF Markup Tools Enhancement Styles */
 
       /* ========== BASE STYLES (Light Mode) ========== */
+      /* Matches JobTread's native button styling */
       .jt-pdf-tool-btn {
         display: inline-block;
         vertical-align: bottom;
@@ -119,10 +120,13 @@ const PDFMarkupToolsFeature = (() => {
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         background-color: #fff;
         color: #4b5563;
-        border: 1px solid #e5e7eb;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
         text-align: center;
         flex-shrink: 0;
-        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        border-radius: 0.125rem;
       }
 
       .jt-pdf-tool-btn:hover {
@@ -133,6 +137,7 @@ const PDFMarkupToolsFeature = (() => {
         box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
       }
 
+      /* Active state matches JT's bg-gray-700 style */
       .jt-pdf-tool-btn.active {
         background-color: #374151;
         color: #fff;
