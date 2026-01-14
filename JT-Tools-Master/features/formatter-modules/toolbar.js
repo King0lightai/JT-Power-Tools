@@ -129,6 +129,12 @@ const FormatterToolbar = (() => {
       return true;
     }
 
+    // Check for custom fields inside a <label> element
+    // This is the primary pattern for custom fields in JobTread
+    if (field.closest('label')) {
+      return true;
+    }
+
     // Check for custom fields with .font-bold sibling (field label)
     const parent = field.parentElement;
     if (parent) {
