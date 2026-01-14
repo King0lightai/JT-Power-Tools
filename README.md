@@ -86,6 +86,10 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Click Quick Notes button in header or use keyboard shortcut
 - Press Escape to close editor or panel
 
+### ✏️ PDF Markup Tools
+- Stamp Selector for Text and Callout tools
+- Erease elements faster with the erease button!
+
 ### 🌙 Dark Mode
 - Beautiful dark theme for JobTread interface
 - Reduces eye strain during long work sessions
