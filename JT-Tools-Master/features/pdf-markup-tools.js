@@ -360,7 +360,7 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Create SVG icon for highlight tool
+   * Create SVG icon for highlight tool - simple filled rectangle
    */
   function createHighlightIcon() {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -370,20 +370,37 @@ const PDFMarkupToolsFeature = (() => {
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
-    svg.classList.add('jt-highlight-icon');
 
-    // Highlighter pen icon
-    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path1.setAttribute('d', 'M9 11 4 6l4-4 5 5');
-    svg.appendChild(path1);
+    // Simple rectangle with yellow fill to represent highlight
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', '3');
+    rect.setAttribute('y', '6');
+    rect.setAttribute('width', '18');
+    rect.setAttribute('height', '12');
+    rect.setAttribute('rx', '2');
+    rect.setAttribute('fill', '#fbbf24');
+    rect.setAttribute('fill-opacity', '0.5');
+    rect.setAttribute('stroke', '#f59e0b');
+    svg.appendChild(rect);
 
-    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path2.setAttribute('d', 'm9 11 4 4-8 8H2l1-9 6-3z');
-    svg.appendChild(path2);
+    // Horizontal lines to suggest text being highlighted
+    const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line1.setAttribute('x1', '6');
+    line1.setAttribute('y1', '10');
+    line1.setAttribute('x2', '18');
+    line1.setAttribute('y2', '10');
+    line1.setAttribute('stroke', '#92400e');
+    line1.setAttribute('stroke-width', '1.5');
+    svg.appendChild(line1);
 
-    const path3 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path3.setAttribute('d', 'm16 16 3-8 3 3-8 3');
-    svg.appendChild(path3);
+    const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line2.setAttribute('x1', '6');
+    line2.setAttribute('y1', '14');
+    line2.setAttribute('x2', '14');
+    line2.setAttribute('y2', '14');
+    line2.setAttribute('stroke', '#92400e');
+    line2.setAttribute('stroke-width', '1.5');
+    svg.appendChild(line2);
 
     return svg;
   }
@@ -887,158 +904,142 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Configure highlight settings in the options panel
-   * Step 1: Set line color to yellow and thickness to minimum
-   * Step 2: Set fill color to yellow
-   * Step 3: Set opacity to 50%
+   * JobTread Workflow:
+   * 1. Click LINE swatch → Opens color picker + thickness slider
+   * 2. Set yellow color, minimum thickness
+   * 3. Click FILL swatch (droplet icon) → Opens color picker immediately
+   * 4. Set yellow color
+   * 5. Click FILL swatch again → Shows opacity slider
+   * 6. Set opacity to 50%
    */
   function configureHighlightSettings() {
     console.log('PDF Markup Tools: Configuring highlight settings...');
 
-    // Find the options panel (z-50 popover that appears)
-    const optionsPanel = document.querySelector('.z-50.bg-white, .z-50 .bg-white');
-    if (!optionsPanel) {
-      console.log('PDF Markup Tools: Options panel not found');
-      showNotification('Options panel not found - set colors manually', 'info');
-      return;
-    }
+    // Find the line/fill button container
+    // Structure: div.flex.flex-col.space-y-1 containing two swatches
+    const swatchContainers = document.querySelectorAll('div.flex.flex-col.space-y-1');
+    let lineSwatchContainer = null;
 
-    // Find all color swatches in the panel
-    // They are small colored divs with cursor-pointer
-    const colorSwatches = optionsPanel.querySelectorAll('div.cursor-pointer[class*="w-7"][class*="h-7"]');
-    console.log(`PDF Markup Tools: Found ${colorSwatches.length} color swatches`);
+    for (const container of swatchContainers) {
+      // Line swatch has border-gray-300, fill swatch has droplet SVG
+      const lineSwatch = container.querySelector('div.w-7.h-7.border');
+      const fillSwatch = container.querySelector('div.w-7.h-7.flex.items-center svg path[d*="M12 22a7"]');
 
-    // Also look for the swatches by their container structure
-    const swatchContainers = optionsPanel.querySelectorAll('div.flex.items-center.justify-center.rounded-sm.cursor-pointer');
-    console.log(`PDF Markup Tools: Found ${swatchContainers.length} swatch containers`);
-
-    const allSwatches = [...colorSwatches, ...swatchContainers];
-
-    if (allSwatches.length >= 2) {
-      // First swatch is typically stroke/line color, second is fill color
-      const lineColorSwatch = allSwatches[0];
-      const fillColorSwatch = allSwatches[1];
-
-      // Step 1: Configure line color (yellow) and thickness (minimum)
-      console.log('PDF Markup Tools: Step 1 - Configuring line color...');
-      configureLineColor(lineColorSwatch, () => {
-        // Step 2: Configure fill color
-        console.log('PDF Markup Tools: Step 2 - Configuring fill color...');
-        setTimeout(() => {
-          configureFillColor(fillColorSwatch, () => {
-            // Step 3: Set opacity
-            console.log('PDF Markup Tools: Step 3 - Setting opacity...');
-            setTimeout(() => {
-              setHighlightOpacity();
-              showNotification('Highlight ready! Draw rectangles to highlight.');
-            }, 200);
-          });
-        }, 300);
-      });
-    } else {
-      console.log('PDF Markup Tools: Could not find enough color swatches');
-      showNotification('Could not auto-configure - set colors manually', 'info');
-    }
-  }
-
-  /**
-   * Configure line/stroke color to yellow and set thickness to minimum
-   */
-  function configureLineColor(swatch, callback) {
-    if (!swatch) {
-      callback && callback();
-      return;
-    }
-
-    // Click the swatch to open color picker
-    swatch.click();
-
-    setTimeout(() => {
-      // Find and set color input to yellow
-      const colorInput = document.querySelector('input[type="color"]');
-      if (colorInput) {
-        setColorInputValue(colorInput, '#FFFF00');
-        console.log('PDF Markup Tools: Line color set to yellow');
+      if (lineSwatch && fillSwatch) {
+        lineSwatchContainer = container;
+        break;
       }
-
-      // Find thickness/stroke width slider and set to minimum
-      const thicknessSlider = document.querySelector('input[type="range"][min="1"]');
-      if (thicknessSlider) {
-        setSliderToMinimum(thicknessSlider);
-        console.log('PDF Markup Tools: Line thickness set to minimum');
-      }
-
-      // Close the color picker by clicking elsewhere
-      setTimeout(() => {
-        // Press Escape or click outside to close
-        document.body.click();
-        setTimeout(() => {
-          callback && callback();
-        }, 100);
-      }, 150);
-    }, 200);
-  }
-
-  /**
-   * Configure fill color to yellow
-   */
-  function configureFillColor(swatch, callback) {
-    if (!swatch) {
-      callback && callback();
-      return;
     }
 
-    // Click the swatch to open color picker
-    swatch.click();
+    if (!lineSwatchContainer) {
+      // Fallback: try to find swatches directly
+      console.log('PDF Markup Tools: Looking for swatches with fallback selectors...');
+      const allSwatches = document.querySelectorAll('div.w-7.h-7.cursor-pointer, div.w-7.h-7.border.cursor-pointer');
 
-    setTimeout(() => {
-      // Find and set color input to yellow
-      const colorInput = document.querySelector('input[type="color"]');
-      if (colorInput) {
-        setColorInputValue(colorInput, '#FFFF00');
-        console.log('PDF Markup Tools: Fill color set to yellow');
-      }
-
-      // Close the color picker
-      setTimeout(() => {
-        document.body.click();
-        setTimeout(() => {
-          callback && callback();
-        }, 100);
-      }, 150);
-    }, 200);
-  }
-
-  /**
-   * Set the highlight opacity to 50% (5 out of 10)
-   */
-  function setHighlightOpacity() {
-    // Find opacity slider - typically a range input with max around 10
-    const opacitySliders = document.querySelectorAll('input[type="range"]');
-
-    for (const slider of opacitySliders) {
-      const max = parseInt(slider.getAttribute('max')) || 10;
-      const min = parseInt(slider.getAttribute('min')) || 1;
-
-      // Opacity slider typically has max=10, different from thickness slider
-      if (max === 10 && min === 1) {
-        // Set to 50% (5 out of 10)
-        setSliderValue(slider, 5);
-        console.log('PDF Markup Tools: Opacity set to 50%');
+      if (allSwatches.length >= 2) {
+        configureWithSwatches(allSwatches[0], allSwatches[1]);
         return;
       }
+
+      console.log('PDF Markup Tools: Could not find line/fill swatches');
+      showNotification('Could not find color controls - set colors manually', 'info');
+      return;
     }
 
-    console.log('PDF Markup Tools: Could not find opacity slider');
+    // Get the line swatch (first child with border) and fill swatch (has droplet)
+    const lineSwatch = lineSwatchContainer.querySelector('div.w-7.h-7.border');
+    const fillSwatchContainer = lineSwatchContainer.querySelector('div.w-7.h-7.flex.items-center');
+
+    if (!lineSwatch || !fillSwatchContainer) {
+      console.log('PDF Markup Tools: Could not find individual swatches');
+      showNotification('Could not find color controls', 'info');
+      return;
+    }
+
+    configureWithSwatches(lineSwatch, fillSwatchContainer);
   }
 
   /**
-   * Set a slider to its minimum value
+   * Configure highlight with found swatches
    */
-  function setSliderToMinimum(slider) {
-    if (!slider) return;
+  function configureWithSwatches(lineSwatch, fillSwatch) {
+    // Step 1: Click LINE swatch to open color picker + thickness
+    console.log('PDF Markup Tools: Step 1 - Clicking line swatch...');
+    lineSwatch.click();
 
-    const min = parseInt(slider.getAttribute('min')) || 1;
-    setSliderValue(slider, min);
+    setTimeout(() => {
+      // Find the popover that appeared (z-50 with bg-gray-700)
+      const linePopover = document.querySelector('div.z-50 div.bg-gray-700');
+
+      if (linePopover) {
+        // Find color input (hidden, type="color")
+        const colorInput = linePopover.querySelector('input[type="color"]') ||
+                          document.querySelector('div.z-50 input[type="color"]');
+        if (colorInput) {
+          setColorInputValue(colorInput, '#FFFF00');
+          console.log('PDF Markup Tools: Line color set to yellow');
+        }
+
+        // Find thickness slider (range input)
+        const thicknessSlider = linePopover.querySelector('input[type="range"]');
+        if (thicknessSlider) {
+          setSliderValue(thicknessSlider, 1); // Minimum thickness
+          console.log('PDF Markup Tools: Line thickness set to minimum');
+        }
+      } else {
+        // Try finding color input anywhere in z-50
+        const colorInput = document.querySelector('div.z-50 input[type="color"]');
+        if (colorInput) {
+          setColorInputValue(colorInput, '#FFFF00');
+        }
+      }
+
+      // Step 2: Close line popover and click FILL swatch
+      setTimeout(() => {
+        console.log('PDF Markup Tools: Step 2 - Clicking fill swatch...');
+
+        // Click elsewhere to close line popover first
+        document.body.click();
+
+        setTimeout(() => {
+          // Now click fill swatch - this opens color picker immediately
+          fillSwatch.click();
+
+          setTimeout(() => {
+            // Find color input in the new popover
+            const fillColorInput = document.querySelector('div.z-50 input[type="color"]');
+            if (fillColorInput) {
+              setColorInputValue(fillColorInput, '#FFFF00');
+              console.log('PDF Markup Tools: Fill color set to yellow');
+            }
+
+            // Step 3: Click fill swatch AGAIN to access opacity slider
+            setTimeout(() => {
+              console.log('PDF Markup Tools: Step 3 - Clicking fill swatch again for opacity...');
+              fillSwatch.click();
+
+              setTimeout(() => {
+                // Find opacity slider in the new popover (bg-gray-600)
+                const opacityPopover = document.querySelector('div.z-50 div.bg-gray-600');
+                const opacitySlider = opacityPopover?.querySelector('input[type="range"]') ||
+                                     document.querySelector('div.z-50 input[type="range"]');
+
+                if (opacitySlider) {
+                  setSliderValue(opacitySlider, 5); // 50% opacity (5 out of 10)
+                  console.log('PDF Markup Tools: Opacity set to 50%');
+                }
+
+                // Close the popover
+                setTimeout(() => {
+                  document.body.click();
+                  showNotification('Highlight ready! Draw rectangles to highlight.');
+                }, 150);
+              }, 200);
+            }, 200);
+          }, 200);
+        }, 150);
+      }, 200);
+    }, 250);
   }
 
   /**
