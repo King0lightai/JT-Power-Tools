@@ -110,7 +110,7 @@ const FormatterToolbar = (() => {
   /**
    * Check if a field is a budget custom field (custom fields on the budget page)
    * Budget custom fields should use floating expanded toolbar, not embedded compact toolbar
-   * This includes ANY field on the budget page that is NOT a budget table description field
+   * This does NOT include fields in sidebars (like Cost Item Details) - those get embedded toolbars
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
@@ -126,6 +126,19 @@ const FormatterToolbar = (() => {
     // If it's a budget table description field, it's not a "custom" field
     // (budget table fields are handled separately by isBudgetTableField)
     if (isBudgetTableField(field)) {
+      return false;
+    }
+
+    // If the field is inside a sidebar panel (like Cost Item Details),
+    // it should get the embedded toolbar like regular sidebars
+    if (isSidebarField(field)) {
+      return false;
+    }
+
+    // Check for sidebar-like containers: sticky panels with overflow-y-auto
+    // This catches the Cost Item Details sidebar and similar panels
+    const stickyPanel = field.closest('.overflow-y-auto.sticky, .overflow-y-auto.overscroll-contain');
+    if (stickyPanel) {
       return false;
     }
 
