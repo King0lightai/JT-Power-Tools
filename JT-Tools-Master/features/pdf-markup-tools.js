@@ -928,31 +928,27 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Configure highlight with found swatches
+   * Workflow:
+   * 1. Click line swatch → set yellow color + minimum thickness → click line swatch to close
+   * 2. Click fill swatch → set yellow color
+   * 3. Click fill swatch again → set 50% opacity → close
    */
   function configureWithSwatches(lineSwatch, fillSwatch) {
-    // Step 1: Click LINE swatch to open color picker + thickness
+    // Step 1: Click LINE swatch to set yellow color and minimum thickness
     console.log('PDF Markup Tools: Step 1 - Clicking line swatch...');
     lineSwatch.click();
 
     setTimeout(() => {
-      // Find the popover that appeared - try multiple selectors
-      let linePopover = document.querySelector('div.z-50 div.bg-gray-700') ||
-                       document.querySelector('div.z-50 div.bg-gray-600') ||
-                       document.querySelector('div.z-50[style*="position"]');
-
-      console.log('PDF Markup Tools: Line popover found:', !!linePopover);
-
-      // Find color input (hidden, type="color") - search broadly
-      const colorInput = document.querySelector('div.z-50 input[type="color"]') ||
-                        document.querySelector('input[type="color"]');
-      if (colorInput) {
-        setColorInputValue(colorInput, '#FFFF00');
+      // Set line color to yellow
+      const lineColorInput = document.querySelector('div.z-50 input[type="color"]');
+      if (lineColorInput) {
+        setColorInputValue(lineColorInput, '#FFFF00');
         console.log('PDF Markup Tools: Line color set to yellow');
       } else {
-        console.log('PDF Markup Tools: No color input found for line');
+        console.log('PDF Markup Tools: No line color input found');
       }
 
-      // Find thickness slider (range input)
+      // Set thickness to minimum
       const thicknessSlider = document.querySelector('div.z-50 input[type="range"]');
       if (thicknessSlider) {
         setSliderValue(thicknessSlider, 1); // Minimum thickness
@@ -961,20 +957,18 @@ const PDFMarkupToolsFeature = (() => {
         console.log('PDF Markup Tools: No thickness slider found');
       }
 
-      // Step 2: Close line popover and click FILL swatch
+      // Step 2: Click line swatch AGAIN to close the popup (it covers fill swatch)
       setTimeout(() => {
-        console.log('PDF Markup Tools: Step 2 - Closing line popover, clicking fill swatch...');
+        console.log('PDF Markup Tools: Step 2 - Clicking line swatch again to close popup...');
+        lineSwatch.click();
 
-        // Click elsewhere to close line popover first
-        document.body.click();
-
+        // Step 3: Now click FILL swatch to set yellow color
         setTimeout(() => {
-          // Now click fill swatch - this opens color picker immediately
+          console.log('PDF Markup Tools: Step 3 - Clicking fill swatch for color...');
           fillSwatch.click();
-          console.log('PDF Markup Tools: Fill swatch clicked');
 
           setTimeout(() => {
-            // Find color input in the new popover
+            // Find color input in the fill popover
             const fillColorInput = document.querySelector('div.z-50 input[type="color"]');
             if (fillColorInput) {
               setColorInputValue(fillColorInput, '#FFFF00');
@@ -983,13 +977,13 @@ const PDFMarkupToolsFeature = (() => {
               console.log('PDF Markup Tools: No fill color input found');
             }
 
-            // Step 3: Click fill swatch AGAIN to access opacity slider
+            // Step 4: Click fill swatch AGAIN to access opacity slider
             setTimeout(() => {
-              console.log('PDF Markup Tools: Step 3 - Clicking fill swatch again for opacity...');
+              console.log('PDF Markup Tools: Step 4 - Clicking fill swatch again for opacity...');
               fillSwatch.click();
 
               setTimeout(() => {
-                // Find opacity slider in the new popover - try multiple selectors
+                // Find opacity slider in the new popover
                 const opacitySlider = document.querySelector('div.z-50 input[type="range"]');
 
                 if (opacitySlider) {
@@ -999,15 +993,16 @@ const PDFMarkupToolsFeature = (() => {
                   console.log('PDF Markup Tools: No opacity slider found');
                 }
 
-                // Close the popover
+                // Step 5: Close the popover by clicking fill swatch again
                 setTimeout(() => {
-                  document.body.click();
+                  console.log('PDF Markup Tools: Step 5 - Closing opacity popup...');
+                  fillSwatch.click();
                   showNotification('Highlight ready! Draw rectangles to highlight.');
                 }, 200);
               }, 300);
             }, 300);
           }, 300);
-        }, 200);
+        }, 300);
       }, 300);
     }, 350);
   }
