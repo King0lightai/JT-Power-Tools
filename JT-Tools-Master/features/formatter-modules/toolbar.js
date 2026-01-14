@@ -908,9 +908,13 @@ const FormatterToolbar = (() => {
       return;
     }
 
-    // CRITICAL: Custom fields (fields inside <label> elements) should NEVER use sticky positioning
-    // They should always stay embedded in normal document flow, locked in under the field label
-    if (field.closest('label')) {
+    // Check if this is a sidebar field FIRST - sidebar fields get sticky positioning
+    // even if they're inside <label> elements (like Cost Item Details sidebar)
+    const isSidebar = isSidebarField(field);
+
+    // Custom fields (fields inside <label> elements) should NOT use sticky positioning
+    // UNLESS they are in a sidebar panel - sidebar fields always get sticky behavior
+    if (field.closest('label') && !isSidebar) {
       // Mark this toolbar as a custom field toolbar so it's never processed for sticky positioning
       toolbar.dataset.customField = 'true';
       // Use !important to override CSS .jt-toolbar-sticky-active { position: fixed !important; }
@@ -937,8 +941,7 @@ const FormatterToolbar = (() => {
       return;
     }
 
-    // Check if this is a sidebar field - use sidebar container for width constraints
-    const isSidebar = isSidebarField(field);
+    // Get sidebar container for width constraints (isSidebar already checked above)
     const sidebarContainer = isSidebar ? findSidebarContainer(field) : null;
 
     // For non-sidebar fields, try to find a containing column (job overview columns, etc.)
