@@ -244,8 +244,26 @@ const PDFMarkupToolsFeature = (() => {
       }
 
       /* ========== DARK MODE STYLES ========== */
-      /* Note: PDF toolbar buttons don't need dark mode overrides since the PDF toolbar
-         is always dark (bg-gray-800) and base styles are already designed for dark bg */
+      /* Vertical toolbar buttons need dark styling in dark mode */
+      body.jt-dark-mode .jt-pdf-tool-btn {
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn:hover {
+        background-color: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn.active {
+        background-color: #6b7280;
+        color: #fff;
+        border-color: #6b7280;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn.active:hover {
+        background-color: #9ca3af;
+      }
 
       body.jt-dark-mode .jt-pdf-notification {
         background-color: #1e40af !important;
