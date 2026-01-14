@@ -97,12 +97,15 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Inject CSS styles for our new tools
+   * Includes dark mode and RGB theme compatibility
    */
   function injectCSS() {
     if (styleElement) return;
 
     const css = `
       /* PDF Markup Tools Enhancement Styles */
+
+      /* ========== BASE STYLES (Light Mode) ========== */
       .jt-pdf-tool-btn {
         display: inline-block;
         vertical-align: bottom;
@@ -119,6 +122,7 @@ const PDFMarkupToolsFeature = (() => {
         border: 1px solid #e5e7eb;
         text-align: center;
         flex-shrink: 0;
+        transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
       }
 
       .jt-pdf-tool-btn:hover {
@@ -199,13 +203,160 @@ const PDFMarkupToolsFeature = (() => {
       .jt-pdf-notification {
         transition: all 0.3s ease-out;
       }
+
+      /* Stamp quick-select base styles */
+      .jt-stamp-quick-select {
+        background-color: #fff;
+        border-color: #e5e7eb;
+      }
+
+      .jt-stamp-btn {
+        background-color: #fff;
+        color: #374151;
+        border-color: #d1d5db;
+      }
+
+      .jt-stamp-btn:hover {
+        background-color: #f3f4f6;
+      }
+
+      .jt-stamp-tab {
+        background-color: #fff;
+        color: #374151;
+        border-color: #d1d5db;
+      }
+
+      .jt-stamp-tab.active {
+        background-color: #3b82f6;
+        color: #fff;
+        border-color: #3b82f6;
+      }
+
+      /* ========== DARK MODE STYLES ========== */
+      body.jt-dark-mode .jt-pdf-tool-btn {
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn:hover {
+        background-color: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn.active {
+        background-color: #60a5fa;
+        color: #1f2937;
+        border-color: #60a5fa;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn.active:hover {
+        background-color: #93c5fd;
+      }
+
+      body.jt-dark-mode .jt-tool-separator {
+        background: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-notification {
+        background-color: #1e40af !important;
+      }
+
+      body.jt-dark-mode .jt-pdf-notification.error {
+        background-color: #991b1b !important;
+      }
+
+      /* Dark mode stamp quick-select */
+      body.jt-dark-mode .jt-stamp-quick-select {
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
+      }
+
+      body.jt-dark-mode .jt-stamp-btn {
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
+      }
+
+      body.jt-dark-mode .jt-stamp-btn:hover {
+        background-color: #4b5563 !important;
+      }
+
+      body.jt-dark-mode .jt-stamp-tab {
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
+      }
+
+      body.jt-dark-mode .jt-stamp-tab.active {
+        background-color: #60a5fa !important;
+        color: #1f2937 !important;
+        border-color: #60a5fa !important;
+      }
+
+      /* ========== RGB/CUSTOM THEME STYLES ========== */
+      body.jt-custom-theme .jt-pdf-tool-btn {
+        background-color: var(--jt-theme-background, #fff);
+        color: var(--jt-theme-text, #4b5563);
+        border-color: var(--jt-theme-border, #e5e7eb);
+      }
+
+      body.jt-custom-theme .jt-pdf-tool-btn:hover {
+        background-color: var(--jt-theme-background-subtle, #f9fafb);
+      }
+
+      body.jt-custom-theme .jt-pdf-tool-btn.active {
+        background-color: var(--jt-theme-primary, #3b82f6);
+        color: var(--jt-theme-primary-text, #fff);
+        border-color: var(--jt-theme-primary, #3b82f6);
+      }
+
+      body.jt-custom-theme .jt-pdf-tool-btn.active:hover {
+        background-color: var(--jt-theme-primary-hover, #2563eb);
+      }
+
+      body.jt-custom-theme .jt-tool-separator {
+        background: var(--jt-theme-border, #e5e7eb);
+      }
+
+      body.jt-custom-theme .jt-pdf-notification {
+        background-color: var(--jt-theme-primary, #3b82f6) !important;
+        color: var(--jt-theme-primary-text, #fff) !important;
+      }
+
+      /* RGB theme stamp quick-select */
+      body.jt-custom-theme .jt-stamp-quick-select {
+        background-color: var(--jt-theme-background, #fff) !important;
+        border-color: var(--jt-theme-border, #e5e7eb) !important;
+      }
+
+      body.jt-custom-theme .jt-stamp-btn {
+        background-color: var(--jt-theme-background, #fff) !important;
+        color: var(--jt-theme-text, #374151) !important;
+        border-color: var(--jt-theme-border, #d1d5db) !important;
+      }
+
+      body.jt-custom-theme .jt-stamp-btn:hover {
+        background-color: var(--jt-theme-background-subtle, #f3f4f6) !important;
+      }
+
+      body.jt-custom-theme .jt-stamp-tab {
+        background-color: var(--jt-theme-background, #fff) !important;
+        color: var(--jt-theme-text, #374151) !important;
+        border-color: var(--jt-theme-border, #d1d5db) !important;
+      }
+
+      body.jt-custom-theme .jt-stamp-tab.active {
+        background-color: var(--jt-theme-primary, #3b82f6) !important;
+        color: var(--jt-theme-primary-text, #fff) !important;
+        border-color: var(--jt-theme-primary, #3b82f6) !important;
+      }
     `;
 
     styleElement = document.createElement('style');
     styleElement.textContent = css;
     styleElement.id = 'jt-pdf-markup-tools-styles';
     document.head.appendChild(styleElement);
-    console.log('PDF Markup Tools: CSS injected');
+    console.log('PDF Markup Tools: CSS injected (with dark mode & RGB theme support)');
   }
 
   /**
@@ -474,135 +625,8 @@ const PDFMarkupToolsFeature = (() => {
     return true;
   }
 
-  /**
-   * Set highlight presets - configures stroke color, fill color, and opacity for highlighting
-   * The more options panel should already be open when this is called
-   *
-   * Workflow: click color picker -> select color -> click color picker again -> adjust opacity
-   */
-  function setHighlightPresets() {
-    console.log('PDF Markup Tools: Setting highlight presets...');
-
-    // Find all color swatch elements - they are clickable divs with colored backgrounds
-    // Look for elements that look like color swatches (small, square, with background color)
-    const allSwatches = document.querySelectorAll('div.cursor-pointer[class*="w-7"][class*="h-7"]');
-    console.log(`PDF Markup Tools: Found ${allSwatches.length} potential color swatches`);
-
-    // Also try to find swatches by their appearance characteristics
-    if (allSwatches.length === 0) {
-      // Try broader search for color picker triggers
-      const swatchCandidates = document.querySelectorAll('div.flex.items-center.justify-center.rounded-sm.cursor-pointer');
-      console.log(`PDF Markup Tools: Found ${swatchCandidates.length} swatch candidates`);
-
-      if (swatchCandidates.length > 0) {
-        setColorOnFirstSwatch(swatchCandidates[0]);
-        return;
-      }
-    } else {
-      setColorOnFirstSwatch(allSwatches[0]);
-      return;
-    }
-
-    // Fallback: look for any element that might open a color picker
-    const colorTriggers = document.querySelectorAll('[class*="color"], [class*="swatch"]');
-    console.log(`PDF Markup Tools: Found ${colorTriggers.length} color triggers via fallback`);
-
-    if (colorTriggers.length > 0) {
-      setColorOnFirstSwatch(colorTriggers[0]);
-    } else {
-      console.log('PDF Markup Tools: Could not find color swatches - please set color manually');
-      showNotification('Set color to yellow manually in options panel', 'info');
-    }
-  }
-
-  /**
-   * Set yellow color on a swatch element
-   * Workflow: click swatch -> set color input -> click swatch again -> set opacity
-   */
-  function setColorOnFirstSwatch(swatch) {
-    if (!swatch) return;
-
-    console.log('PDF Markup Tools: Clicking swatch to open color picker...');
-    swatch.click();
-
-    // Wait for color picker dropdown to open
-    setTimeout(() => {
-      // Look for color input in the dropdown
-      const colorInput = document.querySelector('input[type="color"]');
-
-      if (colorInput) {
-        console.log('PDF Markup Tools: Found color input, setting to yellow...');
-        setColorInputValue(colorInput, '#FFFF00');
-
-        // Now click the swatch again to access opacity slider
-        setTimeout(() => {
-          console.log('PDF Markup Tools: Clicking swatch again for opacity...');
-          swatch.click();
-
-          setTimeout(() => {
-            // Find and set opacity slider
-            const opacitySlider = document.querySelector('input[type="range"]');
-            if (opacitySlider) {
-              console.log('PDF Markup Tools: Found opacity slider, setting to 30%...');
-              setOpacitySliderValue(opacitySlider, 3); // 3 out of 10 = 30%
-            } else {
-              console.log('PDF Markup Tools: Opacity slider not found');
-            }
-
-            // Close the dropdown
-            setTimeout(() => {
-              // Click elsewhere to close
-              const optionsPanel = document.querySelector('.z-50');
-              if (optionsPanel) {
-                // Click outside the panel
-                document.body.click();
-              }
-              console.log('PDF Markup Tools: Highlight presets applied');
-            }, 100);
-          }, 200);
-        }, 150);
-      } else {
-        console.log('PDF Markup Tools: Color input not found in dropdown');
-
-        // Try to find it in the entire document
-        const anyColorInput = document.querySelector('input[type="color"]');
-        if (anyColorInput) {
-          setColorInputValue(anyColorInput, '#FFFF00');
-        }
-      }
-    }, 300);
-  }
-
-  /**
-   * Set opacity slider value (generic version)
-   */
-  function setOpacitySliderValue(slider, value) {
-    if (!slider) return;
-
-    // Get min/max from slider attributes
-    const min = parseInt(slider.getAttribute('min')) || 0;
-    const max = parseInt(slider.getAttribute('max')) || 10;
-
-    // Clamp value to range
-    const clampedValue = Math.max(min, Math.min(max, value));
-
-    // Set the value using native setter
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      'value'
-    ).set;
-
-    nativeInputValueSetter.call(slider, clampedValue);
-
-    // Dispatch events
-    const inputEvent = new Event('input', { bubbles: true });
-    slider.dispatchEvent(inputEvent);
-
-    const changeEvent = new Event('change', { bubbles: true });
-    slider.dispatchEvent(changeEvent);
-
-    console.log(`PDF Markup Tools: Set slider to ${clampedValue} (range ${min}-${max})`);
-  }
+  // Note: Old setHighlightPresets() and setColorOnFirstSwatch() functions removed
+  // Replaced by new configureHighlightSettings() workflow with proper line/fill/opacity control
 
   /**
    * Set the value of a color input and trigger React change events
@@ -628,50 +652,8 @@ const PDFMarkupToolsFeature = (() => {
     console.log(`PDF Markup Tools: Set color to ${hexColor}`);
   }
 
-  /**
-   * Set the opacity slider value
-   */
-  function setOpacitySlider(value) {
-    // Find the opacity slider (range input with min=1, max=10)
-    const opacitySlider = document.querySelector('input[type="range"][min="1"][max="10"]');
-
-    if (opacitySlider) {
-      // Set the value using native setter
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value'
-      ).set;
-
-      nativeInputValueSetter.call(opacitySlider, value);
-
-      // Dispatch events
-      const inputEvent = new Event('input', { bubbles: true });
-      opacitySlider.dispatchEvent(inputEvent);
-
-      const changeEvent = new Event('change', { bubbles: true });
-      opacitySlider.dispatchEvent(changeEvent);
-
-      console.log(`PDF Markup Tools: Set opacity to ${value}/10`);
-    } else {
-      console.log('PDF Markup Tools: Opacity slider not found');
-    }
-  }
-
-  /**
-   * Open the "more options" panel and set highlight presets
-   */
-  function openMoreOptionsAndSetPresets() {
-    const buttons = findJobTreadButtons();
-    if (buttons && buttons.more) {
-      console.log('PDF Markup Tools: Clicking more options button');
-      buttons.more.click();
-
-      // Wait for the options panel to appear
-      setTimeout(() => {
-        setHighlightPresets();
-      }, 200);
-    }
-  }
+  // Note: Old setOpacitySlider() and openMoreOptionsAndSetPresets() functions removed
+  // Replaced by setSliderValue() and configureHighlightSettings()
 
   /**
    * Find and click JobTread's color picker to set a specific color
@@ -782,20 +764,45 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Show a notification to the user
+   * Theme-aware - respects dark mode and RGB theme settings
    */
   function showNotification(message, type = 'info') {
     console.log(`PDF Markup Tools: ${message}`);
 
+    // Detect current theme for fallback colors
+    const isDarkMode = document.body.classList.contains('jt-dark-mode');
+    const isCustomTheme = document.body.classList.contains('jt-custom-theme');
+
+    // Get theme-appropriate colors
+    let bgColor, textColor;
+    if (type === 'error') {
+      bgColor = isDarkMode ? '#991b1b' : '#ef4444';
+      textColor = 'white';
+    } else {
+      // Info/default - use theme primary if available
+      if (isCustomTheme) {
+        // CSS will handle via .jt-pdf-notification class
+        bgColor = ''; // Let CSS handle it
+        textColor = '';
+      } else if (isDarkMode) {
+        bgColor = '#1e40af';
+        textColor = 'white';
+      } else {
+        bgColor = '#3b82f6';
+        textColor = 'white';
+      }
+    }
+
     // Create a simple toast notification
     const toast = document.createElement('div');
-    toast.className = 'jt-pdf-notification';
+    toast.className = 'jt-pdf-notification' + (type === 'error' ? ' error' : '');
     toast.textContent = message;
-    toast.style.cssText = `
+
+    // Base styles - colors applied via CSS classes for theme support
+    let styleString = `
       position: fixed;
       bottom: 20px;
       right: 20px;
-      background: ${type === 'error' ? '#ef4444' : '#3b82f6'};
-      color: white;
       padding: 12px 20px;
       border-radius: 6px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -805,6 +812,16 @@ const PDFMarkupToolsFeature = (() => {
       max-width: 300px;
       animation: slideIn 0.3s ease-out;
     `;
+
+    // Apply inline colors only if not using custom theme (CSS handles it)
+    if (!isCustomTheme && bgColor) {
+      styleString += `background: ${bgColor}; color: ${textColor};`;
+    } else if (!isCustomTheme) {
+      // Fallback for non-custom theme
+      styleString += `background: ${isDarkMode ? '#1e40af' : '#3b82f6'}; color: white;`;
+    }
+
+    toast.style.cssText = styleString;
 
     document.body.appendChild(toast);
 
@@ -816,7 +833,8 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Handle highlight tool click - activates JobTread's rectangle tool with yellow color
+   * Handle highlight tool click - activates JobTread's rectangle tool with yellow highlight presets
+   * Workflow: Rectangle tool → Line color (yellow, min thickness) → Fill (yellow, 50% opacity)
    */
   function handleHighlightClick() {
     console.log('PDF Markup Tools: Highlight tool clicked');
@@ -835,19 +853,23 @@ const PDFMarkupToolsFeature = (() => {
         deactivateOtherTools('highlight');
         highlightBtn.classList.add('active');
 
-        // Open more options and set highlight presets (yellow color + low opacity)
+        // Open more options and configure highlight presets
         setTimeout(() => {
-          // Click the more options button to reveal the options panel
           const buttons = findJobTreadButtons();
           if (buttons && buttons.more) {
+            console.log('PDF Markup Tools: Opening more options panel...');
             buttons.more.click();
-            // Wait for panel to open, then set presets
-            setTimeout(() => setHighlightPresets(), 200);
-          }
-        }, 100);
 
-        // Show user notification
-        showNotification('Highlight mode active - Draw rectangles to highlight areas');
+            // Wait for panel to open, then configure highlight settings
+            setTimeout(() => {
+              configureHighlightSettings();
+            }, 300);
+          } else {
+            showNotification('Could not find options panel - set colors manually', 'info');
+          }
+        }, 150);
+
+        showNotification('Highlight mode - configuring yellow highlight...');
       } else {
         console.error('PDF Markup Tools: Failed to activate highlight tool');
         showNotification('Could not activate highlight tool', 'error');
@@ -864,11 +886,186 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
+   * Configure highlight settings in the options panel
+   * Step 1: Set line color to yellow and thickness to minimum
+   * Step 2: Set fill color to yellow
+   * Step 3: Set opacity to 50%
+   */
+  function configureHighlightSettings() {
+    console.log('PDF Markup Tools: Configuring highlight settings...');
+
+    // Find the options panel (z-50 popover that appears)
+    const optionsPanel = document.querySelector('.z-50.bg-white, .z-50 .bg-white');
+    if (!optionsPanel) {
+      console.log('PDF Markup Tools: Options panel not found');
+      showNotification('Options panel not found - set colors manually', 'info');
+      return;
+    }
+
+    // Find all color swatches in the panel
+    // They are small colored divs with cursor-pointer
+    const colorSwatches = optionsPanel.querySelectorAll('div.cursor-pointer[class*="w-7"][class*="h-7"]');
+    console.log(`PDF Markup Tools: Found ${colorSwatches.length} color swatches`);
+
+    // Also look for the swatches by their container structure
+    const swatchContainers = optionsPanel.querySelectorAll('div.flex.items-center.justify-center.rounded-sm.cursor-pointer');
+    console.log(`PDF Markup Tools: Found ${swatchContainers.length} swatch containers`);
+
+    const allSwatches = [...colorSwatches, ...swatchContainers];
+
+    if (allSwatches.length >= 2) {
+      // First swatch is typically stroke/line color, second is fill color
+      const lineColorSwatch = allSwatches[0];
+      const fillColorSwatch = allSwatches[1];
+
+      // Step 1: Configure line color (yellow) and thickness (minimum)
+      console.log('PDF Markup Tools: Step 1 - Configuring line color...');
+      configureLineColor(lineColorSwatch, () => {
+        // Step 2: Configure fill color
+        console.log('PDF Markup Tools: Step 2 - Configuring fill color...');
+        setTimeout(() => {
+          configureFillColor(fillColorSwatch, () => {
+            // Step 3: Set opacity
+            console.log('PDF Markup Tools: Step 3 - Setting opacity...');
+            setTimeout(() => {
+              setHighlightOpacity();
+              showNotification('Highlight ready! Draw rectangles to highlight.');
+            }, 200);
+          });
+        }, 300);
+      });
+    } else {
+      console.log('PDF Markup Tools: Could not find enough color swatches');
+      showNotification('Could not auto-configure - set colors manually', 'info');
+    }
+  }
+
+  /**
+   * Configure line/stroke color to yellow and set thickness to minimum
+   */
+  function configureLineColor(swatch, callback) {
+    if (!swatch) {
+      callback && callback();
+      return;
+    }
+
+    // Click the swatch to open color picker
+    swatch.click();
+
+    setTimeout(() => {
+      // Find and set color input to yellow
+      const colorInput = document.querySelector('input[type="color"]');
+      if (colorInput) {
+        setColorInputValue(colorInput, '#FFFF00');
+        console.log('PDF Markup Tools: Line color set to yellow');
+      }
+
+      // Find thickness/stroke width slider and set to minimum
+      const thicknessSlider = document.querySelector('input[type="range"][min="1"]');
+      if (thicknessSlider) {
+        setSliderToMinimum(thicknessSlider);
+        console.log('PDF Markup Tools: Line thickness set to minimum');
+      }
+
+      // Close the color picker by clicking elsewhere
+      setTimeout(() => {
+        // Press Escape or click outside to close
+        document.body.click();
+        setTimeout(() => {
+          callback && callback();
+        }, 100);
+      }, 150);
+    }, 200);
+  }
+
+  /**
+   * Configure fill color to yellow
+   */
+  function configureFillColor(swatch, callback) {
+    if (!swatch) {
+      callback && callback();
+      return;
+    }
+
+    // Click the swatch to open color picker
+    swatch.click();
+
+    setTimeout(() => {
+      // Find and set color input to yellow
+      const colorInput = document.querySelector('input[type="color"]');
+      if (colorInput) {
+        setColorInputValue(colorInput, '#FFFF00');
+        console.log('PDF Markup Tools: Fill color set to yellow');
+      }
+
+      // Close the color picker
+      setTimeout(() => {
+        document.body.click();
+        setTimeout(() => {
+          callback && callback();
+        }, 100);
+      }, 150);
+    }, 200);
+  }
+
+  /**
+   * Set the highlight opacity to 50% (5 out of 10)
+   */
+  function setHighlightOpacity() {
+    // Find opacity slider - typically a range input with max around 10
+    const opacitySliders = document.querySelectorAll('input[type="range"]');
+
+    for (const slider of opacitySliders) {
+      const max = parseInt(slider.getAttribute('max')) || 10;
+      const min = parseInt(slider.getAttribute('min')) || 1;
+
+      // Opacity slider typically has max=10, different from thickness slider
+      if (max === 10 && min === 1) {
+        // Set to 50% (5 out of 10)
+        setSliderValue(slider, 5);
+        console.log('PDF Markup Tools: Opacity set to 50%');
+        return;
+      }
+    }
+
+    console.log('PDF Markup Tools: Could not find opacity slider');
+  }
+
+  /**
+   * Set a slider to its minimum value
+   */
+  function setSliderToMinimum(slider) {
+    if (!slider) return;
+
+    const min = parseInt(slider.getAttribute('min')) || 1;
+    setSliderValue(slider, min);
+  }
+
+  /**
+   * Set a slider to a specific value
+   */
+  function setSliderValue(slider, value) {
+    if (!slider) return;
+
+    // Set the value using native setter
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value'
+    ).set;
+
+    nativeInputValueSetter.call(slider, value);
+
+    // Dispatch events to trigger React's change detection
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    slider.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  /**
    * Deactivate all other JT tools (visual state only)
    * JobTread's buttons manage their own state
    */
   function deactivateOtherTools(exceptTool) {
-    const tools = ['highlight', 'eraser'];
+    const tools = ['highlight', 'eraser', 'line'];
 
     tools.forEach(toolName => {
       if (toolName === exceptTool) return;
@@ -876,6 +1073,11 @@ const PDFMarkupToolsFeature = (() => {
       const btn = document.querySelector(`[data-jt-tool="${toolName}"]`);
       if (btn && btn.classList.contains('active')) {
         btn.classList.remove('active');
+
+        // If deactivating eraser, also disable delete-on-click mode
+        if (toolName === 'eraser') {
+          disableDeleteOnClick();
+        }
       }
     });
   }
@@ -1097,13 +1299,12 @@ const PDFMarkupToolsFeature = (() => {
     separator.className = 'jt-tool-separator';
 
     // Create our tools
-    // NOTE: Highlight button hidden for now - needs more work on color picker automation
-    // const highlightBtn = createToolButton(
-    //   createHighlightIcon(),
-    //   'Highlight Tool (JT Enhanced)',
-    //   handleHighlightClick
-    // );
-    // highlightBtn.setAttribute('data-jt-tool', 'highlight');
+    const highlightBtn = createToolButton(
+      createHighlightIcon(),
+      'Highlight Tool (JT Enhanced) - Yellow rectangle with 50% opacity',
+      handleHighlightClick
+    );
+    highlightBtn.setAttribute('data-jt-tool', 'highlight');
 
     const eraserBtn = createToolButton(
       createEraserIcon(),
@@ -1114,17 +1315,17 @@ const PDFMarkupToolsFeature = (() => {
 
     // Append tools to toolbar
     toolContainer.appendChild(separator);
-    // toolContainer.appendChild(highlightBtn); // Hidden for now
+    toolContainer.appendChild(highlightBtn);
     toolContainer.appendChild(eraserBtn);
 
     // Track injected elements
     toolbarEnhancements.set(toolbar, {
       separator,
-      // highlightBtn, // Hidden for now
+      highlightBtn,
       eraserBtn
     });
 
-    injectedTools.push({ toolbar, separator, eraserBtn });
+    injectedTools.push({ toolbar, separator, highlightBtn, eraserBtn });
 
     console.log('PDF Markup Tools: Tools injected successfully');
   }
@@ -1158,8 +1359,9 @@ const PDFMarkupToolsFeature = (() => {
    * Remove all injected tools
    */
   function removeInjectedTools() {
-    injectedTools.forEach(({ separator, eraserBtn }) => {
+    injectedTools.forEach(({ separator, highlightBtn, eraserBtn }) => {
       separator?.remove();
+      highlightBtn?.remove();
       eraserBtn?.remove();
     });
 
@@ -1170,6 +1372,7 @@ const PDFMarkupToolsFeature = (() => {
   /**
    * Inject stamp quick-select buttons into JobTread's "Input Text" modal
    * This is called when the modal appears
+   * Supports dark mode and RGB theme via CSS classes
    */
   function injectStampButtonsIntoModal(modal) {
     // Check if we already injected
@@ -1179,12 +1382,13 @@ const PDFMarkupToolsFeature = (() => {
     const textarea = modal.querySelector('textarea');
     if (!textarea) return;
 
-    // Create stamp quick-select container
+    // Create stamp quick-select container - uses .jt-stamp-quick-select for theme styling
     const container = document.createElement('div');
     container.className = 'jt-stamp-quick-select';
     container.style.cssText = `
       padding: 8px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
@@ -1224,26 +1428,24 @@ const PDFMarkupToolsFeature = (() => {
       stamps.forEach(stamp => {
         const btn = document.createElement('button');
         btn.type = 'button';
+        // Use CSS class for theme-aware styling
+        btn.className = 'jt-stamp-btn';
         btn.style.cssText = `
           padding: 4px 8px;
           font-size: 11px;
-          border: 1px solid #d1d5db;
+          border-width: 1px;
+          border-style: solid;
           border-radius: 4px;
-          background: white;
           cursor: pointer;
           display: flex;
           align-items: center;
           gap: 4px;
           white-space: nowrap;
+          transition: background-color 0.15s ease;
         `;
         btn.innerHTML = `<span style="font-size: 14px;">${stamp.icon}</span> ${stamp.copyText || stamp.name.replace(/_/g, ' ')}`;
 
-        btn.addEventListener('mouseenter', () => {
-          btn.style.background = '#f3f4f6';
-        });
-        btn.addEventListener('mouseleave', () => {
-          btn.style.background = 'white';
-        });
+        // Hover is handled by CSS now via .jt-stamp-btn:hover
 
         btn.addEventListener('click', (e) => {
           e.preventDefault();
@@ -1298,18 +1500,20 @@ const PDFMarkupToolsFeature = (() => {
       });
     }
 
-    categories.forEach(cat => {
+    categories.forEach((cat, index) => {
       const tab = document.createElement('button');
       tab.type = 'button';
       tab.textContent = cat.label;
+      // Use CSS class for theme-aware styling
+      tab.className = 'jt-stamp-tab' + (cat.key === activeCategory ? ' active' : '');
       tab.style.cssText = `
         padding: 4px 8px;
         font-size: 11px;
-        border: 1px solid #d1d5db;
+        border-width: 1px;
+        border-style: solid;
         border-radius: 4px;
         cursor: pointer;
-        background: ${cat.key === activeCategory ? '#3b82f6' : 'white'};
-        color: ${cat.key === activeCategory ? 'white' : '#374151'};
+        transition: background-color 0.15s ease, color 0.15s ease;
       `;
 
       tab.addEventListener('click', (e) => {
@@ -1317,11 +1521,10 @@ const PDFMarkupToolsFeature = (() => {
         e.stopPropagation();
         activeCategory = cat.key;
 
-        // Update tab styles
+        // Update tab classes for theme-aware styling
         tabsContainer.querySelectorAll('button').forEach((t, i) => {
           const isActive = categories[i].key === activeCategory;
-          t.style.background = isActive ? '#3b82f6' : 'white';
-          t.style.color = isActive ? 'white' : '#374151';
+          t.className = 'jt-stamp-tab' + (isActive ? ' active' : '');
         });
 
         renderStamps(activeCategory);
@@ -1342,7 +1545,7 @@ const PDFMarkupToolsFeature = (() => {
     // Render initial stamps
     renderStamps(activeCategory);
 
-    console.log('PDF Markup Tools: Injected stamp buttons into Input Text modal');
+    console.log('PDF Markup Tools: Injected stamp buttons into Input Text modal (theme-aware)');
   }
 
   /**
