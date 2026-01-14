@@ -106,7 +106,7 @@ const PDFMarkupToolsFeature = (() => {
       /* PDF Markup Tools Enhancement Styles */
 
       /* ========== BASE STYLES ========== */
-      /* PDF toolbar has dark bg (gray-800), so buttons need to match */
+      /* Vertical toolbar buttons - match JT's outlined button style */
       .jt-pdf-tool-btn {
         display: inline-block;
         vertical-align: bottom;
@@ -117,32 +117,41 @@ const PDFMarkupToolsFeature = (() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         padding: 0.25rem 0.5rem;
-        background-color: transparent;
-        color: #9ca3af;
-        border: none;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         text-align: center;
         flex-shrink: 0;
+        /* Inactive state - white bg with gray text */
+        background-color: #fff;
+        color: #4b5563;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
         border-radius: 0.125rem;
-        margin-top: 0.5rem;
       }
 
       .jt-pdf-tool-btn:hover {
-        background-color: #4b5563;
-        color: #fff;
+        background-color: #f9fafb;
       }
 
       .jt-pdf-tool-btn:active {
-        opacity: 0.9;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
       }
 
-      /* Active state - matches JT's active button style */
+      /* Active state - dark bg with white text */
       .jt-pdf-tool-btn.active {
         background-color: #374151;
         color: #fff;
+        border-color: #374151;
       }
 
       .jt-pdf-tool-btn.active:hover {
-        background-color: #4b5563;
+        background-color: #1f2937;
+      }
+
+      /* Horizontal toolbar buttons (file viewer style) */
+      .jt-pdf-tool-btn-horizontal.active {
+        background-color: #4b5563 !important;
       }
 
       .jt-pdf-tool-btn svg {
@@ -393,7 +402,7 @@ const PDFMarkupToolsFeature = (() => {
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('title', tooltip);
-    btn.className = 'jt-pdf-tool-btn mt-2';
+    btn.className = 'jt-pdf-tool-btn';
 
     btn.appendChild(icon);
 
@@ -928,31 +937,27 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Configure highlight with found swatches
+   * Workflow:
+   * 1. Click line swatch → set yellow color + minimum thickness → click line swatch to close
+   * 2. Click fill swatch → set yellow color
+   * 3. Click fill swatch again → set 50% opacity → close
    */
   function configureWithSwatches(lineSwatch, fillSwatch) {
-    // Step 1: Click LINE swatch to open color picker + thickness
+    // Step 1: Click LINE swatch to set yellow color and minimum thickness
     console.log('PDF Markup Tools: Step 1 - Clicking line swatch...');
     lineSwatch.click();
 
     setTimeout(() => {
-      // Find the popover that appeared - try multiple selectors
-      let linePopover = document.querySelector('div.z-50 div.bg-gray-700') ||
-                       document.querySelector('div.z-50 div.bg-gray-600') ||
-                       document.querySelector('div.z-50[style*="position"]');
-
-      console.log('PDF Markup Tools: Line popover found:', !!linePopover);
-
-      // Find color input (hidden, type="color") - search broadly
-      const colorInput = document.querySelector('div.z-50 input[type="color"]') ||
-                        document.querySelector('input[type="color"]');
-      if (colorInput) {
-        setColorInputValue(colorInput, '#FFFF00');
+      // Set line color to yellow
+      const lineColorInput = document.querySelector('div.z-50 input[type="color"]');
+      if (lineColorInput) {
+        setColorInputValue(lineColorInput, '#FFFF00');
         console.log('PDF Markup Tools: Line color set to yellow');
       } else {
-        console.log('PDF Markup Tools: No color input found for line');
+        console.log('PDF Markup Tools: No line color input found');
       }
 
-      // Find thickness slider (range input)
+      // Set thickness to minimum
       const thicknessSlider = document.querySelector('div.z-50 input[type="range"]');
       if (thicknessSlider) {
         setSliderValue(thicknessSlider, 1); // Minimum thickness
@@ -961,20 +966,18 @@ const PDFMarkupToolsFeature = (() => {
         console.log('PDF Markup Tools: No thickness slider found');
       }
 
-      // Step 2: Close line popover and click FILL swatch
+      // Step 2: Click line swatch AGAIN to close the popup (it covers fill swatch)
       setTimeout(() => {
-        console.log('PDF Markup Tools: Step 2 - Closing line popover, clicking fill swatch...');
+        console.log('PDF Markup Tools: Step 2 - Clicking line swatch again to close popup...');
+        lineSwatch.click();
 
-        // Click elsewhere to close line popover first
-        document.body.click();
-
+        // Step 3: Now click FILL swatch to set yellow color
         setTimeout(() => {
-          // Now click fill swatch - this opens color picker immediately
+          console.log('PDF Markup Tools: Step 3 - Clicking fill swatch for color...');
           fillSwatch.click();
-          console.log('PDF Markup Tools: Fill swatch clicked');
 
           setTimeout(() => {
-            // Find color input in the new popover
+            // Find color input in the fill popover
             const fillColorInput = document.querySelector('div.z-50 input[type="color"]');
             if (fillColorInput) {
               setColorInputValue(fillColorInput, '#FFFF00');
@@ -983,13 +986,13 @@ const PDFMarkupToolsFeature = (() => {
               console.log('PDF Markup Tools: No fill color input found');
             }
 
-            // Step 3: Click fill swatch AGAIN to access opacity slider
+            // Step 4: Click fill swatch AGAIN to access opacity slider
             setTimeout(() => {
-              console.log('PDF Markup Tools: Step 3 - Clicking fill swatch again for opacity...');
+              console.log('PDF Markup Tools: Step 4 - Clicking fill swatch again for opacity...');
               fillSwatch.click();
 
               setTimeout(() => {
-                // Find opacity slider in the new popover - try multiple selectors
+                // Find opacity slider in the new popover
                 const opacitySlider = document.querySelector('div.z-50 input[type="range"]');
 
                 if (opacitySlider) {
@@ -999,15 +1002,16 @@ const PDFMarkupToolsFeature = (() => {
                   console.log('PDF Markup Tools: No opacity slider found');
                 }
 
-                // Close the popover
+                // Step 5: Close the popover by clicking fill swatch again
                 setTimeout(() => {
-                  document.body.click();
+                  console.log('PDF Markup Tools: Step 5 - Closing opacity popup...');
+                  fillSwatch.click();
                   showNotification('Highlight ready! Draw rectangles to highlight.');
                 }, 200);
               }, 300);
             }, 300);
           }, 300);
-        }, 200);
+        }, 300);
       }, 300);
     }, 350);
   }
@@ -1250,18 +1254,57 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Inject tools into the PDF toolbar
+   * Create a tool button for horizontal toolbar (file viewer style)
    */
-  function injectTools(toolbar) {
+  function createHorizontalToolButton(icon, tooltip, onClick, shortcutNum) {
+    const btn = document.createElement('div');
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('title', tooltip);
+    btn.className = 'jt-pdf-tool-btn-horizontal inline-block align-bottom relative cursor-pointer px-4 py-1 text-center text-lg w-full text-white hover:bg-gray-700';
+
+    // Create inner container with relative positioning for shortcut number
+    const inner = document.createElement('div');
+    inner.className = 'relative';
+    inner.appendChild(icon);
+
+    // Add shortcut number if provided
+    if (shortcutNum) {
+      const shortcut = document.createElement('span');
+      shortcut.className = 'absolute bottom-0 right-0 text-xs text-gray-500';
+      shortcut.textContent = shortcutNum;
+      inner.appendChild(shortcut);
+    }
+
+    btn.appendChild(inner);
+
+    // Add click handler
+    btn.addEventListener('click', onClick);
+
+    // Add keyboard support
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick(e);
+      }
+    });
+
+    return btn;
+  }
+
+  /**
+   * Inject tools into the vertical PDF toolbar (sidebar style)
+   */
+  function injectToolsVertical(toolbar) {
     if (!toolbar) return;
     if (toolbarEnhancements.has(toolbar)) return; // Already injected
 
-    console.log('PDF Markup Tools: Injecting tools into toolbar');
+    console.log('PDF Markup Tools: Injecting tools into vertical toolbar');
 
     // Find the container where tools are added
     const toolContainer = toolbar.querySelector('.relative.grow > .absolute.inset-0 > .flex.flex-col');
     if (!toolContainer) {
-      console.warn('PDF Markup Tools: Could not find tool container');
+      console.warn('PDF Markup Tools: Could not find vertical tool container');
       return;
     }
 
@@ -1298,32 +1341,82 @@ const PDFMarkupToolsFeature = (() => {
 
     injectedTools.push({ toolbar, separator, highlightBtn, eraserBtn });
 
-    console.log('PDF Markup Tools: Tools injected successfully');
+    console.log('PDF Markup Tools: Vertical tools injected successfully');
+  }
+
+  /**
+   * Inject tools into the horizontal PDF toolbar (file viewer style)
+   */
+  function injectToolsHorizontal(toolbar) {
+    if (!toolbar) return;
+    if (toolbarEnhancements.has(toolbar)) return; // Already injected
+
+    console.log('PDF Markup Tools: Injecting tools into horizontal toolbar');
+
+    // The horizontal toolbar is the flex container with the tool buttons
+    // We need to append our buttons to the end of this container
+
+    // Create our tools with horizontal styling
+    const highlightBtn = createHorizontalToolButton(
+      createHighlightIcon(),
+      'Highlight Tool (JT Enhanced) - Yellow rectangle with 50% opacity',
+      handleHighlightClick,
+      'H'
+    );
+    highlightBtn.setAttribute('data-jt-tool', 'highlight');
+
+    const eraserBtn = createHorizontalToolButton(
+      createEraserIcon(),
+      'Eraser Tool (JT Enhanced)',
+      handleEraserClick,
+      'E'
+    );
+    eraserBtn.setAttribute('data-jt-tool', 'eraser');
+
+    // Append tools to toolbar
+    toolbar.appendChild(highlightBtn);
+    toolbar.appendChild(eraserBtn);
+
+    // Track injected elements
+    toolbarEnhancements.set(toolbar, {
+      highlightBtn,
+      eraserBtn
+    });
+
+    injectedTools.push({ toolbar, highlightBtn, eraserBtn });
+
+    console.log('PDF Markup Tools: Horizontal tools injected successfully');
   }
 
   /**
    * Find and enhance PDF toolbars on the page
    */
   function findAndEnhanceToolbars() {
-    // Look for PDF toolbar containers - multiple possible structures
-    // Structure 1: <div class="flex relative shadow-line-left p-1">
-    const toolbars1 = document.querySelectorAll('.flex.relative.shadow-line-left.p-1');
+    // Structure 1: Vertical sidebar toolbar (PDF annotation mode)
+    // <div class="flex relative shadow-line-left p-1">
+    const verticalToolbars = document.querySelectorAll('.flex.relative.shadow-line-left.p-1');
 
-    // Structure 2: File viewer toolbar with bg-gray-800
-    // <div class="flex flex-wrap w-full right-0"> containing <div class="w-full bg-gray-800">
-    const toolbars2 = document.querySelectorAll('.bg-gray-800 .relative .absolute.inset-0.flex');
-
-    const allToolbars = [...toolbars1, ...toolbars2];
-
-    console.log(`PDF Markup Tools: Found ${allToolbars.length} potential PDF toolbars`);
-
-    allToolbars.forEach(toolbar => {
-      // Verify it's actually a PDF toolbar by checking for tool buttons
+    verticalToolbars.forEach(toolbar => {
       const hasTools = toolbar.querySelector('[role="button"] svg');
       if (hasTools) {
-        injectTools(toolbar);
+        injectToolsVertical(toolbar);
       }
     });
+
+    // Structure 2: Horizontal file viewer toolbar
+    // <div class="w-full bg-gray-800"> containing <div class="absolute inset-0 flex">
+    const horizontalContainers = document.querySelectorAll('.w-full.bg-gray-800 .relative .absolute.inset-0.flex');
+
+    horizontalContainers.forEach(toolbar => {
+      // Verify it's a tool toolbar by checking for numbered shortcuts (1, 2, 3, etc.)
+      const hasNumberedTools = toolbar.querySelector('.text-xs.text-gray-500');
+      if (hasNumberedTools) {
+        injectToolsHorizontal(toolbar);
+      }
+    });
+
+    const totalFound = verticalToolbars.length + horizontalContainers.length;
+    console.log(`PDF Markup Tools: Found ${totalFound} potential PDF toolbars`);
   }
 
   /**
