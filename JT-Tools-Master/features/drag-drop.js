@@ -1,93 +1,43 @@
-// JobTread Schedule Drag & Drop Feature Module (Refactored)
-// Main orchestrator - coordinates all drag-drop modules
+// JobTread Schedule Feature Module (Refactored)
+// Main orchestrator - coordinates task completion modules
+// NOTE: Drag & drop functionality DISABLED as of Jan 2026 - JobTread now has native drag & drop
+// This module now only handles: Task Completion checkboxes & Action Items completion
 
 const DragDropFeature = (() => {
-  // Shared state
-  const state = {
-    draggedElement: null,
-    draggedItemData: null,
-    sourceDateInfo: null,
-    sourceRow: null, // Track source row for availability view restriction
-    shiftKeyAtDragStart: false,
-    altKeyAtDragStart: false,
-    isDateChangeInProgress: false
-  };
-
   // Feature state
   let observer = null;
   let isActive = false;
-  let eventHandlers = null;
 
   /**
-   * Initialize the drag & drop feature
+   * Initialize the schedule feature (task completion only - drag & drop disabled)
    */
   function init() {
     if (isActive) {
-      console.log('DragDrop: Already initialized');
+      console.log('ScheduleFeature: Already initialized');
       return;
     }
 
-    console.log('DragDrop: Initializing...');
+    console.log('ScheduleFeature: Initializing (task completion only, drag & drop disabled)...');
     isActive = true;
 
-    // Inject weekend styling
-    if (window.WeekendUtils) {
-      window.WeekendUtils.injectWeekendCSS();
-    }
+    // NOTE: Drag & drop disabled - JobTread now has native drag & drop
+    // Weekend styling and event handlers no longer needed
 
-    // Create event handlers with access to shared state
-    if (window.DragDropEventHandlers && window.DateChanger) {
-      eventHandlers = window.DragDropEventHandlers.createHandlers(
-        state,
-        (element, newDateNumber, targetCell, dateInfo, sourceDateInfo, callback, changeEndDate) => {
-          // Set flag to prevent observer re-entry during date changes
-          state.isDateChangeInProgress = true;
-          console.log('DragDrop: Set isDateChangeInProgress = true');
-
-          window.DateChanger.attemptDateChange(
-            element,
-            newDateNumber,
-            targetCell,
-            dateInfo,
-            sourceDateInfo,
-            () => {
-              // Callback when date change is complete
-              state.isDateChangeInProgress = false;
-              console.log('DragDrop: Set isDateChangeInProgress = false');
-
-              // Force re-initialization to ensure items are draggable again
-              console.log('DragDrop: Re-initializing drag and drop after date change');
-              setTimeout(() => {
-                initDragAndDrop();
-              }, 100);
-            },
-            changeEndDate  // Pass Alt key state to change End date
-          );
-        }
-      );
-    }
-
-    // Initial setup
+    // Initial setup - only task completion features
     setTimeout(() => {
-      initDragAndDrop();
+      initTaskCompletion();
 
       // Initialize Action Items Completion
       if (window.ActionItemsCompletion) {
         window.ActionItemsCompletion.init();
       }
 
-      console.log('DragDrop: Feature loaded');
+      console.log('ScheduleFeature: Feature loaded (task completion only)');
     }, 1000);
 
-    // Watch for DOM changes and re-initialize (with error handling)
+    // Watch for DOM changes and re-initialize checkboxes (with error handling)
     observer = new MutationObserver((mutations) => {
       try {
-        // CRITICAL: Don't re-initialize while date change is in progress
-        if (state.isDateChangeInProgress) {
-          console.log('DragDrop: MutationObserver - Skipping re-init, date change in progress');
-          return;
-        }
-
         let shouldReinit = false;
 
         mutations.forEach(mutation => {
@@ -97,10 +47,10 @@ const DragDropFeature = (() => {
         });
 
         if (shouldReinit) {
-          setTimeout(initDragAndDrop, 500);
+          setTimeout(initTaskCompletion, 500);
         }
       } catch (error) {
-        console.error('DragDrop: Error in MutationObserver callback:', error);
+        console.error('ScheduleFeature: Error in MutationObserver callback:', error);
       }
     });
 
@@ -113,15 +63,15 @@ const DragDropFeature = (() => {
 
 
   /**
-   * Cleanup the drag & drop feature
+   * Cleanup the schedule feature
    */
   function cleanup() {
     if (!isActive) {
-      console.log('DragDrop: Not active, nothing to cleanup');
+      console.log('ScheduleFeature: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('DragDrop: Cleaning up...');
+    console.log('ScheduleFeature: Cleaning up...');
     isActive = false;
 
     // Disconnect observer
@@ -130,10 +80,7 @@ const DragDropFeature = (() => {
       observer = null;
     }
 
-    // Cleanup drag & drop UI
-    if (window.UIUtils) {
-      window.UIUtils.cleanupDragDrop();
-    }
+    // NOTE: Drag & drop UI cleanup no longer needed - feature disabled
 
     // Cleanup task completion checkboxes
     if (window.TaskCompletion) {
@@ -145,25 +92,14 @@ const DragDropFeature = (() => {
       window.ActionItemsCompletion.cleanup();
     }
 
-    // Remove weekend CSS
-    if (window.WeekendUtils) {
-      window.WeekendUtils.removeWeekendCSS();
-    }
-
-    console.log('DragDrop: Cleanup complete');
+    console.log('ScheduleFeature: Cleanup complete');
   }
 
   /**
-   * Initialize drag and drop on the current page
+   * Initialize task completion checkboxes on the current page
+   * NOTE: Drag & drop disabled - only task completion is active
    */
-  function initDragAndDrop() {
-    if (!window.UIUtils || !eventHandlers) {
-      console.error('DragDrop: Required modules not loaded');
-      return;
-    }
-
-    window.UIUtils.initDragAndDrop(eventHandlers);
-
+  function initTaskCompletion() {
     // Add completion checkboxes to task cards
     if (window.TaskCompletion) {
       window.TaskCompletion.addCompletionCheckboxes();
