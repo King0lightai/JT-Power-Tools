@@ -145,6 +145,11 @@ const PDFMarkupToolsFeature = (() => {
         background-color: #4b5563;
       }
 
+      /* Horizontal toolbar buttons (file viewer style) */
+      .jt-pdf-tool-btn-horizontal.active {
+        background-color: #4b5563 !important;
+      }
+
       .jt-pdf-tool-btn svg {
         display: inline-block;
         overflow: visible;
@@ -1245,18 +1250,57 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Inject tools into the PDF toolbar
+   * Create a tool button for horizontal toolbar (file viewer style)
    */
-  function injectTools(toolbar) {
+  function createHorizontalToolButton(icon, tooltip, onClick, shortcutNum) {
+    const btn = document.createElement('div');
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('title', tooltip);
+    btn.className = 'jt-pdf-tool-btn-horizontal inline-block align-bottom relative cursor-pointer px-4 py-1 text-center text-lg w-full text-white hover:bg-gray-700';
+
+    // Create inner container with relative positioning for shortcut number
+    const inner = document.createElement('div');
+    inner.className = 'relative';
+    inner.appendChild(icon);
+
+    // Add shortcut number if provided
+    if (shortcutNum) {
+      const shortcut = document.createElement('span');
+      shortcut.className = 'absolute bottom-0 right-0 text-xs text-gray-500';
+      shortcut.textContent = shortcutNum;
+      inner.appendChild(shortcut);
+    }
+
+    btn.appendChild(inner);
+
+    // Add click handler
+    btn.addEventListener('click', onClick);
+
+    // Add keyboard support
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onClick(e);
+      }
+    });
+
+    return btn;
+  }
+
+  /**
+   * Inject tools into the vertical PDF toolbar (sidebar style)
+   */
+  function injectToolsVertical(toolbar) {
     if (!toolbar) return;
     if (toolbarEnhancements.has(toolbar)) return; // Already injected
 
-    console.log('PDF Markup Tools: Injecting tools into toolbar');
+    console.log('PDF Markup Tools: Injecting tools into vertical toolbar');
 
     // Find the container where tools are added
     const toolContainer = toolbar.querySelector('.relative.grow > .absolute.inset-0 > .flex.flex-col');
     if (!toolContainer) {
-      console.warn('PDF Markup Tools: Could not find tool container');
+      console.warn('PDF Markup Tools: Could not find vertical tool container');
       return;
     }
 
@@ -1293,32 +1337,82 @@ const PDFMarkupToolsFeature = (() => {
 
     injectedTools.push({ toolbar, separator, highlightBtn, eraserBtn });
 
-    console.log('PDF Markup Tools: Tools injected successfully');
+    console.log('PDF Markup Tools: Vertical tools injected successfully');
+  }
+
+  /**
+   * Inject tools into the horizontal PDF toolbar (file viewer style)
+   */
+  function injectToolsHorizontal(toolbar) {
+    if (!toolbar) return;
+    if (toolbarEnhancements.has(toolbar)) return; // Already injected
+
+    console.log('PDF Markup Tools: Injecting tools into horizontal toolbar');
+
+    // The horizontal toolbar is the flex container with the tool buttons
+    // We need to append our buttons to the end of this container
+
+    // Create our tools with horizontal styling
+    const highlightBtn = createHorizontalToolButton(
+      createHighlightIcon(),
+      'Highlight Tool (JT Enhanced) - Yellow rectangle with 50% opacity',
+      handleHighlightClick,
+      'H'
+    );
+    highlightBtn.setAttribute('data-jt-tool', 'highlight');
+
+    const eraserBtn = createHorizontalToolButton(
+      createEraserIcon(),
+      'Eraser Tool (JT Enhanced)',
+      handleEraserClick,
+      'E'
+    );
+    eraserBtn.setAttribute('data-jt-tool', 'eraser');
+
+    // Append tools to toolbar
+    toolbar.appendChild(highlightBtn);
+    toolbar.appendChild(eraserBtn);
+
+    // Track injected elements
+    toolbarEnhancements.set(toolbar, {
+      highlightBtn,
+      eraserBtn
+    });
+
+    injectedTools.push({ toolbar, highlightBtn, eraserBtn });
+
+    console.log('PDF Markup Tools: Horizontal tools injected successfully');
   }
 
   /**
    * Find and enhance PDF toolbars on the page
    */
   function findAndEnhanceToolbars() {
-    // Look for PDF toolbar containers - multiple possible structures
-    // Structure 1: <div class="flex relative shadow-line-left p-1">
-    const toolbars1 = document.querySelectorAll('.flex.relative.shadow-line-left.p-1');
+    // Structure 1: Vertical sidebar toolbar (PDF annotation mode)
+    // <div class="flex relative shadow-line-left p-1">
+    const verticalToolbars = document.querySelectorAll('.flex.relative.shadow-line-left.p-1');
 
-    // Structure 2: File viewer toolbar with bg-gray-800
-    // <div class="flex flex-wrap w-full right-0"> containing <div class="w-full bg-gray-800">
-    const toolbars2 = document.querySelectorAll('.bg-gray-800 .relative .absolute.inset-0.flex');
-
-    const allToolbars = [...toolbars1, ...toolbars2];
-
-    console.log(`PDF Markup Tools: Found ${allToolbars.length} potential PDF toolbars`);
-
-    allToolbars.forEach(toolbar => {
-      // Verify it's actually a PDF toolbar by checking for tool buttons
+    verticalToolbars.forEach(toolbar => {
       const hasTools = toolbar.querySelector('[role="button"] svg');
       if (hasTools) {
-        injectTools(toolbar);
+        injectToolsVertical(toolbar);
       }
     });
+
+    // Structure 2: Horizontal file viewer toolbar
+    // <div class="w-full bg-gray-800"> containing <div class="absolute inset-0 flex">
+    const horizontalContainers = document.querySelectorAll('.w-full.bg-gray-800 .relative .absolute.inset-0.flex');
+
+    horizontalContainers.forEach(toolbar => {
+      // Verify it's a tool toolbar by checking for numbered shortcuts (1, 2, 3, etc.)
+      const hasNumberedTools = toolbar.querySelector('.text-xs.text-gray-500');
+      if (hasNumberedTools) {
+        injectToolsHorizontal(toolbar);
+      }
+    });
+
+    const totalFound = verticalToolbars.length + horizontalContainers.length;
+    console.log(`PDF Markup Tools: Found ${totalFound} potential PDF toolbars`);
   }
 
   /**
