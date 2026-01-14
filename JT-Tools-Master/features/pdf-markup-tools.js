@@ -206,32 +206,32 @@ const PDFMarkupToolsFeature = (() => {
         transition: all 0.3s ease-out;
       }
 
-      /* Stamp quick-select base styles */
+      /* Stamp quick-select base styles - dark theme to match modal */
       .jt-stamp-quick-select {
-        background-color: #fff;
-        border-color: #e5e7eb;
+        background-color: #1f2937;
+        border-color: #374151;
       }
 
       .jt-stamp-btn {
-        background-color: #fff;
-        color: #374151;
-        border-color: #d1d5db;
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
       }
 
       .jt-stamp-btn:hover {
-        background-color: #f3f4f6;
+        background-color: #4b5563;
       }
 
       .jt-stamp-tab {
-        background-color: #fff;
-        color: #374151;
-        border-color: #d1d5db;
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
       }
 
       .jt-stamp-tab.active {
-        background-color: #3b82f6;
+        background-color: #6b7280;
         color: #fff;
-        border-color: #3b82f6;
+        border-color: #6b7280;
       }
 
       /* ========== DARK MODE STYLES ========== */
@@ -246,33 +246,8 @@ const PDFMarkupToolsFeature = (() => {
         background-color: #991b1b !important;
       }
 
-      /* Dark mode stamp quick-select */
-      body.jt-dark-mode .jt-stamp-quick-select {
-        background-color: #1f2937 !important;
-        border-color: #374151 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-btn {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-btn:hover {
-        background-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-tab {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-tab.active {
-        background-color: #60a5fa !important;
-        color: #1f2937 !important;
-        border-color: #60a5fa !important;
-      }
+      /* Dark mode stamp quick-select - modal is always dark, so no overrides needed */
+      /* Base styles already use dark theme colors */
 
       /* ========== RGB/CUSTOM THEME STYLES ========== */
       body.jt-custom-theme .jt-pdf-tool-btn {
@@ -304,33 +279,8 @@ const PDFMarkupToolsFeature = (() => {
         color: var(--jt-theme-primary-text, #fff) !important;
       }
 
-      /* RGB theme stamp quick-select */
-      body.jt-custom-theme .jt-stamp-quick-select {
-        background-color: var(--jt-theme-background, #fff) !important;
-        border-color: var(--jt-theme-border, #e5e7eb) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-btn {
-        background-color: var(--jt-theme-background, #fff) !important;
-        color: var(--jt-theme-text, #374151) !important;
-        border-color: var(--jt-theme-border, #d1d5db) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-btn:hover {
-        background-color: var(--jt-theme-background-subtle, #f3f4f6) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-tab {
-        background-color: var(--jt-theme-background, #fff) !important;
-        color: var(--jt-theme-text, #374151) !important;
-        border-color: var(--jt-theme-border, #d1d5db) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-tab.active {
-        background-color: var(--jt-theme-primary, #3b82f6) !important;
-        color: var(--jt-theme-primary-text, #fff) !important;
-        border-color: var(--jt-theme-primary, #3b82f6) !important;
-      }
+      /* RGB theme stamp quick-select - modal is always dark, so no RGB overrides needed */
+      /* Base styles already use dark theme colors that work for all themes */
     `;
 
     styleElement = document.createElement('style');
