@@ -106,7 +106,7 @@ const PDFMarkupToolsFeature = (() => {
       /* PDF Markup Tools Enhancement Styles */
 
       /* ========== BASE STYLES ========== */
-      /* PDF toolbar has dark bg (gray-800), so buttons need to match */
+      /* Vertical toolbar buttons - match JT's outlined button style */
       .jt-pdf-tool-btn {
         display: inline-block;
         vertical-align: bottom;
@@ -117,32 +117,36 @@ const PDFMarkupToolsFeature = (() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         padding: 0.25rem 0.5rem;
-        background-color: transparent;
-        color: #9ca3af;
-        border: none;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         text-align: center;
         flex-shrink: 0;
+        /* Inactive state - white bg with gray text */
+        background-color: #fff;
+        color: #4b5563;
+        border-left: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
         border-radius: 0.125rem;
-        margin-top: 0.5rem;
       }
 
       .jt-pdf-tool-btn:hover {
-        background-color: #4b5563;
-        color: #fff;
+        background-color: #f9fafb;
       }
 
       .jt-pdf-tool-btn:active {
-        opacity: 0.9;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
       }
 
-      /* Active state - matches JT's active button style */
+      /* Active state - dark bg with white text */
       .jt-pdf-tool-btn.active {
         background-color: #374151;
         color: #fff;
+        border-color: #374151;
       }
 
       .jt-pdf-tool-btn.active:hover {
-        background-color: #4b5563;
+        background-color: #1f2937;
       }
 
       /* Horizontal toolbar buttons (file viewer style) */
@@ -398,7 +402,7 @@ const PDFMarkupToolsFeature = (() => {
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('title', tooltip);
-    btn.className = 'jt-pdf-tool-btn mt-2';
+    btn.className = 'jt-pdf-tool-btn';
 
     btn.appendChild(icon);
 
