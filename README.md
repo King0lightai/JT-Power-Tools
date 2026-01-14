@@ -10,15 +10,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 🎯 Features
 
-### 📅 Schedule Drag & Drop (Premium)
-- Drag schedule items between dates seamlessly with full year boundary support
-- Works across December→January transitions (2025→2026)
-- Automatically updates dates invisibly in the background
-- Multi-month and multi-year support with intelligent date detection
-- Visual feedback with drop zone highlighting
-- Preserves task details and assignments during moves
-- Hold Shift to drag a task to weekends
-- Hold Alt to change the tasks end date
+### 📅 Schedule Checkboxes (Premium)
 - Checkboxes added to task cards in month schedule view for instant task completion
 - Checkboxes added to Action Items card for instant task completion
 
