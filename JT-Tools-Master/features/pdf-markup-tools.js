@@ -217,30 +217,30 @@ const PDFMarkupToolsFeature = (() => {
 
       /* Stamp quick-select base styles - dark theme to match modal */
       .jt-stamp-quick-select {
-        background-color: #1f2937;
-        border-color: #374151;
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
       }
 
       .jt-stamp-btn {
-        background-color: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
       }
 
       .jt-stamp-btn:hover {
-        background-color: #4b5563;
+        background-color: #4b5563 !important;
       }
 
       .jt-stamp-tab {
-        background-color: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
       }
 
       .jt-stamp-tab.active {
-        background-color: #6b7280;
-        color: #fff;
-        border-color: #6b7280;
+        background-color: #6b7280 !important;
+        color: #fff !important;
+        border-color: #6b7280 !important;
       }
 
       /* ========== DARK MODE STYLES ========== */
