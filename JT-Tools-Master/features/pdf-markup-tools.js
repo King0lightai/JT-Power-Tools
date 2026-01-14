@@ -105,8 +105,8 @@ const PDFMarkupToolsFeature = (() => {
     const css = `
       /* PDF Markup Tools Enhancement Styles */
 
-      /* ========== BASE STYLES (Light Mode) ========== */
-      /* Matches JobTread's native button styling */
+      /* ========== BASE STYLES ========== */
+      /* PDF toolbar has dark bg (gray-800), so buttons need to match */
       .jt-pdf-tool-btn {
         display: inline-block;
         vertical-align: bottom;
@@ -117,35 +117,32 @@ const PDFMarkupToolsFeature = (() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         padding: 0.25rem 0.5rem;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        background-color: #fff;
-        color: #4b5563;
-        border-left: 1px solid #e5e7eb;
-        border-right: 1px solid #e5e7eb;
-        border-top: 1px solid #e5e7eb;
-        border-bottom: 1px solid #e5e7eb;
+        background-color: transparent;
+        color: #9ca3af;
+        border: none;
         text-align: center;
         flex-shrink: 0;
         border-radius: 0.125rem;
+        margin-top: 0.5rem;
       }
 
       .jt-pdf-tool-btn:hover {
-        background-color: #f9fafb;
+        background-color: #4b5563;
+        color: #fff;
       }
 
       .jt-pdf-tool-btn:active {
-        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        opacity: 0.9;
       }
 
-      /* Active state matches JT's bg-gray-700 style */
+      /* Active state - matches JT's active button style */
       .jt-pdf-tool-btn.active {
         background-color: #374151;
         color: #fff;
-        border-color: #374151;
       }
 
       .jt-pdf-tool-btn.active:hover {
-        background-color: #1f2937;
+        background-color: #4b5563;
       }
 
       .jt-pdf-tool-btn svg {
@@ -162,10 +159,10 @@ const PDFMarkupToolsFeature = (() => {
         stroke: #f59e0b;
       }
 
-      /* Separator line between tool groups */
+      /* Separator line between tool groups - for dark toolbar */
       .jt-tool-separator {
         height: 1px;
-        background: #e5e7eb;
+        background: #4b5563;
         margin: 0.5rem 0;
       }
 
@@ -209,58 +206,37 @@ const PDFMarkupToolsFeature = (() => {
         transition: all 0.3s ease-out;
       }
 
-      /* Stamp quick-select base styles */
+      /* Stamp quick-select base styles - dark theme to match modal */
       .jt-stamp-quick-select {
-        background-color: #fff;
-        border-color: #e5e7eb;
+        background-color: #1f2937;
+        border-color: #374151;
       }
 
       .jt-stamp-btn {
-        background-color: #fff;
-        color: #374151;
-        border-color: #d1d5db;
-      }
-
-      .jt-stamp-btn:hover {
-        background-color: #f3f4f6;
-      }
-
-      .jt-stamp-tab {
-        background-color: #fff;
-        color: #374151;
-        border-color: #d1d5db;
-      }
-
-      .jt-stamp-tab.active {
-        background-color: #3b82f6;
-        color: #fff;
-        border-color: #3b82f6;
-      }
-
-      /* ========== DARK MODE STYLES ========== */
-      body.jt-dark-mode .jt-pdf-tool-btn {
         background-color: #374151;
         color: #e5e7eb;
         border-color: #4b5563;
       }
 
-      body.jt-dark-mode .jt-pdf-tool-btn:hover {
+      .jt-stamp-btn:hover {
         background-color: #4b5563;
       }
 
-      body.jt-dark-mode .jt-pdf-tool-btn.active {
-        background-color: #60a5fa;
-        color: #1f2937;
-        border-color: #60a5fa;
+      .jt-stamp-tab {
+        background-color: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
       }
 
-      body.jt-dark-mode .jt-pdf-tool-btn.active:hover {
-        background-color: #93c5fd;
+      .jt-stamp-tab.active {
+        background-color: #6b7280;
+        color: #fff;
+        border-color: #6b7280;
       }
 
-      body.jt-dark-mode .jt-tool-separator {
-        background: #4b5563;
-      }
+      /* ========== DARK MODE STYLES ========== */
+      /* Note: PDF toolbar buttons don't need dark mode overrides since the PDF toolbar
+         is always dark (bg-gray-800) and base styles are already designed for dark bg */
 
       body.jt-dark-mode .jt-pdf-notification {
         background-color: #1e40af !important;
@@ -270,33 +246,8 @@ const PDFMarkupToolsFeature = (() => {
         background-color: #991b1b !important;
       }
 
-      /* Dark mode stamp quick-select */
-      body.jt-dark-mode .jt-stamp-quick-select {
-        background-color: #1f2937 !important;
-        border-color: #374151 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-btn {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-btn:hover {
-        background-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-tab {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
-      }
-
-      body.jt-dark-mode .jt-stamp-tab.active {
-        background-color: #60a5fa !important;
-        color: #1f2937 !important;
-        border-color: #60a5fa !important;
-      }
+      /* Dark mode stamp quick-select - modal is always dark, so no overrides needed */
+      /* Base styles already use dark theme colors */
 
       /* ========== RGB/CUSTOM THEME STYLES ========== */
       body.jt-custom-theme .jt-pdf-tool-btn {
@@ -328,33 +279,8 @@ const PDFMarkupToolsFeature = (() => {
         color: var(--jt-theme-primary-text, #fff) !important;
       }
 
-      /* RGB theme stamp quick-select */
-      body.jt-custom-theme .jt-stamp-quick-select {
-        background-color: var(--jt-theme-background, #fff) !important;
-        border-color: var(--jt-theme-border, #e5e7eb) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-btn {
-        background-color: var(--jt-theme-background, #fff) !important;
-        color: var(--jt-theme-text, #374151) !important;
-        border-color: var(--jt-theme-border, #d1d5db) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-btn:hover {
-        background-color: var(--jt-theme-background-subtle, #f3f4f6) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-tab {
-        background-color: var(--jt-theme-background, #fff) !important;
-        color: var(--jt-theme-text, #374151) !important;
-        border-color: var(--jt-theme-border, #d1d5db) !important;
-      }
-
-      body.jt-custom-theme .jt-stamp-tab.active {
-        background-color: var(--jt-theme-primary, #3b82f6) !important;
-        color: var(--jt-theme-primary-text, #fff) !important;
-        border-color: var(--jt-theme-primary, #3b82f6) !important;
-      }
+      /* RGB theme stamp quick-select - modal is always dark, so no RGB overrides needed */
+      /* Base styles already use dark theme colors that work for all themes */
     `;
 
     styleElement = document.createElement('style');
@@ -467,7 +393,7 @@ const PDFMarkupToolsFeature = (() => {
     btn.setAttribute('role', 'button');
     btn.setAttribute('tabindex', '0');
     btn.setAttribute('title', tooltip);
-    btn.className = 'jt-pdf-tool-btn shadow-xs mt-2';
+    btn.className = 'jt-pdf-tool-btn mt-2';
 
     btn.appendChild(icon);
 
@@ -856,7 +782,7 @@ const PDFMarkupToolsFeature = (() => {
 
   /**
    * Handle highlight tool click - activates JobTread's rectangle tool with yellow highlight presets
-   * Workflow: Rectangle tool → Line color (yellow, min thickness) → Fill (yellow, 50% opacity)
+   * Workflow: Rectangle tool → Line/Fill swatches appear → Configure colors and opacity
    */
   function handleHighlightClick() {
     console.log('PDF Markup Tools: Highlight tool clicked');
@@ -875,21 +801,12 @@ const PDFMarkupToolsFeature = (() => {
         deactivateOtherTools('highlight');
         highlightBtn.classList.add('active');
 
-        // Open more options and configure highlight presets
+        // After rectangle is activated, the line/fill swatches appear in the toolbar
+        // Wait for them to render, then configure (need more time for DOM update)
         setTimeout(() => {
-          const buttons = findJobTreadButtons();
-          if (buttons && buttons.more) {
-            console.log('PDF Markup Tools: Opening more options panel...');
-            buttons.more.click();
-
-            // Wait for panel to open, then configure highlight settings
-            setTimeout(() => {
-              configureHighlightSettings();
-            }, 300);
-          } else {
-            showNotification('Could not find options panel - set colors manually', 'info');
-          }
-        }, 150);
+          console.log('PDF Markup Tools: Looking for line/fill swatches...');
+          configureHighlightSettings();
+        }, 500);
 
         showNotification('Highlight mode - configuring yellow highlight...');
       } else {
@@ -908,60 +825,105 @@ const PDFMarkupToolsFeature = (() => {
   }
 
   /**
-   * Configure highlight settings in the options panel
-   * JobTread Workflow:
-   * 1. Click LINE swatch → Opens color picker + thickness slider
-   * 2. Set yellow color, minimum thickness
-   * 3. Click FILL swatch (droplet icon) → Opens color picker immediately
-   * 4. Set yellow color
-   * 5. Click FILL swatch again → Shows opacity slider
-   * 6. Set opacity to 50%
+   * Configure highlight settings in the toolbar
+   * JobTread Workflow (after rectangle tool activated):
+   * 1. Line swatch appears (w-7 h-7 border with background-color)
+   * 2. Fill swatch appears below (w-7 h-7 with droplet SVG)
+   * 3. Click LINE → color picker + thickness slider popover
+   * 4. Click FILL → color picker popover, click again → opacity slider
    */
   function configureHighlightSettings() {
     console.log('PDF Markup Tools: Configuring highlight settings...');
 
-    // Find the line/fill button container
-    // Structure: div.flex.flex-col.space-y-1 containing two swatches
+    // Find the line swatch - it's a div with w-7 h-7 border and has a background-color or diagonal line
+    // The line swatch is in a flex-col container
+    let lineSwatch = null;
+    let fillSwatch = null;
+
+    // Method 1: Look for the swatch container (flex flex-col space-y-1)
     const swatchContainers = document.querySelectorAll('div.flex.flex-col.space-y-1');
-    let lineSwatchContainer = null;
+    console.log(`PDF Markup Tools: Found ${swatchContainers.length} potential swatch containers`);
 
     for (const container of swatchContainers) {
-      // Line swatch has border-gray-300, fill swatch has droplet SVG
-      const lineSwatch = container.querySelector('div.w-7.h-7.border');
-      const fillSwatch = container.querySelector('div.w-7.h-7.flex.items-center svg path[d*="M12 22a7"]');
+      // Line swatch: div.w-7.h-7.border with style background-color or has diagonal SVG
+      const possibleLine = container.querySelector('div.w-7.h-7.border');
+      // Fill swatch: has the droplet SVG path
+      const possibleFill = container.querySelector('svg path[d*="M12 22a7"]');
 
-      if (lineSwatch && fillSwatch) {
-        lineSwatchContainer = container;
+      if (possibleLine && possibleFill) {
+        lineSwatch = possibleLine;
+        // Fill swatch is the parent container of the SVG
+        fillSwatch = possibleFill.closest('div.w-7.h-7');
+        console.log('PDF Markup Tools: Found swatches in flex-col container');
         break;
       }
     }
 
-    if (!lineSwatchContainer) {
-      // Fallback: try to find swatches directly
-      console.log('PDF Markup Tools: Looking for swatches with fallback selectors...');
-      const allSwatches = document.querySelectorAll('div.w-7.h-7.cursor-pointer, div.w-7.h-7.border.cursor-pointer');
+    // Method 2: Search for swatches in toolbar area specifically
+    if (!lineSwatch || !fillSwatch) {
+      console.log('PDF Markup Tools: Using toolbar-specific swatch detection...');
+
+      // Find the toolbar first
+      const toolbar = document.querySelector('.flex.relative.shadow-line-left.p-1') ||
+                     document.querySelector('.bg-gray-800 .relative');
+
+      if (toolbar) {
+        // Line swatch has border class
+        lineSwatch = toolbar.querySelector('div.w-7.h-7.border');
+
+        // Fill swatch has the droplet icon
+        const dropletPath = toolbar.querySelector('svg path[d*="M12 22a7"]');
+        if (dropletPath) {
+          fillSwatch = dropletPath.closest('div.w-7.h-7');
+        }
+
+        if (lineSwatch && fillSwatch) {
+          console.log('PDF Markup Tools: Found swatches in toolbar');
+        }
+      }
+    }
+
+    // Method 3: Fallback - search entire document
+    if (!lineSwatch || !fillSwatch) {
+      console.log('PDF Markup Tools: Using document-wide swatch detection...');
+
+      // Line swatch has border-gray-300 class
+      lineSwatch = document.querySelector('div.w-7.h-7.border.border-gray-300.cursor-pointer') ||
+                   document.querySelector('div.w-7.h-7.border.cursor-pointer');
+
+      // Fill swatch has the droplet icon
+      const dropletPath = document.querySelector('svg path[d*="M12 22a7 7 0 0 0 7-7"]') ||
+                         document.querySelector('svg path[d*="M12 22a7"]');
+      if (dropletPath) {
+        fillSwatch = dropletPath.closest('div.w-7.h-7');
+      }
+    }
+
+    // Method 4: Final fallback - any w-7 h-7 elements that look like swatches
+    if (!lineSwatch || !fillSwatch) {
+      console.log('PDF Markup Tools: Using broad fallback...');
+      const allSwatches = document.querySelectorAll('div.w-7.h-7.cursor-pointer');
+      console.log(`PDF Markup Tools: Found ${allSwatches.length} potential swatch elements`);
 
       if (allSwatches.length >= 2) {
-        configureWithSwatches(allSwatches[0], allSwatches[1]);
-        return;
+        // Typically line is first, fill is second
+        lineSwatch = lineSwatch || allSwatches[0];
+        fillSwatch = fillSwatch || allSwatches[1];
       }
+    }
 
+    if (!lineSwatch || !fillSwatch) {
       console.log('PDF Markup Tools: Could not find line/fill swatches');
-      showNotification('Could not find color controls - set colors manually', 'info');
+      console.log('PDF Markup Tools: lineSwatch:', lineSwatch);
+      console.log('PDF Markup Tools: fillSwatch:', fillSwatch);
+      showNotification('Set colors manually: yellow fill, 50% opacity', 'info');
       return;
     }
 
-    // Get the line swatch (first child with border) and fill swatch (has droplet)
-    const lineSwatch = lineSwatchContainer.querySelector('div.w-7.h-7.border');
-    const fillSwatchContainer = lineSwatchContainer.querySelector('div.w-7.h-7.flex.items-center');
-
-    if (!lineSwatch || !fillSwatchContainer) {
-      console.log('PDF Markup Tools: Could not find individual swatches');
-      showNotification('Could not find color controls', 'info');
-      return;
-    }
-
-    configureWithSwatches(lineSwatch, fillSwatchContainer);
+    console.log('PDF Markup Tools: Found swatches, starting configuration...');
+    console.log('PDF Markup Tools: lineSwatch:', lineSwatch);
+    console.log('PDF Markup Tools: fillSwatch:', fillSwatch);
+    configureWithSwatches(lineSwatch, fillSwatch);
   }
 
   /**
@@ -973,35 +935,35 @@ const PDFMarkupToolsFeature = (() => {
     lineSwatch.click();
 
     setTimeout(() => {
-      // Find the popover that appeared (z-50 with bg-gray-700)
-      const linePopover = document.querySelector('div.z-50 div.bg-gray-700');
+      // Find the popover that appeared - try multiple selectors
+      let linePopover = document.querySelector('div.z-50 div.bg-gray-700') ||
+                       document.querySelector('div.z-50 div.bg-gray-600') ||
+                       document.querySelector('div.z-50[style*="position"]');
 
-      if (linePopover) {
-        // Find color input (hidden, type="color")
-        const colorInput = linePopover.querySelector('input[type="color"]') ||
-                          document.querySelector('div.z-50 input[type="color"]');
-        if (colorInput) {
-          setColorInputValue(colorInput, '#FFFF00');
-          console.log('PDF Markup Tools: Line color set to yellow');
-        }
+      console.log('PDF Markup Tools: Line popover found:', !!linePopover);
 
-        // Find thickness slider (range input)
-        const thicknessSlider = linePopover.querySelector('input[type="range"]');
-        if (thicknessSlider) {
-          setSliderValue(thicknessSlider, 1); // Minimum thickness
-          console.log('PDF Markup Tools: Line thickness set to minimum');
-        }
+      // Find color input (hidden, type="color") - search broadly
+      const colorInput = document.querySelector('div.z-50 input[type="color"]') ||
+                        document.querySelector('input[type="color"]');
+      if (colorInput) {
+        setColorInputValue(colorInput, '#FFFF00');
+        console.log('PDF Markup Tools: Line color set to yellow');
       } else {
-        // Try finding color input anywhere in z-50
-        const colorInput = document.querySelector('div.z-50 input[type="color"]');
-        if (colorInput) {
-          setColorInputValue(colorInput, '#FFFF00');
-        }
+        console.log('PDF Markup Tools: No color input found for line');
+      }
+
+      // Find thickness slider (range input)
+      const thicknessSlider = document.querySelector('div.z-50 input[type="range"]');
+      if (thicknessSlider) {
+        setSliderValue(thicknessSlider, 1); // Minimum thickness
+        console.log('PDF Markup Tools: Line thickness set to minimum');
+      } else {
+        console.log('PDF Markup Tools: No thickness slider found');
       }
 
       // Step 2: Close line popover and click FILL swatch
       setTimeout(() => {
-        console.log('PDF Markup Tools: Step 2 - Clicking fill swatch...');
+        console.log('PDF Markup Tools: Step 2 - Closing line popover, clicking fill swatch...');
 
         // Click elsewhere to close line popover first
         document.body.click();
@@ -1009,6 +971,7 @@ const PDFMarkupToolsFeature = (() => {
         setTimeout(() => {
           // Now click fill swatch - this opens color picker immediately
           fillSwatch.click();
+          console.log('PDF Markup Tools: Fill swatch clicked');
 
           setTimeout(() => {
             // Find color input in the new popover
@@ -1016,6 +979,8 @@ const PDFMarkupToolsFeature = (() => {
             if (fillColorInput) {
               setColorInputValue(fillColorInput, '#FFFF00');
               console.log('PDF Markup Tools: Fill color set to yellow');
+            } else {
+              console.log('PDF Markup Tools: No fill color input found');
             }
 
             // Step 3: Click fill swatch AGAIN to access opacity slider
@@ -1024,27 +989,27 @@ const PDFMarkupToolsFeature = (() => {
               fillSwatch.click();
 
               setTimeout(() => {
-                // Find opacity slider in the new popover (bg-gray-600)
-                const opacityPopover = document.querySelector('div.z-50 div.bg-gray-600');
-                const opacitySlider = opacityPopover?.querySelector('input[type="range"]') ||
-                                     document.querySelector('div.z-50 input[type="range"]');
+                // Find opacity slider in the new popover - try multiple selectors
+                const opacitySlider = document.querySelector('div.z-50 input[type="range"]');
 
                 if (opacitySlider) {
                   setSliderValue(opacitySlider, 5); // 50% opacity (5 out of 10)
                   console.log('PDF Markup Tools: Opacity set to 50%');
+                } else {
+                  console.log('PDF Markup Tools: No opacity slider found');
                 }
 
                 // Close the popover
                 setTimeout(() => {
                   document.body.click();
                   showNotification('Highlight ready! Draw rectangles to highlight.');
-                }, 150);
-              }, 200);
-            }, 200);
-          }, 200);
-        }, 150);
-      }, 200);
-    }, 250);
+                }, 200);
+              }, 300);
+            }, 300);
+          }, 300);
+        }, 200);
+      }, 300);
+    }, 350);
   }
 
   /**
