@@ -110,6 +110,7 @@ const FormatterToolbar = (() => {
   /**
    * Check if a field is a budget custom field (custom fields on the budget page)
    * Budget custom fields should use floating expanded toolbar, not embedded compact toolbar
+   * This includes ANY field on the budget page that is NOT a budget table description field
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
@@ -122,29 +123,15 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    // Check for custom field form (rounded-sm border divide-y)
-    const customFieldForm = field.closest('form.rounded-sm');
-    if (customFieldForm && customFieldForm.classList.contains('border') &&
-        customFieldForm.classList.contains('divide-y')) {
-      return true;
+    // If it's a budget table description field, it's not a "custom" field
+    // (budget table fields are handled separately by isBudgetTableField)
+    if (isBudgetTableField(field)) {
+      return false;
     }
 
-    // Check for custom fields inside a <label> element
-    // This is the primary pattern for custom fields in JobTread
-    if (field.closest('label')) {
-      return true;
-    }
-
-    // Check for custom fields with .font-bold sibling (field label)
-    const parent = field.parentElement;
-    if (parent) {
-      const boldSibling = parent.querySelector('.font-bold');
-      if (boldSibling) {
-        return true;
-      }
-    }
-
-    return false;
+    // Any other field on the budget page is considered a budget custom field
+    // These should all use the floating expanded toolbar, not embedded compact
+    return true;
   }
 
   /**
