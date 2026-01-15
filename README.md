@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.3.8%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.4.01%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
@@ -10,15 +10,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 🎯 Features
 
-### 📅 Schedule Drag & Drop (Premium)
-- Drag schedule items between dates seamlessly with full year boundary support
-- Works across December→January transitions (2025→2026)
-- Automatically updates dates invisibly in the background
-- Multi-month and multi-year support with intelligent date detection
-- Visual feedback with drop zone highlighting
-- Preserves task details and assignments during moves
-- Hold Shift to drag a task to weekends
-- Hold Alt to change the tasks end date
+### 📅 Schedule Checkboxes (Premium)
 - Checkboxes added to task cards in month schedule view for instant task completion
 - Checkboxes added to Action Items card for instant task completion
 
@@ -85,6 +77,10 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Word count and last updated timestamps
 - Click Quick Notes button in header or use keyboard shortcut
 - Press Escape to close editor or panel
+
+### ✏️ PDF Markup Tools
+- Stamp Selector for Text and Callout tools
+- Erease elements faster with the erease button!
 
 ### 🌙 Dark Mode
 - Beautiful dark theme for JobTread interface
