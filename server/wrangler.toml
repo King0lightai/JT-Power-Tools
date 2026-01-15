@@ -5,20 +5,18 @@ name = "jobtread-tools-pro"
 main = "cloudflare-worker-jobtread-api.js"
 compatibility_date = "2024-01-01"
 
-# D1 Database binding - create with:
-# wrangler d1 create jobtread-extension-users
-# Then update the database_id with your actual ID
-[[d1_databases]]
-binding = "DB"
-database_name = "jobtread-extension-users"
-database_id = "YOUR_D1_DATABASE_ID"  # Replace with actual ID from wrangler d1 create
+# D1 Database binding - COMMENTED OUT FOR NOW
+# Uncomment and configure when ready to use:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "jobtread-extension-users"
+# database_id = "YOUR_D1_DATABASE_ID"
 
-# KV Namespace binding - create with:
-# wrangler kv:namespace create "CACHE"
-# Then update the id with your actual namespace ID
-[[kv_namespaces]]
-binding = "CACHE"
-id = "YOUR_KV_NAMESPACE_ID"  # Replace with actual ID
+# KV Namespace binding - COMMENTED OUT FOR NOW
+# Uncomment and configure when ready to use:
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "YOUR_KV_NAMESPACE_ID"
 
 # Environment variables (secrets) - set via wrangler:
 # wrangler secret put GUMROAD_PRODUCT_ID
