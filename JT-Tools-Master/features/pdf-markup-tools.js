@@ -217,35 +217,53 @@ const PDFMarkupToolsFeature = (() => {
 
       /* Stamp quick-select base styles - dark theme to match modal */
       .jt-stamp-quick-select {
-        background-color: #1f2937;
-        border-color: #374151;
+        background-color: #1f2937 !important;
+        border-color: #374151 !important;
       }
 
       .jt-stamp-btn {
-        background-color: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
       }
 
       .jt-stamp-btn:hover {
-        background-color: #4b5563;
+        background-color: #4b5563 !important;
       }
 
       .jt-stamp-tab {
+        background-color: #374151 !important;
+        color: #e5e7eb !important;
+        border-color: #4b5563 !important;
+      }
+
+      .jt-stamp-tab.active {
+        background-color: #6b7280 !important;
+        color: #fff !important;
+        border-color: #6b7280 !important;
+      }
+
+      /* ========== DARK MODE STYLES ========== */
+      /* Vertical toolbar buttons need dark styling in dark mode */
+      body.jt-dark-mode .jt-pdf-tool-btn {
         background-color: #374151;
         color: #e5e7eb;
         border-color: #4b5563;
       }
 
-      .jt-stamp-tab.active {
+      body.jt-dark-mode .jt-pdf-tool-btn:hover {
+        background-color: #4b5563;
+      }
+
+      body.jt-dark-mode .jt-pdf-tool-btn.active {
         background-color: #6b7280;
         color: #fff;
         border-color: #6b7280;
       }
 
-      /* ========== DARK MODE STYLES ========== */
-      /* Note: PDF toolbar buttons don't need dark mode overrides since the PDF toolbar
-         is always dark (bg-gray-800) and base styles are already designed for dark bg */
+      body.jt-dark-mode .jt-pdf-tool-btn.active:hover {
+        background-color: #9ca3af;
+      }
 
       body.jt-dark-mode .jt-pdf-notification {
         background-color: #1e40af !important;
@@ -310,6 +328,7 @@ const PDFMarkupToolsFeature = (() => {
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
 
     // Simple rectangle with yellow fill to represent highlight
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -356,6 +375,7 @@ const PDFMarkupToolsFeature = (() => {
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
 
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', '5');
@@ -378,6 +398,7 @@ const PDFMarkupToolsFeature = (() => {
     svg.setAttribute('stroke-width', '2');
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('class', 'inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]');
 
     const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path1.setAttribute('d', 'm7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21');
