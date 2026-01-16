@@ -794,10 +794,12 @@ async function testGrantKey(grantKey) {
  * Fixed to properly handle Pave query structure and error detection
  */
 async function jobtreadRequest(paveQuery, grantKey) {
-  // Build the request body - grantKey in $, then spread the paveQuery
+  // Build the request body - MUST wrap in "query" per JobTread docs
   const body = {
-    $: { grantKey },
-    ...paveQuery
+    query: {
+      $: { grantKey },
+      ...paveQuery
+    }
   };
 
   console.log('JobTread Request:', JSON.stringify(body, null, 2));
