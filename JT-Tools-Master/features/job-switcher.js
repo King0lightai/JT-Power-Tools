@@ -53,6 +53,8 @@ const QuickJobSwitcherFeature = (() => {
   function injectResizeHandle(sidebar) {
     // Check if resize handle already exists
     if (sidebar.querySelector('.jt-resize-handle')) {
+      // Still apply saved width in case sidebar was recreated
+      applySavedWidth(sidebar);
       return;
     }
 
@@ -90,14 +92,37 @@ const QuickJobSwitcherFeature = (() => {
       startResize(e, sidebar);
     });
 
-    // Insert at the beginning of the sidebar
-    sidebar.insertBefore(resizeHandle, sidebar.firstChild);
+    // Insert the resize handle into the inner container (the one with bg-white)
+    const innerContainer = sidebar.querySelector('.absolute.inset-0');
+    if (innerContainer) {
+      innerContainer.insertBefore(resizeHandle, innerContainer.firstChild);
+    } else {
+      sidebar.insertBefore(resizeHandle, sidebar.firstChild);
+    }
 
     // Apply saved width
+    applySavedWidth(sidebar);
+
+    console.log(`QuickJobSwitcher: ✅ Resize handle injected`);
+  }
+
+  /**
+   * Apply saved width to sidebar and trigger reflow
+   */
+  function applySavedWidth(sidebar) {
     const savedWidth = getSavedWidth();
+
+    // Remove max-width constraint that might interfere
+    sidebar.style.maxWidth = 'none';
     sidebar.style.width = `${savedWidth}px`;
 
-    console.log(`QuickJobSwitcher: ✅ Resize handle injected, width: ${savedWidth}px`);
+    // Force a reflow to ensure the width is applied
+    void sidebar.offsetWidth;
+
+    // Dispatch resize event to notify any listeners
+    window.dispatchEvent(new Event('resize'));
+
+    console.log(`QuickJobSwitcher: Applied saved width: ${savedWidth}px`);
   }
 
   /**
@@ -138,7 +163,8 @@ const QuickJobSwitcherFeature = (() => {
     // Clamp to min/max
     newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
-    // Apply new width
+    // Apply new width (ensure max-width doesn't constrain)
+    sidebar.style.maxWidth = 'none';
     sidebar.style.width = `${newWidth}px`;
   }
 
