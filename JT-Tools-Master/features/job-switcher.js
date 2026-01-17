@@ -111,18 +111,68 @@ const QuickJobSwitcherFeature = (() => {
    */
   function applySavedWidth(sidebar) {
     const savedWidth = getSavedWidth();
+    updateSidebarWidth(sidebar, savedWidth);
+    console.log(`QuickJobSwitcher: Applied saved width: ${savedWidth}px`);
+  }
 
+  /**
+   * Find the main content container that needs its margin adjusted
+   */
+  function findMainContentContainer(sidebar) {
+    const parent = sidebar.parentElement;
+    if (!parent) return null;
+
+    // Look for siblings - the main content is usually a sibling with grow/flex-1 class
+    for (const sibling of parent.children) {
+      if (sibling === sidebar) continue;
+
+      // Check for common main content patterns
+      if (sibling.classList.contains('grow') ||
+          sibling.classList.contains('flex-1') ||
+          sibling.classList.contains('flex-grow') ||
+          sibling.classList.contains('min-w-0')) {
+        // Check if it has inline margin-right or padding-right
+        const style = sibling.getAttribute('style') || '';
+        if (style.includes('margin-right') || style.includes('padding-right')) {
+          return sibling;
+        }
+      }
+
+      // Also check if any sibling has inline margin-right set
+      if (sibling.style.marginRight || sibling.style.paddingRight) {
+        return sibling;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Update sidebar width and adjust main content area
+   */
+  function updateSidebarWidth(sidebar, newWidth) {
     // Remove max-width constraint that might interfere
     sidebar.style.maxWidth = 'none';
-    sidebar.style.width = `${savedWidth}px`;
+    sidebar.style.width = `${newWidth}px`;
+
+    // Find and update the main content container
+    const mainContent = findMainContentContainer(sidebar);
+    if (mainContent) {
+      if (mainContent.style.marginRight) {
+        mainContent.style.marginRight = `${newWidth}px`;
+        console.log('QuickJobSwitcher: Updated main content margin-right');
+      }
+      if (mainContent.style.paddingRight) {
+        mainContent.style.paddingRight = `${newWidth}px`;
+        console.log('QuickJobSwitcher: Updated main content padding-right');
+      }
+    }
 
     // Force a reflow to ensure the width is applied
     void sidebar.offsetWidth;
 
     // Dispatch resize event to notify any listeners
     window.dispatchEvent(new Event('resize'));
-
-    console.log(`QuickJobSwitcher: Applied saved width: ${savedWidth}px`);
   }
 
   /**
@@ -163,9 +213,8 @@ const QuickJobSwitcherFeature = (() => {
     // Clamp to min/max
     newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
 
-    // Apply new width (ensure max-width doesn't constrain)
-    sidebar.style.maxWidth = 'none';
-    sidebar.style.width = `${newWidth}px`;
+    // Apply new width and update main content
+    updateSidebarWidth(sidebar, newWidth);
   }
 
   /**
