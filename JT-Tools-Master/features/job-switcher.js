@@ -5,6 +5,299 @@ const QuickJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
   let jKeyPressed = false;
+  let sidebarObserver = null;
+  let resizeState = {
+    isResizing: false,
+    startX: 0,
+    startWidth: 0
+  };
+
+  // Constants for resize functionality
+  const STORAGE_KEY = 'jt-job-switcher-width';
+  const MIN_WIDTH = 280;
+  const MAX_WIDTH = 800;
+  const DEFAULT_WIDTH = 400;
+
+  /**
+   * Get saved sidebar width from localStorage
+   */
+  function getSavedWidth() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const width = parseInt(saved, 10);
+        if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
+          return width;
+        }
+      }
+    } catch (e) {
+      console.warn('QuickJobSwitcher: Could not read saved width', e);
+    }
+    return DEFAULT_WIDTH;
+  }
+
+  /**
+   * Save sidebar width to localStorage
+   */
+  function saveWidth(width) {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(width));
+    } catch (e) {
+      console.warn('QuickJobSwitcher: Could not save width', e);
+    }
+  }
+
+  /**
+   * Create and inject the resize handle into the sidebar
+   */
+  function injectResizeHandle(sidebar) {
+    // Check if resize handle already exists
+    if (sidebar.querySelector('.jt-resize-handle')) {
+      // Still apply saved width in case sidebar was recreated
+      applySavedWidth(sidebar);
+      return;
+    }
+
+    console.log('QuickJobSwitcher: Injecting resize handle...');
+
+    // Create the resize handle element
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'jt-resize-handle';
+    resizeHandle.style.cssText = `
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 100;
+      transition: background 0.15s ease;
+    `;
+
+    // Visual indicator on hover
+    resizeHandle.addEventListener('mouseenter', () => {
+      resizeHandle.style.background = 'rgba(0, 0, 0, 0.1)';
+    });
+    resizeHandle.addEventListener('mouseleave', () => {
+      if (!resizeState.isResizing) {
+        resizeHandle.style.background = 'transparent';
+      }
+    });
+
+    // Start resize on mousedown
+    resizeHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      startResize(e, sidebar);
+    });
+
+    // Insert the resize handle into the inner container (the one with bg-white)
+    const innerContainer = sidebar.querySelector('.absolute.inset-0');
+    if (innerContainer) {
+      innerContainer.insertBefore(resizeHandle, innerContainer.firstChild);
+    } else {
+      sidebar.insertBefore(resizeHandle, sidebar.firstChild);
+    }
+
+    // Apply saved width
+    applySavedWidth(sidebar);
+
+    console.log(`QuickJobSwitcher: ✅ Resize handle injected`);
+  }
+
+  /**
+   * Apply saved width to sidebar and trigger reflow
+   */
+  function applySavedWidth(sidebar) {
+    const savedWidth = getSavedWidth();
+    updateSidebarWidth(sidebar, savedWidth);
+    console.log(`QuickJobSwitcher: Applied saved width: ${savedWidth}px`);
+  }
+
+  /**
+   * Find the main content container that needs its margin adjusted
+   */
+  function findMainContentContainer(sidebar) {
+    const parent = sidebar.parentElement;
+    if (!parent) return null;
+
+    // Look for siblings - the main content is usually a sibling with grow/flex-1 class
+    for (const sibling of parent.children) {
+      if (sibling === sidebar) continue;
+
+      // Check for common main content patterns
+      if (sibling.classList.contains('grow') ||
+          sibling.classList.contains('flex-1') ||
+          sibling.classList.contains('flex-grow') ||
+          sibling.classList.contains('min-w-0')) {
+        // Check if it has inline margin-right or padding-right
+        const style = sibling.getAttribute('style') || '';
+        if (style.includes('margin-right') || style.includes('padding-right')) {
+          return sibling;
+        }
+      }
+
+      // Also check if any sibling has inline margin-right set
+      if (sibling.style.marginRight || sibling.style.paddingRight) {
+        return sibling;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Update sidebar width and adjust main content area
+   */
+  function updateSidebarWidth(sidebar, newWidth) {
+    // Remove max-width constraint that might interfere
+    sidebar.style.maxWidth = 'none';
+    sidebar.style.width = `${newWidth}px`;
+
+    // Find and update the main content container
+    const mainContent = findMainContentContainer(sidebar);
+    if (mainContent) {
+      if (mainContent.style.marginRight) {
+        mainContent.style.marginRight = `${newWidth}px`;
+        console.log('QuickJobSwitcher: Updated main content margin-right');
+      }
+      if (mainContent.style.paddingRight) {
+        mainContent.style.paddingRight = `${newWidth}px`;
+        console.log('QuickJobSwitcher: Updated main content padding-right');
+      }
+    }
+
+    // Force a reflow to ensure the width is applied
+    void sidebar.offsetWidth;
+
+    // Dispatch resize event to notify any listeners
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  /**
+   * Start the resize operation
+   */
+  function startResize(e, sidebar) {
+    resizeState.isResizing = true;
+    resizeState.startX = e.clientX;
+    resizeState.startWidth = sidebar.offsetWidth;
+
+    // Add global event listeners
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+
+    // Prevent text selection during resize
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+
+    console.log('QuickJobSwitcher: Started resize');
+  }
+
+  /**
+   * Handle mouse move during resize
+   */
+  function handleResizeMove(e) {
+    if (!resizeState.isResizing) return;
+
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (!sidebar) {
+      handleResizeEnd();
+      return;
+    }
+
+    // Calculate new width (dragging left increases width since sidebar is on right)
+    const deltaX = resizeState.startX - e.clientX;
+    let newWidth = resizeState.startWidth + deltaX;
+
+    // Clamp to min/max
+    newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, newWidth));
+
+    // Apply new width and update main content
+    updateSidebarWidth(sidebar, newWidth);
+  }
+
+  /**
+   * End the resize operation
+   */
+  function handleResizeEnd() {
+    if (!resizeState.isResizing) return;
+
+    resizeState.isResizing = false;
+
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
+
+    // Restore normal cursor and selection
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+
+    // Save the final width
+    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (sidebar) {
+      const finalWidth = sidebar.offsetWidth;
+      saveWidth(finalWidth);
+      console.log(`QuickJobSwitcher: Resize ended, saved width: ${finalWidth}px`);
+    }
+
+    // Reset resize handle visual
+    const resizeHandle = sidebar?.querySelector('.jt-resize-handle');
+    if (resizeHandle) {
+      resizeHandle.style.background = 'transparent';
+    }
+  }
+
+  /**
+   * Start observing for sidebar appearances
+   */
+  function startSidebarObserver() {
+    if (sidebarObserver) {
+      return;
+    }
+
+    sidebarObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if the added node is the sidebar or contains it
+            const sidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0')
+              ? node
+              : node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+
+            if (sidebar) {
+              // Small delay to ensure sidebar is fully rendered
+              setTimeout(() => injectResizeHandle(sidebar), 50);
+            }
+          }
+        }
+      }
+    });
+
+    sidebarObserver.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    // Also check if sidebar is already present
+    const existingSidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    if (existingSidebar) {
+      injectResizeHandle(existingSidebar);
+    }
+
+    console.log('QuickJobSwitcher: Sidebar observer started');
+  }
+
+  /**
+   * Stop observing for sidebar appearances
+   */
+  function stopSidebarObserver() {
+    if (sidebarObserver) {
+      sidebarObserver.disconnect();
+      sidebarObserver = null;
+      console.log('QuickJobSwitcher: Sidebar observer stopped');
+    }
+  }
 
   /**
    * Initialize the feature
@@ -22,7 +315,11 @@ const QuickJobSwitcherFeature = (() => {
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
 
+    // Start observing for sidebar to add resize handle
+    startSidebarObserver();
+
     console.log('QuickJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
+    console.log('QuickJobSwitcher: ✅ Resize functionality enabled');
   }
 
   /**
@@ -39,6 +336,14 @@ const QuickJobSwitcherFeature = (() => {
 
     document.removeEventListener('keydown', handleKeyDown, true);
     document.removeEventListener('keyup', handleKeyUp, true);
+
+    // Stop sidebar observer
+    stopSidebarObserver();
+
+    // Clean up any active resize state
+    if (resizeState.isResizing) {
+      handleResizeEnd();
+    }
 
     closeSidebar();
 
