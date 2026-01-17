@@ -186,17 +186,39 @@ const QuickJobSwitcherFeature = (() => {
     sidebar.style.maxWidth = 'none';
     sidebar.style.width = `${newWidth}px`;
 
-    // Find and update the main content container
-    const mainContent = findMainContentContainer(sidebar);
-    if (mainContent) {
-      // Track element for cleanup
-      lastMainContent = mainContent;
+    // Find ALL elements with inline padding-right that might need updating
+    // JobTread sets padding-right on multiple elements when sidebar is open
+    const parent = sidebar.parentElement;
+    if (parent) {
+      // Update all siblings that have inline padding-right
+      for (const sibling of parent.children) {
+        if (sibling === sidebar) continue;
 
-      // Set padding-right to match sidebar width
-      mainContent.style.paddingRight = `${newWidth}px`;
-      console.log(`QuickJobSwitcher: Set main content padding-right to ${newWidth}px`);
-    } else {
-      console.log('QuickJobSwitcher: Could not find main content container');
+        if (sibling.style.paddingRight) {
+          sibling.style.paddingRight = `${newWidth}px`;
+          console.log(`QuickJobSwitcher: Updated sibling padding-right to ${newWidth}px`, sibling.className.substring(0, 40));
+        }
+      }
+
+      // Also check if parent has padding-right
+      if (parent.style.paddingRight) {
+        parent.style.paddingRight = `${newWidth}px`;
+        console.log(`QuickJobSwitcher: Updated parent padding-right to ${newWidth}px`);
+      }
+    }
+
+    // Also look for elements with padding-right set anywhere in the page
+    // that matches approximately the default sidebar width
+    const elementsWithPadding = document.querySelectorAll('[style*="padding-right"]');
+    for (const el of elementsWithPadding) {
+      if (el === sidebar || sidebar.contains(el)) continue;
+
+      const currentPadding = parseInt(el.style.paddingRight, 10);
+      // Update if padding is significant (likely set for sidebar)
+      if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
+        el.style.paddingRight = `${newWidth}px`;
+        console.log(`QuickJobSwitcher: Updated element padding-right to ${newWidth}px`, el.className.substring(0, 40));
+      }
     }
 
     // Force a reflow to ensure the width is applied
