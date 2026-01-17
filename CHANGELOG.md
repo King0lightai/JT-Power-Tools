@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed budget hierarchy resize handles getting shaded
-- Fixed Quick Job Switcher to select highlighted item on Enter when using arrow keys
+- Fixed Smart Job Switcher to select highlighted item on Enter when using arrow keys
 - Fixed dark toolbars and file viewers being incorrectly themed
 - Fixed content tiles incorrectly getting popup shadows
 - Fixed native formatter detection for custom fields in labels
@@ -286,14 +286,14 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 - Added dark mode support for text formatter toolbar
 
 ### Changed
-- Quick Job Switcher now supports both J+S and Alt+J keyboard shortcuts
+- Smart Job Switcher now supports both J+S and Alt+J keyboard shortcuts
 
 ---
 
 ## [3.1.0] - 2024-09-XX
 
 ### Added
-- **New Feature: Quick Job Switcher**
+- **New Feature: Smart Job Switcher**
   - J+S keyboard shortcut to instantly open job switcher
   - Type to search and filter jobs in real-time
   - Enter to select top result and navigate
@@ -310,7 +310,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 - **UI/UX Improvements**:
   - Renamed "Budget Formatter" to "Text Formatter" for clarity
   - Redesigned theme customization with inline color previews
-  - Moved Dark Mode below Quick Job Switcher in popup
+  - Moved Dark Mode below Smart Job Switcher in popup
   - Added Premium badge to Schedule Drag & Drop feature
   - Simplified popup to minimal white aesthetic
 
