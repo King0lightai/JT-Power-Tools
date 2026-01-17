@@ -139,7 +139,7 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The View button or null
    */
   function findViewButton(item) {
-    // Look for a button with text "View"
+    // Look for a button with text "View" inside the item
     const buttons = item.querySelectorAll('div[role="button"]');
 
     for (const button of buttons) {
@@ -149,12 +149,31 @@ const ActionItemsCompletion = (() => {
       }
     }
 
-    // Fallback: look for any element with "View" text
+    // Fallback: look for any element with "View" text inside item
     const allDivs = item.querySelectorAll('div');
     for (const div of allDivs) {
       if (div.textContent.trim() === 'View') {
         return div;
       }
+    }
+
+    // Extended fallback: search parent container for View button
+    // The View button might be a sibling or in a flex container
+    const parent = item.parentElement;
+    if (parent) {
+      const siblingButtons = parent.querySelectorAll('div[role="button"]');
+      for (const button of siblingButtons) {
+        const text = button.textContent.trim();
+        if (text === 'View' || text.toLowerCase().includes('view')) {
+          return button;
+        }
+      }
+    }
+
+    // Last resort: find the first button-like element in the item
+    const firstButton = item.querySelector('[role="button"], button');
+    if (firstButton) {
+      return firstButton;
     }
 
     return null;
@@ -320,10 +339,26 @@ const ActionItemsCompletion = (() => {
 
           // Wait for sidebar to be present (auto-opened by ?taskId= URL param)
           setTimeout(() => {
-            const sidebar = iframeDoc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+            // Try multiple sidebar selectors for robustness
+            const sidebarSelectors = [
+              'div.overflow-y-auto.overscroll-contain.sticky',
+              'div.sticky.overflow-y-auto',
+              'div[data-is-drag-scroll-boundary="true"]',
+              'div.overflow-y-auto.sticky',
+              'div.sticky[class*="overflow"]'
+            ];
+
+            let sidebar = null;
+            for (const selector of sidebarSelectors) {
+              sidebar = iframeDoc.querySelector(selector);
+              if (sidebar) {
+                console.log('ActionItemsCompletion: Found sidebar with selector:', selector);
+                break;
+              }
+            }
 
             if (!sidebar) {
-              console.error('ActionItemsCompletion: Sidebar not found in iframe');
+              console.error('ActionItemsCompletion: Sidebar not found in iframe (tried multiple selectors)');
               clearTimeout(failsafeTimeout);
               iframe.remove();
               callback(false);
@@ -408,17 +443,80 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The progress checkbox or null
    */
   function findProgressCheckboxInDoc(doc) {
-    const sidebar = doc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
-    if (!sidebar) return null;
+    // Try multiple sidebar selectors for robustness
+    const sidebarSelectors = [
+      'div.overflow-y-auto.overscroll-contain.sticky',
+      'div.sticky.overflow-y-auto',
+      'div[data-is-drag-scroll-boundary="true"]',
+      'div.overflow-y-auto.sticky',
+      'div.sticky[class*="overflow"]'
+    ];
 
-    const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
-    const progressLabel = allLabels.find(span => span.textContent.trim() === 'Progress');
+    let sidebar = null;
+    for (const selector of sidebarSelectors) {
+      sidebar = doc.querySelector(selector);
+      if (sidebar) break;
+    }
+
+    // Fallback: search the entire document
+    const searchRoot = sidebar || doc.body;
+
+    // Find "Progress" label using multiple selectors
+    const labelSelectors = [
+      'span.font-bold',
+      'span[class*="font-bold"]',
+      'label',
+      'div.font-bold',
+      'strong'
+    ];
+
+    let progressLabel = null;
+    for (const selector of labelSelectors) {
+      const labels = Array.from(searchRoot.querySelectorAll(selector));
+      progressLabel = labels.find(el => el.textContent.trim() === 'Progress');
+      if (progressLabel) break;
+    }
+
+    if (!progressLabel) {
+      // Last resort: search by text content
+      const allElements = searchRoot.querySelectorAll('*');
+      for (const el of allElements) {
+        if (el.childNodes.length === 1 &&
+            el.childNodes[0].nodeType === Node.TEXT_NODE &&
+            el.textContent.trim() === 'Progress') {
+          progressLabel = el;
+          break;
+        }
+      }
+    }
+
     if (!progressLabel) return null;
 
-    const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
+    // Find the checkbox button near the Progress label
+    // Try multiple container patterns
+    let progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
+    if (!progressContainer) {
+      progressContainer = progressLabel.closest('div.flex.items-center');
+    }
+    if (!progressContainer) {
+      progressContainer = progressLabel.closest('div[class*="flex"]');
+    }
+    if (!progressContainer) {
+      progressContainer = progressLabel.parentElement;
+    }
+
     if (!progressContainer) return null;
 
-    return progressContainer.querySelector('div[role="button"]');
+    // Find the button in the container
+    let button = progressContainer.querySelector('div[role="button"]');
+    if (!button) {
+      button = progressContainer.querySelector('[role="button"]');
+    }
+    if (!button) {
+      button = progressContainer.querySelector('button');
+    }
+
+    return button;
   }
 
   /**
@@ -427,13 +525,29 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The Save button or null
    */
   function findSaveButtonInDoc(doc) {
-    const allButtons = Array.from(doc.querySelectorAll('div[role="button"]'));
+    const allButtons = Array.from(doc.querySelectorAll('div[role="button"], [role="button"], button'));
 
     for (const button of allButtons) {
       const text = button.textContent.trim();
-      const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
 
-      if (hasCheckmark && text.includes('Save')) {
+      // Check for Save text (primary method)
+      if (text.includes('Save')) {
+        // Verify it has a checkmark icon (various possible paths)
+        const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]') ||
+                            button.querySelector('path[d*="M20 6"]') ||
+                            button.querySelector('path[d*="9 17"]') ||
+                            button.querySelector('svg');
+
+        if (hasCheckmark) {
+          return button;
+        }
+      }
+    }
+
+    // Fallback: find button with just "Save" text
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      if (text === 'Save' || text.startsWith('Save')) {
         return button;
       }
     }
