@@ -58,13 +58,14 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Intelligent positioning to avoid viewport edges
 - Click outside preview to close
 
-### ⚡ Quick Job Switcher
+### ⚡ Smart Job Switcher
 - Keyboard shortcuts (J+S or Alt+J) to instantly open job switcher
+- Resizable sidebar - drag the left edge to customize width (280-800px)
+- Width preference remembered across sessions
 - Type to search and filter jobs in real-time
 - Press Enter to select top result and navigate
 - Press Escape to cancel and close
 - Fully keyboard-driven workflow for power users
-- No mouse needed for job switching
 
 ### 📒 Quick Notes
 - Persistent notepad accessible from any JobTread page
@@ -192,7 +193,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 4. Preview updates in real-time as you type
 5. Click outside the preview panel to close it
 
-#### Quick Job Switcher
+#### Smart Job Switcher
 1. Press J+S or Alt+J from anywhere on JobTread (app.jobtread.com)
 2. Job switcher sidebar opens with search focused
 3. Type to filter jobs in real-time
@@ -258,7 +259,7 @@ JT-Tools-Master/
 │   ├── contrast-fix.js       # Contrast Fix module
 │   ├── formatter.js          # Text Formatter module
 │   ├── preview-mode.js       # Preview Mode module (Premium)
-│   ├── job-switcher.js       # Quick Job Switcher module
+│   ├── job-switcher.js       # Smart Job Switcher module
 │   ├── quick-notes.js        # Quick Notes module
 │   ├── dark-mode.js          # Dark Mode module
 │   ├── rgb-theme.js          # Custom Theme module (Premium)
@@ -386,7 +387,7 @@ const featureModules = {
   - Clean lines in Gantt chart (removed unnecessary shadows)
 - **Bug Fixes**
   - Fixed budget hierarchy resize handles getting shaded
-  - Fixed Quick Job Switcher to select highlighted item on Enter when using arrow keys
+  - Fixed Smart Job Switcher to select highlighted item on Enter when using arrow keys
   - Fixed dark toolbars and file viewers being incorrectly themed
   - Fixed content tiles incorrectly getting popup shadows
 
@@ -486,10 +487,10 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
   - Added dark mode support for text formatter toolbar
   - Theme-aware styling for JobTread header logo
   - Collapsible customize button for cleaner custom theme interface
-  - Quick Job Switcher now supports both J+S and Alt+J keyboard shortcuts
+  - Smart Job Switcher now supports both J+S and Alt+J keyboard shortcuts
 
 ### v3.1.0
-- **New Feature: Quick Job Switcher**
+- **New Feature: Smart Job Switcher**
   - J+S keyboard shortcut to instantly open job switcher
   - Type to search and filter jobs in real-time
   - Enter to select top result and navigate
@@ -503,7 +504,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 - **UI/UX Improvements**:
   - Renamed "Budget Formatter" to "Text Formatter" for clarity
   - Redesigned theme customization with inline color previews
-  - Moved Dark Mode below Quick Job Switcher in popup
+  - Moved Dark Mode below Smart Job Switcher in popup
   - Added Premium badge to Schedule Drag & Drop feature
   - Simplified popup to minimal white aesthetic
 - **Custom Theme Enhancements** (Premium):

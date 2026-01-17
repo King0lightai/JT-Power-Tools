@@ -57,9 +57,9 @@ const featureModules = {
     feature: () => window.RGBThemeFeature,
     instance: null
   },
-  quickJobSwitcher: {
-    name: 'Quick Job Switcher',
-    feature: () => window.QuickJobSwitcherFeature,
+  smartJobSwitcher: {
+    name: 'Smart Job Switcher',
+    feature: () => window.SmartJobSwitcherFeature,
     instance: null
   },
   budgetHierarchy: {
@@ -110,7 +110,7 @@ let currentSettings = window.JTDefaults
   : {
       // Inline fallback if JTDefaults not loaded (should not happen)
       dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-      darkMode: false, rgbTheme: false, quickJobSwitcher: true, budgetHierarchy: false,
+      darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
       pdfMarkupTools: true,
