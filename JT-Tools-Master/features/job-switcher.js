@@ -6,6 +6,7 @@ const QuickJobSwitcherFeature = (() => {
   let isSearchOpen = false;
   let jKeyPressed = false;
   let sidebarObserver = null;
+  let lastMainContent = null; // Track the main content element for cleanup
   let resizeState = {
     isResizing: false,
     startX: 0,
@@ -122,25 +123,49 @@ const QuickJobSwitcherFeature = (() => {
     const parent = sidebar.parentElement;
     if (!parent) return null;
 
-    // Look for siblings - the main content is usually a sibling with grow/flex-1 class
+    // Strategy 1: Look for siblings with common main content classes
     for (const sibling of parent.children) {
       if (sibling === sidebar) continue;
 
-      // Check for common main content patterns
+      // Check for common main content patterns (flex containers that grow)
       if (sibling.classList.contains('grow') ||
           sibling.classList.contains('flex-1') ||
           sibling.classList.contains('flex-grow') ||
           sibling.classList.contains('min-w-0')) {
-        // Check if it has inline margin-right or padding-right
-        const style = sibling.getAttribute('style') || '';
-        if (style.includes('margin-right') || style.includes('padding-right')) {
-          return sibling;
-        }
-      }
-
-      // Also check if any sibling has inline margin-right set
-      if (sibling.style.marginRight || sibling.style.paddingRight) {
         return sibling;
+      }
+    }
+
+    // Strategy 2: Look for the largest sibling element (likely the main content)
+    let largestSibling = null;
+    let largestWidth = 0;
+    for (const sibling of parent.children) {
+      if (sibling === sidebar) continue;
+      if (sibling.nodeType !== Node.ELEMENT_NODE) continue;
+
+      const width = sibling.offsetWidth;
+      if (width > largestWidth) {
+        largestWidth = width;
+        largestSibling = sibling;
+      }
+    }
+    if (largestSibling) {
+      return largestSibling;
+    }
+
+    // Strategy 3: Look one level up if we're in a nested structure
+    const grandparent = parent.parentElement;
+    if (grandparent) {
+      for (const uncle of grandparent.children) {
+        if (uncle === parent) continue;
+        if (uncle.classList.contains('grow') ||
+            uncle.classList.contains('flex-1') ||
+            uncle.classList.contains('flex-grow') ||
+            uncle.classList.contains('min-w-0') ||
+            uncle.classList.contains('overflow-auto') ||
+            uncle.classList.contains('overflow-y-auto')) {
+          return uncle;
+        }
       }
     }
 
@@ -158,14 +183,24 @@ const QuickJobSwitcherFeature = (() => {
     // Find and update the main content container
     const mainContent = findMainContentContainer(sidebar);
     if (mainContent) {
-      if (mainContent.style.marginRight) {
-        mainContent.style.marginRight = `${newWidth}px`;
-        console.log('QuickJobSwitcher: Updated main content margin-right');
-      }
-      if (mainContent.style.paddingRight) {
+      // Track this element so we can reset it when sidebar closes
+      lastMainContent = mainContent;
+
+      // Check which property the element is using (JobTread uses padding-right)
+      const computedStyle = window.getComputedStyle(mainContent);
+      const hasPaddingRight = computedStyle.paddingRight && computedStyle.paddingRight !== '0px';
+
+      if (hasPaddingRight || mainContent.style.paddingRight) {
+        // Use padding-right (this is what JobTread uses)
         mainContent.style.paddingRight = `${newWidth}px`;
-        console.log('QuickJobSwitcher: Updated main content padding-right');
+        console.log(`QuickJobSwitcher: Set main content padding-right to ${newWidth}px`);
+      } else {
+        // Fallback to margin-right
+        mainContent.style.marginRight = `${newWidth}px`;
+        console.log(`QuickJobSwitcher: Set main content margin-right to ${newWidth}px`);
       }
+    } else {
+      console.log('QuickJobSwitcher: Could not find main content container');
     }
 
     // Force a reflow to ensure the width is applied
@@ -173,6 +208,17 @@ const QuickJobSwitcherFeature = (() => {
 
     // Dispatch resize event to notify any listeners
     window.dispatchEvent(new Event('resize'));
+  }
+
+  /**
+   * Reset tracking when sidebar closes
+   * Note: JobTread handles resetting the main content padding itself when the sidebar closes
+   */
+  function resetMainContentMargin() {
+    if (lastMainContent) {
+      console.log('QuickJobSwitcher: Clearing main content tracking (JobTread will reset padding)');
+      lastMainContent = null;
+    }
   }
 
   /**
@@ -258,6 +304,7 @@ const QuickJobSwitcherFeature = (() => {
 
     sidebarObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
+        // Check for added nodes (sidebar opening)
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
             // Check if the added node is the sidebar or contains it
@@ -268,6 +315,20 @@ const QuickJobSwitcherFeature = (() => {
             if (sidebar) {
               // Small delay to ensure sidebar is fully rendered
               setTimeout(() => injectResizeHandle(sidebar), 50);
+            }
+          }
+        }
+
+        // Check for removed nodes (sidebar closing)
+        for (const node of mutation.removedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if the removed node is the sidebar or contains it
+            const wasSidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0') ||
+                               node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+
+            if (wasSidebar) {
+              // Reset main content margin when sidebar is removed
+              resetMainContentMargin();
             }
           }
         }
@@ -344,6 +405,9 @@ const QuickJobSwitcherFeature = (() => {
     if (resizeState.isResizing) {
       handleResizeEnd();
     }
+
+    // Reset main content margin
+    resetMainContentMargin();
 
     closeSidebar();
 
