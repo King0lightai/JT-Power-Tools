@@ -19,6 +19,57 @@ const SmartJobSwitcherFeature = (() => {
   const MIN_WIDTH = 280;
   const MAX_WIDTH = 800;
   const DEFAULT_WIDTH = 400;
+  const SIDEBAR_SELECTOR = 'div.z-30.absolute.top-0.bottom-0.right-0';
+
+  /**
+   * Check if a sidebar element is specifically the Job Switcher
+   * (not other sidebars like document viewers, etc.)
+   */
+  function isJobSwitcherSidebar(sidebar) {
+    if (!sidebar) return false;
+
+    // Check for "JOB SWITCHER" text in the header
+    const headerText = sidebar.textContent || '';
+    if (headerText.includes('JOB SWITCHER') || headerText.includes('Job Switcher')) {
+      return true;
+    }
+
+    // Check for job search input placeholder
+    const searchInput = sidebar.querySelector('input[placeholder*="Search Jobs"]') ||
+                       sidebar.querySelector('input[placeholder*="Search jobs"]');
+    if (searchInput) {
+      return true;
+    }
+
+    // Check for the job list structure (multiple job entries with addresses)
+    const jobEntries = sidebar.querySelectorAll('[role="button"]');
+    let jobLikeEntries = 0;
+    for (const entry of jobEntries) {
+      const text = entry.textContent || '';
+      // Job entries typically have address patterns or job numbers like "25-1001"
+      if (/\d{2}-\d{4}/.test(text) || /\d+\s+\w+\s+(st|street|ave|avenue|ln|lane|dr|drive|rd|road)/i.test(text)) {
+        jobLikeEntries++;
+      }
+    }
+    if (jobLikeEntries >= 3) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Find the Job Switcher sidebar specifically
+   */
+  function findJobSwitcherSidebar() {
+    const sidebars = document.querySelectorAll(SIDEBAR_SELECTOR);
+    for (const sidebar of sidebars) {
+      if (isJobSwitcherSidebar(sidebar)) {
+        return sidebar;
+      }
+    }
+    return null;
+  }
 
   /**
    * Get saved sidebar width from localStorage
@@ -53,6 +104,12 @@ const SmartJobSwitcherFeature = (() => {
    * Create and inject the resize handle into the sidebar
    */
   function injectResizeHandle(sidebar) {
+    // Safety check: only inject into Job Switcher sidebar
+    if (!isJobSwitcherSidebar(sidebar)) {
+      console.log('SmartJobSwitcher: Skipping non-Job Switcher sidebar');
+      return;
+    }
+
     // Check if resize handle already exists
     if (sidebar.querySelector('.jt-resize-handle')) {
       // Still apply saved width in case sidebar was recreated
@@ -60,7 +117,7 @@ const SmartJobSwitcherFeature = (() => {
       return;
     }
 
-    console.log('SmartJobSwitcher: Injecting resize handle...');
+    console.log('SmartJobSwitcher: Injecting resize handle into Job Switcher...');
 
     // Create the resize handle element
     const resizeHandle = document.createElement('div');
@@ -265,7 +322,7 @@ const SmartJobSwitcherFeature = (() => {
   function handleResizeMove(e) {
     if (!resizeState.isResizing) return;
 
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    const sidebar = findJobSwitcherSidebar();
     if (!sidebar) {
       handleResizeEnd();
       return;
@@ -299,17 +356,17 @@ const SmartJobSwitcherFeature = (() => {
     document.body.style.cursor = '';
 
     // Save the final width
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    const sidebar = findJobSwitcherSidebar();
     if (sidebar) {
       const finalWidth = sidebar.offsetWidth;
       saveWidth(finalWidth);
       console.log(`SmartJobSwitcher: Resize ended, saved width: ${finalWidth}px`);
-    }
 
-    // Reset resize handle visual
-    const resizeHandle = sidebar?.querySelector('.jt-resize-handle');
-    if (resizeHandle) {
-      resizeHandle.style.background = 'transparent';
+      // Reset resize handle visual
+      const resizeHandle = sidebar.querySelector('.jt-resize-handle');
+      if (resizeHandle) {
+        resizeHandle.style.background = 'transparent';
+      }
     }
   }
 
@@ -326,14 +383,18 @@ const SmartJobSwitcherFeature = (() => {
         // Check for added nodes (sidebar opening)
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if the added node is the sidebar or contains it
-            const sidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0')
+            // Check if the added node is a sidebar or contains one
+            const sidebar = node.matches?.(SIDEBAR_SELECTOR)
               ? node
-              : node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+              : node.querySelector?.(SIDEBAR_SELECTOR);
 
             if (sidebar) {
-              // Small delay to ensure sidebar is fully rendered
-              setTimeout(() => injectResizeHandle(sidebar), 50);
+              // Small delay to ensure sidebar is fully rendered, then check if it's the Job Switcher
+              setTimeout(() => {
+                if (isJobSwitcherSidebar(sidebar)) {
+                  injectResizeHandle(sidebar);
+                }
+              }, 50);
             }
           }
         }
@@ -341,12 +402,12 @@ const SmartJobSwitcherFeature = (() => {
         // Check for removed nodes (sidebar closing)
         for (const node of mutation.removedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if the removed node is the sidebar or contains it
-            const wasSidebar = node.matches?.('div.z-30.absolute.top-0.bottom-0.right-0') ||
-                               node.querySelector?.('div.z-30.absolute.top-0.bottom-0.right-0');
+            // Check if the removed node had our resize handle (meaning it was a Job Switcher we modified)
+            const hadResizeHandle = node.querySelector?.('.jt-resize-handle') ||
+                                   node.classList?.contains('jt-resize-handle');
 
-            if (wasSidebar) {
-              // Reset main content margin when sidebar is removed
+            if (hadResizeHandle) {
+              // Reset main content margin when Job Switcher sidebar is removed
               resetMainContentMargin();
             }
           }
@@ -359,8 +420,8 @@ const SmartJobSwitcherFeature = (() => {
       subtree: true
     });
 
-    // Also check if sidebar is already present
-    const existingSidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
+    // Also check if Job Switcher sidebar is already present
+    const existingSidebar = findJobSwitcherSidebar();
     if (existingSidebar) {
       injectResizeHandle(existingSidebar);
     }
