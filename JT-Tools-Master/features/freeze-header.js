@@ -1209,8 +1209,12 @@ const FreezeHeaderFeature = (() => {
     // Inject styles
     injectStyles();
 
-    // Apply sticky header
-    applyFreezeHeader();
+    // Only apply sticky header on job pages
+    if (isJobPage()) {
+      applyFreezeHeader();
+    } else {
+      console.log('FreezeHeader: Not on a job page, waiting for navigation');
+    }
 
     // Set up popup detection to exclude popups from freeze header effects
     setupPopupObserver();
@@ -1273,27 +1277,44 @@ const FreezeHeaderFeature = (() => {
 
     // Watch for URL changes (SPA navigation)
     let lastUrl = location.href;
+    let wasOnJobPage = isJobPage();
     setInterval(() => {
       if (!isActiveState) return;
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        // Remove old markings and re-apply
+        const nowOnJobPage = isJobPage();
+
+        // Remove old markings
         document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
           el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
         });
-        setTimeout(() => {
-          findAndMarkTopHeader();
-          findAndMarkTabs();
-          findAndMarkActionToolbar();
-          findAndMarkBudgetTableHeader();
-          findAndMarkScheduleHeader();
-          findAndMarkListHeader();
-          findAndMarkFilesFolderBar();
-          findAndMarkFilesListHeader();
-          findAndMarkFilesSidebar();
-          findAndMarkGlobalSidebars();
-          updatePositions();
-        }, 300);
+
+        if (nowOnJobPage) {
+          // Navigated to a job page - apply freeze header
+          if (!wasOnJobPage) {
+            console.log('FreezeHeader: Navigated to job page, applying freeze header');
+            applyFreezeHeader();
+          }
+          setTimeout(() => {
+            findAndMarkTopHeader();
+            findAndMarkTabs();
+            findAndMarkActionToolbar();
+            findAndMarkBudgetTableHeader();
+            findAndMarkScheduleHeader();
+            findAndMarkListHeader();
+            findAndMarkFilesFolderBar();
+            findAndMarkFilesListHeader();
+            findAndMarkFilesSidebar();
+            findAndMarkGlobalSidebars();
+            updatePositions();
+          }, 300);
+        } else if (wasOnJobPage) {
+          // Navigated away from job page - remove freeze header
+          console.log('FreezeHeader: Left job page, removing freeze header');
+          removeFreezeHeader();
+        }
+
+        wasOnJobPage = nowOnJobPage;
       }
     }, 500);
 
