@@ -1,7 +1,8 @@
-// JobTread Quick Job Switcher Feature
+// JobTread Smart Job Switcher Feature
 // Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
+// Features: Quick job search, keyboard navigation, resizable sidebar
 
-const QuickJobSwitcherFeature = (() => {
+const SmartJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
   let jKeyPressed = false;
@@ -32,7 +33,7 @@ const QuickJobSwitcherFeature = (() => {
         }
       }
     } catch (e) {
-      console.warn('QuickJobSwitcher: Could not read saved width', e);
+      console.warn('SmartJobSwitcher: Could not read saved width', e);
     }
     return DEFAULT_WIDTH;
   }
@@ -44,7 +45,7 @@ const QuickJobSwitcherFeature = (() => {
     try {
       localStorage.setItem(STORAGE_KEY, String(width));
     } catch (e) {
-      console.warn('QuickJobSwitcher: Could not save width', e);
+      console.warn('SmartJobSwitcher: Could not save width', e);
     }
   }
 
@@ -59,7 +60,7 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    console.log('QuickJobSwitcher: Injecting resize handle...');
+    console.log('SmartJobSwitcher: Injecting resize handle...');
 
     // Create the resize handle element
     const resizeHandle = document.createElement('div');
@@ -104,7 +105,7 @@ const QuickJobSwitcherFeature = (() => {
     // Apply saved width
     applySavedWidth(sidebar);
 
-    console.log(`QuickJobSwitcher: ✅ Resize handle injected`);
+    console.log(`SmartJobSwitcher: ✅ Resize handle injected`);
   }
 
   /**
@@ -113,7 +114,7 @@ const QuickJobSwitcherFeature = (() => {
   function applySavedWidth(sidebar) {
     const savedWidth = getSavedWidth();
     updateSidebarWidth(sidebar, savedWidth);
-    console.log(`QuickJobSwitcher: Applied saved width: ${savedWidth}px`);
+    console.log(`SmartJobSwitcher: Applied saved width: ${savedWidth}px`);
   }
 
   /**
@@ -134,7 +135,7 @@ const QuickJobSwitcherFeature = (() => {
         // Check if this sibling has padding-right in inline style
         const inlinePaddingRight = sibling.style.paddingRight;
         if (inlinePaddingRight) {
-          console.log('QuickJobSwitcher: Found content container with inline padding-right:', inlinePaddingRight);
+          console.log('SmartJobSwitcher: Found content container with inline padding-right:', inlinePaddingRight);
           return sibling;
         }
       }
@@ -153,7 +154,7 @@ const QuickJobSwitcherFeature = (() => {
           const computed = window.getComputedStyle(sibling);
           const computedPadding = parseInt(computed.paddingRight, 10);
           if (computedPadding > 100) {
-            console.log('QuickJobSwitcher: Found grow container with padding-right:', computedPadding);
+            console.log('SmartJobSwitcher: Found grow container with padding-right:', computedPadding);
             return sibling;
           }
         }
@@ -168,13 +169,13 @@ const QuickJobSwitcherFeature = (() => {
         if (sibling.classList.contains('grow') ||
             sibling.classList.contains('flex-1') ||
             sibling.classList.contains('flex-grow')) {
-          console.log('QuickJobSwitcher: Found grow container (fallback)');
+          console.log('SmartJobSwitcher: Found grow container (fallback)');
           return sibling;
         }
       }
     }
 
-    console.log('QuickJobSwitcher: Could not find content container');
+    console.log('SmartJobSwitcher: Could not find content container');
     return null;
   }
 
@@ -196,14 +197,14 @@ const QuickJobSwitcherFeature = (() => {
 
         if (sibling.style.paddingRight) {
           sibling.style.paddingRight = `${newWidth}px`;
-          console.log(`QuickJobSwitcher: Updated sibling padding-right to ${newWidth}px`, sibling.className.substring(0, 40));
+          console.log(`SmartJobSwitcher: Updated sibling padding-right to ${newWidth}px`, sibling.className.substring(0, 40));
         }
       }
 
       // Also check if parent has padding-right
       if (parent.style.paddingRight) {
         parent.style.paddingRight = `${newWidth}px`;
-        console.log(`QuickJobSwitcher: Updated parent padding-right to ${newWidth}px`);
+        console.log(`SmartJobSwitcher: Updated parent padding-right to ${newWidth}px`);
       }
     }
 
@@ -217,7 +218,7 @@ const QuickJobSwitcherFeature = (() => {
       // Update if padding is significant (likely set for sidebar)
       if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
         el.style.paddingRight = `${newWidth}px`;
-        console.log(`QuickJobSwitcher: Updated element padding-right to ${newWidth}px`, el.className.substring(0, 40));
+        console.log(`SmartJobSwitcher: Updated element padding-right to ${newWidth}px`, el.className.substring(0, 40));
       }
     }
 
@@ -234,7 +235,7 @@ const QuickJobSwitcherFeature = (() => {
    */
   function resetMainContentMargin() {
     if (lastMainContent) {
-      console.log('QuickJobSwitcher: Clearing main content tracking (JobTread will reset padding)');
+      console.log('SmartJobSwitcher: Clearing main content tracking (JobTread will reset padding)');
       lastMainContent = null;
     }
   }
@@ -255,7 +256,7 @@ const QuickJobSwitcherFeature = (() => {
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'col-resize';
 
-    console.log('QuickJobSwitcher: Started resize');
+    console.log('SmartJobSwitcher: Started resize');
   }
 
   /**
@@ -302,7 +303,7 @@ const QuickJobSwitcherFeature = (() => {
     if (sidebar) {
       const finalWidth = sidebar.offsetWidth;
       saveWidth(finalWidth);
-      console.log(`QuickJobSwitcher: Resize ended, saved width: ${finalWidth}px`);
+      console.log(`SmartJobSwitcher: Resize ended, saved width: ${finalWidth}px`);
     }
 
     // Reset resize handle visual
@@ -364,7 +365,7 @@ const QuickJobSwitcherFeature = (() => {
       injectResizeHandle(existingSidebar);
     }
 
-    console.log('QuickJobSwitcher: Sidebar observer started');
+    console.log('SmartJobSwitcher: Sidebar observer started');
   }
 
   /**
@@ -374,7 +375,7 @@ const QuickJobSwitcherFeature = (() => {
     if (sidebarObserver) {
       sidebarObserver.disconnect();
       sidebarObserver = null;
-      console.log('QuickJobSwitcher: Sidebar observer stopped');
+      console.log('SmartJobSwitcher: Sidebar observer stopped');
     }
   }
 
@@ -383,11 +384,11 @@ const QuickJobSwitcherFeature = (() => {
    */
   function init() {
     if (isActive) {
-      console.log('QuickJobSwitcher: Already initialized');
+      console.log('SmartJobSwitcher: Already initialized');
       return;
     }
 
-    console.log('QuickJobSwitcher: Initializing...');
+    console.log('SmartJobSwitcher: Initializing...');
     isActive = true;
 
     // Listen for keyboard shortcuts
@@ -397,8 +398,8 @@ const QuickJobSwitcherFeature = (() => {
     // Start observing for sidebar to add resize handle
     startSidebarObserver();
 
-    console.log('QuickJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
-    console.log('QuickJobSwitcher: ✅ Resize functionality enabled');
+    console.log('SmartJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
+    console.log('SmartJobSwitcher: ✅ Resize functionality enabled');
   }
 
   /**
@@ -406,11 +407,11 @@ const QuickJobSwitcherFeature = (() => {
    */
   function cleanup() {
     if (!isActive) {
-      console.log('QuickJobSwitcher: Not active, nothing to cleanup');
+      console.log('SmartJobSwitcher: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('QuickJobSwitcher: Cleaning up...');
+    console.log('SmartJobSwitcher: Cleaning up...');
     isActive = false;
 
     document.removeEventListener('keydown', handleKeyDown, true);
@@ -429,7 +430,7 @@ const QuickJobSwitcherFeature = (() => {
 
     closeSidebar();
 
-    console.log('QuickJobSwitcher: Cleanup complete');
+    console.log('SmartJobSwitcher: Cleanup complete');
   }
 
   /**
@@ -455,21 +456,21 @@ const QuickJobSwitcherFeature = (() => {
       }
 
       if (!isSearchOpen) {
-        console.log(`QuickJobSwitcher: 🎯 ${isAltJShortcut ? 'ALT+J' : 'J+S'} detected!`);
+        console.log(`SmartJobSwitcher: 🎯 ${isAltJShortcut ? 'ALT+J' : 'J+S'} detected!`);
         e.preventDefault();
         e.stopPropagation();
         // Reset J key state immediately after opening
         jKeyPressed = false;
         openSidebar();
       } else {
-        console.log('QuickJobSwitcher: Sidebar already open, ignoring shortcut');
+        console.log('SmartJobSwitcher: Sidebar already open, ignoring shortcut');
       }
       return;
     }
 
     // If sidebar is open and Enter is pressed, select top job and close
     if (isSearchOpen && e.key === 'Enter') {
-      console.log('QuickJobSwitcher: Enter pressed while sidebar open');
+      console.log('SmartJobSwitcher: Enter pressed while sidebar open');
 
       // Try multiple selectors for the search input
       const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
@@ -480,24 +481,24 @@ const QuickJobSwitcherFeature = (() => {
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
       const isInSidebar = sidebar && sidebar.contains(document.activeElement);
 
-      console.log('QuickJobSwitcher: searchInput exists:', !!searchInput);
-      console.log('QuickJobSwitcher: activeElement is searchInput:', document.activeElement === searchInput);
-      console.log('QuickJobSwitcher: isInSidebar:', isInSidebar);
+      console.log('SmartJobSwitcher: searchInput exists:', !!searchInput);
+      console.log('SmartJobSwitcher: activeElement is searchInput:', document.activeElement === searchInput);
+      console.log('SmartJobSwitcher: isInSidebar:', isInSidebar);
 
       if ((searchInput && document.activeElement === searchInput) || isInSidebar) {
-        console.log('QuickJobSwitcher: Conditions met, selecting top job');
+        console.log('SmartJobSwitcher: Conditions met, selecting top job');
         e.preventDefault();
         e.stopPropagation();
         selectTopJobAndClose();
         return;
       } else {
-        console.log('QuickJobSwitcher: Conditions NOT met, not handling Enter');
+        console.log('SmartJobSwitcher: Conditions NOT met, not handling Enter');
       }
     }
 
     // Close sidebar on Escape
     if (isSearchOpen && e.key === 'Escape') {
-      console.log('QuickJobSwitcher: ESC pressed, closing sidebar');
+      console.log('SmartJobSwitcher: ESC pressed, closing sidebar');
       e.preventDefault();
       e.stopPropagation();
       closeSidebar();
@@ -519,7 +520,7 @@ const QuickJobSwitcherFeature = (() => {
    * Open the job switcher sidebar
    */
   function openSidebar() {
-    console.log('QuickJobSwitcher: Opening sidebar...');
+    console.log('SmartJobSwitcher: Opening sidebar...');
 
     // Find the job number button - try multiple selectors
     let jobNumberButton = null;
@@ -553,15 +554,15 @@ const QuickJobSwitcherFeature = (() => {
     }
 
     if (!jobNumberButton) {
-      console.error('QuickJobSwitcher: ❌ Could not find job number button');
+      console.error('SmartJobSwitcher: ❌ Could not find job number button');
       showErrorNotification('Could not find job switcher button. Make sure you\'re on a job page.');
       return;
     }
 
-    console.log('QuickJobSwitcher: ✅ Found job button:', jobNumberButton.textContent);
+    console.log('SmartJobSwitcher: ✅ Found job button:', jobNumberButton.textContent);
 
     // Click to open sidebar
-    console.log('QuickJobSwitcher: Clicking job button to open sidebar...');
+    console.log('SmartJobSwitcher: Clicking job button to open sidebar...');
     jobNumberButton.click();
     isSearchOpen = true;
 
@@ -573,13 +574,13 @@ const QuickJobSwitcherFeature = (() => {
 
       if (searchInput) {
         searchInput.focus();
-        console.log('QuickJobSwitcher: ✅ Search input focused');
+        console.log('SmartJobSwitcher: ✅ Search input focused');
       } else {
-        console.log('QuickJobSwitcher: ⚠️ Could not find search input to focus');
+        console.log('SmartJobSwitcher: ⚠️ Could not find search input to focus');
       }
     }, 150);
 
-    console.log('QuickJobSwitcher: ✅ Sidebar opened');
+    console.log('SmartJobSwitcher: ✅ Sidebar opened');
   }
 
   /**
@@ -590,7 +591,7 @@ const QuickJobSwitcherFeature = (() => {
       return;
     }
 
-    console.log('QuickJobSwitcher: Closing sidebar...');
+    console.log('SmartJobSwitcher: Closing sidebar...');
 
     // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
@@ -626,7 +627,7 @@ const QuickJobSwitcherFeature = (() => {
 
       if (closeButton) {
         closeButton.click();
-        console.log('QuickJobSwitcher: ✅ Closed sidebar via close button');
+        console.log('SmartJobSwitcher: ✅ Closed sidebar via close button');
       } else {
         // Strategy 2: Try clicking outside the sidebar (on the overlay)
         const overlay = document.querySelector('div.z-30.absolute.inset-0:not(.top-0)') ||
@@ -635,10 +636,10 @@ const QuickJobSwitcherFeature = (() => {
                        document.querySelector('[class*="overlay"]');
         if (overlay) {
           overlay.click();
-          console.log('QuickJobSwitcher: ✅ Closed sidebar via overlay click');
+          console.log('SmartJobSwitcher: ✅ Closed sidebar via overlay click');
         } else {
           // Strategy 3: Dispatch Escape key to close
-          console.log('QuickJobSwitcher: Trying Escape key to close sidebar');
+          console.log('SmartJobSwitcher: Trying Escape key to close sidebar');
           const escEvent = new KeyboardEvent('keydown', {
             key: 'Escape',
             code: 'Escape',
@@ -660,12 +661,12 @@ const QuickJobSwitcherFeature = (() => {
    * Select the currently highlighted job (or top job) and close sidebar
    */
   function selectTopJobAndClose() {
-    console.log('QuickJobSwitcher: Selecting job...');
+    console.log('SmartJobSwitcher: Selecting job...');
 
     // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
     if (!sidebar) {
-      console.error('QuickJobSwitcher: ❌ Could not find sidebar');
+      console.error('SmartJobSwitcher: ❌ Could not find sidebar');
       closeSidebar();
       return;
     }
@@ -704,7 +705,7 @@ const QuickJobSwitcherFeature = (() => {
 
       if (hasHighlight) {
         selectedButton = button;
-        console.log(`QuickJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
+        console.log(`SmartJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
         break;
       }
     }
@@ -724,7 +725,7 @@ const QuickJobSwitcherFeature = (() => {
             !text.includes('Job Switcher') &&
             !activeElement.querySelector('path[d*="M18 6"]')) {
           selectedButton = activeElement;
-          console.log(`QuickJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
+          console.log(`SmartJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
         }
       }
     }
@@ -734,7 +735,7 @@ const QuickJobSwitcherFeature = (() => {
       // Find the scrollable job list container
       const jobList = sidebar.querySelector('.overflow-y-auto') || sidebar;
       const jobButtons = jobList.querySelectorAll('div[role="button"][tabindex="0"]');
-      console.log(`QuickJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
+      console.log(`SmartJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
 
       // Find the first actual job (skip close button and header)
       for (const button of jobButtons) {
@@ -759,13 +760,13 @@ const QuickJobSwitcherFeature = (() => {
 
         // This is the first job in the list
         selectedButton = button;
-        console.log(`QuickJobSwitcher: ✅ Top job (fallback): ${text.substring(0, 50)}`);
+        console.log(`SmartJobSwitcher: ✅ Top job (fallback): ${text.substring(0, 50)}`);
         break;
       }
     }
 
     if (selectedButton) {
-      console.log('QuickJobSwitcher: Clicking selected job...');
+      console.log('SmartJobSwitcher: Clicking selected job...');
 
       // Click the job button to navigate
       selectedButton.click();
@@ -777,7 +778,7 @@ const QuickJobSwitcherFeature = (() => {
         closeSidebar();
       }, 100);
     } else {
-      console.log('QuickJobSwitcher: No jobs found, just closing sidebar');
+      console.log('SmartJobSwitcher: No jobs found, just closing sidebar');
       closeSidebar();
     }
   }
@@ -818,5 +819,5 @@ const QuickJobSwitcherFeature = (() => {
 
 // Export for use in main content script
 if (typeof window !== 'undefined') {
-  window.QuickJobSwitcherFeature = QuickJobSwitcherFeature;
+  window.SmartJobSwitcherFeature = SmartJobSwitcherFeature;
 }
