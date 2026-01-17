@@ -1,0 +1,1544 @@
+# Jobtread Power Tools - Universal MCP Server Implementation Spec v4
+
+## Executive Summary
+
+**What Changed:** In December 2025, Anthropic donated MCP to the Linux Foundation's Agentic AI Foundation. OpenAI, Google, Microsoft, AWS, and Block joined as co-founders. MCP is now **the universal standard** for AI-to-tool connectivity with 97M+ monthly SDK downloads.
+
+**What This Means:** Your MCP server works with **every major AI platform**, not just Claude. Build once, serve everyone.
+
+**v3 Update:** Simplified per-company pricing (no per-seat fees) with multi-tenant architecture.
+
+**v4 Update:** Added AI Knowledge System with three-tier knowledge retrieval (Official → Community → Team) and Process Document Library for user-generated SOPs.
+
+---
+
+## The Killer Value Prop
+
+### $30/month. Whole company. Every AI platform.
+
+No per-seat fees. No gotchas. Your entire team gets AI-powered JobTread access for less than a single user on most software.
+
+### The Math That Sells It
+
+```
+Titus Contracting: 15 employees
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Typical SaaS pricing:     $30/user × 15 = $450/month
+JobTread Tools Pro:       $30/month flat = $30/month
+
+You save: $420/month ($5,040/year)
+```
+
+---
+
+## Market Opportunity
+
+### Supported Platforms (All Use Your Same Server)
+
+| Platform | Company | Status | Use Case |
+|----------|---------|--------|----------|
+| Claude Desktop/Web/Code | Anthropic | ✅ Native | Chat, coding |
+| ChatGPT Desktop | OpenAI | ✅ Native | Chat, agents |
+| Gemini CLI | Google | ✅ Native | CLI, coding |
+| Copilot / VS Code | Microsoft | ✅ Native | Coding |
+| Cursor | Cursor | ✅ Native | Coding |
+| JetBrains IDEs | JetBrains | ✅ Native | Coding |
+| Goose | Block | ✅ Native | Automation |
+| Windsurf | Codeium | ✅ Native | Coding |
+
+**Key Insight:** One MCP server serves ALL these platforms. No code changes needed.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   User's AI Environment                          │
+├─────────────────────────────────────────────────────────────────┤
+│  Claude │ ChatGPT │ Gemini CLI │ Cursor │ Copilot │ Goose │...  │
+│       ↓                                                         │
+│  MCP Client (built into all platforms)                          │
+│       ↓                                                         │
+│  Platform-specific config (all point to same URL)               │
+│  URL: "https://mcp.jobtread-tools.pro/sse"                     │
+│  Auth: "Bearer <license_key>:<grant_key>"                       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ↓ HTTPS + SSE (MCP Protocol)
+┌─────────────────────────────────────────────────────────────────┐
+│              Your MCP Server (Cloudflare Worker)                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐        │
+│  │    Auth     │    │   Tools     │    │  Knowledge  │        │
+│  ├─────────────┤    ├─────────────┤    ├─────────────┤        │
+│  │ Validate    │    │ jobtread_*  │    │ 3-tier      │        │
+│  │ license key │    │ actions     │    │ lookup      │        │
+│  │ + grant key │    │             │    │             │        │
+│  │ + tier      │    │ knowledge_  │    │ Team→       │        │
+│  │             │    │ lookup      │    │ Community→  │        │
+│  │             │    │             │    │ Official    │        │
+│  └─────────────┘    └──────┬──────┘    └──────┬──────┘        │
+│                            │                   │               │
+│                            ↓                   ↓               │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │                     Bindings                             │  │
+│  │  DB: jobtread-extension-users (license validation)       │  │
+│  │  AI_KB: jobtread-ai-knowledge (process docs + cache)     │  │
+│  │  CACHE: jobtread-cache (Gemini response caching)         │  │
+│  └─────────────────────────────────────────────────────────┘  │
+│                            │                                   │
+│                       ┌────┴────┐                              │
+│                       ↓         ↓                              │
+│              ┌──────────────┐  ┌──────────────┐               │
+│              │ Gemini API   │  │ JobTread API │               │
+│              │ (Official    │  │ (User Data)  │               │
+│              │  Knowledge)  │  │              │               │
+│              └──────────────┘  └──────────────┘               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## AI Knowledge System (v4 NEW)
+
+### The Problem
+
+AI assistants don't know JobTread-specific workflows:
+- "Create a change order" → AI doesn't know JobTread's specific process
+- "Set up a budget template" → AI guesses at field names and structures
+- "Import a task template" → AI makes up parameters that don't exist
+
+**Result:** Users spend time teaching AI how JobTread works, correcting errors, and re-running failed operations.
+
+### The Solution: Three-Tier Knowledge Retrieval
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Knowledge Retrieval Flow                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  User: "Create a change order for the Johnson kitchen remodel"  │
+│                              │                                   │
+│                              ↓                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           TIER 1: Team Documents (Private)                │   │
+│  │           ─────────────────────────────────               │   │
+│  │  Query: "change order" in org's private SOPs              │   │
+│  │                                                           │   │
+│  │  Found: "Titus Change Order Process"                      │   │
+│  │  → Must include Design Review Sign-off field              │   │
+│  │  → Always CC project manager                              │   │
+│  │  → Use cost code 99-CO for change order line items        │   │
+│  └────────────────────────┬─────────────────────────────────┘   │
+│                           │                                      │
+│                           ↓ Merge with...                        │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           TIER 2: Community Documents (Shared)            │   │
+│  │           ─────────────────────────────────               │   │
+│  │  Query: "change order" in public process library          │   │
+│  │                                                           │   │
+│  │  Found: "Change Order Best Practices" (⭐ 127 saves)      │   │
+│  │  → Link to original estimate for cost reference           │   │
+│  │  → Include before/after scope comparison                  │   │
+│  │  → Get digital signature before work begins               │   │
+│  └────────────────────────┬─────────────────────────────────┘   │
+│                           │                                      │
+│                           ↓ Supplement with...                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           TIER 3: Official Documentation (Gemini)         │   │
+│  │           ─────────────────────────────────               │   │
+│  │  Query: Gemini API → "JobTread change order creation"     │   │
+│  │                                                           │   │
+│  │  Returns: Official JobTread help desk content             │   │
+│  │  → createDocument mutation with type: 'changeOrder'       │   │
+│  │  → Required fields: jobId, name, costItems                │   │
+│  │  → Optional: description, dueDate, assignees              │   │
+│  └────────────────────────┬─────────────────────────────────┘   │
+│                           │                                      │
+│                           ↓                                      │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    AI Executes With:                      │   │
+│  │  ✓ Correct API syntax (from Official)                    │   │
+│  │  ✓ Industry best practices (from Community)              │   │
+│  │  ✓ Company-specific requirements (from Team)             │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Knowledge Tiers Explained
+
+| Tier | Scope | Source | Priority |
+|------|-------|--------|----------|
+| **Team** | Your org only | Private SOPs in extension | 1st (highest) |
+| **Community** | All subscribers | Shared process library | 2nd |
+| **Official** | Everyone | JobTread docs via Gemini | 3rd (fallback) |
+
+### Why This Order?
+
+1. **Team first** - Your company's specific processes trump everything
+2. **Community second** - Peer-tested workflows from real contractors
+3. **Official third** - Authoritative but generic documentation
+
+### The Flywheel Effect
+
+```
+Users create SOPs
+       │
+       ↓
+AI gets smarter
+       │
+       ↓
+Product more valuable
+       │
+       ↓
+More users join
+       │
+       ↓
+More SOPs created
+       │
+       └─────→ (repeat)
+```
+
+---
+
+## Process Document Library (v4 NEW)
+
+### Browser Extension Help Desk Integration
+
+The browser extension injects a new tab into JobTread's help desk area:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    JobTread Help Desk                           │
+│                  (via browser extension)                        │
+├─────────────────────────────────────────────────────────────────┤
+│  [Official Docs]  [Community Processes]  [My Team's SOPs]       │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  📄 Kitchen Remodel Budget Template Setup                │   │
+│  │  by @ScottEstimating · ⭐ 47 saves · Titus Contracting   │   │
+│  │                                                          │   │
+│  │  Step 1: Create cost code groups for Demo, Rough-in...  │   │
+│  │  Step 2: Set up parameters for room dimensions...        │   │
+│  │  Step 3: Add formula-based calculations...               │   │
+│  │                                                          │   │
+│  │  [View Full Process] [Save to My Library] [Share]        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │  📄 Change Order Workflow with Client Approval           │   │
+│  │  by @PMBrian · ⭐ 89 saves · BuildRight Construction     │   │
+│  │                                                          │   │
+│  │  Complete workflow for handling scope changes...         │   │
+│  │                                                          │   │
+│  │  [View Full Process] [Save to My Library] [Share]        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  [+ Create New Process Doc]                                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Document Visibility Levels
+
+| Level | Who Can See | Use Case |
+|-------|-------------|----------|
+| **Private** | Only you | Draft SOPs, personal notes |
+| **Team** | Your org | Company procedures, internal SOPs |
+| **Public** | All subscribers | Share with community, get saves |
+
+### Process Document Schema
+
+```javascript
+{
+  id: "doc_abc123",
+  title: "Kitchen Remodel Budget Template Setup",
+  slug: "kitchen-remodel-budget-template",
+  
+  // Author info
+  authorId: "user_xyz",
+  authorName: "Scott",
+  authorOrg: "Titus Contracting",
+  
+  // Visibility
+  visibility: "public", // private | team | public
+  orgId: "22PGZ29nPpZH", // for team-level docs
+  
+  // Content
+  content: "## Step 1: Create cost code groups...",
+  contentFormat: "markdown",
+  
+  // Categorization
+  category: "estimating", // estimating | scheduling | budgeting | etc.
+  tags: ["kitchen", "budget", "template", "formulas"],
+  jobtreadFeatures: ["budget", "cost-codes", "parameters"],
+  
+  // Engagement
+  saveCount: 47,
+  viewCount: 312,
+  
+  // Metadata
+  createdAt: "2025-12-01T...",
+  updatedAt: "2026-01-15T...",
+  version: 3
+}
+```
+
+### Feature Access by Tier
+
+| Feature | Essential | Pro | Power User |
+|---------|-----------|-----|------------|
+| View community docs | ✅ | ✅ | ✅ |
+| Save docs to library | ✅ | ✅ | ✅ |
+| Create team docs | ❌ | ✅ | ✅ |
+| Share to community | ❌ | ✅ | ✅ |
+| AI queries team docs | ❌ | ❌ | ✅ |
+| AI queries community docs | ❌ | ❌ | ✅ |
+| AI queries official docs | ❌ | ❌ | ✅ |
+
+---
+
+## Knowledge Lookup Tool Implementation
+
+### MCP Tool: `jobtread_knowledge_lookup`
+
+```javascript
+{
+  name: 'jobtread_knowledge_lookup',
+  description: 'Query JobTread documentation and process library before performing operations. Returns official docs, community best practices, and team-specific SOPs.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      query: { 
+        type: 'string', 
+        description: 'What to look up (e.g., "change order creation", "budget formulas", "task templates")' 
+      },
+      category: {
+        type: 'string',
+        enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general'],
+        description: 'Optional category filter'
+      }
+    },
+    required: ['query']
+  }
+}
+```
+
+### Implementation
+
+```javascript
+// jobtread-mcp-server/src/tools/knowledge.js
+
+export class KnowledgeLookup {
+  constructor(env, orgId) {
+    this.env = env;
+    this.orgId = orgId;
+    this.geminiApiKey = env.GEMINI_API_KEY;
+  }
+
+  async lookup(query, category = null) {
+    const results = {
+      team: null,
+      community: null,
+      official: null,
+      combined: ''
+    };
+
+    // Tier 1: Team documents (private to org)
+    results.team = await this.queryTeamDocs(query, category);
+
+    // Tier 2: Community documents (shared)
+    results.community = await this.queryCommunityDocs(query, category);
+
+    // Tier 3: Official docs (via Gemini)
+    results.official = await this.queryGemini(query);
+
+    // Combine with priority weighting
+    results.combined = this.combineResults(results);
+
+    return results;
+  }
+
+  async queryTeamDocs(query, category) {
+    const conditions = ['visibility IN (?, ?)', 'org_id = ?'];
+    const params = ['team', 'private', this.orgId];
+
+    if (category) {
+      conditions.push('category = ?');
+      params.push(category);
+    }
+
+    // Full-text search on title and content
+    const docs = await this.env.AI_KNOWLEDGE_DB.prepare(`
+      SELECT id, title, content, category, tags, save_count
+      FROM process_documents
+      WHERE ${conditions.join(' AND ')}
+        AND (title LIKE ? OR content LIKE ? OR tags LIKE ?)
+      ORDER BY save_count DESC
+      LIMIT 5
+    `).bind(...params, `%${query}%`, `%${query}%`, `%${query}%`).all();
+
+    return docs.results;
+  }
+
+  async queryCommunityDocs(query, category) {
+    const conditions = ['visibility = ?'];
+    const params = ['public'];
+
+    if (category) {
+      conditions.push('category = ?');
+      params.push(category);
+    }
+
+    const docs = await this.env.AI_KNOWLEDGE_DB.prepare(`
+      SELECT id, title, content, category, tags, save_count, author_name, author_org
+      FROM process_documents
+      WHERE ${conditions.join(' AND ')}
+        AND (title LIKE ? OR content LIKE ? OR tags LIKE ?)
+      ORDER BY save_count DESC
+      LIMIT 5
+    `).bind(...params, `%${query}%`, `%${query}%`, `%${query}%`).all();
+
+    return docs.results;
+  }
+
+  async queryGemini(query) {
+    // Check cache first
+    const cacheKey = `gemini:${query.toLowerCase().replace(/\s+/g, '_')}`;
+    const cached = await this.env.CACHE.get(cacheKey);
+    
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    // Query Gemini
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': this.geminiApiKey
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `You are a JobTread construction management software expert. 
+            
+Answer this question about JobTread: "${query}"
+
+Provide:
+1. The correct way to do this in JobTread
+2. Required fields and parameters
+3. Common mistakes to avoid
+4. Any relevant API/Pave query syntax if applicable
+
+Be specific and technical. Reference JobTread's actual features and terminology.`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1024
+        }
+      })
+    });
+
+    const data = await response.json();
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+
+    // Cache for 24 hours
+    if (result) {
+      await this.env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 });
+    }
+
+    return result;
+  }
+
+  combineResults(results) {
+    let combined = '';
+
+    // Team docs get highest priority header
+    if (results.team?.length > 0) {
+      combined += '## Your Team\'s Processes\n\n';
+      for (const doc of results.team) {
+        combined += `### ${doc.title}\n${doc.content}\n\n`;
+      }
+    }
+
+    // Community docs next
+    if (results.community?.length > 0) {
+      combined += '## Community Best Practices\n\n';
+      for (const doc of results.community) {
+        combined += `### ${doc.title} (⭐ ${doc.save_count} saves)\n`;
+        combined += `*by ${doc.author_name} @ ${doc.author_org}*\n\n`;
+        combined += `${doc.content}\n\n`;
+      }
+    }
+
+    // Official docs as foundation
+    if (results.official) {
+      combined += '## Official JobTread Documentation\n\n';
+      combined += results.official;
+    }
+
+    return combined;
+  }
+}
+```
+
+### When to Call Knowledge Lookup
+
+The AI should call `jobtread_knowledge_lookup` **before** these operations:
+
+| Operation Type | Lookup Query |
+|---------------|--------------|
+| Create document | "{document_type} creation" |
+| Update budget | "budget editing {specific_action}" |
+| Import template | "task template import" |
+| Create customer | "customer creation workflow" |
+| Generate report | "{report_type} report" |
+| Any "how do I..." | Direct user query |
+
+### Example Flow
+
+```
+User: "Create a change order for the Johnson kitchen adding $5,000 for upgraded cabinets"
+
+AI Internal Process:
+1. Call jobtread_knowledge_lookup({ query: "change order creation" })
+2. Receive:
+   - Team: "Titus always uses cost code 99-CO, requires PM approval"
+   - Community: "Best practice: link to original estimate"
+   - Official: "createDocument mutation syntax..."
+3. Execute with combined knowledge
+4. Result: Correct change order, first try
+```
+
+---
+
+## Cost Analysis: Gemini API
+
+### Gemini 1.5 Flash Pricing
+
+| Metric | Cost |
+|--------|------|
+| Input tokens | $0.075 / 1M tokens |
+| Output tokens | $0.30 / 1M tokens |
+
+### Per-Lookup Cost Estimate
+
+```
+Average lookup:
+- Input: ~500 tokens (query + system prompt)
+- Output: ~1,000 tokens (detailed response)
+
+Cost per lookup:
+- Input: 500 × $0.000000075 = $0.0000375
+- Output: 1,000 × $0.0000003 = $0.0003
+- Total: ~$0.00034 per lookup
+
+Rounded up for safety: ~$0.0005 per lookup
+```
+
+### Break-Even Analysis
+
+```
+Power User tier: $30/month
+Gemini cost per lookup: $0.0005
+
+Break-even point: $30 / $0.0005 = 60,000 lookups/month
+
+Per company:
+- 10 users × 20 lookups/day × 22 workdays = 4,400 lookups/month
+- Cost: $2.20/month (7.3% of revenue)
+
+Worst case (heavy usage):
+- 20 users × 50 lookups/day × 22 workdays = 22,000 lookups/month
+- Cost: $11/month (36.7% of revenue)
+
+Still profitable even at extreme usage!
+```
+
+### Optimization Strategies
+
+1. **KV Caching** (24hr TTL)
+   - Cache common queries
+   - ~80% cache hit rate expected
+   - Reduces Gemini calls by 4x
+
+2. **Conditional Lookup**
+   - Only call for complex operations (create/update/import)
+   - Skip for simple queries (search, get, list)
+
+3. **Batch at Session Start**
+   - Detect user intent from first message
+   - Pre-fetch relevant knowledge
+
+4. **D1 Fallback**
+   - Store official docs snippets locally
+   - Use for common/static queries
+   - Gemini only for novel questions
+
+### Cost Projection with Optimizations
+
+```
+Base: 4,400 lookups/month per company
+
+With 80% cache hit rate:
+- Gemini calls: 880/month
+- Cost: $0.44/month per company
+
+With conditional lookup (50% reduction):
+- Gemini calls: 440/month
+- Cost: $0.22/month per company
+
+Net margin: $29.78/month per Power User (99.3%)
+```
+
+---
+
+## Database Schema Updates (v4)
+
+### Process Documents Table
+
+```sql
+-- Run on jobtread-ai-knowledge D1
+
+CREATE TABLE process_documents (
+  id TEXT PRIMARY KEY,
+  
+  -- Content
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  content_format TEXT DEFAULT 'markdown',
+  
+  -- Author
+  author_id TEXT NOT NULL,
+  author_name TEXT,
+  author_org TEXT,
+  org_id TEXT,
+  
+  -- Visibility
+  visibility TEXT DEFAULT 'private' CHECK (visibility IN ('private', 'team', 'public')),
+  
+  -- Categorization
+  category TEXT,
+  tags TEXT, -- JSON array as string
+  jobtread_features TEXT, -- JSON array of relevant JT features
+  
+  -- Engagement
+  save_count INTEGER DEFAULT 0,
+  view_count INTEGER DEFAULT 0,
+  
+  -- Metadata
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  version INTEGER DEFAULT 1,
+  
+  -- Foreign keys
+  FOREIGN KEY (author_id) REFERENCES org_users(id)
+);
+
+CREATE INDEX idx_docs_visibility ON process_documents(visibility);
+CREATE INDEX idx_docs_org ON process_documents(org_id);
+CREATE INDEX idx_docs_category ON process_documents(category);
+CREATE INDEX idx_docs_saves ON process_documents(save_count DESC);
+CREATE INDEX idx_docs_search ON process_documents(title, content, tags);
+```
+
+### Document Saves Table
+
+```sql
+CREATE TABLE document_saves (
+  id TEXT PRIMARY KEY,
+  document_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  FOREIGN KEY (document_id) REFERENCES process_documents(id),
+  FOREIGN KEY (user_id) REFERENCES org_users(id),
+  UNIQUE(document_id, user_id)
+);
+
+CREATE INDEX idx_saves_user ON document_saves(user_id);
+CREATE INDEX idx_saves_doc ON document_saves(document_id);
+```
+
+### Knowledge Cache Table
+
+```sql
+CREATE TABLE knowledge_cache (
+  id TEXT PRIMARY KEY,
+  query_hash TEXT UNIQUE NOT NULL,
+  query_text TEXT NOT NULL,
+  response TEXT NOT NULL,
+  source TEXT DEFAULT 'gemini', -- gemini | manual
+  hit_count INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME
+);
+
+CREATE INDEX idx_cache_hash ON knowledge_cache(query_hash);
+CREATE INDEX idx_cache_expires ON knowledge_cache(expires_at);
+```
+
+---
+
+## Multi-Tenant Architecture
+
+### How It Works
+
+```
+LICENSE_KEY (Gumroad) → One per company (flat pricing)
+GRANT_KEY (JobTread) → Each user has their own
+```
+
+**Bob's config:** `Bearer COMPANY_LICENSE:BOBS_GRANT_KEY`
+**Pam's config:** `Bearer COMPANY_LICENSE:PAMS_GRANT_KEY`
+
+Both work simultaneously, from different AI platforms. One flat fee covers the whole company.
+
+### Visual Example: Titus Contracting
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Titus Contracting Inc.                        │
+│                  (JobTread Org: 22PGZ29nPpZH)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Gumroad License: ABC-123-XYZ (Power User - $30/mo flat)       │
+│  └─ Registered to Org: 22PGZ29nPpZH                            │
+│  └─ ENTIRE COMPANY gets access. No per-seat fees.              │
+│                                                                 │
+│  ┌─────────────────┐          ┌─────────────────┐              │
+│  │      Bob        │          │      Pam        │              │
+│  │  PM @ Titus     │          │  Designer @ Titus│             │
+│  ├─────────────────┤          ├─────────────────┤              │
+│  │ Grant Key:      │          │ Grant Key:      │              │
+│  │ grant_bob_xxx   │          │ grant_pam_yyy   │              │
+│  │                 │          │                 │              │
+│  │ Prefers:        │          │ Prefers:        │              │
+│  │ Gemini CLI      │          │ Claude Desktop  │              │
+│  └────────┬────────┘          └────────┬────────┘              │
+│           │                            │                        │
+│           ▼                            ▼                        │
+│  ┌─────────────────┐          ┌─────────────────┐              │
+│  │ ~/.gemini/      │          │ claude_desktop_ │              │
+│  │ settings.json   │          │ config.json     │              │
+│  ├─────────────────┤          ├─────────────────┤              │
+│  │ Auth Header:    │          │ Auth Header:    │              │
+│  │ Bearer ABC-123- │          │ Bearer ABC-123- │              │
+│  │ XYZ:grant_bob   │          │ XYZ:grant_pam   │              │
+│  └────────┬────────┘          └────────┬────────┘              │
+│           │                            │                        │
+└───────────┼────────────────────────────┼────────────────────────┘
+            │                            │
+            ▼                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    MCP Server validates:                         │
+│  1. License ABC-123-XYZ is valid Power User tier ✓              │
+│  2. grant_bob belongs to org 22PGZ29nPpZH ✓                     │
+│  3. grant_pam belongs to org 22PGZ29nPpZH ✓                     │
+│  4. Power User tier has MCP access enabled ✓                    │
+│  5. Both get access to Titus team docs ✓                        │
+│  6. Both connections allowed simultaneously ✓                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Security Model
+
+| Component | Who Knows It | What It Controls |
+|-----------|--------------|------------------|
+| License Key | Everyone at company | Which tier/features you have |
+| Grant Key | Only the individual user | THEIR JobTread access |
+| Org Lock | Automatic (server-side) | Prevents other companies from using your license |
+| Team Docs | Server-side org check | Only your org sees your team docs |
+
+**Why this is secure:**
+- The license key alone does nothing without a valid grant key
+- Grant keys only work if they belong to the SAME JobTread organization
+- Someone outside your company can't use your license (org mismatch error)
+- Team documents are filtered by orgId on every query
+- Each user's actions are tracked to their grant key (for analytics)
+- Grant key is never stored (only a fingerprint for identification)
+
+---
+
+## Business Model
+
+### Simplified Pricing
+
+| Tier | Price | What Everyone Gets |
+|------|-------|-------------------|
+| **Essential** | $10/mo | Browser extension + view community docs |
+| **Pro** | $20/mo | + Create team docs + share to community |
+| **Power User** | $30/mo | + MCP + AI knowledge lookup |
+
+**Per company. Not per seat.**
+
+### Tier Feature Matrix (Updated v4)
+
+```javascript
+// jobtread-mcp-server/src/config/tiers.js
+
+export const TIER_CONFIG = {
+  essential: {
+    name: 'Essential',
+    price: 10,
+    priceLabel: '$10/mo',
+    apiAccess: false,
+    mcpAccess: false,
+    canCreateDocs: false,
+    canSharePublic: false,
+    aiKnowledgeLookup: false,
+    features: [
+      'Browser extension',
+      'Quick navigation',
+      'Keyboard shortcuts',
+      'UI enhancements',
+      'View community process docs',
+      'Save docs to personal library'
+    ],
+    tagline: 'Enhance your JobTread experience'
+  },
+  pro: {
+    name: 'Pro', 
+    price: 20,
+    priceLabel: '$20/mo',
+    apiAccess: true,
+    mcpAccess: false,
+    canCreateDocs: true,
+    canSharePublic: true,
+    aiKnowledgeLookup: false,
+    features: [
+      'Everything in Essential',
+      'Bulk operations',
+      'Custom reports',
+      'Data export',
+      'Pre-built automations',
+      'Create team process docs',
+      'Share docs to community'
+    ],
+    tagline: 'Automate and document'
+  },
+  power_user: {
+    name: 'Power User',
+    price: 30,
+    priceLabel: '$30/mo',
+    apiAccess: true,
+    mcpAccess: true,
+    canCreateDocs: true,
+    canSharePublic: true,
+    aiKnowledgeLookup: true,
+    features: [
+      'Everything in Pro',
+      'MCP server access',
+      'Works with Claude, ChatGPT, Gemini, Cursor, Copilot',
+      'Natural language queries',
+      'AI-assisted workflows',
+      'AI queries your team docs',
+      'AI queries community docs',
+      'AI queries official JobTread docs'
+    ],
+    tagline: 'AI-powered JobTread mastery'
+  }
+};
+
+export function hasMcpAccess(tier) {
+  return TIER_CONFIG[tier]?.mcpAccess ?? false;
+}
+
+export function hasApiAccess(tier) {
+  return TIER_CONFIG[tier]?.apiAccess ?? false;
+}
+
+export function hasAiKnowledge(tier) {
+  return TIER_CONFIG[tier]?.aiKnowledgeLookup ?? false;
+}
+
+export function canCreateDocs(tier) {
+  return TIER_CONFIG[tier]?.canCreateDocs ?? false;
+}
+
+export function canSharePublic(tier) {
+  return TIER_CONFIG[tier]?.canSharePublic ?? false;
+}
+```
+
+### Why This Pricing Works
+
+**Your Costs:**
+- Cloudflare: ~$0 (free tier)
+- Gemini API: ~$0.22-2.20/mo per Power User (with caching)
+- Total: <$5/mo per customer even at heavy usage
+
+**Your Value Proposition:**
+- Pre-built, tested JobTread integration
+- Works across ALL AI platforms
+- Three-tier knowledge base (team → community → official)
+- Community-generated process library
+- Ongoing maintenance as JobTread API evolves
+- **Whole company access for one flat fee**
+
+---
+
+## Content Sources for Official Knowledge
+
+### Available JobTread Content (Already Indexed by Gemini)
+
+| Source | Estimated Content | URL Pattern |
+|--------|------------------|-------------|
+| Product Updates | 200+ articles | www.jobtread.com/product-updates |
+| Webinars | 100+ recordings | www.jobtread.com/resources/webinars |
+| Podcast Episodes | 100+ episodes | www.jobtread.com/resources/podcasts |
+| Blog Posts | 100+ articles | www.jobtread.com/resources/blog |
+| Help Desk | Full docs | app.jobtread.com/help (Gemini-integrated) |
+
+**Total estimated content:** ~1.3M words
+
+### Why Gemini Already Has This
+
+In September 2025, JobTread integrated Google Gemini into their help desk. When users search, it opens a Gemini chat with their query. This means:
+
+1. Gemini has been trained on / has access to JobTread's documentation
+2. We can query Gemini for authoritative JobTread knowledge
+3. No need to scrape or build our own knowledge base
+4. Knowledge stays current as JobTread updates their docs
+
+### Alternative/Supplemental Sources (If Needed)
+
+1. **YouTube Transcription** - Whisper AI on JobTread YouTube videos
+2. **API Schema Introspection** - Query Pave for entity structures
+3. **Manual Curation** - High-value SOPs from power users
+
+---
+
+## Cloudflare Resources
+
+### Existing (reuse from extension)
+| Resource | ID | Purpose |
+|----------|-----|---------|
+| Worker | `jobtread-tools-pro` | Keep for extension API |
+| D1 | `jobtread-extension-users` | License validation |
+| KV | `jobtread-cache` | Response caching |
+
+### New
+| Resource | ID | Purpose |
+|----------|-----|---------|
+| Worker | `jobtread-mcp-server` | MCP protocol handler |
+| D1 | `jobtread-ai-knowledge` | `2cad09d2-72bc-4176-b66d-d8f955546963` - Process docs + cache |
+
+### wrangler.toml
+
+```toml
+name = "jobtread-mcp-server"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "jobtread-extension-users"
+database_id = "576bc461-59fc-42de-85fd-3397be8b8df9"
+
+[[d1_databases]]
+binding = "AI_KNOWLEDGE_DB"
+database_name = "jobtread-ai-knowledge"
+database_id = "2cad09d2-72bc-4176-b66d-d8f955546963"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "7d35cd79e58c43259108a6036d10dcf9"
+
+[vars]
+GEMINI_API_KEY = "your-gemini-api-key"
+
+[routes]
+pattern = "mcp.jobtread-tools.pro/*"
+zone_name = "jobtread-tools.pro"
+```
+
+---
+
+## MCP Server Implementation
+
+### Updated Worker Entry Point
+
+```javascript
+// jobtread-mcp-server/src/index.js
+
+import { McpServer } from './mcp/server.js';
+import { JobTreadTools } from './tools/jobtread.js';
+import { KnowledgeLookup } from './tools/knowledge.js';
+import { validateAuth } from './auth.js';
+import { hasAiKnowledge } from './config/tiers.js';
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+      return handleCors();
+    }
+    
+    // Health check
+    if (url.pathname === '/health') {
+      return new Response(JSON.stringify({ 
+        status: 'ok',
+        version: '4.0.0',
+        protocol: 'MCP 2024-11-05',
+        features: ['knowledge-lookup', 'process-docs', 'three-tier-retrieval']
+      }), { 
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // MCP SSE endpoint
+    if (url.pathname === '/sse') {
+      return handleMcpConnection(request, env, ctx);
+    }
+    
+    // MCP message endpoint
+    if (url.pathname === '/message' && request.method === 'POST') {
+      return handleMcpMessage(request, env, ctx);
+    }
+    
+    return new Response('Not Found', { status: 404 });
+  }
+};
+
+async function handleMcpConnection(request, env, ctx) {
+  // 1. Validate authorization
+  const authHeader = request.headers.get('Authorization');
+  const authResult = await validateAuth(env, authHeader);
+  
+  if (!authResult.valid) {
+    return new Response(JSON.stringify({ 
+      error: authResult.error,
+      code: authResult.code 
+    }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  const { license, user, grantKey } = authResult;
+  
+  // 2. Check tier has MCP access
+  if (!hasMcpAccess(license.tier)) {
+    return new Response(JSON.stringify({
+      error: `Your ${license.tier} tier doesn't include MCP access. Upgrade to Power User at jobtread-tools.pro/upgrade`,
+      code: 'TIER_NO_MCP'
+    }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  // 3. Detect client type for analytics
+  const clientName = detectClientName(request);
+  
+  // 4. Create MCP server instance
+  const mcpServer = new McpServer({
+    name: 'jobtread-tools-pro',
+    version: '4.0.0'
+  });
+  
+  // 5. Register JobTread tools
+  const tools = new JobTreadTools(env, grantKey, license, user, clientName);
+  
+  // 6. Register Knowledge Lookup tool (if tier supports it)
+  if (hasAiKnowledge(license.tier)) {
+    const knowledge = new KnowledgeLookup(env, license.orgId);
+    tools.registerKnowledgeLookup(knowledge);
+  }
+  
+  mcpServer.registerTools(tools.getToolDefinitions());
+  mcpServer.setToolHandler(tools.handleToolCall.bind(tools));
+  
+  // 7. Update connection stats
+  ctx.waitUntil(updateConnectionStats(env, license.id, user.id, clientName));
+  
+  // 8. Return SSE stream
+  return mcpServer.createSseResponse(request);
+}
+```
+
+### Updated JobTread Tools with Knowledge Lookup
+
+```javascript
+// jobtread-mcp-server/src/tools/jobtread.js
+
+export class JobTreadTools {
+  constructor(env, grantKey, license, user, clientName) {
+    this.env = env;
+    this.grantKey = grantKey;
+    this.license = license;
+    this.user = user;
+    this.orgId = license.orgId;
+    this.clientName = clientName;
+    this.knowledgeLookup = null;
+  }
+  
+  registerKnowledgeLookup(knowledge) {
+    this.knowledgeLookup = knowledge;
+  }
+  
+  getToolDefinitions() {
+    const tools = [
+      // ... existing tools ...
+      {
+        name: 'jobtread_search_jobs',
+        description: 'Search for jobs by name, number, or status.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'Search term' },
+            status: { 
+              type: 'string', 
+              enum: ['lead', 'opportunity', 'committed', 'active', 'completed', 'closed'],
+              description: 'Filter by status'
+            },
+            limit: { type: 'number', description: 'Max results (default 20)' }
+          }
+        }
+      },
+      {
+        name: 'jobtread_get_job',
+        description: 'Get detailed info about a specific job.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            jobId: { type: 'string', description: 'The JobTread job ID' }
+          },
+          required: ['jobId']
+        }
+      },
+      {
+        name: 'jobtread_create_task',
+        description: 'Create a new task on a job.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            jobId: { type: 'string', description: 'Job ID' },
+            name: { type: 'string', description: 'Task name' },
+            description: { type: 'string', description: 'Task description' },
+            startDate: { type: 'string', description: 'Start date (YYYY-MM-DD)' },
+            endDate: { type: 'string', description: 'End date (YYYY-MM-DD)' },
+            assigneeEmails: { type: 'array', items: { type: 'string' }, description: 'Assignee emails' }
+          },
+          required: ['jobId', 'name']
+        }
+      },
+      // ... more JobTread tools ...
+    ];
+    
+    // Add knowledge lookup if available
+    if (this.knowledgeLookup) {
+      tools.push({
+        name: 'jobtread_knowledge_lookup',
+        description: 'Query JobTread documentation and process library before performing operations. Returns official docs, community best practices, and team-specific SOPs. Call this BEFORE create/update/import operations.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { 
+              type: 'string', 
+              description: 'What to look up (e.g., "change order creation", "budget formulas", "task templates")' 
+            },
+            category: {
+              type: 'string',
+              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general'],
+              description: 'Optional category filter'
+            }
+          },
+          required: ['query']
+        }
+      });
+    }
+    
+    return tools;
+  }
+  
+  async handleToolCall(name, args) {
+    // Track usage
+    const startTime = Date.now();
+    let success = true;
+    let errorMessage = null;
+    
+    try {
+      switch (name) {
+        case 'jobtread_knowledge_lookup':
+          if (!this.knowledgeLookup) {
+            throw new Error('Knowledge lookup not available on your tier');
+          }
+          return await this.knowledgeLookup.lookup(args.query, args.category);
+          
+        case 'jobtread_search_jobs':
+          return await this.searchJobs(args);
+          
+        case 'jobtread_get_job':
+          return await this.getJob(args.jobId);
+          
+        case 'jobtread_create_task':
+          return await this.createTask(args);
+          
+        // ... other tool handlers ...
+          
+        default:
+          throw new Error(`Unknown tool: ${name}`);
+      }
+    } catch (error) {
+      success = false;
+      errorMessage = error.message;
+      throw error;
+    } finally {
+      // Log usage
+      const latency = Date.now() - startTime;
+      await this.env.DB.prepare(`
+        INSERT INTO mcp_tool_usage (license_id, user_id, tool_name, client_name, success, error_message, latency_ms)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(this.license.id, this.user.id, name, this.clientName, success, errorMessage, latency).run();
+    }
+  }
+  
+  // ... existing tool implementations ...
+}
+```
+
+---
+
+## Browser Extension: Process Doc Editor
+
+### Help Desk Tab Injection
+
+```javascript
+// extension/src/content/helpdesk-tab.js
+
+class ProcessDocManager {
+  constructor() {
+    this.currentView = 'community'; // community | team | saved
+  }
+
+  inject() {
+    // Find JobTread's help desk navigation
+    const helpNav = document.querySelector('.help-desk-nav');
+    if (!helpNav) return;
+
+    // Add our custom tabs
+    const tabsHtml = `
+      <div class="jt-pro-tabs">
+        <button class="jt-pro-tab active" data-view="community">
+          🌐 Community Processes
+        </button>
+        <button class="jt-pro-tab" data-view="team">
+          🏢 My Team's SOPs
+        </button>
+        <button class="jt-pro-tab" data-view="saved">
+          ⭐ Saved
+        </button>
+      </div>
+    `;
+
+    helpNav.insertAdjacentHTML('afterend', tabsHtml);
+
+    // Add event listeners
+    document.querySelectorAll('.jt-pro-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => this.switchView(e.target.dataset.view));
+    });
+  }
+
+  async switchView(view) {
+    this.currentView = view;
+    
+    // Update active tab
+    document.querySelectorAll('.jt-pro-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+    // Load content
+    const content = await this.loadContent(view);
+    this.renderContent(content);
+  }
+
+  async loadContent(view) {
+    const response = await fetch(`https://api.jobtread-tools.pro/docs?view=${view}`, {
+      headers: {
+        'Authorization': `Bearer ${this.licenseKey}:${this.grantKey}`
+      }
+    });
+    return response.json();
+  }
+
+  renderContent(docs) {
+    const container = document.querySelector('.jt-pro-content');
+    
+    container.innerHTML = docs.map(doc => `
+      <div class="jt-pro-doc-card">
+        <h3>${doc.title}</h3>
+        <div class="jt-pro-doc-meta">
+          by ${doc.author_name} · ⭐ ${doc.save_count} saves
+        </div>
+        <p>${doc.content.substring(0, 200)}...</p>
+        <div class="jt-pro-doc-actions">
+          <button onclick="viewDoc('${doc.id}')">View Full Process</button>
+          <button onclick="saveDoc('${doc.id}')">Save to Library</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+```
+
+### Process Doc Editor UI
+
+```javascript
+// extension/src/content/doc-editor.js
+
+class ProcessDocEditor {
+  constructor() {
+    this.doc = {
+      title: '',
+      content: '',
+      visibility: 'team',
+      category: 'general',
+      tags: []
+    };
+  }
+
+  open() {
+    const modal = document.createElement('div');
+    modal.className = 'jt-pro-modal';
+    modal.innerHTML = `
+      <div class="jt-pro-modal-content">
+        <h2>Create Process Document</h2>
+        
+        <label>Title</label>
+        <input type="text" id="doc-title" placeholder="e.g., Kitchen Remodel Budget Setup">
+        
+        <label>Category</label>
+        <select id="doc-category">
+          <option value="estimating">Estimating</option>
+          <option value="scheduling">Scheduling</option>
+          <option value="budgeting">Budgeting</option>
+          <option value="invoicing">Invoicing</option>
+          <option value="tasks">Tasks</option>
+          <option value="documents">Documents</option>
+          <option value="general">General</option>
+        </select>
+        
+        <label>Visibility</label>
+        <select id="doc-visibility">
+          <option value="private">🔒 Private (only me)</option>
+          <option value="team" selected>🏢 Team (my organization)</option>
+          <option value="public">🌐 Public (all subscribers)</option>
+        </select>
+        
+        <label>Content (Markdown)</label>
+        <textarea id="doc-content" rows="15" placeholder="## Step 1: ..."></textarea>
+        
+        <label>Tags (comma-separated)</label>
+        <input type="text" id="doc-tags" placeholder="kitchen, budget, template">
+        
+        <div class="jt-pro-modal-actions">
+          <button onclick="this.close()">Cancel</button>
+          <button class="primary" onclick="this.save()">Save Document</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  async save() {
+    const doc = {
+      title: document.getElementById('doc-title').value,
+      content: document.getElementById('doc-content').value,
+      visibility: document.getElementById('doc-visibility').value,
+      category: document.getElementById('doc-category').value,
+      tags: document.getElementById('doc-tags').value.split(',').map(t => t.trim())
+    };
+
+    const response = await fetch('https://api.jobtread-tools.pro/docs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.licenseKey}:${this.grantKey}`
+      },
+      body: JSON.stringify(doc)
+    });
+
+    if (response.ok) {
+      this.close();
+      showToast('Document saved!');
+    }
+  }
+}
+```
+
+---
+
+## API Endpoints for Process Docs
+
+### List Documents
+
+```javascript
+// GET /docs?view=community|team|saved
+
+app.get('/docs', async (req, res) => {
+  const { view } = req.query;
+  const { orgId, userId } = req.auth;
+
+  let query;
+  switch (view) {
+    case 'community':
+      query = `SELECT * FROM process_documents WHERE visibility = 'public' ORDER BY save_count DESC LIMIT 50`;
+      break;
+    case 'team':
+      query = `SELECT * FROM process_documents WHERE org_id = ? AND visibility IN ('team', 'private') ORDER BY updated_at DESC`;
+      break;
+    case 'saved':
+      query = `SELECT d.* FROM process_documents d 
+               JOIN document_saves s ON d.id = s.document_id 
+               WHERE s.user_id = ? ORDER BY s.saved_at DESC`;
+      break;
+  }
+
+  const docs = await env.AI_KNOWLEDGE_DB.prepare(query).bind(orgId || userId).all();
+  return res.json(docs.results);
+});
+```
+
+### Create Document
+
+```javascript
+// POST /docs
+
+app.post('/docs', async (req, res) => {
+  const { title, content, visibility, category, tags } = req.body;
+  const { userId, userName, orgId, orgName, tier } = req.auth;
+
+  // Check tier permissions
+  if (!canCreateDocs(tier)) {
+    return res.status(403).json({ error: 'Upgrade to Pro to create documents' });
+  }
+
+  if (visibility === 'public' && !canSharePublic(tier)) {
+    return res.status(403).json({ error: 'Upgrade to Pro to share publicly' });
+  }
+
+  const id = crypto.randomUUID();
+  const slug = slugify(title);
+
+  await env.AI_KNOWLEDGE_DB.prepare(`
+    INSERT INTO process_documents (id, title, slug, content, author_id, author_name, author_org, org_id, visibility, category, tags)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(id, title, slug, content, userId, userName, orgName, orgId, visibility, category, JSON.stringify(tags)).run();
+
+  return res.json({ id, slug });
+});
+```
+
+### Save/Unsave Document
+
+```javascript
+// POST /docs/:id/save
+// DELETE /docs/:id/save
+
+app.post('/docs/:id/save', async (req, res) => {
+  const { id } = req.params;
+  const { userId } = req.auth;
+
+  await env.AI_KNOWLEDGE_DB.prepare(`
+    INSERT OR IGNORE INTO document_saves (id, document_id, user_id)
+    VALUES (?, ?, ?)
+  `).bind(crypto.randomUUID(), id, userId).run();
+
+  await env.AI_KNOWLEDGE_DB.prepare(`
+    UPDATE process_documents SET save_count = save_count + 1 WHERE id = ?
+  `).bind(id).run();
+
+  return res.json({ saved: true });
+});
+```
+
+---
+
+## Troubleshooting
+
+| Code | Meaning | Solution |
+|------|---------|----------|
+| `NO_AUTH` | Missing auth header | Add Bearer token |
+| `INVALID_LICENSE` | Bad license key | Check spelling |
+| `LICENSE_EXPIRED` | Subscription expired | Renew |
+| `INVALID_GRANT_KEY` | Bad grant key | Create new one in JobTread |
+| `ORG_MISMATCH` | Grant key from wrong org | Use your org's grant key |
+| `ORG_ALREADY_REGISTERED` | Org registered elsewhere | Contact support |
+| `TIER_NO_MCP` | Tier doesn't include MCP | Upgrade to Power User |
+| `TIER_NO_KNOWLEDGE` | Tier doesn't include AI knowledge | Upgrade to Power User |
+| `DOC_CREATE_DENIED` | Can't create docs on tier | Upgrade to Pro |
+| `DOC_SHARE_DENIED` | Can't share publicly on tier | Upgrade to Pro |
+
+---
+
+## Deployment Checklist
+
+### 1. Database Schema
+```sql
+-- Run migrations on jobtread-ai-knowledge D1
+-- See "Database Schema Updates (v4)" section
+```
+
+### 2. Environment Variables
+```bash
+wrangler secret put GEMINI_API_KEY
+```
+
+### 3. Deploy Worker
+```bash
+cd jobtread-mcp-server
+wrangler deploy
+```
+
+### 4. Update Extension
+```bash
+cd extension
+npm run build
+# Upload to Chrome Web Store
+```
+
+### 5. Custom Domain
+- `mcp.jobtread-tools.pro` → Worker
+- `api.jobtread-tools.pro` → Worker (docs API)
+
+### 6. Gumroad Products
+- Essential: $10/mo
+- Pro: $20/mo  
+- Power User: $30/mo
+
+---
+
+## Summary
+
+### The Value Prop
+**$30/month. Whole company. Every AI platform. AI that actually knows JobTread.**
+
+### Key Features in v4
+- **Three-tier knowledge retrieval** - Team → Community → Official
+- **Process Document Library** - Build, store, share SOPs
+- **AI Knowledge Lookup** - Correct execution first time
+- **Community flywheel** - More users = more SOPs = smarter AI
+- **Gemini integration** - Leverages JobTread's own AI investment
+
+### What Stays the Same
+- Core architecture (Cloudflare Workers)
+- Tool implementations (JobTread API)
+- ~$0 infrastructure costs (Gemini adds minimal cost)
+- Works with ALL major AI platforms
+- Per-company pricing, no seat limits
+
+---
+
+**Document Version:** 4.0  
+**Last Updated:** January 2026  
+**MCP Spec Version:** 2024-11-05
