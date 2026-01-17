@@ -117,58 +117,64 @@ const QuickJobSwitcherFeature = (() => {
   }
 
   /**
-   * Find the main content container that needs its margin adjusted
+   * Find the main content container that JobTread uses for padding adjustment
+   * JobTread uses a container with inline padding-right style matching sidebar width
    */
   function findMainContentContainer(sidebar) {
+    // Get the current sidebar width to help identify the right element
+    const sidebarWidth = sidebar.offsetWidth || DEFAULT_WIDTH;
+
+    // Strategy 1: Look for sidebar's sibling with inline padding-right style
+    // This is the most reliable because JobTread sets padding-right dynamically
     const parent = sidebar.parentElement;
-    if (!parent) return null;
+    if (parent) {
+      for (const sibling of parent.children) {
+        if (sibling === sidebar) continue;
 
-    // Strategy 1: Look for siblings with common main content classes
-    for (const sibling of parent.children) {
-      if (sibling === sidebar) continue;
-
-      // Check for common main content patterns (flex containers that grow)
-      if (sibling.classList.contains('grow') ||
-          sibling.classList.contains('flex-1') ||
-          sibling.classList.contains('flex-grow') ||
-          sibling.classList.contains('min-w-0')) {
-        return sibling;
-      }
-    }
-
-    // Strategy 2: Look for the largest sibling element (likely the main content)
-    let largestSibling = null;
-    let largestWidth = 0;
-    for (const sibling of parent.children) {
-      if (sibling === sidebar) continue;
-      if (sibling.nodeType !== Node.ELEMENT_NODE) continue;
-
-      const width = sibling.offsetWidth;
-      if (width > largestWidth) {
-        largestWidth = width;
-        largestSibling = sibling;
-      }
-    }
-    if (largestSibling) {
-      return largestSibling;
-    }
-
-    // Strategy 3: Look one level up if we're in a nested structure
-    const grandparent = parent.parentElement;
-    if (grandparent) {
-      for (const uncle of grandparent.children) {
-        if (uncle === parent) continue;
-        if (uncle.classList.contains('grow') ||
-            uncle.classList.contains('flex-1') ||
-            uncle.classList.contains('flex-grow') ||
-            uncle.classList.contains('min-w-0') ||
-            uncle.classList.contains('overflow-auto') ||
-            uncle.classList.contains('overflow-y-auto')) {
-          return uncle;
+        // Check if this sibling has padding-right in inline style
+        const inlinePaddingRight = sibling.style.paddingRight;
+        if (inlinePaddingRight) {
+          console.log('QuickJobSwitcher: Found content container with inline padding-right:', inlinePaddingRight);
+          return sibling;
         }
       }
     }
 
+    // Strategy 2: Look for siblings with grow class that have computed padding-right
+    if (parent) {
+      for (const sibling of parent.children) {
+        if (sibling === sidebar) continue;
+
+        if (sibling.classList.contains('grow') ||
+            sibling.classList.contains('flex-1') ||
+            sibling.classList.contains('flex-grow') ||
+            sibling.classList.contains('min-w-0')) {
+          // Check if it has significant padding-right (indicating sidebar awareness)
+          const computed = window.getComputedStyle(sibling);
+          const computedPadding = parseInt(computed.paddingRight, 10);
+          if (computedPadding > 100) {
+            console.log('QuickJobSwitcher: Found grow container with padding-right:', computedPadding);
+            return sibling;
+          }
+        }
+      }
+    }
+
+    // Strategy 3: Find any sibling with grow class (fallback)
+    if (parent) {
+      for (const sibling of parent.children) {
+        if (sibling === sidebar) continue;
+
+        if (sibling.classList.contains('grow') ||
+            sibling.classList.contains('flex-1') ||
+            sibling.classList.contains('flex-grow')) {
+          console.log('QuickJobSwitcher: Found grow container (fallback)');
+          return sibling;
+        }
+      }
+    }
+
+    console.log('QuickJobSwitcher: Could not find content container');
     return null;
   }
 
@@ -183,22 +189,12 @@ const QuickJobSwitcherFeature = (() => {
     // Find and update the main content container
     const mainContent = findMainContentContainer(sidebar);
     if (mainContent) {
-      // Track this element so we can reset it when sidebar closes
+      // Track element for cleanup
       lastMainContent = mainContent;
 
-      // Check which property the element is using (JobTread uses padding-right)
-      const computedStyle = window.getComputedStyle(mainContent);
-      const hasPaddingRight = computedStyle.paddingRight && computedStyle.paddingRight !== '0px';
-
-      if (hasPaddingRight || mainContent.style.paddingRight) {
-        // Use padding-right (this is what JobTread uses)
-        mainContent.style.paddingRight = `${newWidth}px`;
-        console.log(`QuickJobSwitcher: Set main content padding-right to ${newWidth}px`);
-      } else {
-        // Fallback to margin-right
-        mainContent.style.marginRight = `${newWidth}px`;
-        console.log(`QuickJobSwitcher: Set main content margin-right to ${newWidth}px`);
-      }
+      // Set padding-right to match sidebar width
+      mainContent.style.paddingRight = `${newWidth}px`;
+      console.log(`QuickJobSwitcher: Set main content padding-right to ${newWidth}px`);
     } else {
       console.log('QuickJobSwitcher: Could not find main content container');
     }
