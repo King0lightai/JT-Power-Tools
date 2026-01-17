@@ -1,0 +1,28 @@
+{
+  "name": "jobtread-mcp-server",
+  "version": "4.0.0",
+  "description": "MCP Server for JobTread Tools Pro - AI-powered JobTread access",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "tail": "wrangler tail",
+    "db:migrate": "wrangler d1 execute jobtread-ai-knowledge --file=./schema-ai-knowledge.sql",
+    "db:migrate:local": "wrangler d1 execute jobtread-ai-knowledge --local --file=./schema-ai-knowledge.sql"
+  },
+  "keywords": [
+    "mcp",
+    "jobtread",
+    "cloudflare-workers",
+    "ai",
+    "construction"
+  ],
+  "author": "JobTread Tools Pro",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

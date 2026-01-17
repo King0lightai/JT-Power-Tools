@@ -1,0 +1,42 @@
+# JobTread Tools Pro - MCP Server
+# Deploy with: wrangler deploy
+
+name = "jobtread-mcp-server"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding (license validation - shared with main worker)
+[[d1_databases]]
+binding = "DB"
+database_name = "jobtread-extension-users"
+database_id = "576bc461-59fc-42de-85fd-3397be8b8df9"
+
+# D1 Database for AI Knowledge (process docs + cache)
+[[d1_databases]]
+binding = "AI_KNOWLEDGE_DB"
+database_name = "jobtread-ai-knowledge"
+database_id = "2cad09d2-72bc-4176-b66d-d8f955546963"
+
+# KV Namespace binding (response caching)
+[[kv_namespaces]]
+binding = "CACHE"
+id = "7d35cd79e58c43259108a6036d10dcf9"
+
+# Environment variables
+# Set secrets via: wrangler secret put GEMINI_API_KEY
+[vars]
+# Non-secret variables
+
+# Custom domain routing
+# Uncomment when ready to deploy with custom domain
+# [routes]
+# pattern = "mcp.jobtread-tools.pro/*"
+# zone_name = "jobtread-tools.pro"
+
+# Production environment
+[env.production]
+name = "jobtread-mcp-server"
+
+# Staging environment
+[env.staging]
+name = "jobtread-mcp-server-staging"
