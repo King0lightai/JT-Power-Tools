@@ -233,10 +233,14 @@ async function testApiKey() {
 }
 
 // Check and update license status on load
+// Now uses tier-based feature gating
 async function checkLicenseStatus() {
   const licenseData = await LicenseService.getLicenseData();
+  const tier = await LicenseService.getTier();
   const licenseStatus = document.getElementById('licenseStatus');
   const statusText = licenseStatus.querySelector('.status-text');
+
+  // Premium features (Pro tier and above)
   const dragDropFeature = document.getElementById('dragDropFeature');
   const dragDropCheckbox = document.getElementById('dragDrop');
   const rgbThemeFeature = document.getElementById('rgbThemeFeature');
@@ -244,21 +248,41 @@ async function checkLicenseStatus() {
   const previewModeFeature = document.getElementById('previewModeFeature');
   const previewModeCheckbox = document.getElementById('previewMode');
 
-  if (licenseData && licenseData.valid) {
-    // Valid license
+  if (licenseData && licenseData.valid && tier) {
+    // Valid license - show tier name
+    const tierDisplayName = LicenseService.getTierDisplayName(tier);
     licenseStatus.className = 'license-status active';
-    statusText.textContent = `✓ Premium Active (${licenseData.purchaseEmail})`;
-    dragDropFeature.classList.remove('locked');
-    dragDropCheckbox.disabled = false;
-    rgbThemeFeature.classList.remove('locked');
-    rgbThemeCheckbox.disabled = false;
-    previewModeFeature.classList.remove('locked');
-    previewModeCheckbox.disabled = false;
-    return true; // Has license
+    statusText.textContent = `✓ ${tierDisplayName} Active (${licenseData.purchaseEmail})`;
+
+    // Check if tier has access to premium features (Pro and Power User only)
+    const hasPremiumFeatures = LicenseService.tierHasFeature(tier, 'dragDrop');
+
+    if (hasPremiumFeatures) {
+      // Pro or Power User tier - enable premium features
+      dragDropFeature.classList.remove('locked');
+      dragDropCheckbox.disabled = false;
+      rgbThemeFeature.classList.remove('locked');
+      rgbThemeCheckbox.disabled = false;
+      previewModeFeature.classList.remove('locked');
+      previewModeCheckbox.disabled = false;
+    } else {
+      // Essential tier - lock premium features
+      dragDropFeature.classList.add('locked');
+      dragDropCheckbox.disabled = true;
+      rgbThemeFeature.classList.add('locked');
+      rgbThemeCheckbox.disabled = true;
+      previewModeFeature.classList.add('locked');
+      previewModeCheckbox.disabled = true;
+
+      // Add upgrade hint for Essential users
+      statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for premium features`;
+    }
+
+    return { hasLicense: true, tier: tier };
   } else {
     // No license or invalid
     licenseStatus.className = 'license-status inactive';
-    statusText.textContent = '✗ Premium Not Active';
+    statusText.textContent = '✗ Not Active';
     dragDropFeature.classList.add('locked');
     dragDropCheckbox.disabled = true;
     rgbThemeFeature.classList.add('locked');
@@ -266,7 +290,7 @@ async function checkLicenseStatus() {
     previewModeFeature.classList.add('locked');
     previewModeCheckbox.disabled = true;
     // Don't change checked state here - let loadSettings handle it
-    return false; // No license
+    return { hasLicense: false, tier: null };
   }
 }
 
@@ -289,7 +313,10 @@ async function verifyLicenseKey() {
     const result = await LicenseService.verifyLicense(licenseKey);
 
     if (result.success) {
-      showStatus('License activated successfully!', 'success');
+      // Show tier in success message
+      const tier = result.data?.tier;
+      const tierName = tier ? LicenseService.getTierDisplayName(tier) : 'Pro';
+      showStatus(`${tierName} license activated!`, 'success');
       licenseInput.value = '';
 
       // Update UI
@@ -313,16 +340,17 @@ async function loadSettings() {
     const result = await chrome.storage.sync.get(['jtToolsSettings']);
     const settings = result.jtToolsSettings || defaultSettings;
 
-    // Check if user has premium license
-    const hasLicense = await LicenseService.hasValidLicense();
+    // Check user's tier for feature access
+    const tier = await LicenseService.getTier();
+    const hasPremiumFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
 
-    // Update checkboxes
-    document.getElementById('dragDrop').checked = hasLicense && settings.dragDrop;
+    // Update checkboxes - premium features require Pro or Power User tier
+    document.getElementById('dragDrop').checked = hasPremiumFeatures && settings.dragDrop;
     document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('formatter').checked = settings.formatter;
-    document.getElementById('previewMode').checked = hasLicense && settings.previewMode;
+    document.getElementById('previewMode').checked = hasPremiumFeatures && settings.previewMode;
     document.getElementById('darkMode').checked = settings.darkMode;
-    document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
+    document.getElementById('rgbTheme').checked = hasPremiumFeatures && settings.rgbTheme;
     document.getElementById('smartJobSwitcher').checked = settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
     document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
@@ -343,14 +371,14 @@ async function loadSettings() {
 
     // Show/hide customize button based on rgbTheme state
     const customizeBtn = document.getElementById('customizeThemeBtn');
-    customizeBtn.style.display = (hasLicense && settings.rgbTheme) ? 'inline-flex' : 'none';
+    customizeBtn.style.display = (hasPremiumFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
 
     // Always hide the customization panel initially
     const themeCustomization = document.getElementById('themeCustomization');
     themeCustomization.style.display = 'none';
     customizeBtn.classList.remove('expanded');
 
-    console.log('Settings loaded:', settings);
+    console.log('Settings loaded:', settings, 'tier:', tier);
   } catch (error) {
     console.error('Error loading settings:', error);
     showStatus('Error loading settings', 'error');
@@ -360,27 +388,32 @@ async function loadSettings() {
 // Save settings
 async function saveSettings(settings) {
   try {
-    const hasLicense = await LicenseService.hasValidLicense();
+    // Use tier-based feature checking
+    const tier = await LicenseService.getTier();
+    const hasPremiumFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
 
-    // Check if user is trying to enable drag-drop without license
-    if (settings.dragDrop && !hasLicense) {
-      showStatus('Drag & Drop requires a premium license', 'error');
+    // Check if user is trying to enable drag-drop without premium tier
+    if (settings.dragDrop && !hasPremiumFeatures) {
+      const message = tier ? 'Drag & Drop requires Pro or Power User tier' : 'Drag & Drop requires a license';
+      showStatus(message, 'error');
       document.getElementById('dragDrop').checked = false;
       settings.dragDrop = false;
       return;
     }
 
-    // Check if user is trying to enable Preview Mode without license
-    if (settings.previewMode && !hasLicense) {
-      showStatus('Preview Mode requires a premium license', 'error');
+    // Check if user is trying to enable Preview Mode without premium tier
+    if (settings.previewMode && !hasPremiumFeatures) {
+      const message = tier ? 'Preview Mode requires Pro or Power User tier' : 'Preview Mode requires a license';
+      showStatus(message, 'error');
       document.getElementById('previewMode').checked = false;
       settings.previewMode = false;
       return;
     }
 
-    // Check if user is trying to enable RGB theme without license
-    if (settings.rgbTheme && !hasLicense) {
-      showStatus('RGB Custom Theme requires a premium license', 'error');
+    // Check if user is trying to enable RGB theme without premium tier
+    if (settings.rgbTheme && !hasPremiumFeatures) {
+      const message = tier ? 'Custom Theme requires Pro or Power User tier' : 'Custom Theme requires a license';
+      showStatus(message, 'error');
       document.getElementById('rgbTheme').checked = false;
       settings.rgbTheme = false;
       // Hide customize button and panel since RGB theme can't be enabled
@@ -394,7 +427,7 @@ async function saveSettings(settings) {
     // Show/hide customize button based on rgbTheme toggle
     const customizeBtn = document.getElementById('customizeThemeBtn');
     const themeCustomization = document.getElementById('themeCustomization');
-    const shouldShowButton = hasLicense && settings.rgbTheme;
+    const shouldShowButton = hasPremiumFeatures && settings.rgbTheme;
     customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
 
     // Hide panel when toggle is turned off
@@ -403,7 +436,7 @@ async function saveSettings(settings) {
       customizeBtn.classList.remove('expanded');
     }
 
-    console.log('saveSettings: Customize button visibility:', shouldShowButton ? 'visible' : 'hidden');
+    console.log('saveSettings: Customize button visibility:', shouldShowButton ? 'visible' : 'hidden', 'tier:', tier);
 
     await chrome.storage.sync.set({ jtToolsSettings: settings });
     console.log('Settings saved:', settings);
@@ -714,7 +747,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('popupThemeToggle').addEventListener('click', togglePopupTheme);
 
   // Check license status first (just UI, don't modify settings)
-  const hasLicense = await checkLicenseStatus();
+  const licenseStatus = await checkLicenseStatus();
+  const { hasLicense, tier } = licenseStatus;
 
   // Check API status
   await checkApiStatus();
@@ -725,11 +759,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize collapsible categories
   initializeCategories();
 
-  // If no license, ensure premium features stay disabled
-  if (!hasLicense) {
+  // Determine if user has premium features (Pro or Power User tier)
+  const hasPremiumFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+
+  // If no premium features access, ensure premium features stay disabled
+  if (!hasPremiumFeatures) {
     const settings = await chrome.storage.sync.get(['jtToolsSettings']);
     if (settings.jtToolsSettings && (settings.jtToolsSettings.dragDrop || settings.jtToolsSettings.rgbTheme || settings.jtToolsSettings.previewMode)) {
-      // User had premium features enabled but license expired/removed
+      // User had premium features enabled but tier doesn't allow it (Essential tier or no license)
+      console.log('Disabling premium features - tier:', tier, 'hasPremiumFeatures:', hasPremiumFeatures);
       const updatedSettings = {
         ...settings.jtToolsSettings,
         dragDrop: false,

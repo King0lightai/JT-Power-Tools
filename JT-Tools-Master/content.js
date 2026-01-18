@@ -7,13 +7,17 @@
  * - Initializing enabled features
  * - Responding to settings changes from the popup
  * - Coordinating feature cleanup on disable
+ * - Tier-based feature gating (v2.0)
  *
  * @module content
  * @author JT Power Tools Team
- * @version 3.3.6
+ * @version 3.3.7
  */
 
 console.log('JT Power Tools: Content script loaded');
+
+// Current license tier (cached for performance)
+let currentTier = null;
 
 /**
  * Feature module registry
