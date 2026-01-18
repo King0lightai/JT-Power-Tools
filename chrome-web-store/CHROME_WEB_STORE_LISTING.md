@@ -15,7 +15,7 @@ JT Power Tools is the all-in-one Chrome extension toolkit that transforms JobTre
 ⚡ FREE FEATURES
 • Dark Mode - Beautiful dark theme for comfortable all-day use
 • Text Formatter - Rich formatting for budgets, daily logs, and notes
-• Quick Job Switcher - Press J+S to instantly search and switch jobs
+• Smart Job Switcher - Press J+S to instantly search and switch jobs
 • Quick Notes - Built-in notepad accessible from any page
 • Budget Hierarchy Shading - Visual shading for nested budget groups
 • Contrast Fix - Improved visibility for schedule month view

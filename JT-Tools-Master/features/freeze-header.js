@@ -255,6 +255,37 @@ const FreezeHeaderFeature = (() => {
       background-color: var(--jt-theme-background, white) !important;
       filter: brightness(0.95);
     }
+
+    /* ========== POPUP EXCLUSIONS (HIGH SPECIFICITY) ========== */
+    /* These rules MUST come last to override earlier freeze header rules */
+    /* File picker popup and similar popups should NOT have freeze header applied */
+
+    /* Reset ALL freeze header marker class elements inside shadow-lg popups */
+    .jt-freeze-header-active .shadow-lg .jt-action-toolbar,
+    .jt-freeze-header-active .shadow-lg .jt-files-folder-bar,
+    .jt-freeze-header-active .shadow-lg .jt-files-list-header,
+    .jt-freeze-header-active .shadow-lg .jt-files-sidebar,
+    .jt-freeze-header-active .shadow-lg .jt-schedule-header-container,
+    .jt-freeze-header-active .shadow-lg .jt-budget-header-container {
+      position: static !important;
+      top: unset !important;
+      z-index: unset !important;
+      box-shadow: none !important;
+    }
+
+    /* Reset sticky elements inside shadow-lg popups to their native positioning */
+    .jt-freeze-header-active .shadow-lg .sticky,
+    .jt-freeze-header-active .shadow-lg.rounded-sm .sticky,
+    .jt-freeze-header-active .rounded-sm.shadow-lg .sticky {
+      top: 0px !important;
+      max-height: unset !important;
+    }
+
+    /* Ensure popup internal sticky elements with inline top: 0 stay at 0 */
+    .jt-freeze-header-active .shadow-lg .sticky[style*="top: 0"],
+    .jt-freeze-header-active .shadow-lg .sticky[style*="top:0"] {
+      top: 0px !important;
+    }
   `;
 
   /**
@@ -1178,8 +1209,12 @@ const FreezeHeaderFeature = (() => {
     // Inject styles
     injectStyles();
 
-    // Apply sticky header
-    applyFreezeHeader();
+    // Only apply sticky header on job pages
+    if (isJobPage()) {
+      applyFreezeHeader();
+    } else {
+      console.log('FreezeHeader: Not on a job page, waiting for navigation');
+    }
 
     // Set up popup detection to exclude popups from freeze header effects
     setupPopupObserver();
@@ -1242,27 +1277,44 @@ const FreezeHeaderFeature = (() => {
 
     // Watch for URL changes (SPA navigation)
     let lastUrl = location.href;
+    let wasOnJobPage = isJobPage();
     setInterval(() => {
       if (!isActiveState) return;
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        // Remove old markings and re-apply
+        const nowOnJobPage = isJobPage();
+
+        // Remove old markings
         document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
           el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
         });
-        setTimeout(() => {
-          findAndMarkTopHeader();
-          findAndMarkTabs();
-          findAndMarkActionToolbar();
-          findAndMarkBudgetTableHeader();
-          findAndMarkScheduleHeader();
-          findAndMarkListHeader();
-          findAndMarkFilesFolderBar();
-          findAndMarkFilesListHeader();
-          findAndMarkFilesSidebar();
-          findAndMarkGlobalSidebars();
-          updatePositions();
-        }, 300);
+
+        if (nowOnJobPage) {
+          // Navigated to a job page - apply freeze header
+          if (!wasOnJobPage) {
+            console.log('FreezeHeader: Navigated to job page, applying freeze header');
+            applyFreezeHeader();
+          }
+          setTimeout(() => {
+            findAndMarkTopHeader();
+            findAndMarkTabs();
+            findAndMarkActionToolbar();
+            findAndMarkBudgetTableHeader();
+            findAndMarkScheduleHeader();
+            findAndMarkListHeader();
+            findAndMarkFilesFolderBar();
+            findAndMarkFilesListHeader();
+            findAndMarkFilesSidebar();
+            findAndMarkGlobalSidebars();
+            updatePositions();
+          }, 300);
+        } else if (wasOnJobPage) {
+          // Navigated away from job page - remove freeze header
+          console.log('FreezeHeader: Left job page, removing freeze header');
+          removeFreezeHeader();
+        }
+
+        wasOnJobPage = nowOnJobPage;
       }
     }, 500);
 

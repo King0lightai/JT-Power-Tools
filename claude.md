@@ -24,7 +24,7 @@ This document provides comprehensive guidance for AI assistants (Claude) working
 **Free Features (11):**
 4. **Contrast Fix** - Automatic text color adjustment for WCAG-compliant readability
 5. **Text Formatter** - Rich text formatting toolbar with bold, italic, headings, tables, links, alerts, and keyboard shortcuts
-6. **Quick Job Switcher** - Keyboard-driven job search (J+S or Alt+J) with real-time filtering
+6. **Smart Job Switcher** - Keyboard-driven job search (J+S or Alt+J) with real-time filtering
 7. **Quick Notes** - Persistent notepad with markdown support, WYSIWYG editor, and cross-device sync
 8. **Dark Mode** - Complete dark theme for JobTread interface with current date highlighting
 9. **Budget Hierarchy Shading** - Progressive visual shading for nested budget groups (up to 5 levels)

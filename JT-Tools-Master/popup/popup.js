@@ -65,7 +65,7 @@ const defaultSettings = {
   previewMode: false,
   darkMode: false,
   rgbTheme: false,
-  quickJobSwitcher: true,
+  smartJobSwitcher: true,
   budgetHierarchy: false,
   quickNotes: true,
   helpSidebarSupport: true,
@@ -323,7 +323,7 @@ async function loadSettings() {
     document.getElementById('previewMode').checked = hasLicense && settings.previewMode;
     document.getElementById('darkMode').checked = settings.darkMode;
     document.getElementById('rgbTheme').checked = hasLicense && settings.rgbTheme;
-    document.getElementById('quickJobSwitcher').checked = settings.quickJobSwitcher !== undefined ? settings.quickJobSwitcher : true;
+    document.getElementById('smartJobSwitcher').checked = settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true;
     document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
     document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
     document.getElementById('freezeHeader').checked = settings.freezeHeader !== undefined ? settings.freezeHeader : false;
@@ -434,7 +434,7 @@ async function getCurrentSettings() {
     previewMode: document.getElementById('previewMode').checked,
     darkMode: document.getElementById('darkMode').checked,
     rgbTheme: document.getElementById('rgbTheme').checked,
-    quickJobSwitcher: document.getElementById('quickJobSwitcher').checked,
+    smartJobSwitcher: document.getElementById('smartJobSwitcher').checked,
     budgetHierarchy: document.getElementById('budgetHierarchy').checked,
     quickNotes: document.getElementById('quickNotes').checked,
     helpSidebarSupport: true, // Always enabled, not user-toggleable
