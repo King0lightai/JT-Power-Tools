@@ -17,7 +17,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   : {
       // Inline fallback - should rarely be used
       dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
-      darkMode: false, rgbTheme: false, quickJobSwitcher: true, budgetHierarchy: false,
+      darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },

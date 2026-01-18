@@ -42,8 +42,10 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Real-time updates as you type
 - Works on budget descriptions and daily logs
 
-### ⚡ Quick Job Switcher
+### ⚡ Smart Job Switcher
 - Keyboard shortcut (J+S or Alt+J) to instantly open job switcher
+- Resizable sidebar - drag the left edge to customize width
+- Width preference remembered across sessions
 - Type to search and filter jobs in real-time
 - Press Enter to select top result and navigate
 - Fully keyboard-driven workflow for power users
@@ -129,7 +131,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 2. Look for the eye icon button on textareas
 3. Click to see a live preview of your formatted text
 
-#### Quick Job Switcher
+#### Smart Job Switcher
 1. Press J+S or Alt+J from any JobTread page
 2. Type to search and filter jobs
 3. Press Enter to select top result
@@ -186,7 +188,7 @@ JT-Tools-Master/
 │   ├── contrast-fix.js       # Contrast Fix module
 │   ├── formatter.js          # Text Formatter module
 │   ├── preview-mode.js       # Preview Mode module (Premium)
-│   ├── job-switcher.js       # Quick Job Switcher module
+│   ├── job-switcher.js       # Smart Job Switcher module
 │   ├── quick-notes.js        # Quick Notes module
 │   ├── dark-mode.js          # Dark Mode module
 │   ├── rgb-theme.js          # Custom Theme module (Premium)
@@ -298,7 +300,7 @@ const featureModules = {
 ### v3.3.0 (Current)
 - New Feature: Quick Notes - Persistent notepad with markdown support
 - New Premium Feature: Preview Mode - Live preview of formatted text
-- Includes all features: Drag & Drop, Contrast Fix, Text Formatter, Preview Mode, Quick Job Switcher, Quick Notes, Dark Mode, Custom Theme, and Budget Hierarchy Shading
+- Includes all features: Drag & Drop, Contrast Fix, Text Formatter, Preview Mode, Smart Job Switcher, Quick Notes, Dark Mode, Custom Theme, and Budget Hierarchy Shading
 
 ### v1.0.0
 - Initial release

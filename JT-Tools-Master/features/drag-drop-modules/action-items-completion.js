@@ -139,7 +139,7 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The View button or null
    */
   function findViewButton(item) {
-    // Look for a button with text "View"
+    // Look for a button with text "View" inside the item
     const buttons = item.querySelectorAll('div[role="button"]');
 
     for (const button of buttons) {
@@ -149,12 +149,31 @@ const ActionItemsCompletion = (() => {
       }
     }
 
-    // Fallback: look for any element with "View" text
+    // Fallback: look for any element with "View" text inside item
     const allDivs = item.querySelectorAll('div');
     for (const div of allDivs) {
       if (div.textContent.trim() === 'View') {
         return div;
       }
+    }
+
+    // Extended fallback: search parent container for View button
+    // The View button might be a sibling or in a flex container
+    const parent = item.parentElement;
+    if (parent) {
+      const siblingButtons = parent.querySelectorAll('div[role="button"]');
+      for (const button of siblingButtons) {
+        const text = button.textContent.trim();
+        if (text === 'View' || text.toLowerCase().includes('view')) {
+          return button;
+        }
+      }
+    }
+
+    // Last resort: find the first button-like element in the item
+    const firstButton = item.querySelector('[role="button"], button');
+    if (firstButton) {
+      return firstButton;
     }
 
     return null;
@@ -320,66 +339,91 @@ const ActionItemsCompletion = (() => {
 
           // Wait for sidebar to be present (auto-opened by ?taskId= URL param)
           setTimeout(() => {
-            const sidebar = iframeDoc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+            // Try multiple sidebar selectors for robustness
+            const sidebarSelectors = [
+              'div.overflow-y-auto.overscroll-contain.sticky',
+              'div.sticky.overflow-y-auto',
+              'div[data-is-drag-scroll-boundary="true"]',
+              'div.overflow-y-auto.sticky',
+              'div.sticky[class*="overflow"]'
+            ];
+
+            let sidebar = null;
+            for (const selector of sidebarSelectors) {
+              sidebar = iframeDoc.querySelector(selector);
+              if (sidebar) {
+                console.log('ActionItemsCompletion: Found sidebar with selector:', selector);
+                break;
+              }
+            }
 
             if (!sidebar) {
-              console.error('ActionItemsCompletion: Sidebar not found in iframe');
+              console.error('ActionItemsCompletion: Sidebar not found in iframe (tried multiple selectors)');
               clearTimeout(failsafeTimeout);
               iframe.remove();
               callback(false);
               return;
             }
 
-            // Find Progress checkbox
-            const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
-            if (!progressCheckbox) {
-              console.error('ActionItemsCompletion: Could not find progress checkbox in iframe');
-              clearTimeout(failsafeTimeout);
-              iframe.remove();
-              callback(false);
-              return;
+            // Check if task has checklist items - if so, we need to check them all first
+            const checklistItems = findChecklistItemsInDoc(iframeDoc);
+
+            if (checklistItems.length > 0) {
+              console.log('ActionItemsCompletion: Found', checklistItems.length, 'checklist items');
+              // Click all unchecked checklist items
+              completeChecklistItems(checklistItems, iframeDoc, iframe, failsafeTimeout, callback);
+            } else {
+              // No checklist - use Progress checkbox approach
+              const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
+              if (!progressCheckbox) {
+                console.error('ActionItemsCompletion: Could not find progress checkbox in iframe');
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(false);
+                return;
+              }
+              progressCheckbox.click();
+
+              // Wait for Save button to appear and become enabled
+              setTimeout(async () => {
+                const saveButton = findSaveButtonInDoc(iframeDoc);
+                if (!saveButton) {
+                  console.error('ActionItemsCompletion: Could not find Save button in iframe');
+                  clearTimeout(failsafeTimeout);
+                  iframe.remove();
+                  callback(false);
+                  return;
+                }
+
+                // Wait for Save button to become enabled
+                const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
+                if (!isEnabled) {
+                  console.error('ActionItemsCompletion: Save button did not enable in time');
+                  clearTimeout(failsafeTimeout);
+                  iframe.remove();
+                  callback(false);
+                  return;
+                }
+
+                // Click Save button
+                saveButton.click();
+
+                // Also dispatch mouse event for React compatibility
+                const clickEvent = new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: iframe.contentWindow
+                });
+                saveButton.dispatchEvent(clickEvent);
+
+                // Wait for save to complete
+                setTimeout(() => {
+                  clearTimeout(failsafeTimeout);
+                  iframe.remove();
+                  callback(true);
+                }, 2000);
+              }, 800);
             }
-            progressCheckbox.click();
-
-            // Wait for Save button to appear and become enabled
-            setTimeout(async () => {
-              const saveButton = findSaveButtonInDoc(iframeDoc);
-              if (!saveButton) {
-                console.error('ActionItemsCompletion: Could not find Save button in iframe');
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(false);
-                return;
-              }
-
-              // Wait for Save button to become enabled
-              const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
-              if (!isEnabled) {
-                console.error('ActionItemsCompletion: Save button did not enable in time');
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(false);
-                return;
-              }
-
-              // Click Save button
-              saveButton.click();
-
-              // Also dispatch mouse event for React compatibility
-              const clickEvent = new MouseEvent('click', {
-                bubbles: true,
-                cancelable: true,
-                view: iframe.contentWindow
-              });
-              saveButton.dispatchEvent(clickEvent);
-
-              // Wait for save to complete
-              setTimeout(() => {
-                clearTimeout(failsafeTimeout);
-                iframe.remove();
-                callback(true);
-              }, 2000);
-            }, 800);
           }, 1000);
         } catch (error) {
           console.error('ActionItemsCompletion: Error completing task in iframe:', error);
@@ -408,17 +452,80 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The progress checkbox or null
    */
   function findProgressCheckboxInDoc(doc) {
-    const sidebar = doc.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
-    if (!sidebar) return null;
+    // Try multiple sidebar selectors for robustness
+    const sidebarSelectors = [
+      'div.overflow-y-auto.overscroll-contain.sticky',
+      'div.sticky.overflow-y-auto',
+      'div[data-is-drag-scroll-boundary="true"]',
+      'div.overflow-y-auto.sticky',
+      'div.sticky[class*="overflow"]'
+    ];
 
-    const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
-    const progressLabel = allLabels.find(span => span.textContent.trim() === 'Progress');
+    let sidebar = null;
+    for (const selector of sidebarSelectors) {
+      sidebar = doc.querySelector(selector);
+      if (sidebar) break;
+    }
+
+    // Fallback: search the entire document
+    const searchRoot = sidebar || doc.body;
+
+    // Find "Progress" label using multiple selectors
+    const labelSelectors = [
+      'span.font-bold',
+      'span[class*="font-bold"]',
+      'label',
+      'div.font-bold',
+      'strong'
+    ];
+
+    let progressLabel = null;
+    for (const selector of labelSelectors) {
+      const labels = Array.from(searchRoot.querySelectorAll(selector));
+      progressLabel = labels.find(el => el.textContent.trim() === 'Progress');
+      if (progressLabel) break;
+    }
+
+    if (!progressLabel) {
+      // Last resort: search by text content
+      const allElements = searchRoot.querySelectorAll('*');
+      for (const el of allElements) {
+        if (el.childNodes.length === 1 &&
+            el.childNodes[0].nodeType === Node.TEXT_NODE &&
+            el.textContent.trim() === 'Progress') {
+          progressLabel = el;
+          break;
+        }
+      }
+    }
+
     if (!progressLabel) return null;
 
-    const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
+    // Find the checkbox button near the Progress label
+    // Try multiple container patterns
+    let progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
+    if (!progressContainer) {
+      progressContainer = progressLabel.closest('div.flex.items-center');
+    }
+    if (!progressContainer) {
+      progressContainer = progressLabel.closest('div[class*="flex"]');
+    }
+    if (!progressContainer) {
+      progressContainer = progressLabel.parentElement;
+    }
+
     if (!progressContainer) return null;
 
-    return progressContainer.querySelector('div[role="button"]');
+    // Find the button in the container
+    let button = progressContainer.querySelector('div[role="button"]');
+    if (!button) {
+      button = progressContainer.querySelector('[role="button"]');
+    }
+    if (!button) {
+      button = progressContainer.querySelector('button');
+    }
+
+    return button;
   }
 
   /**
@@ -427,13 +534,29 @@ const ActionItemsCompletion = (() => {
    * @returns {HTMLElement|null} The Save button or null
    */
   function findSaveButtonInDoc(doc) {
-    const allButtons = Array.from(doc.querySelectorAll('div[role="button"]'));
+    const allButtons = Array.from(doc.querySelectorAll('div[role="button"], [role="button"], button'));
 
     for (const button of allButtons) {
       const text = button.textContent.trim();
-      const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]');
 
-      if (hasCheckmark && text.includes('Save')) {
+      // Check for Save text (primary method)
+      if (text.includes('Save')) {
+        // Verify it has a checkmark icon (various possible paths)
+        const hasCheckmark = button.querySelector('path[d="M20 6 9 17l-5-5"]') ||
+                            button.querySelector('path[d*="M20 6"]') ||
+                            button.querySelector('path[d*="9 17"]') ||
+                            button.querySelector('svg');
+
+        if (hasCheckmark) {
+          return button;
+        }
+      }
+    }
+
+    // Fallback: find button with just "Save" text
+    for (const button of allButtons) {
+      const text = button.textContent.trim();
+      if (text === 'Save' || text.startsWith('Save')) {
         return button;
       }
     }
@@ -470,6 +593,139 @@ const ActionItemsCompletion = (() => {
 
       checkEnabled();
     });
+  }
+
+  /**
+   * Find unchecked checklist items in a document
+   * @param {Document} doc - The iframe document to search in
+   * @returns {HTMLElement[]} Array of unchecked checklist item checkboxes
+   */
+  function findChecklistItemsInDoc(doc) {
+    const uncheckedItems = [];
+
+    // Look for checklist section - typically has "Checklist" label
+    const allLabels = doc.querySelectorAll('span, div, label');
+    let checklistSection = null;
+
+    for (const label of allLabels) {
+      if (label.textContent.trim() === 'Checklist') {
+        // Find the parent container that holds the checklist
+        checklistSection = label.closest('div[class*="flex-col"]') ||
+                          label.closest('div[class*="space-y"]') ||
+                          label.parentElement?.parentElement;
+        break;
+      }
+    }
+
+    // Search root - either checklist section or whole document
+    const searchRoot = checklistSection || doc.body;
+
+    // Find all checkbox buttons in the checklist
+    // Checklist items typically have a checkbox SVG with a rect element
+    const allButtons = searchRoot.querySelectorAll('div[role="button"], [role="button"]');
+
+    for (const button of allButtons) {
+      // Check if this looks like a checkbox (has SVG with rect)
+      const svg = button.querySelector('svg');
+      if (!svg) continue;
+
+      const rect = svg.querySelector('rect');
+      if (!rect) continue;
+
+      // Check if it's unchecked (no checkmark path)
+      const checkmark = svg.querySelector('path[d*="M20 6"], path[d*="9 17"], path.jt-checkmark');
+
+      // Also check for circle checkboxes (complete indicator)
+      const circle = svg.querySelector('circle');
+
+      // If it has a rect but no checkmark, it's an unchecked checkbox
+      if (rect && !checkmark) {
+        // Make sure it's actually a checklist item checkbox, not the main Progress checkbox
+        // Checklist item checkboxes are typically smaller and in a list structure
+        const parent = button.closest('div[class*="flex"]');
+        if (parent) {
+          // Check if there's text next to the checkbox (checklist item description)
+          const hasTextContent = parent.textContent.trim().length > 0;
+          const isNotProgressCheckbox = !parent.textContent.includes('Progress');
+
+          if (hasTextContent && isNotProgressCheckbox) {
+            uncheckedItems.push(button);
+          }
+        }
+      }
+    }
+
+    return uncheckedItems;
+  }
+
+  /**
+   * Complete all checklist items and then save
+   * @param {HTMLElement[]} checklistItems - Array of unchecked checklist checkboxes
+   * @param {Document} iframeDoc - The iframe document
+   * @param {HTMLIFrameElement} iframe - The iframe element
+   * @param {number} failsafeTimeout - The failsafe timeout ID
+   * @param {Function} callback - Callback function (success: boolean)
+   */
+  function completeChecklistItems(checklistItems, iframeDoc, iframe, failsafeTimeout, callback) {
+    let currentIndex = 0;
+
+    function clickNextItem() {
+      if (currentIndex >= checklistItems.length) {
+        // All items checked, now wait for Save button and click it
+        console.log('ActionItemsCompletion: All checklist items checked, looking for Save button');
+
+        setTimeout(async () => {
+          const saveButton = findSaveButtonInDoc(iframeDoc);
+          if (!saveButton) {
+            console.error('ActionItemsCompletion: Could not find Save button after checking all items');
+            clearTimeout(failsafeTimeout);
+            iframe.remove();
+            callback(false);
+            return;
+          }
+
+          // Wait for Save button to become enabled
+          const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 3000);
+          if (!isEnabled) {
+            console.error('ActionItemsCompletion: Save button did not enable in time');
+            clearTimeout(failsafeTimeout);
+            iframe.remove();
+            callback(false);
+            return;
+          }
+
+          // Click Save button
+          saveButton.click();
+
+          const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: iframe.contentWindow
+          });
+          saveButton.dispatchEvent(clickEvent);
+
+          // Wait for save to complete
+          setTimeout(() => {
+            clearTimeout(failsafeTimeout);
+            iframe.remove();
+            callback(true);
+          }, 2000);
+        }, 500);
+
+        return;
+      }
+
+      const item = checklistItems[currentIndex];
+      console.log('ActionItemsCompletion: Clicking checklist item', currentIndex + 1, 'of', checklistItems.length);
+      item.click();
+
+      currentIndex++;
+      // Wait a bit between clicks for UI to update
+      setTimeout(clickNextItem, 300);
+    }
+
+    // Start clicking checklist items
+    clickNextItem();
   }
 
   /**
