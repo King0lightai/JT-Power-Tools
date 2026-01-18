@@ -1,0 +1,31 @@
+# Cloudflare Worker Configuration for License Proxy
+# Deploy with: wrangler deploy
+#
+# This worker validates Gumroad licenses and determines subscription tiers.
+
+name = "jt-tools-license-proxy"
+main = "../cloudflare-worker-license-proxy.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding for storing license records
+[[d1_databases]]
+binding = "DB"
+database_name = "jobtread-extension-users"
+database_id = "576bc461-59fc-42de-85fd-3397be8b8df9"
+
+# Environment variables (secrets) - set via wrangler:
+# wrangler secret put GUMROAD_PRODUCT_ID
+# wrangler secret put SIGNATURE_SECRET
+# wrangler secret put ALLOWED_ORIGINS
+
+[vars]
+# Rate limiting: max requests per IP per hour
+RATE_LIMIT_MAX = "100"
+
+# Production environment
+[env.production]
+name = "jt-tools-license-proxy"
+
+# Development/staging environment
+[env.staging]
+name = "jt-tools-license-proxy-staging"

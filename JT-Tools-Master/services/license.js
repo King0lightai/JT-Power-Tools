@@ -1,5 +1,6 @@
 // License Verification Service
 // Handles secure license key verification via server-side proxy
+// v2.0 - Added tier support for Essential, Pro, and Power User subscription levels
 
 const LicenseService = (() => {
   // ⚠️ IMPORTANT: Set this to your deployed license proxy URL
@@ -11,6 +12,41 @@ const LicenseService = (() => {
 
   // Re-validation interval (24 hours)
   const REVALIDATION_INTERVAL = 24 * 60 * 60 * 1000;
+
+  // Tier definitions - must match server/mcp-server/src/config/tiers.js
+  const TIERS = {
+    ESSENTIAL: 'essential',
+    PRO: 'pro',
+    POWER_USER: 'power_user'
+  };
+
+  // Feature access by tier
+  // Free features available to all tiers (Essential, Pro, Power User)
+  const FREE_FEATURES = [
+    'contrastFix',
+    'formatter',
+    'jobSwitcher',
+    'quickNotes',
+    'darkMode',
+    'budgetHierarchy',
+    'freezeHeader',
+    'charCounter',
+    'kanbanFilter',
+    'autoCollapse'
+  ];
+
+  // Premium features available only to Pro and Power User tiers
+  const PRO_FEATURES = [
+    'dragDrop',
+    'previewMode',
+    'rgbTheme'
+  ];
+
+  // Power User exclusive features (MCP access, AI features)
+  const POWER_USER_FEATURES = [
+    'mcpAccess',
+    'aiKnowledge'
+  ];
 
   /**
    * SECURITY NOTE: This is NOT cryptographic encryption.
@@ -66,9 +102,11 @@ const LicenseService = (() => {
         const licenseData = {
           valid: true,
           key: licenseKey,
+          tier: result.data.tier || TIERS.PRO, // NEW: Store tier (default to PRO for backwards compatibility)
           purchaseEmail: result.data.purchaseEmail,
           productName: result.data.productName,
           purchaseDate: result.data.purchaseDate,
+          variantName: result.data.variantName || null, // Store variant for debugging
           verifiedAt: result.data.verifiedAt,
           signature: result.data.signature,
           lastRevalidated: Date.now()
@@ -77,7 +115,7 @@ const LicenseService = (() => {
         // Encrypt and store license data
         await saveLicenseData(licenseData);
 
-        console.log('License: Valid license activated');
+        console.log('License: Valid license activated, tier:', licenseData.tier);
         return { success: true, data: licenseData };
       } else {
         // License is invalid
@@ -122,12 +160,20 @@ const LicenseService = (() => {
       const result = await response.json();
 
       if (result.success && result.data) {
-        // Update stored license data
+        // Update stored license data (including tier in case of upgrade)
         licenseData.lastRevalidated = Date.now();
         licenseData.signature = result.data.signature;
+        // Update tier in case user upgraded their subscription
+        if (result.data.tier) {
+          const oldTier = licenseData.tier;
+          licenseData.tier = result.data.tier;
+          if (oldTier !== licenseData.tier) {
+            console.log('License: Tier changed from', oldTier, 'to', licenseData.tier);
+          }
+        }
         await saveLicenseData(licenseData);
 
-        console.log('License: Re-validation successful');
+        console.log('License: Re-validation successful, tier:', licenseData.tier);
         return { success: true, data: licenseData };
       } else {
         // License no longer valid (refunded, revoked, etc.)
@@ -329,15 +375,113 @@ const LicenseService = (() => {
     console.log('License: License removed');
   }
 
+  /**
+   * Get the current subscription tier
+   * @returns {Promise<string|null>} Tier name ('essential', 'pro', 'power_user') or null if no license
+   */
+  async function getTier() {
+    try {
+      const licenseData = await getLicenseData();
+      if (!licenseData || !licenseData.valid) {
+        return null;
+      }
+      // Default to PRO for backwards compatibility with existing users
+      return licenseData.tier || TIERS.PRO;
+    } catch (error) {
+      console.error('License: Error getting tier:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Check if a specific feature is available for a given tier
+   * @param {string|null} tier - The tier to check ('essential', 'pro', 'power_user', or null)
+   * @param {string} feature - The feature name to check
+   * @returns {boolean} True if the feature is available for the tier
+   */
+  function tierHasFeature(tier, feature) {
+    // No tier means no license - no features available
+    if (!tier) {
+      return false;
+    }
+
+    // Free features are available to ALL tiers
+    if (FREE_FEATURES.includes(feature)) {
+      return true;
+    }
+
+    // Pro features available to Pro and Power User tiers
+    if (PRO_FEATURES.includes(feature)) {
+      return tier === TIERS.PRO || tier === TIERS.POWER_USER;
+    }
+
+    // Power User features only available to Power User tier
+    if (POWER_USER_FEATURES.includes(feature)) {
+      return tier === TIERS.POWER_USER;
+    }
+
+    // Unknown feature - default to false for safety
+    console.warn('License: Unknown feature requested:', feature);
+    return false;
+  }
+
+  /**
+   * Get the tier display name for UI
+   * @param {string} tier - The tier code
+   * @returns {string} Human-readable tier name
+   */
+  function getTierDisplayName(tier) {
+    switch (tier) {
+      case TIERS.ESSENTIAL: return 'Essential';
+      case TIERS.PRO: return 'Pro';
+      case TIERS.POWER_USER: return 'Power User';
+      default: return tier || 'Unknown';
+    }
+  }
+
+  /**
+   * Get features available for a tier
+   * @param {string} tier - The tier to check
+   * @returns {string[]} Array of feature names available for the tier
+   */
+  function getFeaturesForTier(tier) {
+    if (!tier) return [];
+
+    let features = [...FREE_FEATURES];
+
+    if (tier === TIERS.PRO || tier === TIERS.POWER_USER) {
+      features = features.concat(PRO_FEATURES);
+    }
+
+    if (tier === TIERS.POWER_USER) {
+      features = features.concat(POWER_USER_FEATURES);
+    }
+
+    return features;
+  }
+
   // Public API
   return {
+    // License management
     verifyLicense,
     revalidateLicense,
     getLicenseData,
     hasValidLicense,
     removeLicense,
     checkRevalidationNeeded,
-    PRODUCT_PERMALINK
+
+    // Tier management (NEW)
+    getTier,
+    tierHasFeature,
+    getTierDisplayName,
+    getFeaturesForTier,
+
+    // Constants
+    PRODUCT_PERMALINK,
+    TIERS,
+    FREE_FEATURES,
+    PRO_FEATURES,
+    POWER_USER_FEATURES
   };
 })();
 
