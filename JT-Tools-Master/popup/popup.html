@@ -16,7 +16,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>JT Power Tools</h1>
-        <span class="version">v3.4.03 BETA</span>
+        <span class="version">v3.5.0 BETA</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <span class="theme-icon light-icon">☀️</span>
           <span class="theme-icon dark-icon">🌙</span>
@@ -38,7 +38,7 @@
         <div class="category-features collapsed" data-category-content="schedule">
           <div class="feature-item premium" id="dragDropFeature">
             <div class="feature-info">
-              <h3>Schedule Task Checkboxes <span class="badge">Premium</span></h3>
+              <h3>Schedule Task Checkboxes <span class="badge pro">Pro</span></h3>
               <p>Mark schedule complete in month view</p>
             </div>
             <label class="toggle">
@@ -91,10 +91,10 @@
             </label>
           </div>
 
-          <div class="feature-item">
+          <div class="feature-item" id="smartJobSwitcherFeature">
             <div class="feature-info">
-              <h3>Smart Job Switcher</h3>
-              <p>AKeyboard driven, resizable sidebar </p>
+              <h3>Smart Job Switcher <span class="badge essential">Essential</span></h3>
+              <p>Keyboard driven, resizable sidebar (J+S or Alt+J)</p>
             </div>
             <label class="toggle">
               <input type="checkbox" id="smartJobSwitcher" data-feature="smartJobSwitcher">
@@ -102,9 +102,9 @@
             </label>
           </div>
 
-          <div class="feature-item">
+          <div class="feature-item" id="quickNotesFeature">
             <div class="feature-info">
-              <h3>Quick Notes</h3>
+              <h3>Quick Notes <span class="badge essential">Essential</span></h3>
               <p>Persistent notepad accessible from any page (Q+N)</p>
             </div>
             <label class="toggle">
@@ -115,7 +115,7 @@
 
           <div class="feature-item premium" id="previewModeFeature">
             <div class="feature-info">
-              <h3>Preview Mode <span class="badge">Premium</span></h3>
+              <h3>Preview Mode <span class="badge pro">Pro</span></h3>
               <p>Click the preview button to see your formatted text rendered beautifully!</p>
             </div>
             <label class="toggle">
@@ -124,9 +124,9 @@
             </label>
           </div>
 
-          <div class="feature-item">
+          <div class="feature-item" id="freezeHeaderFeature">
             <div class="feature-info">
-              <h3>Freeze Header</h3>
+              <h3>Freeze Header <span class="badge essential">Essential</span></h3>
               <p>Keep job info and tabs visible while scrolling</p>
             </div>
             <label class="toggle">
@@ -146,9 +146,9 @@
             </label>
           </div>
 
-          <div class="feature-item">
+          <div class="feature-item" id="pdfMarkupToolsFeature">
             <div class="feature-info">
-              <h3>PDF Markup Tools <span class="badge new">New</span></h3>
+              <h3>PDF Markup Tools <span class="badge essential">Essential</span></h3>
               <p>Stamps and eraser tools for PDFs</p>
             </div>
             <label class="toggle">
@@ -203,7 +203,7 @@
 
           <div class="feature-item premium" id="rgbThemeFeature">
             <div class="feature-info">
-              <h3>Custom Theme <span class="badge">Premium</span></h3>
+              <h3>Custom Theme <span class="badge pro">Pro</span></h3>
               <p>Create your own custom color theme</p>
               <button class="customize-btn" id="customizeThemeBtn" style="display: none;">
                 <span>Customize</span>
@@ -218,18 +218,18 @@
         </div>
       </div>
 
-      <!-- API (Experimental) Category -->
-      <div class="feature-category">
+      <!-- API & Power User Category -->
+      <div class="feature-category" id="apiCategory">
         <div class="category-header collapsed" data-category="api">
           <span class="category-icon">🔌</span>
-          <span class="category-title">API (Experimental)</span>
+          <span class="category-title">API & Power Features</span>
           <span class="category-count">1</span>
           <span class="category-toggle">▼</span>
         </div>
         <div class="category-features collapsed" data-category-content="api">
           <div class="feature-item" id="customFieldFilterFeature">
             <div class="feature-info">
-              <h3>Custom Field Filter</h3>
+              <h3>Custom Field Filter <span class="badge power-user">Power User</span></h3>
               <p>Filter jobs by custom fields in Quick Job Switcher</p>
             </div>
             <label class="toggle">
@@ -238,8 +238,8 @@
             </label>
           </div>
 
-          <!-- API Configuration -->
-          <div class="api-config-panel">
+          <!-- API Configuration - Only visible for Power User tier -->
+          <div class="api-config-panel" id="apiConfigPanel">
             <div id="apiStatus" class="api-status">
               <p class="status-text"></p>
             </div>
@@ -259,6 +259,77 @@
       </div>
 
     </div>
+
+    <!-- AI Integration Section - Power User Only - TEMPORARILY DISABLED FOR RELEASE -->
+    <!-- TODO: Re-enable when MCP setup is simplified for all platforms
+    <div class="ai-integration-section" id="aiIntegrationSection" style="display: none;">
+      <div class="section-label">
+        <span class="ai-icon">🤖</span>
+        AI Integration
+        <span class="badge power-user">Power User</span>
+      </div>
+
+      <div class="ai-status" id="aiConnectionStatus">
+        <div class="ai-status-indicator disconnected" id="aiStatusIndicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Not configured</span>
+        </div>
+        <button class="btn-test-connection" id="testAiConnectionBtn">Test Connection</button>
+      </div>
+
+      <div class="ai-platform-selector">
+        <label>Select your AI platform:</label>
+        <div class="platform-tabs" id="platformTabs">
+          <button class="platform-tab active" data-platform="claude">
+            <span class="platform-icon">🟣</span>
+            Desktop
+          </button>
+          <button class="platform-tab" data-platform="claudeCode">
+            <span class="platform-icon">🟣</span>
+            Code
+          </button>
+          <button class="platform-tab" data-platform="chatgpt">
+            <span class="platform-icon">🟢</span>
+            ChatGPT
+          </button>
+          <button class="platform-tab" data-platform="cursor">
+            <span class="platform-icon">🔵</span>
+            Cursor
+          </button>
+          <button class="platform-tab" data-platform="other">
+            <span class="platform-icon">⚪</span>
+            Other
+          </button>
+        </div>
+      </div>
+
+      <div class="ai-config-panel">
+        <div class="config-instructions" id="configInstructions"></div>
+
+        <div class="config-code-wrapper">
+          <div class="config-header">
+            <span class="config-label">Configuration JSON</span>
+            <button class="btn-copy" id="copyConfigBtn" title="Copy to clipboard">
+              <span class="copy-icon">📋</span>
+              <span class="copy-text">Copy</span>
+            </button>
+          </div>
+          <pre class="config-code" id="configCode"></pre>
+        </div>
+
+        <div class="config-file-path" id="configFilePath"></div>
+      </div>
+
+      <div class="ai-quick-links">
+        <a href="https://jobtread-tools.pro/docs/mcp" target="_blank" class="ai-link">
+          📚 Full Documentation
+        </a>
+        <a href="https://jobtread-mcp-server.king0light-ai.workers.dev/health" target="_blank" class="ai-link">
+          🔗 Server Status
+        </a>
+      </div>
+    </div>
+    -->
 
     <!-- Custom Theme Panel -->
     <div class="theme-customization" id="themeCustomization" style="display: none;">
@@ -359,7 +430,7 @@
       </div>
 
       <p class="license-link">
-        <a href="premium.jtpowertools.com" target="_blank">Purchase a license to share with your team!</a>
+        <a href="https://premium.jtpowertools.com" target="_blank">Purchase a license to share with your team!</a>
       </p>
     </div>
 

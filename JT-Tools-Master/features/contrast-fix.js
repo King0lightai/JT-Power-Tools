@@ -9,13 +9,10 @@ const ContrastFixFeature = (() => {
 
   // Initialize the feature
   function init() {
-    if (isActive) {
-      console.log('ContrastFix: Already initialized');
-      return;
-    }
+    if (isActive) return;
 
-    console.log('ContrastFix: Initializing...');
     isActive = true;
+    console.log('ContrastFix: Activated');
 
     // Run initial fix
     fixAllScheduleItems();
@@ -39,19 +36,14 @@ const ContrastFixFeature = (() => {
       childList: true,
       subtree: true
     });
-
-    console.log('ContrastFix: Feature loaded');
   }
 
   // Cleanup the feature
   function cleanup() {
-    if (!isActive) {
-      console.log('ContrastFix: Not active, nothing to cleanup');
-      return;
-    }
+    if (!isActive) return;
 
-    console.log('ContrastFix: Cleaning up...');
     isActive = false;
+    console.log('ContrastFix: Deactivated');
 
     // Disconnect observer
     if (observer) {
@@ -64,8 +56,6 @@ const ContrastFixFeature = (() => {
       debouncedUpdate.cancel();
       debouncedUpdate = null;
     }
-
-    console.log('ContrastFix: Cleanup complete');
   }
 
   // Parse RGB string to values

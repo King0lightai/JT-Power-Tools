@@ -21,31 +21,39 @@ const LicenseService = (() => {
   };
 
   // Feature access by tier
-  // Free features available to all tiers (Essential, Pro, Power User)
+  // FREE features - work without any license (hook users)
   const FREE_FEATURES = [
-    'contrastFix',
-    'formatter',
-    'jobSwitcher',
-    'quickNotes',
-    'darkMode',
-    'budgetHierarchy',
-    'freezeHeader',
-    'charCounter',
-    'kanbanFilter',
-    'autoCollapse'
+    'formatter',        // Most popular - shows quality
+    'darkMode',         // Most popular - instant visual impact
+    'contrastFix',      // Accessibility, instant value
+    'characterCounter', // Simple utility
+    'budgetHierarchy',  // Visual enhancement for budget tables
+    'kanbanTypeFilter', // Simple - auto-hide empty Kanban columns
+    'autoCollapseGroups' // Simple - collapse 100% complete groups
   ];
 
-  // Premium features available only to Pro and Power User tiers
+  // ESSENTIAL tier features ($10) - "I want more"
+  const ESSENTIAL_FEATURES = [
+    'quickNotes',       // Persistent notepad with sync
+    'smartJobSwitcher', // Keyboard navigation (J+S, Alt+J)
+    'freezeHeader',     // Sticky headers for tables
+    'pdfMarkupTools'    // PDF annotations
+  ];
+
+  // PRO tier features ($20) - "I want premium"
+  // NOTE: 'dragDrop' internal key now represents Schedule & Task Checkboxes
+  // (JobTread launched native drag-drop, so we pivoted to checkbox completion)
   const PRO_FEATURES = [
-    'dragDrop',
-    'previewMode',
-    'rgbTheme'
+    'dragDrop',         // Schedule & Task Checkboxes (legacy key name)
+    'rgbTheme',         // Custom color theming
+    'previewMode'       // Live markdown preview
   ];
 
-  // Power User exclusive features (MCP access, AI features)
+  // POWER USER tier features ($30) - "I want everything + AI"
   const POWER_USER_FEATURES = [
-    'mcpAccess',
-    'aiKnowledge'
+    'customFieldFilter', // API-powered job filtering
+    'mcpAccess',         // AI integration
+    'aiKnowledge'        // AI-powered assistance
   ];
 
   /**
@@ -394,28 +402,42 @@ const LicenseService = (() => {
   }
 
   /**
+   * Check if a feature is free (works without any license)
+   * @param {string} feature - The feature name to check
+   * @returns {boolean} True if the feature is free
+   */
+  function isFeatureFree(feature) {
+    return FREE_FEATURES.includes(feature);
+  }
+
+  /**
    * Check if a specific feature is available for a given tier
    * @param {string|null} tier - The tier to check ('essential', 'pro', 'power_user', or null)
    * @param {string} feature - The feature name to check
    * @returns {boolean} True if the feature is available for the tier
    */
   function tierHasFeature(tier, feature) {
-    // No tier means no license - no features available
-    if (!tier) {
-      return false;
-    }
-
-    // Free features are available to ALL tiers
+    // FREE features work for everyone (even without a license)
     if (FREE_FEATURES.includes(feature)) {
       return true;
     }
 
-    // Pro features available to Pro and Power User tiers
+    // All other features require a license
+    if (!tier) {
+      return false;
+    }
+
+    // ESSENTIAL features available to Essential, Pro, and Power User tiers
+    if (ESSENTIAL_FEATURES.includes(feature)) {
+      return tier === TIERS.ESSENTIAL || tier === TIERS.PRO || tier === TIERS.POWER_USER;
+    }
+
+    // PRO features available to Pro and Power User tiers only
     if (PRO_FEATURES.includes(feature)) {
       return tier === TIERS.PRO || tier === TIERS.POWER_USER;
     }
 
-    // Power User features only available to Power User tier
+    // POWER USER features only available to Power User tier
     if (POWER_USER_FEATURES.includes(feature)) {
       return tier === TIERS.POWER_USER;
     }
@@ -441,18 +463,26 @@ const LicenseService = (() => {
 
   /**
    * Get features available for a tier
-   * @param {string} tier - The tier to check
+   * @param {string|null} tier - The tier to check (null = no license, free features only)
    * @returns {string[]} Array of feature names available for the tier
    */
   function getFeaturesForTier(tier) {
-    if (!tier) return [];
-
+    // Free features always available
     let features = [...FREE_FEATURES];
 
+    if (!tier) return features;
+
+    // Essential tier adds Essential features
+    if (tier === TIERS.ESSENTIAL || tier === TIERS.PRO || tier === TIERS.POWER_USER) {
+      features = features.concat(ESSENTIAL_FEATURES);
+    }
+
+    // Pro tier adds Pro features
     if (tier === TIERS.PRO || tier === TIERS.POWER_USER) {
       features = features.concat(PRO_FEATURES);
     }
 
+    // Power User tier adds Power User features
     if (tier === TIERS.POWER_USER) {
       features = features.concat(POWER_USER_FEATURES);
     }
@@ -470,9 +500,10 @@ const LicenseService = (() => {
     removeLicense,
     checkRevalidationNeeded,
 
-    // Tier management (NEW)
+    // Tier management
     getTier,
     tierHasFeature,
+    isFeatureFree,
     getTierDisplayName,
     getFeaturesForTier,
 
@@ -480,6 +511,7 @@ const LicenseService = (() => {
     PRODUCT_PERMALINK,
     TIERS,
     FREE_FEATURES,
+    ESSENTIAL_FEATURES,
     PRO_FEATURES,
     POWER_USER_FEATURES
   };

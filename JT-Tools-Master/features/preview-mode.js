@@ -29,12 +29,11 @@ const PreviewModeFeature = (() => {
   // Initialize the feature
   function init() {
     if (isActive) {
-      console.log('Preview Mode: Already initialized');
       return;
     }
 
-    console.log('Preview Mode: Initializing...');
     isActive = true;
+    console.log('PreviewMode: Activated');
 
     // Inject CSS
     injectCSS();
@@ -57,19 +56,16 @@ const PreviewModeFeature = (() => {
 
     // Listen for settings changes
     chrome.runtime.onMessage.addListener(handleSettingsChange);
-
-    console.log('Preview Mode: Feature loaded');
   }
 
   // Cleanup the feature
   function cleanup() {
     if (!isActive) {
-      console.log('Preview Mode: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('Preview Mode: Cleaning up...');
     isActive = false;
+    console.log('PreviewMode: Deactivated');
 
     // Close any open preview
     closePreview();
@@ -99,8 +95,6 @@ const PreviewModeFeature = (() => {
     // Remove all preview panels
     const previews = document.querySelectorAll('.jt-preview-panel');
     previews.forEach(panel => panel.remove());
-
-    console.log('Preview Mode: Cleanup complete');
   }
 
   // Inject CSS
@@ -146,7 +140,6 @@ const PreviewModeFeature = (() => {
     // Skip if on excluded paths
     const path = window.location.pathname;
     if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers')) {
-      console.log('Preview Mode: Skipping excluded path:', path);
       return;
     }
 
@@ -196,8 +189,6 @@ const PreviewModeFeature = (() => {
 
       return true;
     });
-
-    console.log('Preview Mode: Found', filteredFields.length, 'fields');
 
     filteredFields.forEach((field) => {
       if (!field.dataset.previewModeReady && document.body.contains(field)) {
@@ -322,8 +313,6 @@ const PreviewModeFeature = (() => {
     if (document.activeElement === textarea) {
       showButton();
     }
-
-    console.log('Premium Formatter: Preview button added');
   }
 
   // Toggle preview panel
@@ -542,8 +531,6 @@ const PreviewModeFeature = (() => {
     preview._scrollHandler = handleScroll;
     preview._textarea = textarea;
     preview._button = button;
-
-    console.log('Premium Formatter: Preview shown');
   }
 
   // Get sticky header offset for preview positioning (mirrors toolbar logic)

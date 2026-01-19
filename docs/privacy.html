@@ -30,13 +30,13 @@
     <div class="guide-container">
         <div class="guide-header">
             <h1>Privacy Policy</h1>
-            <p class="guide-meta">Last Updated: October 31, 2025</p>
+            <p class="guide-meta">Last Updated: January 18, 2026</p>
         </div>
 
         <div class="guide-content">
             <div class="info-box tip">
                 <strong>TL;DR</strong>
-                <p>We don't collect your data. Period. Everything stays local in your browser. The only external communication is optional license verification with Gumroad if you buy premium features.</p>
+                <p>Free users: All data stays local in your browser. Premium users: We store minimal data (license key, email, tier) on Cloudflare servers for license validation. Power Users who connect the API also have their JobTread org info stored. We never store your actual JobTread project data, financials, or client information.</p>
             </div>
 
             <h2>Overview</h2>
@@ -62,6 +62,8 @@
                 <li>Dark mode preference</li>
                 <li>Custom theme colors (Premium)</li>
                 <li>Saved theme presets (Premium)</li>
+                <li>Message signature text (for quick insertion into messages)</li>
+                <li>Quick Notes content</li>
                 <li>User preferences</li>
             </ul>
             <p><strong>This data:</strong></p>
@@ -75,11 +77,41 @@
             <h2>Premium License Verification</h2>
             <p><strong>If you purchase premium features:</strong></p>
             <ul>
-                <li>Your license key is verified with Gumroad's servers (not ours)</li>
+                <li>Your license key is verified with Gumroad's servers via our secure proxy</li>
                 <li>Only your license key is sent to Gumroad for verification</li>
                 <li>Gumroad may collect information according to their privacy policy: <a href="https://gumroad.com/privacy" target="_blank">https://gumroad.com/privacy</a></li>
                 <li>We do not receive or store your payment information</li>
                 <li>License verification is entirely optional (only for premium features)</li>
+            </ul>
+
+            <h2>Server-Side Data Storage (Premium Users)</h2>
+            <p><strong>For premium license holders, we store limited data on Cloudflare servers to enable license validation and API features:</strong></p>
+
+            <h3>License Validation Service</h3>
+            <ul>
+                <li><strong>Data stored:</strong> License key, email (from Gumroad), subscription tier, validation timestamps</li>
+                <li><strong>Purpose:</strong> Verify license validity and determine feature access tier</li>
+                <li><strong>Retention:</strong> Stored while license is active; deleted upon request</li>
+                <li><strong>Security:</strong> Encrypted at rest, HTTPS-only transmission, rate-limited access</li>
+            </ul>
+
+            <h3>API Proxy Service (Power User Tier Only)</h3>
+            <p>Power User subscribers who connect their JobTread API have additional data stored:</p>
+            <ul>
+                <li><strong>Data stored:</strong> JobTread organization ID and name, API grant key (encrypted), device IDs, API usage logs</li>
+                <li><strong>Purpose:</strong> Enable API features, prevent license sharing across organizations</li>
+                <li><strong>Organization lock:</strong> License is locked to one JobTread organization to prevent unauthorized sharing</li>
+                <li><strong>JobTread data:</strong> We cache job names/IDs and custom field definitions temporarily (2 minutes to 1 hour) to improve performance. We do NOT store your actual project data, financials, or client information.</li>
+                <li><strong>Retention:</strong> Data deleted when you disconnect JobTread or upon request</li>
+            </ul>
+
+            <h3>What We Do NOT Store</h3>
+            <ul>
+                <li>Your JobTread password or login credentials</li>
+                <li>Your project details, budgets, or financial information</li>
+                <li>Your client or contact information</li>
+                <li>Your documents, files, or attachments</li>
+                <li>Any data beyond what's needed for license validation and API features</li>
             </ul>
 
             <h2>Permissions Explained</h2>
@@ -106,21 +138,38 @@
                 <li><strong>Data:</strong> Modifies display and behavior, does not read private data</li>
             </ul>
 
-            <h3>Host Permission: https://api.gumroad.com/*</h3>
+            <h3>Host Permission: https://*.workers.dev/*</h3>
             <ul>
-                <li><strong>Purpose:</strong> Verify premium license keys (optional)</li>
-                <li><strong>Access:</strong> Only when you activate a premium license</li>
-                <li><strong>Data:</strong> Only license key is sent to Gumroad</li>
+                <li><strong>Purpose:</strong> Communicate with our Cloudflare Workers for license validation and API proxy</li>
+                <li><strong>Access:</strong> Only when verifying license or using API features (Power User tier)</li>
+                <li><strong>Data:</strong> License key, device ID; for API features: JobTread grant key and organization info</li>
             </ul>
 
             <h2>Third-Party Services</h2>
 
-            <h3>Gumroad (Optional - Premium Features Only)</h3>
+            <h3>Cloudflare (License Validation & API Proxy)</h3>
             <ul>
-                <li><strong>Used for:</strong> Premium license verification and payment processing</li>
+                <li><strong>Used for:</strong> Secure license validation proxy and API features</li>
+                <li><strong>Data stored:</strong> License key, email, tier, organization info (for API users)</li>
+                <li><strong>Infrastructure:</strong> Cloudflare Workers (serverless), D1 Database (encrypted), KV Cache</li>
+                <li><strong>Privacy Policy:</strong> <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">https://www.cloudflare.com/privacypolicy/</a></li>
+                <li><strong>Note:</strong> Only used if you activate a premium license</li>
+            </ul>
+
+            <h3>Gumroad (Payment Processing)</h3>
+            <ul>
+                <li><strong>Used for:</strong> Premium license purchase and verification</li>
                 <li><strong>Data shared:</strong> License key only (for verification)</li>
                 <li><strong>Privacy Policy:</strong> <a href="https://gumroad.com/privacy" target="_blank">https://gumroad.com/privacy</a></li>
                 <li><strong>Note:</strong> Only used if you purchase premium features</li>
+            </ul>
+
+            <h3>JobTread API (Power User Tier Only)</h3>
+            <ul>
+                <li><strong>Used for:</strong> API features like custom field filtering</li>
+                <li><strong>Data shared:</strong> Your JobTread grant key (you provide this)</li>
+                <li><strong>Data accessed:</strong> Job names/IDs, custom fields (temporarily cached)</li>
+                <li><strong>Note:</strong> Only used if you're a Power User subscriber who connects their API</li>
             </ul>
 
             <h2>How We Use Permissions</h2>
@@ -220,10 +269,46 @@
                         <td>Chrome sync only</td>
                     </tr>
                     <tr>
+                        <td>Message Signature</td>
+                        <td>Yes (user-created)</td>
+                        <td>Local browser storage</td>
+                        <td>Chrome sync only</td>
+                    </tr>
+                    <tr>
+                        <td>Quick Notes</td>
+                        <td>Yes (user-created)</td>
+                        <td>Local browser storage</td>
+                        <td>Chrome sync only</td>
+                    </tr>
+                    <tr>
                         <td>License Key</td>
                         <td>Yes (if Premium)</td>
-                        <td>Local browser storage</td>
-                        <td>Gumroad (verification only)</td>
+                        <td>Local + Cloudflare D1</td>
+                        <td>Gumroad (verification)</td>
+                    </tr>
+                    <tr>
+                        <td>Email (from Gumroad)</td>
+                        <td>Yes (if Premium)</td>
+                        <td>Cloudflare D1</td>
+                        <td>No one</td>
+                    </tr>
+                    <tr>
+                        <td>JobTread Org Info</td>
+                        <td>Yes (Power User API only)</td>
+                        <td>Cloudflare D1</td>
+                        <td>No one</td>
+                    </tr>
+                    <tr>
+                        <td>JobTread Grant Key</td>
+                        <td>Yes (Power User API only)</td>
+                        <td>Cloudflare D1 (encrypted)</td>
+                        <td>JobTread API</td>
+                    </tr>
+                    <tr>
+                        <td>Job Names/IDs (cached)</td>
+                        <td>Yes (Power User API only)</td>
+                        <td>Cloudflare KV (temporary)</td>
+                        <td>No one</td>
                     </tr>
                     <tr>
                         <td>Usage Analytics</td>

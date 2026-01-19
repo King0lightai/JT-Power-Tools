@@ -94,7 +94,6 @@ const QuickNotesStorage = (() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    console.log(`Quick Notes Storage: Exported ${notes.length} notes`);
     return true;
   }
 

@@ -26,21 +26,17 @@ const FormatterFeature = (() => {
   // Initialize the feature
   function init() {
     if (isActive) {
-      console.log('Formatter: Already initialized');
       return;
     }
 
-    console.log('Formatter: Initializing...');
     isActive = true;
 
     try {
       // Inject CSS
       injectCSS();
-      console.log('Formatter: CSS injected');
 
       // Initialize fields
       initializeFields();
-      console.log('Formatter: Fields initialized');
 
       // Watch for budget textareas (with error handling)
       observer = new MutationObserver(() => {
@@ -63,7 +59,7 @@ const FormatterFeature = (() => {
       // Use capture phase to catch Enter before React's handlers
       document.addEventListener('keydown', handleKeydown, true);
 
-      console.log('Formatter: Feature loaded successfully');
+      console.log('Formatter: Activated');
     } catch (error) {
       console.error('Formatter: Error during initialization:', error);
       isActive = false;
@@ -74,11 +70,9 @@ const FormatterFeature = (() => {
   // Cleanup the feature
   function cleanup() {
     if (!isActive) {
-      console.log('Formatter: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('Formatter: Cleaning up...');
     isActive = false;
 
     // Remove toolbar if exists (using module)
@@ -114,7 +108,7 @@ const FormatterFeature = (() => {
       delete field.dataset.formatterReady;
     });
 
-    console.log('Formatter: Cleanup complete (all event listeners removed)');
+    console.log('Formatter: Deactivated');
   }
 
   // Inject CSS dynamically
@@ -134,13 +128,11 @@ const FormatterFeature = (() => {
     // Skip if on excluded paths
     const path = window.location.pathname;
     if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
-      console.log('Formatter: Skipping excluded path:', path);
       return;
     }
 
     // Don't re-initialize while we're inserting text - prevents interference
     if (Formats().isInserting && Formats().isInserting()) {
-      console.log('Formatter: Skipping initializeFields - text insertion in progress');
       return;
     }
 
@@ -313,8 +305,6 @@ const FormatterFeature = (() => {
       return !Detection().hasNativeFormatter(field);
     });
 
-    console.log('Formatter: Found', filteredFields.length, 'fields (Budget Description + Daily Log + Todo + Task + Edit + Modal)');
-
     filteredFields.forEach((field) => {
       if (!field.dataset.formatterReady && document.body.contains(field)) {
         field.dataset.formatterReady = 'true';
@@ -369,7 +359,6 @@ const FormatterFeature = (() => {
   function handleFieldBlur(e, field) {
     // Don't hide toolbar if we're prompting user
     if (Formats().isPrompting()) {
-      console.log('Formatter: Skipping blur handler - user is being prompted');
       return;
     }
 

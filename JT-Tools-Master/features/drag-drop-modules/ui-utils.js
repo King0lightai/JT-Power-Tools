@@ -11,7 +11,6 @@ const UIUtils = (() => {
     const searchContainer = document.querySelector('div.relative.h-10.cursor-pointer.grow.min-w-0.rounded-sm');
 
     if (!searchContainer) {
-      console.warn('DragDrop: Search container not found, notification not displayed');
       return;
     }
 
@@ -98,9 +97,7 @@ const UIUtils = (() => {
       viewType: 'normal'
     };
 
-    console.log(`UIUtils: makeScheduleItemsDraggable - Using ${selectors.viewType} view selectors`);
     const scheduleItems = document.querySelectorAll(selectors.scheduleItems);
-    console.log(`UIUtils: makeScheduleItemsDraggable - Found ${scheduleItems.length} items`);
 
     scheduleItems.forEach(item => {
       // Always ensure draggable attribute and cursor are set
@@ -133,26 +130,21 @@ const UIUtils = (() => {
       viewType: 'normal'
     };
 
-    console.log(`UIUtils: makeDateCellsDroppable - Using ${selectors.viewType} view selectors`);
     const dateCells = document.querySelectorAll(selectors.dateCells);
-    console.log(`UIUtils: makeDateCellsDroppable - Found ${dateCells.length} cells to make droppable`);
 
-    let newCells = 0;
-    dateCells.forEach((cell, index) => {
+    dateCells.forEach((cell) => {
       // Skip user name cells in availability view (first column)
       if (selectors.viewType === 'availability') {
         // Check if this cell contains user info (avatar and name)
         const hasUserInfo = cell.querySelector('div.relative.bg-cover.bg-center') ||
                            cell.querySelector('div.font-bold.truncate');
         if (hasUserInfo) {
-          console.log(`UIUtils: Skipping user info cell at index ${index}`);
           return; // Skip this cell
         }
       }
 
       if (!cell.classList.contains('jt-drop-enabled')) {
         cell.classList.add('jt-drop-enabled');
-        newCells++;
 
         // Mark weekends if WeekendUtils is available
         if (window.WeekendUtils && window.WeekendUtils.isWeekendCell(cell)) {
@@ -172,16 +164,8 @@ const UIUtils = (() => {
           cell.addEventListener('dragenter', handlers.onDragEnter);
         }
 
-        // Log a sample of cells to verify they're in different months
-        if (index < 3 || index > dateCells.length - 3) {
-          if (window.DateUtils) {
-            const dateInfo = window.DateUtils.extractDateFromCell(cell);
-            console.log(`UIUtils: makeDateCellsDroppable - Cell ${index}: day=${dateInfo}, classes=${cell.className}`);
-          }
-        }
       }
     });
-    console.log(`UIUtils: makeDateCellsDroppable - Attached listeners to ${newCells} new cells`);
   }
 
   /**

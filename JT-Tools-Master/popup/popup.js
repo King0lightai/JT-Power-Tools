@@ -233,14 +233,14 @@ async function testApiKey() {
 }
 
 // Check and update license status on load
-// Now uses tier-based feature gating
+// Now uses tier-based feature gating with FREE features for all users
 async function checkLicenseStatus() {
   const licenseData = await LicenseService.getLicenseData();
   const tier = await LicenseService.getTier();
   const licenseStatus = document.getElementById('licenseStatus');
   const statusText = licenseStatus.querySelector('.status-text');
 
-  // Premium features (Pro tier and above)
+  // PRO tier features (require Pro or Power User)
   const dragDropFeature = document.getElementById('dragDropFeature');
   const dragDropCheckbox = document.getElementById('dragDrop');
   const rgbThemeFeature = document.getElementById('rgbThemeFeature');
@@ -248,48 +248,112 @@ async function checkLicenseStatus() {
   const previewModeFeature = document.getElementById('previewModeFeature');
   const previewModeCheckbox = document.getElementById('previewMode');
 
+  // ESSENTIAL tier features (require Essential, Pro, or Power User)
+  const quickNotesFeature = document.getElementById('quickNotesFeature');
+  const quickNotesCheckbox = document.getElementById('quickNotes');
+  const smartJobSwitcherFeature = document.getElementById('smartJobSwitcherFeature');
+  const smartJobSwitcherCheckbox = document.getElementById('smartJobSwitcher');
+  const freezeHeaderFeature = document.getElementById('freezeHeaderFeature');
+  const freezeHeaderCheckbox = document.getElementById('freezeHeader');
+  const pdfMarkupToolsFeature = document.getElementById('pdfMarkupToolsFeature');
+  const pdfMarkupToolsCheckbox = document.getElementById('pdfMarkupTools');
+
+  // POWER USER tier features and UI elements
+  const apiCategory = document.getElementById('apiCategory');
+  const apiConfigPanel = document.getElementById('apiConfigPanel');
+  const customFieldFilterFeature = document.getElementById('customFieldFilterFeature');
+  const customFieldFilterCheckbox = document.getElementById('customFieldFilter');
+
   if (licenseData && licenseData.valid && tier) {
     // Valid license - show tier name
     const tierDisplayName = LicenseService.getTierDisplayName(tier);
     licenseStatus.className = 'license-status active';
-    statusText.textContent = `✓ ${tierDisplayName} Active (${licenseData.purchaseEmail})`;
+    statusText.textContent = `✓ ${tierDisplayName} Active`;
 
-    // Check if tier has access to premium features (Pro and Power User only)
-    const hasPremiumFeatures = LicenseService.tierHasFeature(tier, 'dragDrop');
+    // Check tier access for PRO features (Pro and Power User only)
+    const hasProFeatures = LicenseService.tierHasFeature(tier, 'dragDrop');
+    // Check for Power User tier (for API/MCP features)
+    const hasPowerUserFeatures = LicenseService.tierHasFeature(tier, 'customFieldFilter');
 
-    if (hasPremiumFeatures) {
-      // Pro or Power User tier - enable premium features
-      dragDropFeature.classList.remove('locked');
-      dragDropCheckbox.disabled = false;
-      rgbThemeFeature.classList.remove('locked');
-      rgbThemeCheckbox.disabled = false;
-      previewModeFeature.classList.remove('locked');
-      previewModeCheckbox.disabled = false;
+    if (hasProFeatures) {
+      // Pro or Power User tier - enable PRO features
+      dragDropFeature?.classList.remove('locked');
+      if (dragDropCheckbox) dragDropCheckbox.disabled = false;
+      rgbThemeFeature?.classList.remove('locked');
+      if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = false;
+      previewModeFeature?.classList.remove('locked');
+      if (previewModeCheckbox) previewModeCheckbox.disabled = false;
     } else {
-      // Essential tier - lock premium features
-      dragDropFeature.classList.add('locked');
-      dragDropCheckbox.disabled = true;
-      rgbThemeFeature.classList.add('locked');
-      rgbThemeCheckbox.disabled = true;
-      previewModeFeature.classList.add('locked');
-      previewModeCheckbox.disabled = true;
+      // Essential tier - lock PRO features
+      dragDropFeature?.classList.add('locked');
+      if (dragDropCheckbox) dragDropCheckbox.disabled = true;
+      rgbThemeFeature?.classList.add('locked');
+      if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = true;
+      previewModeFeature?.classList.add('locked');
+      if (previewModeCheckbox) previewModeCheckbox.disabled = true;
 
       // Add upgrade hint for Essential users
-      statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for premium features`;
+      statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for more features`;
     }
+
+    // POWER USER features and API section visibility
+    if (hasPowerUserFeatures) {
+      // Show API category and grant key panel for Power Users
+      apiCategory?.classList.remove('hidden');
+      if (apiConfigPanel) apiConfigPanel.style.display = 'block';
+      customFieldFilterFeature?.classList.remove('locked');
+      if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = false;
+    } else {
+      // Hide API category and lock features for non-Power Users
+      apiCategory?.classList.add('hidden');
+      if (apiConfigPanel) apiConfigPanel.style.display = 'none';
+      customFieldFilterFeature?.classList.add('locked');
+      if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
+    }
+
+    // ESSENTIAL features are available to all license holders
+    quickNotesFeature?.classList.remove('locked');
+    if (quickNotesCheckbox) quickNotesCheckbox.disabled = false;
+    smartJobSwitcherFeature?.classList.remove('locked');
+    if (smartJobSwitcherCheckbox) smartJobSwitcherCheckbox.disabled = false;
+    freezeHeaderFeature?.classList.remove('locked');
+    if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = false;
+    pdfMarkupToolsFeature?.classList.remove('locked');
+    if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = false;
 
     return { hasLicense: true, tier: tier };
   } else {
-    // No license or invalid
+    // No license or invalid - FREE features still work!
     licenseStatus.className = 'license-status inactive';
-    statusText.textContent = '✗ Not Active';
-    dragDropFeature.classList.add('locked');
-    dragDropCheckbox.disabled = true;
-    rgbThemeFeature.classList.add('locked');
-    rgbThemeCheckbox.disabled = true;
-    previewModeFeature.classList.add('locked');
-    previewModeCheckbox.disabled = true;
-    // Don't change checked state here - let loadSettings handle it
+    statusText.textContent = 'Free Mode - Upgrade for more features';
+
+    // Lock PRO features
+    dragDropFeature?.classList.add('locked');
+    if (dragDropCheckbox) dragDropCheckbox.disabled = true;
+    rgbThemeFeature?.classList.add('locked');
+    if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = true;
+    previewModeFeature?.classList.add('locked');
+    if (previewModeCheckbox) previewModeCheckbox.disabled = true;
+
+    // Lock ESSENTIAL features (require license)
+    quickNotesFeature?.classList.add('locked');
+    if (quickNotesCheckbox) quickNotesCheckbox.disabled = true;
+    smartJobSwitcherFeature?.classList.add('locked');
+    if (smartJobSwitcherCheckbox) smartJobSwitcherCheckbox.disabled = true;
+    freezeHeaderFeature?.classList.add('locked');
+    if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = true;
+    pdfMarkupToolsFeature?.classList.add('locked');
+    if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = true;
+
+    // Hide API category and grant key for free users
+    apiCategory?.classList.add('hidden');
+    if (apiConfigPanel) apiConfigPanel.style.display = 'none';
+    customFieldFilterFeature?.classList.add('locked');
+    if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
+
+    // FREE features remain unlocked (formatter, darkMode, contrastFix,
+    // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
+
     return { hasLicense: false, tier: null };
   }
 }
@@ -342,24 +406,32 @@ async function loadSettings() {
 
     // Check user's tier for feature access
     const tier = await LicenseService.getTier();
-    const hasPremiumFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+    const hasLicense = tier !== null;
+    const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+    const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
 
-    // Update checkboxes - premium features require Pro or Power User tier
-    document.getElementById('dragDrop').checked = hasPremiumFeatures && settings.dragDrop;
-    document.getElementById('contrastFix').checked = settings.contrastFix;
+    // FREE features - work for everyone (no license required)
     document.getElementById('formatter').checked = settings.formatter;
-    document.getElementById('previewMode').checked = hasPremiumFeatures && settings.previewMode;
     document.getElementById('darkMode').checked = settings.darkMode;
-    document.getElementById('rgbTheme').checked = hasPremiumFeatures && settings.rgbTheme;
-    document.getElementById('smartJobSwitcher').checked = settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true;
-    document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
-    document.getElementById('quickNotes').checked = settings.quickNotes !== undefined ? settings.quickNotes : true;
-    document.getElementById('freezeHeader').checked = settings.freezeHeader !== undefined ? settings.freezeHeader : false;
+    document.getElementById('contrastFix').checked = settings.contrastFix;
     document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
+    document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
     document.getElementById('kanbanTypeFilter').checked = settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false;
     document.getElementById('autoCollapseGroups').checked = settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false;
+
+    // ESSENTIAL features - require any license (Essential, Pro, Power User)
+    document.getElementById('quickNotes').checked = hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true);
+    document.getElementById('smartJobSwitcher').checked = hasEssentialFeatures && (settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true);
+    document.getElementById('freezeHeader').checked = hasEssentialFeatures && (settings.freezeHeader !== undefined ? settings.freezeHeader : false);
+    document.getElementById('pdfMarkupTools').checked = hasEssentialFeatures && (settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true);
+
+    // PRO features - require Pro or Power User tier
+    document.getElementById('dragDrop').checked = hasProFeatures && settings.dragDrop;
+    document.getElementById('previewMode').checked = hasProFeatures && settings.previewMode;
+    document.getElementById('rgbTheme').checked = hasProFeatures && settings.rgbTheme;
+
+    // POWER USER features - require Power User tier (API-powered)
     document.getElementById('customFieldFilter').checked = settings.customFieldFilter !== undefined ? settings.customFieldFilter : false;
-    document.getElementById('pdfMarkupTools').checked = settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -371,14 +443,14 @@ async function loadSettings() {
 
     // Show/hide customize button based on rgbTheme state
     const customizeBtn = document.getElementById('customizeThemeBtn');
-    customizeBtn.style.display = (hasPremiumFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
+    customizeBtn.style.display = (hasProFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
 
     // Always hide the customization panel initially
     const themeCustomization = document.getElementById('themeCustomization');
     themeCustomization.style.display = 'none';
     customizeBtn.classList.remove('expanded');
 
-    console.log('Settings loaded:', settings, 'tier:', tier);
+    console.log('Settings loaded:', settings, 'tier:', tier, 'hasLicense:', hasLicense);
   } catch (error) {
     console.error('Error loading settings:', error);
     showStatus('Error loading settings', 'error');
@@ -390,19 +462,22 @@ async function saveSettings(settings) {
   try {
     // Use tier-based feature checking
     const tier = await LicenseService.getTier();
-    const hasPremiumFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+    const hasLicense = tier !== null;
+    const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+    const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
 
-    // Check if user is trying to enable drag-drop without premium tier
-    if (settings.dragDrop && !hasPremiumFeatures) {
-      const message = tier ? 'Drag & Drop requires Pro or Power User tier' : 'Drag & Drop requires a license';
+    // PRO tier feature checks
+    // Check if user is trying to enable Schedule & Task Checkboxes without Pro tier
+    if (settings.dragDrop && !hasProFeatures) {
+      const message = tier ? 'Schedule & Task Checkboxes requires Pro or Power User tier' : 'Schedule & Task Checkboxes requires a license';
       showStatus(message, 'error');
       document.getElementById('dragDrop').checked = false;
       settings.dragDrop = false;
       return;
     }
 
-    // Check if user is trying to enable Preview Mode without premium tier
-    if (settings.previewMode && !hasPremiumFeatures) {
+    // Check if user is trying to enable Preview Mode without Pro tier
+    if (settings.previewMode && !hasProFeatures) {
       const message = tier ? 'Preview Mode requires Pro or Power User tier' : 'Preview Mode requires a license';
       showStatus(message, 'error');
       document.getElementById('previewMode').checked = false;
@@ -410,8 +485,8 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Check if user is trying to enable RGB theme without premium tier
-    if (settings.rgbTheme && !hasPremiumFeatures) {
+    // Check if user is trying to enable Custom Theme without Pro tier
+    if (settings.rgbTheme && !hasProFeatures) {
       const message = tier ? 'Custom Theme requires Pro or Power User tier' : 'Custom Theme requires a license';
       showStatus(message, 'error');
       document.getElementById('rgbTheme').checked = false;
@@ -424,10 +499,43 @@ async function saveSettings(settings) {
       return;
     }
 
+    // ESSENTIAL tier feature checks
+    // Check if user is trying to enable Quick Notes without license
+    if (settings.quickNotes && !hasEssentialFeatures) {
+      showStatus('Quick Notes requires a license (Essential tier or higher)', 'error');
+      document.getElementById('quickNotes').checked = false;
+      settings.quickNotes = false;
+      return;
+    }
+
+    // Check if user is trying to enable Smart Job Switcher without license
+    if (settings.smartJobSwitcher && !hasEssentialFeatures) {
+      showStatus('Smart Job Switcher requires a license (Essential tier or higher)', 'error');
+      document.getElementById('smartJobSwitcher').checked = false;
+      settings.smartJobSwitcher = false;
+      return;
+    }
+
+    // Check if user is trying to enable Freeze Header without license
+    if (settings.freezeHeader && !hasEssentialFeatures) {
+      showStatus('Freeze Header requires a license (Essential tier or higher)', 'error');
+      document.getElementById('freezeHeader').checked = false;
+      settings.freezeHeader = false;
+      return;
+    }
+
+    // Check if user is trying to enable PDF Markup Tools without license
+    if (settings.pdfMarkupTools && !hasEssentialFeatures) {
+      showStatus('PDF Markup Tools requires a license (Essential tier or higher)', 'error');
+      document.getElementById('pdfMarkupTools').checked = false;
+      settings.pdfMarkupTools = false;
+      return;
+    }
+
     // Show/hide customize button based on rgbTheme toggle
     const customizeBtn = document.getElementById('customizeThemeBtn');
     const themeCustomization = document.getElementById('themeCustomization');
-    const shouldShowButton = hasPremiumFeatures && settings.rgbTheme;
+    const shouldShowButton = hasProFeatures && settings.rgbTheme;
     customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
 
     // Hide panel when toggle is turned off
@@ -759,21 +867,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize collapsible categories
   initializeCategories();
 
-  // Determine if user has premium features (Pro or Power User tier)
-  const hasPremiumFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+  // Determine if user has access to different tiers
+  const hasProFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
+  const hasEssentialFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'quickNotes');
 
-  // If no premium features access, ensure premium features stay disabled
-  if (!hasPremiumFeatures) {
-    const settings = await chrome.storage.sync.get(['jtToolsSettings']);
-    if (settings.jtToolsSettings && (settings.jtToolsSettings.dragDrop || settings.jtToolsSettings.rgbTheme || settings.jtToolsSettings.previewMode)) {
-      // User had premium features enabled but tier doesn't allow it (Essential tier or no license)
-      console.log('Disabling premium features - tier:', tier, 'hasPremiumFeatures:', hasPremiumFeatures);
-      const updatedSettings = {
-        ...settings.jtToolsSettings,
-        dragDrop: false,
-        rgbTheme: false,
-        previewMode: false
-      };
+  // If no license, ensure licensed features stay disabled
+  const currentSettings = await chrome.storage.sync.get(['jtToolsSettings']);
+  if (currentSettings.jtToolsSettings) {
+    let needsUpdate = false;
+    const updatedSettings = { ...currentSettings.jtToolsSettings };
+
+    // PRO features require Pro or Power User tier
+    if (!hasProFeatures) {
+      if (updatedSettings.dragDrop || updatedSettings.rgbTheme || updatedSettings.previewMode) {
+        console.log('Disabling PRO features - tier:', tier);
+        updatedSettings.dragDrop = false;
+        updatedSettings.rgbTheme = false;
+        updatedSettings.previewMode = false;
+        needsUpdate = true;
+      }
+    }
+
+    // ESSENTIAL features require Essential, Pro, or Power User tier
+    if (!hasEssentialFeatures) {
+      if (updatedSettings.quickNotes || updatedSettings.smartJobSwitcher ||
+          updatedSettings.freezeHeader || updatedSettings.pdfMarkupTools) {
+        console.log('Disabling ESSENTIAL features - tier:', tier);
+        updatedSettings.quickNotes = false;
+        updatedSettings.smartJobSwitcher = false;
+        updatedSettings.freezeHeader = false;
+        updatedSettings.pdfMarkupTools = false;
+        needsUpdate = true;
+      }
+    }
+
+    if (needsUpdate) {
       await chrome.storage.sync.set({ jtToolsSettings: updatedSettings });
     }
   }
@@ -884,4 +1012,428 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for refresh button
   document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);
+
+  // Initialize AI Integration section
+  await initAiIntegration();
 });
+
+// ===================================
+// AI Integration Section
+// ===================================
+
+// MCP Server URL - uses workers.dev (same account as main worker)
+const MCP_SERVER_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
+
+const AI_PLATFORMS = {
+  claude: {
+    name: 'Claude Desktop',
+    icon: '🟣',
+    instructions: `<ol>
+      <li>Install mcp-remote: <code>npm install -g mcp-remote</code></li>
+      <li>Open Claude Desktop → <strong>Settings → Developer</strong></li>
+      <li>Click <strong>Edit Config</strong></li>
+      <li>Add the entry below inside your <code>mcpServers</code> object</li>
+      <li>Save and restart Claude Desktop</li>
+    </ol>
+    <p style="margin-top:8px;font-size:11px;color:#888;">
+      <strong>Note:</strong> Replace <code>YOUR_NPM_PATH</code> with your npm global path
+    </p>`,
+    filePath: 'Config: <code>claude_desktop_config.json</code>',
+    configType: 'mcp-remote'
+  },
+  claudeCode: {
+    name: 'Claude Code (CLI)',
+    icon: '🟣',
+    instructions: `<ol>
+      <li>Open your Claude Code settings file</li>
+      <li>Add the entry below inside your <code>mcpServers</code> object</li>
+      <li>Save and restart Claude Code</li>
+    </ol>
+    <p style="margin-top:8px;font-size:11px;color:#888;">
+      Claude Code supports HTTP directly - no mcp-remote needed
+    </p>`,
+    filePath: 'Config: <code>~/.claude/settings.json</code>',
+    configType: 'http'
+  },
+  chatgpt: {
+    name: 'ChatGPT',
+    icon: '🟢',
+    instructions: `<ol>
+      <li>Open ChatGPT settings</li>
+      <li>Go to <strong>Features → MCP Servers</strong></li>
+      <li>Click <strong>Add Server</strong></li>
+      <li>Use SSE endpoint with your credentials</li>
+    </ol>`,
+    filePath: `Endpoint: <code>${MCP_SERVER_URL}/sse</code>`,
+    configType: 'sse'
+  },
+  cursor: {
+    name: 'Cursor IDE',
+    icon: '🔵',
+    instructions: `<ol>
+      <li>Open Cursor settings (<code>Cmd/Ctrl + ,</code>)</li>
+      <li>Search for <strong>MCP</strong></li>
+      <li>Add new MCP server with config below</li>
+      <li>Restart Cursor</li>
+    </ol>`,
+    filePath: 'Config file: <code>~/.cursor/mcp.json</code>',
+    configType: 'http'
+  },
+  other: {
+    name: 'Other MCP Clients',
+    icon: '⚪',
+    instructions: `<ol>
+      <li>Use <strong>HTTP endpoint</strong> for request/response clients</li>
+      <li>Use <strong>SSE endpoint</strong> for streaming clients</li>
+      <li>Auth format: <code>Bearer LICENSE:GRANT_KEY</code></li>
+    </ol>`,
+    filePath: `HTTP: <code>/message</code> | SSE: <code>/sse</code>`,
+    configType: 'both'
+  }
+};
+
+/**
+ * Initialize AI Integration section
+ */
+async function initAiIntegration() {
+  const aiSection = document.getElementById('aiIntegrationSection');
+  if (!aiSection) return;
+
+  // Check if user has Power User tier
+  const tier = await LicenseService.getTier();
+  const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
+
+  if (!hasPowerUser) {
+    aiSection.style.display = 'none';
+    return;
+  }
+
+  // Show the section for Power Users
+  aiSection.style.display = 'block';
+
+  // Setup platform tab switching
+  setupPlatformTabs();
+
+  // Setup copy button
+  setupCopyButton();
+
+  // Setup test connection button
+  setupTestConnection();
+
+  // Load initial config for default platform (Claude)
+  updateConfigDisplay('claude');
+
+  // Check connection status
+  await checkAiConnectionStatus();
+}
+
+/**
+ * Setup platform tab switching
+ */
+function setupPlatformTabs() {
+  const tabs = document.querySelectorAll('.platform-tab');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active from all tabs
+      tabs.forEach(t => t.classList.remove('active'));
+
+      // Add active to clicked tab
+      tab.classList.add('active');
+
+      // Update config display
+      const platform = tab.dataset.platform;
+      updateConfigDisplay(platform);
+    });
+  });
+}
+
+/**
+ * Update config display based on selected platform
+ */
+async function updateConfigDisplay(platform) {
+  const platformConfig = AI_PLATFORMS[platform];
+  if (!platformConfig) return;
+
+  // Update instructions
+  const instructionsEl = document.getElementById('configInstructions');
+  instructionsEl.innerHTML = platformConfig.instructions;
+
+  // Update file path hint
+  const filePathEl = document.getElementById('configFilePath');
+  filePathEl.innerHTML = platformConfig.filePath;
+
+  // Generate and display config JSON
+  const configCode = document.getElementById('configCode');
+  const config = await generateConfigJson(platform);
+  configCode.textContent = config;
+}
+
+/**
+ * Generate MCP config JSON with user's credentials
+ */
+async function generateConfigJson(platform) {
+  // Get user's license key and grant key
+  const licenseData = await LicenseService.getLicenseData();
+  const licenseKey = licenseData?.key || 'YOUR_LICENSE_KEY';
+
+  // Get grant key from Pro Service (stored in local storage as jtpro_grant_key)
+  let grantKey = 'YOUR_GRANT_KEY';
+  try {
+    const isConfigured = await JobTreadProService.isConfigured();
+    if (isConfigured) {
+      const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+      if (stored.jtpro_grant_key) {
+        grantKey = stored.jtpro_grant_key;
+      }
+    }
+  } catch (e) {
+    console.log('Could not retrieve grant key:', e);
+  }
+
+  const authToken = `${licenseKey}:${grantKey}`;
+  const platformConfig = AI_PLATFORMS[platform];
+
+  if (platform === 'other') {
+    // Show both endpoints for "Other" clients
+    return JSON.stringify({
+      "mcpServers": {
+        "jobtread": {
+          "comment": "Use HTTP for request/response, SSE for streaming",
+          "http_url": `${MCP_SERVER_URL}/message`,
+          "sse_url": `${MCP_SERVER_URL}/sse`,
+          "headers": {
+            "Authorization": `Bearer ${authToken}`
+          }
+        }
+      }
+    }, null, 2);
+  }
+
+  if (platformConfig.configType === 'sse') {
+    // SSE config for ChatGPT
+    return JSON.stringify({
+      "mcpServers": {
+        "jobtread": {
+          "type": "sse",
+          "url": `${MCP_SERVER_URL}/sse`,
+          "headers": {
+            "Authorization": `Bearer ${authToken}`
+          }
+        }
+      }
+    }, null, 2);
+  }
+
+  // Claude Desktop - uses mcp-remote bridge for remote servers
+  // Claude Desktop only supports local stdio servers, so we need mcp-remote as a bridge
+  if (platform === 'claude') {
+    const serverConfig = {
+      "command": "node",
+      "args": [
+        "YOUR_NPM_PATH/node_modules/mcp-remote/dist/proxy.js",
+        `${MCP_SERVER_URL}/sse`,
+        "--header",
+        `Authorization: Bearer ${authToken}`
+      ]
+    };
+    // Add helpful comment about finding npm path
+    const configStr = JSON.stringify(serverConfig, null, 2);
+    const helpComment = `// Find YOUR_NPM_PATH by running: npm root -g
+// Windows: Usually C:/Users/USERNAME/AppData/Roaming/npm
+// Mac/Linux: Usually /usr/local/lib or ~/.npm-global
+
+`;
+    return helpComment + `"jobtread": ${configStr}`;
+  }
+
+  // Claude Code (CLI) - supports HTTP directly
+  if (platform === 'claudeCode') {
+    const serverConfig = {
+      "type": "http",
+      "url": `${MCP_SERVER_URL}/message`,
+      "headers": {
+        "Authorization": `Bearer ${authToken}`
+      }
+    };
+    return `"jobtread": ${JSON.stringify(serverConfig, null, 2)}`;
+  }
+
+  // HTTP config for Cursor, etc.
+  return JSON.stringify({
+    "mcpServers": {
+      "jobtread": {
+        "type": "http",
+        "url": `${MCP_SERVER_URL}/message`,
+        "headers": {
+          "Authorization": `Bearer ${authToken}`
+        }
+      }
+    }
+  }, null, 2);
+}
+
+/**
+ * Setup copy to clipboard button
+ */
+function setupCopyButton() {
+  const copyBtn = document.getElementById('copyConfigBtn');
+  if (!copyBtn) return;
+
+  copyBtn.addEventListener('click', async () => {
+    const configCode = document.getElementById('configCode');
+    const configText = configCode.textContent;
+
+    try {
+      await navigator.clipboard.writeText(configText);
+
+      // Show copied state
+      copyBtn.classList.add('copied');
+      const copyText = copyBtn.querySelector('.copy-text');
+      const copyIcon = copyBtn.querySelector('.copy-icon');
+      copyText.textContent = 'Copied!';
+      copyIcon.textContent = '✓';
+
+      // Reset after 2 seconds
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyText.textContent = 'Copy';
+        copyIcon.textContent = '📋';
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showStatus('Failed to copy to clipboard', 'error');
+    }
+  });
+}
+
+/**
+ * Setup test connection button
+ */
+function setupTestConnection() {
+  const testBtn = document.getElementById('testAiConnectionBtn');
+  if (!testBtn) return;
+
+  testBtn.addEventListener('click', async () => {
+    testBtn.classList.add('testing');
+    testBtn.textContent = 'Testing...';
+
+    try {
+      await testMcpConnection();
+    } finally {
+      testBtn.classList.remove('testing');
+      testBtn.textContent = 'Test Connection';
+    }
+  });
+}
+
+/**
+ * Test MCP server connection
+ */
+async function testMcpConnection() {
+  const statusIndicator = document.getElementById('aiStatusIndicator');
+  const statusText = statusIndicator.querySelector('.status-text');
+
+  try {
+    // Test the health endpoint
+    const response = await fetch(`${MCP_SERVER_URL}/health`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      if (data.status === 'ok') {
+        // Server is healthy, now test auth
+        await testMcpAuth(statusIndicator, statusText);
+      } else {
+        setConnectionStatus(statusIndicator, statusText, 'error', 'Server error');
+      }
+    } else {
+      setConnectionStatus(statusIndicator, statusText, 'error', 'Server unavailable');
+    }
+  } catch (error) {
+    console.error('MCP health check failed:', error);
+    setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
+  }
+}
+
+/**
+ * Test MCP authentication with user's grant key
+ */
+async function testMcpAuth(statusIndicator, statusText) {
+  try {
+    // Get grant key from local storage (stored by JobTreadProService as jtpro_grant_key)
+    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+    const grantKey = stored.jtpro_grant_key;
+
+    if (!grantKey) {
+      setConnectionStatus(statusIndicator, statusText, 'disconnected', 'Configure Grant Key above first');
+      showStatus('Enter your Grant Key in the API section above', 'error');
+      return;
+    }
+
+    // Get license key for the auth header
+    const licenseData = await LicenseService.getLicenseData();
+    const licenseKey = licenseData?.key;
+
+    // Test the tools endpoint with auth
+    const response = await fetch(`${MCP_SERVER_URL}/tools`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${licenseKey}:${grantKey}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setConnectionStatus(statusIndicator, statusText, 'connected',
+        `Connected (${data.toolCount || 0} tools)`);
+      showStatus('MCP server connected!', 'success');
+    } else if (response.status === 401) {
+      setConnectionStatus(statusIndicator, statusText, 'error', 'Invalid grant key');
+      showStatus('Grant key not recognized', 'error');
+    } else if (response.status === 403) {
+      setConnectionStatus(statusIndicator, statusText, 'error', 'Org mismatch');
+      showStatus('Grant key doesn\'t match your license org', 'error');
+    } else {
+      setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
+    }
+  } catch (error) {
+    console.error('MCP auth test failed:', error);
+    setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
+  }
+}
+
+/**
+ * Check AI connection status on load
+ */
+async function checkAiConnectionStatus() {
+  const statusIndicator = document.getElementById('aiStatusIndicator');
+  const statusText = statusIndicator?.querySelector('.status-text');
+
+  if (!statusIndicator || !statusText) return;
+
+  // Check if grant key is configured (stored by JobTreadProService in local storage)
+  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+
+  if (!stored.jtpro_grant_key) {
+    setConnectionStatus(statusIndicator, statusText, 'disconnected', 'Configure Grant Key above');
+    return;
+  }
+
+  // Grant key is configured, show ready status
+  setConnectionStatus(statusIndicator, statusText, 'disconnected', 'Ready - click Test to verify');
+}
+
+/**
+ * Set connection status display
+ */
+function setConnectionStatus(indicator, textEl, status, message) {
+  indicator.className = `ai-status-indicator ${status}`;
+  textEl.textContent = message;
+}

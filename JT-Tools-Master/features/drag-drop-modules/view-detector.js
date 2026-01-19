@@ -80,11 +80,6 @@ const ViewDetector = (() => {
 
     const isAvailability = hasUserRows && hasAvailabilityHeader;
 
-    console.log('ViewDetector: isAvailabilityView check:');
-    console.log('  - Has user rows (avatars/names):', hasUserRows);
-    console.log('  - Has availability header (2 rows, date numbers in TH):', hasAvailabilityHeader);
-    console.log('  - Final result:', isAvailability);
-
     return isAvailability;
   }
 
@@ -154,14 +149,12 @@ const ViewDetector = (() => {
 
           // Check for fixed positioning (common in popups/modals)
           if (style.position === 'fixed') {
-            console.log('ViewDetector: isInPopup - Found fixed positioned ancestor, this is a popup');
             return true;
           }
 
           // Check for high z-index (popups typically have high z-index)
           const zIndex = parseInt(style.zIndex);
           if (!isNaN(zIndex) && zIndex > 40) {
-            console.log('ViewDetector: isInPopup - Found high z-index ancestor (z-index: ' + zIndex + '), this is a popup');
             return true;
           }
 
@@ -173,19 +166,16 @@ const ViewDetector = (() => {
               className.includes('popup') ||
               className.includes('overlay')
           )) {
-            console.log('ViewDetector: isInPopup - Found modal/dialog/popup class, this is a popup');
             return true;
           }
 
           element = element.parentElement;
         }
 
-        console.log('ViewDetector: isInPopup - No popup indicators found, this is main schedule page');
         return false;
       }
     }
 
-    console.log('ViewDetector: isInPopup - No availability view found');
     return false;
   }
 

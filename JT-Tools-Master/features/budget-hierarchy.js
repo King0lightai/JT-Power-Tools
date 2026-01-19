@@ -81,7 +81,7 @@ const BudgetHierarchyFeature = (() => {
       // Start observing for new groups
       startObserver();
 
-      console.log('BudgetHierarchy: Initialized with theme:', getActiveTheme().type);
+      console.log('BudgetHierarchy: Activated');
     }, 100); // 100ms delay to let dark mode/theme CSS inject
   }
 
@@ -112,7 +112,7 @@ const BudgetHierarchyFeature = (() => {
       styleElement = null;
     }
 
-    console.log('BudgetHierarchy: Cleanup complete (event listeners removed)');
+    console.log('BudgetHierarchy: Deactivated');
   }
 
   // Inject CSS for shading
@@ -462,7 +462,6 @@ const BudgetHierarchyFeature = (() => {
             if (node.nodeType === 1) { // Element node
               // Check if dark mode or custom theme CSS was injected
               if (node.id === 'jt-dark-mode-styles' || node.id === 'jt-custom-theme-styles') {
-                console.log('BudgetHierarchy: Theme style detected, refreshing shading');
                 shouldRefreshTheme = true;
               }
 
@@ -481,7 +480,6 @@ const BudgetHierarchyFeature = (() => {
             if (node.nodeType === 1) {
               // Check if dark mode or custom theme CSS was removed
               if (node.id === 'jt-dark-mode-styles' || node.id === 'jt-custom-theme-styles') {
-                console.log('BudgetHierarchy: Theme style removed, refreshing shading');
                 shouldRefreshTheme = true;
               }
 

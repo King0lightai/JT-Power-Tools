@@ -233,7 +233,6 @@ const FormatterToolbar = (() => {
     const customFieldForm = field.closest('form.rounded-sm');
     if (customFieldForm && customFieldForm.classList.contains('border') &&
         customFieldForm.classList.contains('divide-y')) {
-      console.log('Found custom field form as containing column');
       return customFieldForm;
     }
 
@@ -370,14 +369,12 @@ const FormatterToolbar = (() => {
     // CRITICAL: Never create embedded toolbar for ANY budget table field
     // Budget table uses the floating expanded toolbar exclusively
     if (isBudgetTableField(field)) {
-      console.log('Formatter: Blocked embedded toolbar creation for budget table field');
       return null;
     }
 
     // CRITICAL: Never create embedded toolbar for budget custom fields
     // Budget custom fields use the floating expanded toolbar, like budget table fields
     if (isBudgetCustomField(field)) {
-      console.log('Formatter: Blocked embedded toolbar creation for budget custom field');
       return null;
     }
 
@@ -1898,16 +1895,11 @@ const FormatterToolbar = (() => {
   function showToolbar(field) {
     if (!field || !document.body.contains(field)) return;
 
-    console.log('>>> showToolbar called for field:', field);
-    console.log('>>> Field placeholder:', field.getAttribute('placeholder'));
-    console.log('>>> Current URL:', window.location.pathname);
-
     clearHideTimeout();
 
     // Budget table fields AND budget custom fields get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
     const isBudgetField = isBudgetTableField(field) || isBudgetCustomField(field);
-    console.log('>>> isBudgetField result:', isBudgetField);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling

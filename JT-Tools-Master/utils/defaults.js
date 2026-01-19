@@ -135,7 +135,8 @@ const JTDefaults = (() => {
     LICENSE: 'jtToolsLicense',
     LICENSE_VERSION: 'jtToolsLicenseVersion',
     QUICK_NOTES: 'jtToolsQuickNotes',
-    QUICK_NOTES_WIDTH: 'jtToolsQuickNotesWidth'
+    QUICK_NOTES_WIDTH: 'jtToolsQuickNotesWidth',
+    MESSAGE_SIGNATURE: 'messageSignature'
   };
 
   /**

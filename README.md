@@ -1,7 +1,7 @@
 # ⚡ JT Power Tools
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-brightgreen?logo=googlechrome)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-[![Version](https://img.shields.io/badge/version-3.4.01%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
+[![Version](https://img.shields.io/badge/version-3.5.0%20(Beta)-blue)](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 [![Changelog](https://img.shields.io/badge/changelog-view-orange)](https://king0lightai.github.io/JT-Power-Tools/changelog.html)
 
 An all-in-one Chrome extension toolkit for JobTread with toggleable features and a sleek control panel.
@@ -121,12 +121,16 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Works seamlessly with sidebar content
 - Prevents frozen elements from overlapping scrollable content
 
-### 🔢 Message Character Counter
+### 🔢 Message Character Counter & Signature
 - Displays character count for message text fields
 - Shows current character count in real-time as you type
 - Counter appears in the toolbar next to the writing assistant
 - Helps stay within character limits before submitting messages
-- Clean, unobtrusive display that doesn't interfere with typing
+- **Message Signature**: Create and save a reusable signature
+  - Click "Signature" to edit your signature text
+  - Click "Insert" to add signature at cursor position
+  - Signature syncs across devices via Chrome storage
+  - Ctrl+Enter to quickly save in the modal
 
 ## 📦 Installation
 
@@ -218,27 +222,52 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Works seamlessly with other appearance features
 - Updates in real-time when groups are expanded or collapsed
 
-## 🔑 Premium Features
+## 💰 Pricing Tiers
 
-Some features require a premium license to unlock:
-- **Schedule Drag & Drop** - Drag schedule items between dates
-- **Preview Mode** - Live preview of formatted text with floating panel
-- **Custom Theme** - Personalize JobTread with your own colors
+JT Power Tools offers a tiered licensing system with features for everyone:
 
-### Premium License Activation
+### 🆓 FREE (No License Required)
+Works immediately after installation - no signup needed:
+- **Text Formatter** - Rich text formatting toolbar
+- **Dark Mode** - Beautiful dark theme
+- **Contrast Fix** - WCAG-compliant text readability
+- **Character Counter** - Real-time character count
+- **Budget Hierarchy Shading** - Visual nesting indicators
+- **Kanban Type Filter** - Auto-hide empty columns
+- **Auto Collapse Groups** - Collapse completed groups
 
-**⚠️ Important:** Premium features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn). Install from there before purchasing.
+### 💼 Essential ($10/company)
+Perfect for teams wanting productivity tools:
+- Everything in FREE, plus:
+- **Quick Notes** - Persistent notepad with markdown & sync
+- **Smart Job Switcher** - Keyboard shortcuts (J+S, Alt+J)
+- **Freeze Header** - Sticky table headers
+- **PDF Markup Tools** - Stamp selector & eraser
 
-**💼 Company Licensing:** Licenses are designed for company-wide use. Purchase **one license per company** and share it with all employees in your organization. No need to buy individual licenses for each team member!
+### ⭐ Pro ($20/company)
+For power users who want customization:
+- Everything in Essential, plus:
+- **Schedule & Task Checkboxes** - Instant task completion from calendar
+- **Custom Theme** - Personalize with your own color palette
+- **Preview Mode** - Live markdown preview panel
+
+### 🚀 Power User ($30/company)
+For teams leveraging AI and advanced features:
+- Everything in Pro, plus:
+- **Custom Field Filter** - API-powered job filtering
+- **MCP Server Access** - Connect AI assistants to JobTread (Coming Soon)
+
+### License Activation
+
+**⚠️ Important:** Paid features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn).
+
+**💼 Company Licensing:** Purchase **one license per company** and share with all employees!
 
 1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
 2. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
-3. Open the extension popup
-4. Navigate to the License section
-5. Enter your license key
-6. Click "Activate"
-7. Premium features will be unlocked immediately
-8. Share the license key with other employees in your company
+3. Open the extension popup → License section
+4. Enter your license key and click "Activate"
+5. Share the key with your team
 
 ## 🏗️ Architecture
 
@@ -370,26 +399,31 @@ const featureModules = {
 
 **For detailed release notes and complete changelog, see the [Changelog](https://king0lightai.github.io/JT-Power-Tools/changelog.html)**
 
-### v3.3.6 (Current - Beta)
+### v3.4.0 (Current - Beta)
+- **New: Four-Tier License System**
+  - FREE tier: Core features work without any license
+  - Essential ($10): Quick Notes, Job Switcher, Freeze Header, PDF Markup
+  - Pro ($20): Schedule Checkboxes, Custom Theme, Preview Mode
+  - Power User ($30): Custom Field Filter, MCP Access (Coming Soon)
+  - Backwards compatible: existing licenses get PRO tier
+- **New: Custom Field Filter** (Power User)
+  - Filter jobs by custom field values in Job Switcher
+  - API-powered dropdown with auto-populated values
+- **AI Integration Panel** (Power User - Coming Soon)
+  - MCP server config generator for Claude, ChatGPT, Cursor, Gemini
+  - One-click copy configuration
+  - Connection status testing
+
+### v3.3.6
 - **New Feature: Auto Collapse Completed Groups**
   - Automatically collapses schedule groups that are 100% complete on page load
-  - Reduces clutter by hiding completed work while keeping active items visible
-  - Works on Schedule views with grouped tasks
   - Helps focus on remaining work without manual collapsing
 - **Custom Theme Improvements**
   - Complete overhaul with HSL-based color palette generation
   - Rich palette with multiple background, border, and text shades
-  - Distinct hover/focus/active state colors (not brightness filters)
-  - Theme-harmonized alert colors that adapt to light/dark backgrounds
-  - Better visual separation between UI layers
-  - Fixed dropdown menus and popper-positioned elements
-  - Fixed scrollbars only appearing on scrollable containers
-  - Clean lines in Gantt chart (removed unnecessary shadows)
 - **Bug Fixes**
   - Fixed budget hierarchy resize handles getting shaded
-  - Fixed Smart Job Switcher to select highlighted item on Enter when using arrow keys
-  - Fixed dark toolbars and file viewers being incorrectly themed
-  - Fixed content tiles incorrectly getting popup shadows
+  - Fixed Smart Job Switcher Enter key behavior
 
 ### v3.3.3
 - **Architecture & Stability**

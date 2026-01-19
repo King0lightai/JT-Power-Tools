@@ -298,7 +298,6 @@ const FreezeHeaderFeature = (() => {
     styleElement.id = 'jt-freeze-header-styles';
     styleElement.textContent = STICKY_STYLES;
     document.head.appendChild(styleElement);
-    console.log('FreezeHeader: Styles injected');
   }
 
   /**
@@ -308,7 +307,6 @@ const FreezeHeaderFeature = (() => {
     if (styleElement) {
       styleElement.remove();
       styleElement = null;
-      console.log('FreezeHeader: Styles removed');
     }
   }
 
@@ -385,7 +383,6 @@ const FreezeHeaderFeature = (() => {
 
       if (hasLogo && hasSearch) {
         div.classList.add('jt-top-header');
-        console.log('FreezeHeader: Found and marked top header');
         return true;
       }
     }
@@ -394,7 +391,6 @@ const FreezeHeaderFeature = (() => {
     const headerWithZ41 = document.querySelector('div.shrink-0.sticky.z-\\[41\\]');
     if (headerWithZ41) {
       headerWithZ41.classList.add('jt-top-header');
-      console.log('FreezeHeader: Found top header via z-[41]');
       return true;
     }
 
@@ -407,7 +403,6 @@ const FreezeHeaderFeature = (() => {
    */
   function findAndMarkTabs() {
     if (!isJobPage()) {
-      console.log('FreezeHeader: Not on a job page, skipping tabs');
       return false;
     }
 
@@ -438,14 +433,12 @@ const FreezeHeaderFeature = (() => {
 
           if (hasTypicalTabs) {
             div.classList.add('jt-job-tabs-container');
-            console.log('FreezeHeader: Found and marked job tabs container');
             return true;
           }
         }
       }
     }
 
-    console.log('FreezeHeader: Job tabs container not found');
     return false;
   }
 
@@ -479,7 +472,6 @@ const FreezeHeaderFeature = (() => {
 
       if (hasSearch || hasFilters) {
         toolbar.classList.add('jt-action-toolbar');
-        console.log('FreezeHeader: Found and marked action toolbar');
         return true;
       }
     }
@@ -495,7 +487,6 @@ const FreezeHeaderFeature = (() => {
       const buttons = toolbar.querySelectorAll('[role="button"]');
       if (buttons.length >= 3) {
         toolbar.classList.add('jt-action-toolbar');
-        console.log('FreezeHeader: Found action toolbar via shadow-line-bottom');
         return true;
       }
     }
@@ -524,7 +515,6 @@ const FreezeHeaderFeature = (() => {
 
       if (hasDailyLogsLinks || hasUploadButton || hasListGridToggle || hasSearchInput) {
         container.classList.add('jt-action-toolbar');
-        console.log('FreezeHeader: Found and marked page action toolbar (daily logs/files)');
         return true;
       }
     }
@@ -544,7 +534,6 @@ const FreezeHeaderFeature = (() => {
 
       if ((hasDocumentsLink || hasPaymentsLink || hasCostInboxLink) && hasSearchInput) {
         toolbar.classList.add('jt-action-toolbar');
-        console.log('FreezeHeader: Found and marked documents page action toolbar');
         return true;
       }
     }
@@ -586,7 +575,6 @@ const FreezeHeaderFeature = (() => {
           const headerText = container.textContent.toLowerCase();
           if (headerText.includes('details') || headerText.includes('estimating') || headerText.includes('name')) {
             container.classList.add('jt-budget-header-container');
-            console.log('FreezeHeader: Found and marked budget header container');
             return true;
           }
         }
@@ -633,7 +621,6 @@ const FreezeHeaderFeature = (() => {
 
         if (hasGanttContent) {
           container.classList.add('jt-schedule-header-container');
-          console.log('FreezeHeader: Found and marked schedule header container (gantt view)');
           return true;
         }
       }
@@ -686,7 +673,6 @@ const FreezeHeaderFeature = (() => {
 
         if (hasScheduleListColumns || hasTaskListColumns) {
           container.classList.add('jt-schedule-header-container');
-          console.log('FreezeHeader: Found and marked list header container');
           return true;
         }
       }
@@ -720,7 +706,6 @@ const FreezeHeaderFeature = (() => {
 
         if (!targetContainer.classList.contains('jt-schedule-header-container')) {
           targetContainer.classList.add('jt-schedule-header-container');
-          console.log('FreezeHeader: Found and marked standalone list header');
           return true;
         }
       }
@@ -764,7 +749,6 @@ const FreezeHeaderFeature = (() => {
 
       if (hasFolderText || hasFolderIcon) {
         container.classList.add('jt-files-folder-bar');
-        console.log('FreezeHeader: Found and marked files folder bar');
         return true;
       }
     }
@@ -810,7 +794,6 @@ const FreezeHeaderFeature = (() => {
 
       if (hasFileColumns) {
         container.classList.add('jt-files-list-header');
-        console.log('FreezeHeader: Found and marked files list header container');
         return true;
       }
     }
@@ -839,12 +822,10 @@ const FreezeHeaderFeature = (() => {
         const stickyParent = flexHeader.closest('div.sticky');
         if (stickyParent && !stickyParent.classList.contains('jt-files-list-header')) {
           stickyParent.classList.add('jt-files-list-header');
-          console.log('FreezeHeader: Found and marked files list header (via sticky parent)');
           return true;
         }
         // Fallback to marking the flex header itself
         flexHeader.classList.add('jt-files-list-header');
-        console.log('FreezeHeader: Found and marked files list header (flex header)');
         return true;
       }
     }
@@ -891,7 +872,6 @@ const FreezeHeaderFeature = (() => {
 
       if ((hasTagsSection && hasTypeSection) || hasNavItems) {
         sidebar.classList.add('jt-files-sidebar');
-        console.log('FreezeHeader: Found and marked files sidebar');
         return true;
       }
     }
@@ -943,7 +923,6 @@ const FreezeHeaderFeature = (() => {
 
       if (isTimeClock || isDailyLog || isNotifications || isNearHeaderLevel) {
         sidebar.classList.add('jt-global-sidebar');
-        console.log('FreezeHeader: Marked global sidebar:', isTimeClock ? 'Time Clock' : isDailyLog ? 'Daily Log' : isNotifications ? 'Notifications' : 'Header-level sidebar');
       }
     }
   }
@@ -983,8 +962,6 @@ const FreezeHeaderFeature = (() => {
     document.documentElement.style.setProperty('--jt-tabs-bottom', `${tabsBottom}px`);
     document.documentElement.style.setProperty('--jt-toolbar-bottom', `${toolbarBottom}px`);
     document.documentElement.style.setProperty('--jt-files-folder-bottom', `${filesFolderBottom}px`);
-
-    console.log('FreezeHeader: Updated positions - header:', headerHeight, 'px, tabs bottom:', tabsBottom, 'px, toolbar bottom:', toolbarBottom, 'px, files folder bottom:', filesFolderBottom, 'px');
   }
 
   /**
@@ -1021,12 +998,10 @@ const FreezeHeaderFeature = (() => {
       // Suspend freeze header to allow JobTread's native fullscreen to work
       document.body.classList.remove('jt-freeze-header-active');
       freezeHeaderSuspended = true;
-      console.log('FreezeHeader: Suspended due to', isInFullscreenMode ? 'fullscreen mode' : 'Preview Document popup');
     } else if (!shouldSuspend && freezeHeaderSuspended) {
       // Resume freeze header
       document.body.classList.add('jt-freeze-header-active');
       freezeHeaderSuspended = false;
-      console.log('FreezeHeader: Resumed');
     }
   }
 
@@ -1147,7 +1122,6 @@ const FreezeHeaderFeature = (() => {
     findAndMarkGlobalSidebars();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
-    console.log('FreezeHeader: Applied');
   }
 
   /**
@@ -1190,8 +1164,6 @@ const FreezeHeaderFeature = (() => {
     document.documentElement.style.removeProperty('--jt-tabs-bottom');
     document.documentElement.style.removeProperty('--jt-toolbar-bottom');
     document.documentElement.style.removeProperty('--jt-files-folder-bottom');
-
-    console.log('FreezeHeader: Removed');
   }
 
   /**
@@ -1199,12 +1171,11 @@ const FreezeHeaderFeature = (() => {
    */
   function init() {
     if (isActiveState) {
-      console.log('FreezeHeader: Already initialized');
       return;
     }
 
-    console.log('FreezeHeader: Initializing...');
     isActiveState = true;
+    console.log('FreezeHeader: Activated');
 
     // Inject styles
     injectStyles();
@@ -1212,8 +1183,6 @@ const FreezeHeaderFeature = (() => {
     // Only apply sticky header on job pages
     if (isJobPage()) {
       applyFreezeHeader();
-    } else {
-      console.log('FreezeHeader: Not on a job page, waiting for navigation');
     }
 
     // Set up popup detection to exclude popups from freeze header effects
@@ -1292,7 +1261,6 @@ const FreezeHeaderFeature = (() => {
         if (nowOnJobPage) {
           // Navigated to a job page - apply freeze header
           if (!wasOnJobPage) {
-            console.log('FreezeHeader: Navigated to job page, applying freeze header');
             applyFreezeHeader();
           }
           setTimeout(() => {
@@ -1310,7 +1278,6 @@ const FreezeHeaderFeature = (() => {
           }, 300);
         } else if (wasOnJobPage) {
           // Navigated away from job page - remove freeze header
-          console.log('FreezeHeader: Left job page, removing freeze header');
           removeFreezeHeader();
         }
 
@@ -1323,8 +1290,6 @@ const FreezeHeaderFeature = (() => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(updatePositions, 100);
     });
-
-    console.log('FreezeHeader: Feature loaded');
   }
 
   /**
@@ -1332,12 +1297,11 @@ const FreezeHeaderFeature = (() => {
    */
   function cleanup() {
     if (!isActiveState) {
-      console.log('FreezeHeader: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('FreezeHeader: Cleaning up...');
     isActiveState = false;
+    console.log('FreezeHeader: Deactivated');
 
     // Disconnect observer
     if (observer) {
@@ -1357,8 +1321,6 @@ const FreezeHeaderFeature = (() => {
     // Remove styles and applied classes
     removeStyles();
     removeFreezeHeader();
-
-    console.log('FreezeHeader: Cleanup complete');
   }
 
   // Public API

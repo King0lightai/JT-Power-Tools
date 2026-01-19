@@ -12,13 +12,10 @@ const DragDropFeature = (() => {
    * Initialize the schedule feature (task completion only - drag & drop disabled)
    */
   function init() {
-    if (isActive) {
-      console.log('ScheduleFeature: Already initialized');
-      return;
-    }
+    if (isActive) return;
 
-    console.log('ScheduleFeature: Initializing (task completion only, drag & drop disabled)...');
     isActive = true;
+    console.log('DragDrop: Activated');
 
     // NOTE: Drag & drop disabled - JobTread now has native drag & drop
     // Weekend styling and event handlers no longer needed
@@ -31,8 +28,6 @@ const DragDropFeature = (() => {
       if (window.ActionItemsCompletion) {
         window.ActionItemsCompletion.init();
       }
-
-      console.log('ScheduleFeature: Feature loaded (task completion only)');
     }, 1000);
 
     // Watch for DOM changes and re-initialize checkboxes (with error handling)
@@ -66,13 +61,10 @@ const DragDropFeature = (() => {
    * Cleanup the schedule feature
    */
   function cleanup() {
-    if (!isActive) {
-      console.log('ScheduleFeature: Not active, nothing to cleanup');
-      return;
-    }
+    if (!isActive) return;
 
-    console.log('ScheduleFeature: Cleaning up...');
     isActive = false;
+    console.log('DragDrop: Deactivated');
 
     // Disconnect observer
     if (observer) {
@@ -91,8 +83,6 @@ const DragDropFeature = (() => {
     if (window.ActionItemsCompletion) {
       window.ActionItemsCompletion.cleanup();
     }
-
-    console.log('ScheduleFeature: Cleanup complete');
   }
 
   /**

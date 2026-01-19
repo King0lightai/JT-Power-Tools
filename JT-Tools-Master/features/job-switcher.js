@@ -1,6 +1,6 @@
 // JobTread Smart Job Switcher Feature
 // Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
-// Features: Quick job search, keyboard navigation, resizable sidebar, custom field filtering
+// Features: Quick job search, keyboard navigation, resizable sidebar
 
 const SmartJobSwitcherFeature = (() => {
   let isActive = false;
@@ -13,11 +13,6 @@ const SmartJobSwitcherFeature = (() => {
     startX: 0,
     startWidth: 0
   };
-
-  // Custom field filter state (from HEAD)
-  let customFieldDefinitions = null;
-  let filterContainer = null;
-  let activeFilters = {};
 
   // Constants for resize functionality
   const STORAGE_KEY = 'jt-job-switcher-width';
@@ -77,11 +72,12 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
-   * Get saved sidebar width from localStorage
+   * Get saved sidebar width from chrome.storage.sync
    */
-  function getSavedWidth() {
+  async function getSavedWidth() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const data = await chrome.storage.sync.get(STORAGE_KEY);
+      const saved = data[STORAGE_KEY];
       if (saved) {
         const width = parseInt(saved, 10);
         if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
@@ -95,11 +91,11 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
-   * Save sidebar width to localStorage
+   * Save sidebar width to chrome.storage.sync
    */
   function saveWidth(width) {
     try {
-      localStorage.setItem(STORAGE_KEY, String(width));
+      chrome.storage.sync.set({ [STORAGE_KEY]: String(width) });
     } catch (e) {
       console.warn('SmartJobSwitcher: Could not save width', e);
     }
@@ -108,21 +104,18 @@ const SmartJobSwitcherFeature = (() => {
   /**
    * Create and inject the resize handle into the sidebar
    */
-  function injectResizeHandle(sidebar) {
+  async function injectResizeHandle(sidebar) {
     // Safety check: only inject into Job Switcher sidebar
     if (!isJobSwitcherSidebar(sidebar)) {
-      console.log('SmartJobSwitcher: Skipping non-Job Switcher sidebar');
       return;
     }
 
     // Check if resize handle already exists
     if (sidebar.querySelector('.jt-resize-handle')) {
       // Still apply saved width in case sidebar was recreated
-      applySavedWidth(sidebar);
+      await applySavedWidth(sidebar);
       return;
     }
-
-    console.log('SmartJobSwitcher: Injecting resize handle into Job Switcher...');
 
     // Create the resize handle element
     const resizeHandle = document.createElement('div');
@@ -165,18 +158,15 @@ const SmartJobSwitcherFeature = (() => {
     }
 
     // Apply saved width
-    applySavedWidth(sidebar);
-
-    console.log(`SmartJobSwitcher: ✅ Resize handle injected`);
+    await applySavedWidth(sidebar);
   }
 
   /**
    * Apply saved width to sidebar and trigger reflow
    */
-  function applySavedWidth(sidebar) {
-    const savedWidth = getSavedWidth();
+  async function applySavedWidth(sidebar) {
+    const savedWidth = await getSavedWidth();
     updateSidebarWidth(sidebar, savedWidth);
-    console.log(`SmartJobSwitcher: Applied saved width: ${savedWidth}px`);
   }
 
   /**
@@ -197,7 +187,6 @@ const SmartJobSwitcherFeature = (() => {
         // Check if this sibling has padding-right in inline style
         const inlinePaddingRight = sibling.style.paddingRight;
         if (inlinePaddingRight) {
-          console.log('SmartJobSwitcher: Found content container with inline padding-right:', inlinePaddingRight);
           return sibling;
         }
       }
@@ -216,7 +205,6 @@ const SmartJobSwitcherFeature = (() => {
           const computed = window.getComputedStyle(sibling);
           const computedPadding = parseInt(computed.paddingRight, 10);
           if (computedPadding > 100) {
-            console.log('SmartJobSwitcher: Found grow container with padding-right:', computedPadding);
             return sibling;
           }
         }
@@ -231,13 +219,11 @@ const SmartJobSwitcherFeature = (() => {
         if (sibling.classList.contains('grow') ||
             sibling.classList.contains('flex-1') ||
             sibling.classList.contains('flex-grow')) {
-          console.log('SmartJobSwitcher: Found grow container (fallback)');
           return sibling;
         }
       }
     }
 
-    console.log('SmartJobSwitcher: Could not find content container');
     return null;
   }
 
@@ -259,14 +245,12 @@ const SmartJobSwitcherFeature = (() => {
 
         if (sibling.style.paddingRight) {
           sibling.style.paddingRight = `${newWidth}px`;
-          console.log(`SmartJobSwitcher: Updated sibling padding-right to ${newWidth}px`, sibling.className.substring(0, 40));
         }
       }
 
       // Also check if parent has padding-right
       if (parent.style.paddingRight) {
         parent.style.paddingRight = `${newWidth}px`;
-        console.log(`SmartJobSwitcher: Updated parent padding-right to ${newWidth}px`);
       }
     }
 
@@ -280,7 +264,6 @@ const SmartJobSwitcherFeature = (() => {
       // Update if padding is significant (likely set for sidebar)
       if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
         el.style.paddingRight = `${newWidth}px`;
-        console.log(`SmartJobSwitcher: Updated element padding-right to ${newWidth}px`, el.className.substring(0, 40));
       }
     }
 
@@ -297,7 +280,6 @@ const SmartJobSwitcherFeature = (() => {
    */
   function resetMainContentMargin() {
     if (lastMainContent) {
-      console.log('SmartJobSwitcher: Clearing main content tracking (JobTread will reset padding)');
       lastMainContent = null;
     }
   }
@@ -317,8 +299,6 @@ const SmartJobSwitcherFeature = (() => {
     // Prevent text selection during resize
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'col-resize';
-
-    console.log('SmartJobSwitcher: Started resize');
   }
 
   /**
@@ -365,7 +345,6 @@ const SmartJobSwitcherFeature = (() => {
     if (sidebar) {
       const finalWidth = sidebar.offsetWidth;
       saveWidth(finalWidth);
-      console.log(`SmartJobSwitcher: Resize ended, saved width: ${finalWidth}px`);
 
       // Reset resize handle visual
       const resizeHandle = sidebar.querySelector('.jt-resize-handle');
@@ -395,15 +374,9 @@ const SmartJobSwitcherFeature = (() => {
 
             if (sidebar) {
               // Small delay to ensure sidebar is fully rendered, then check if it's the Job Switcher
-              setTimeout(() => {
+              setTimeout(async () => {
                 if (isJobSwitcherSidebar(sidebar)) {
-                  injectResizeHandle(sidebar);
-                  // Also inject filter UI if applicable
-                  const searchInput = sidebar.querySelector('input[placeholder*="Search"]') ||
-                                     sidebar.querySelector('input');
-                  if (searchInput) {
-                    injectFilterUI(searchInput);
-                  }
+                  await injectResizeHandle(sidebar);
                 }
               }, 50);
             }
@@ -434,10 +407,8 @@ const SmartJobSwitcherFeature = (() => {
     // Also check if Job Switcher sidebar is already present
     const existingSidebar = findJobSwitcherSidebar();
     if (existingSidebar) {
-      injectResizeHandle(existingSidebar);
+      injectResizeHandle(existingSidebar); // async but fire-and-forget is fine here
     }
-
-    console.log('SmartJobSwitcher: Sidebar observer started');
   }
 
   /**
@@ -447,7 +418,6 @@ const SmartJobSwitcherFeature = (() => {
     if (sidebarObserver) {
       sidebarObserver.disconnect();
       sidebarObserver = null;
-      console.log('SmartJobSwitcher: Sidebar observer stopped');
     }
   }
 
@@ -456,11 +426,9 @@ const SmartJobSwitcherFeature = (() => {
    */
   function init() {
     if (isActive) {
-      console.log('SmartJobSwitcher: Already initialized');
       return;
     }
 
-    console.log('SmartJobSwitcher: Initializing...');
     isActive = true;
 
     // Listen for keyboard shortcuts
@@ -470,8 +438,7 @@ const SmartJobSwitcherFeature = (() => {
     // Start observing for sidebar to add resize handle and filter UI
     startSidebarObserver();
 
-    console.log('SmartJobSwitcher: ✅ Listening for J+S or ALT+J keyboard shortcuts');
-    console.log('SmartJobSwitcher: ✅ Resize functionality enabled');
+    console.log('SmartJobSwitcher: Activated');
   }
 
   /**
@@ -479,11 +446,9 @@ const SmartJobSwitcherFeature = (() => {
    */
   function cleanup() {
     if (!isActive) {
-      console.log('SmartJobSwitcher: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('SmartJobSwitcher: Cleaning up...');
     isActive = false;
 
     document.removeEventListener('keydown', handleKeyDown, true);
@@ -502,7 +467,7 @@ const SmartJobSwitcherFeature = (() => {
 
     closeSidebar();
 
-    console.log('SmartJobSwitcher: Cleanup complete');
+    console.log('SmartJobSwitcher: Deactivated');
   }
 
   /**
@@ -528,22 +493,17 @@ const SmartJobSwitcherFeature = (() => {
       }
 
       if (!isSearchOpen) {
-        console.log(`SmartJobSwitcher: 🎯 ${isAltJShortcut ? 'ALT+J' : 'J+S'} detected!`);
         e.preventDefault();
         e.stopPropagation();
         // Reset J key state immediately after opening
         jKeyPressed = false;
         openSidebar();
-      } else {
-        console.log('SmartJobSwitcher: Sidebar already open, ignoring shortcut');
       }
       return;
     }
 
     // If sidebar is open and Enter is pressed, select top job and close
     if (isSearchOpen && e.key === 'Enter') {
-      console.log('SmartJobSwitcher: Enter pressed while sidebar open');
-
       // Try multiple selectors for the search input
       const searchInput = document.querySelector('div.z-30.absolute input[placeholder*="Search"]') ||
                          document.querySelector('div.z-30.absolute input[type="text"]') ||
@@ -553,24 +513,16 @@ const SmartJobSwitcherFeature = (() => {
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
       const isInSidebar = sidebar && sidebar.contains(document.activeElement);
 
-      console.log('SmartJobSwitcher: searchInput exists:', !!searchInput);
-      console.log('SmartJobSwitcher: activeElement is searchInput:', document.activeElement === searchInput);
-      console.log('SmartJobSwitcher: isInSidebar:', isInSidebar);
-
       if ((searchInput && document.activeElement === searchInput) || isInSidebar) {
-        console.log('SmartJobSwitcher: Conditions met, selecting top job');
         e.preventDefault();
         e.stopPropagation();
         selectTopJobAndClose();
         return;
-      } else {
-        console.log('SmartJobSwitcher: Conditions NOT met, not handling Enter');
       }
     }
 
     // Close sidebar on Escape
     if (isSearchOpen && e.key === 'Escape') {
-      console.log('SmartJobSwitcher: ESC pressed, closing sidebar');
       e.preventDefault();
       e.stopPropagation();
       closeSidebar();
@@ -592,8 +544,6 @@ const SmartJobSwitcherFeature = (() => {
    * Open the job switcher sidebar
    */
   function openSidebar() {
-    console.log('SmartJobSwitcher: Opening sidebar...');
-
     // Find the job number button - try multiple selectors
     let jobNumberButton = null;
 
@@ -626,15 +576,11 @@ const SmartJobSwitcherFeature = (() => {
     }
 
     if (!jobNumberButton) {
-      console.error('SmartJobSwitcher: ❌ Could not find job number button');
       showErrorNotification('Could not find job switcher button. Make sure you\'re on a job page.');
       return;
     }
 
-    console.log('SmartJobSwitcher: ✅ Found job button:', jobNumberButton.textContent);
-
     // Click to open sidebar
-    console.log('SmartJobSwitcher: Clicking job button to open sidebar...');
     jobNumberButton.click();
     isSearchOpen = true;
 
@@ -646,398 +592,8 @@ const SmartJobSwitcherFeature = (() => {
 
       if (searchInput) {
         searchInput.focus();
-        console.log('SmartJobSwitcher: ✅ Search input focused');
-
-        // Inject custom field filter UI if API is configured (handled by sidebar observer)
-      } else {
-        console.log('SmartJobSwitcher: ⚠️ Could not find search input to focus');
       }
     }, 150);
-
-    console.log('SmartJobSwitcher: ✅ Sidebar opened');
-  }
-
-  /**
-   * Inject custom field filter UI after the search input
-   */
-  async function injectFilterUI(searchInput) {
-    console.log('QuickJobSwitcher: injectFilterUI called');
-
-    // Check if the feature is enabled in settings
-    try {
-      const result = await chrome.storage.sync.get(['jtToolsSettings']);
-      const settings = result.jtToolsSettings || {};
-      if (!settings.customFieldFilter) {
-        console.log('QuickJobSwitcher: Custom field filter is disabled in settings');
-        return;
-      }
-    } catch (e) {
-      console.log('QuickJobSwitcher: Could not check settings, skipping filter UI');
-      return;
-    }
-
-    // Check if API is configured (Worker or Direct)
-    let isApiConfigured = false;
-
-    // Check Worker API first (Pro Service)
-    if (typeof JobTreadProService !== 'undefined') {
-      isApiConfigured = await JobTreadProService.isConfigured();
-      console.log('QuickJobSwitcher: Pro Service configured =', isApiConfigured);
-    }
-
-    // Fall back to Direct API if Worker not configured
-    if (!isApiConfigured && typeof JobTreadAPI !== 'undefined') {
-      isApiConfigured = await JobTreadAPI.isFullyConfigured();
-      console.log('QuickJobSwitcher: Direct API configured =', isApiConfigured);
-    }
-
-    if (!isApiConfigured) {
-      console.log('QuickJobSwitcher: No API configured (neither Worker nor Direct), skipping filter UI');
-      return;
-    }
-
-    // Check if we already injected the filter UI
-    const existing = document.getElementById('jt-custom-field-filter');
-    if (existing) {
-      console.log('QuickJobSwitcher: Filter UI already exists');
-      return;
-    }
-
-    // Find the search input container (parent div with p-2 class)
-    const searchContainer = searchInput.closest('div.p-2');
-    console.log('QuickJobSwitcher: searchContainer =', searchContainer);
-
-    if (!searchContainer) {
-      console.log('QuickJobSwitcher: Could not find search container');
-      // Try alternative: find parent containers
-      console.log('QuickJobSwitcher: searchInput parents:', searchInput.parentElement, searchInput.parentElement?.parentElement);
-      return;
-    }
-
-    console.log('QuickJobSwitcher: Injecting filter UI...');
-
-    // Create filter container
-    filterContainer = document.createElement('div');
-    filterContainer.id = 'jt-custom-field-filter';
-    filterContainer.className = 'p-2 pt-0';
-    filterContainer.innerHTML = `
-      <div class="flex items-center gap-2">
-        <select id="jt-cf-field-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0;">
-          <option value="">Filter by Custom Field...</option>
-        </select>
-        <select id="jt-cf-value-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0; display: none;">
-          <option value="">Select value...</option>
-        </select>
-        <button id="jt-cf-clear-btn" class="rounded-sm border p-1 text-sm bg-white hover:bg-gray-50 text-gray-500" style="display: none;" title="Clear filter">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="h-4 w-4" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"></path></svg>
-        </button>
-      </div>
-      <div id="jt-cf-status" class="text-xs text-gray-500 mt-1" style="display: none;"></div>
-    `;
-
-    // Insert after search container
-    searchContainer.after(filterContainer);
-
-    // Load custom field definitions
-    await loadCustomFieldDefinitions();
-
-    // Set up event listeners
-    setupFilterEventListeners();
-  }
-
-  /**
-   * Load custom field definitions from API
-   */
-  async function loadCustomFieldDefinitions() {
-    const fieldSelect = document.getElementById('jt-cf-field-select');
-    if (!fieldSelect) return;
-
-    try {
-      console.log('QuickJobSwitcher: Loading custom field definitions...');
-
-      // Try Pro Service first (uses Cloudflare Worker)
-      let fieldsData;
-      if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
-        console.log('QuickJobSwitcher: Using Pro Service (Worker API)');
-        fieldsData = await JobTreadProService.getCustomFields();
-        customFieldDefinitions = fieldsData.fields || [];
-      } else {
-        // Fall back to direct API
-        console.log('QuickJobSwitcher: Using direct API');
-        customFieldDefinitions = await JobTreadAPI.fetchCustomFieldDefinitions();
-      }
-
-      console.log('QuickJobSwitcher: Loaded', customFieldDefinitions.length, 'job custom fields');
-
-      // Populate dropdown with job custom fields
-      customFieldDefinitions.forEach(field => {
-        const option = document.createElement('option');
-        option.value = field.id;
-        option.textContent = field.name;
-        option.dataset.type = field.type;
-        option.dataset.options = JSON.stringify(field.options || []);
-        fieldSelect.appendChild(option);
-      });
-
-      // Show status message if no fields found
-      const statusDiv = document.getElementById('jt-cf-status');
-      if (statusDiv && customFieldDefinitions.length === 0) {
-        statusDiv.style.display = 'block';
-        statusDiv.textContent = 'No Job custom fields found. Create some in JobTread Settings.';
-        statusDiv.style.color = '#6b7280';
-      }
-    } catch (error) {
-      console.error('QuickJobSwitcher: Failed to load custom fields:', error);
-      const statusDiv = document.getElementById('jt-cf-status');
-      if (statusDiv) {
-        statusDiv.style.display = 'block';
-        statusDiv.textContent = 'Failed to load custom fields';
-        statusDiv.style.color = '#ef4444';
-      }
-    }
-  }
-
-  /**
-   * Set up event listeners for filter controls
-   */
-  function setupFilterEventListeners() {
-    const fieldSelect = document.getElementById('jt-cf-field-select');
-    const valueSelect = document.getElementById('jt-cf-value-select');
-    const clearBtn = document.getElementById('jt-cf-clear-btn');
-
-    if (fieldSelect) {
-      fieldSelect.addEventListener('change', async (e) => {
-        const fieldId = e.target.value;
-        const selectedOption = e.target.selectedOptions[0];
-
-        if (!fieldId) {
-          valueSelect.style.display = 'none';
-          clearBtn.style.display = 'none';
-          clearFilter();
-          return;
-        }
-
-        // Show value select and populate based on field type
-        valueSelect.style.display = 'block';
-        valueSelect.innerHTML = '<option value="">Loading values...</option>';
-
-        const fieldType = selectedOption.dataset.type;
-        const fieldOptions = JSON.parse(selectedOption.dataset.options || '[]');
-        const fieldName = selectedOption.textContent;
-
-        // For fields with predefined options (select, radio, etc.)
-        if (fieldOptions && fieldOptions.length > 0) {
-          valueSelect.innerHTML = '<option value="">Select value...</option>';
-          fieldOptions.forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
-            valueSelect.appendChild(option);
-          });
-        } else {
-          // For other fields, try to get unique values from jobs
-          try {
-            const values = await JobTreadAPI.getCustomFieldValues(fieldId);
-            valueSelect.innerHTML = '<option value="">Select value...</option>';
-            values.forEach(val => {
-              const option = document.createElement('option');
-              option.value = val;
-              option.textContent = val;
-              valueSelect.appendChild(option);
-            });
-
-            if (values.length === 0) {
-              valueSelect.innerHTML = '<option value="">No values found</option>';
-            }
-          } catch (error) {
-            console.error('QuickJobSwitcher: Failed to get field values:', error);
-            valueSelect.innerHTML = '<option value="">Error loading values</option>';
-          }
-        }
-
-        // Store the selected field name for filtering
-        activeFilters.fieldName = fieldName;
-        activeFilters.fieldId = fieldId;
-      });
-    }
-
-    if (valueSelect) {
-      valueSelect.addEventListener('change', async (e) => {
-        const value = e.target.value;
-        if (!value) {
-          clearFilter();
-          return;
-        }
-
-        activeFilters.value = value;
-        clearBtn.style.display = 'block';
-
-        // Apply filter
-        await applyFilter();
-      });
-    }
-
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        clearFilter();
-        fieldSelect.value = '';
-        valueSelect.style.display = 'none';
-        valueSelect.innerHTML = '<option value="">Select value...</option>';
-        clearBtn.style.display = 'none';
-      });
-    }
-  }
-
-  /**
-   * Apply the current filter
-   */
-  async function applyFilter() {
-    const statusDiv = document.getElementById('jt-cf-status');
-
-    if (!activeFilters.fieldName || !activeFilters.value) {
-      return;
-    }
-
-    console.log('QuickJobSwitcher: Applying filter:', activeFilters.fieldName, '=', activeFilters.value);
-
-    if (statusDiv) {
-      statusDiv.style.display = 'block';
-      statusDiv.textContent = 'Filtering...';
-      statusDiv.style.color = '#6b7280';
-    }
-
-    try {
-      // Fetch jobs filtered by custom field value (server-side using Pave 'with' clause)
-      let jobs;
-
-      // Try Pro Service first (uses Cloudflare Worker)
-      if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
-        console.log('QuickJobSwitcher: Filtering via Pro Service (Worker API)');
-        const filters = [{
-          fieldName: activeFilters.fieldName,
-          value: activeFilters.value
-        }];
-        const result = await JobTreadProService.getFilteredJobs(filters);
-        jobs = result.jobs || [];
-      } else {
-        // Fall back to direct API
-        console.log('QuickJobSwitcher: Filtering via direct API');
-        jobs = await JobTreadAPI.fetchJobsByCustomField(
-          activeFilters.fieldName,
-          activeFilters.value
-        );
-      }
-
-      console.log('QuickJobSwitcher: Found', jobs.length, 'matching jobs');
-
-      if (statusDiv) {
-        statusDiv.textContent = `Found ${jobs.length} matching job${jobs.length !== 1 ? 's' : ''}`;
-        statusDiv.style.color = '#10b981';
-      }
-
-      // Update the job list display
-      updateJobListDisplay(jobs);
-    } catch (error) {
-      console.error('QuickJobSwitcher: Filter error:', error);
-      if (statusDiv) {
-        statusDiv.textContent = 'Filter error: ' + error.message;
-        statusDiv.style.color = '#ef4444';
-      }
-    }
-  }
-
-  /**
-   * Clear the current filter
-   */
-  function clearFilter() {
-    activeFilters = {};
-
-    const statusDiv = document.getElementById('jt-cf-status');
-    if (statusDiv) {
-      statusDiv.style.display = 'none';
-    }
-
-    // Restore original job list
-    restoreJobListDisplay();
-  }
-
-  /**
-   * Update the job list to show filtered results
-   */
-  function updateJobListDisplay(jobs) {
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
-    if (!sidebar) return;
-
-    // Find the job list container (the scrollable area with job items)
-    const jobListContainer = sidebar.querySelector('div[style*="padding-top: 0px"]');
-    if (!jobListContainer) {
-      console.log('QuickJobSwitcher: Could not find job list container');
-      return;
-    }
-
-    // Store original content if not already stored
-    if (!jobListContainer.dataset.originalHtml) {
-      jobListContainer.dataset.originalHtml = jobListContainer.innerHTML;
-    }
-
-    // Create filtered job items HTML
-    if (jobs.length === 0) {
-      jobListContainer.innerHTML = `
-        <div class="p-4 text-center text-gray-500">
-          No jobs match the selected filter
-        </div>
-      `;
-      return;
-    }
-
-    const jobItemsHtml = jobs.map(job => `
-      <div role="button" tabindex="0" class="relative cursor-pointer p-2 flex items-center gap-2 border-t hover:bg-gray-50" data-job-id="${job.id}">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] shrink-0 text-xl text-green-500 invisible" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></svg>
-        <div class="grow min-w-0">
-          <div class="text-cyan-500 text-xs font-bold uppercase">${job.number || ''}</div>
-          <div class="flex gap-2">
-            <div class="grow min-w-0 font-bold">${job.name || 'Unnamed Job'}</div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    jobListContainer.innerHTML = jobItemsHtml;
-
-    // Add click handlers to navigate to jobs
-    jobListContainer.querySelectorAll('[data-job-id]').forEach(item => {
-      item.addEventListener('click', () => {
-        const jobId = item.dataset.jobId;
-
-        // Smart navigation: preserve current section (budget, schedule, etc.)
-        const currentPath = window.location.pathname;
-        const jobSectionMatch = currentPath.match(/^\/jobs\/[^\/]+\/(.+)$/);
-
-        if (jobSectionMatch) {
-          // Currently in a specific section (e.g., /jobs/123/budget)
-          // Navigate to the same section of the new job
-          const section = jobSectionMatch[1];
-          window.location.href = `/jobs/${jobId}/${section}`;
-        } else {
-          // Currently on job overview page, navigate to overview of new job
-          window.location.href = `/jobs/${jobId}`;
-        }
-      });
-    });
-  }
-
-  /**
-   * Restore the original job list display
-   */
-  function restoreJobListDisplay() {
-    const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
-    if (!sidebar) return;
-
-    const jobListContainer = sidebar.querySelector('div[style*="padding-top: 0px"]');
-    if (!jobListContainer || !jobListContainer.dataset.originalHtml) return;
-
-    jobListContainer.innerHTML = jobListContainer.dataset.originalHtml;
-    delete jobListContainer.dataset.originalHtml;
   }
 
   /**
@@ -1047,8 +603,6 @@ const SmartJobSwitcherFeature = (() => {
     if (!isSearchOpen) {
       return;
     }
-
-    console.log('SmartJobSwitcher: Closing sidebar...');
 
     // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
@@ -1084,7 +638,6 @@ const SmartJobSwitcherFeature = (() => {
 
       if (closeButton) {
         closeButton.click();
-        console.log('SmartJobSwitcher: ✅ Closed sidebar via close button');
       } else {
         // Strategy 2: Try clicking outside the sidebar (on the overlay)
         const overlay = document.querySelector('div.z-30.absolute.inset-0:not(.top-0)') ||
@@ -1093,10 +646,8 @@ const SmartJobSwitcherFeature = (() => {
                        document.querySelector('[class*="overlay"]');
         if (overlay) {
           overlay.click();
-          console.log('SmartJobSwitcher: ✅ Closed sidebar via overlay click');
         } else {
           // Strategy 3: Dispatch Escape key to close
-          console.log('SmartJobSwitcher: Trying Escape key to close sidebar');
           const escEvent = new KeyboardEvent('keydown', {
             key: 'Escape',
             code: 'Escape',
@@ -1118,12 +669,9 @@ const SmartJobSwitcherFeature = (() => {
    * Select the currently highlighted job (or top job) and close sidebar
    */
   function selectTopJobAndClose() {
-    console.log('SmartJobSwitcher: Selecting job...');
-
     // Find the sidebar
     const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
     if (!sidebar) {
-      console.error('SmartJobSwitcher: ❌ Could not find sidebar');
       closeSidebar();
       return;
     }
@@ -1162,7 +710,6 @@ const SmartJobSwitcherFeature = (() => {
 
       if (hasHighlight) {
         selectedButton = button;
-        console.log(`SmartJobSwitcher: ✅ Using highlighted job: ${text.substring(0, 50)}`);
         break;
       }
     }
@@ -1182,7 +729,6 @@ const SmartJobSwitcherFeature = (() => {
             !text.includes('Job Switcher') &&
             !activeElement.querySelector('path[d*="M18 6"]')) {
           selectedButton = activeElement;
-          console.log(`SmartJobSwitcher: ✅ Using focused job: ${text.substring(0, 50)}`);
         }
       }
     }
@@ -1192,7 +738,6 @@ const SmartJobSwitcherFeature = (() => {
       // Find the scrollable job list container
       const jobList = sidebar.querySelector('.overflow-y-auto') || sidebar;
       const jobButtons = jobList.querySelectorAll('div[role="button"][tabindex="0"]');
-      console.log(`SmartJobSwitcher: Found ${jobButtons.length} buttons in sidebar`);
 
       // Find the first actual job (skip close button and header)
       for (const button of jobButtons) {
@@ -1217,14 +762,11 @@ const SmartJobSwitcherFeature = (() => {
 
         // This is the first job in the list
         selectedButton = button;
-        console.log(`SmartJobSwitcher: ✅ Top job (fallback): ${text.substring(0, 50)}`);
         break;
       }
     }
 
     if (selectedButton) {
-      console.log('SmartJobSwitcher: Clicking selected job...');
-
       // Click the job button to navigate
       selectedButton.click();
 
@@ -1235,7 +777,6 @@ const SmartJobSwitcherFeature = (() => {
         closeSidebar();
       }, 100);
     } else {
-      console.log('SmartJobSwitcher: No jobs found, just closing sidebar');
       closeSidebar();
     }
   }

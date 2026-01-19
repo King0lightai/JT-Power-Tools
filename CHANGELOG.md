@@ -5,6 +5,66 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-01-18 (Beta)
+
+### Added
+
+#### Message Signature Feature
+- Added message signature functionality to Character Counter feature
+- Edit Signature button opens modal to create/edit your signature text
+- Insert button injects saved signature into message fields at cursor position
+- Signature syncs across devices via Chrome storage
+- Signature container with subtle border groups buttons and counter together
+- Ctrl+Enter keyboard shortcut to save signature in modal
+- Full dark mode support for signature UI and modal
+
+#### License Tier System
+- Added four-tier license system: FREE, Essential ($10), Pro ($20), Power User ($30)
+- FREE features work without any license to attract new users
+- Essential tier unlocks Quick Notes, Smart Job Switcher, Freeze Header, PDF Markup Tools
+- Pro tier unlocks Schedule & Task Checkboxes, Custom Theme, Preview Mode
+- Power User tier unlocks Custom Field Filter, MCP Access (Coming Soon)
+- Backwards compatibility: existing "JT Power Tools" purchasers get PRO tier
+
+#### Custom Field Filter Feature
+- Separated Custom Field Filter from Job Switcher as a standalone Power User feature
+- API-powered filtering of jobs by custom field values in Job Switcher sidebar
+- Requires Power User tier and API configuration
+- Added `getCustomFieldValues` API endpoint to fetch unique values for text-based fields
+- Filter dropdown auto-populates with available values from your jobs
+
+#### AI Integration Panel (Power User - Coming Soon)
+- Added AI Integration section in extension popup for Power User tier
+- Platform selector with Claude, ChatGPT, Cursor, and Other MCP clients
+- Auto-generates personalized MCP config JSON with user's license and grant keys
+- One-click copy to clipboard for easy setup
+- Platform-specific setup instructions for each AI client
+- Connection status indicator with live server test
+- Test Connection button validates credentials against MCP server
+- Quick links to full documentation and server status
+- Full dark mode support for the integration panel
+- Claude Desktop now uses mcp-remote bridge for remote MCP server connection (Windows path-with-spaces fix)
+- Claude Code (CLI) option added with direct HTTP config support
+- Separated Claude Desktop and Claude Code tabs for clearer setup instructions
+- Config output shows just the server entry for easy merging into existing configs
+
+### Fixed
+
+#### AI Integration Panel Bug Fixes
+- Fixed Test Connection sending undefined license key (was using wrong property name)
+- Fixed license key retrieval using correct property (`key` instead of `licenseKey`)
+
+### Changed
+
+#### Feature Tier Restructuring
+- Dark Mode and Text Formatter are FREE (most popular features as hooks)
+- Budget Hierarchy Shading, Kanban Type Filter, Auto Collapse Groups are FREE
+- Contrast Fix and Character Counter are FREE
+- Smart Job Switcher, Freeze Header, PDF Markup Tools moved to Essential tier
+- Renamed "Drag & Drop" feature to "Schedule & Task Checkboxes" (JobTread launched native drag-drop)
+
+---
+
 ## [3.3.10] - 2026-01-06 (Beta)
 
 ### Added

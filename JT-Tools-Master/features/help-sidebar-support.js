@@ -16,7 +16,7 @@ const HelpSidebarSupportFeature = (() => {
     if (isActive) return;
 
     isActive = true;
-    console.log('HelpSidebarSupport: Initializing...');
+    console.log('HelpSidebarSupport: Activated');
 
     // Try to inject immediately if sidebar exists
     injectSupportSection();
@@ -40,7 +40,7 @@ const HelpSidebarSupportFeature = (() => {
     // Remove injected element
     removeInjectedElement();
 
-    console.log('HelpSidebarSupport: Cleanup complete');
+    console.log('HelpSidebarSupport: Deactivated');
   }
 
   // Remove the injected support section
@@ -231,8 +231,6 @@ const HelpSidebarSupportFeature = (() => {
     // Append to the divide container
     divideContainer.appendChild(supportSection);
     injectedElement = supportSection;
-
-    console.log('HelpSidebarSupport: Support section injected');
   }
 
   // Start observing for sidebar changes

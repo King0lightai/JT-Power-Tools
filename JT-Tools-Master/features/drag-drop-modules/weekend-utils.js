@@ -40,43 +40,25 @@ const WeekendUtils = (() => {
    * @returns {Object} Adjusted date info {day, month, year, fullDisplay}
    */
   function adjustDateToSkipWeekend(dateInfo) {
-    console.log('WeekendUtils: adjustDateToSkipWeekend - input:', JSON.stringify(dateInfo));
-
     const year = dateInfo.year || new Date().getFullYear();
-    if (!dateInfo.year) {
-      console.warn(`WeekendUtils: adjustDateToSkipWeekend - year missing, using current year: ${year}`);
-    }
-
     const monthIndex = MONTH_MAP[dateInfo.month];
     const date = new Date(year, monthIndex, parseInt(dateInfo.day));
     const dayOfWeek = date.getDay();
 
-    console.log(`WeekendUtils: adjustDateToSkipWeekend - original date: ${dateInfo.month} ${dateInfo.day}, ${year} (day of week: ${dayOfWeek})`);
-
     // If Saturday (6), add 2 days to get to Monday
     // If Sunday (0), add 1 day to get to Monday
     if (dayOfWeek === 6) {
-      console.log('WeekendUtils: adjustDateToSkipWeekend - Saturday detected, adding 2 days');
       date.setDate(date.getDate() + 2);
     } else if (dayOfWeek === 0) {
-      console.log('WeekendUtils: adjustDateToSkipWeekend - Sunday detected, adding 1 day');
       date.setDate(date.getDate() + 1);
     }
 
-    const result = {
+    return {
       day: date.getDate().toString(),
       month: MONTH_ABBREV[date.getMonth()],
       year: date.getFullYear(),
       fullDisplay: `${MONTH_ABBREV[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
     };
-
-    console.log('WeekendUtils: adjustDateToSkipWeekend - output:', JSON.stringify(result));
-
-    if (result.year !== year) {
-      console.log(`WeekendUtils: adjustDateToSkipWeekend - *** YEAR CHANGED during weekend skip: ${year} -> ${result.year} ***`);
-    }
-
-    return result;
   }
 
   /**
