@@ -55,18 +55,22 @@ async function handleRequest(request, env, ctx) {
 
   // Only allow POST requests
   if (request.method !== 'POST') {
+    console.log('Rejected: Method not allowed:', request.method);
     return jsonResponse({ success: false, error: 'Method not allowed' }, 405);
   }
 
   // Verify origin (Chrome extension only)
   const origin = request.headers.get('Origin');
+  console.log('Request origin:', origin);
   if (!isValidOrigin(origin, env)) {
-    return jsonResponse({ success: false, error: 'Unauthorized origin' }, 403);
+    console.log('Rejected: Unauthorized origin:', origin);
+    return jsonResponse({ success: false, error: 'Unauthorized origin', receivedOrigin: origin }, 403);
   }
 
   // Rate limiting
   const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
   if (isRateLimited(clientIP, env)) {
+    console.log('Rejected: Rate limited:', clientIP);
     return jsonResponse({
       success: false,
       error: 'Too many requests. Please try again later.'
@@ -76,9 +80,11 @@ async function handleRequest(request, env, ctx) {
   try {
     // Parse request body
     const body = await request.json();
+    console.log('Request body received:', { action: body.action, hasLicenseKey: !!body.licenseKey });
     const { licenseKey, action } = body;
 
     if (!licenseKey || typeof licenseKey !== 'string') {
+      console.log('Rejected: Invalid license key format');
       return jsonResponse({ success: false, error: 'Invalid license key' }, 400);
     }
 
@@ -172,80 +178,105 @@ async function verifyLicense(licenseKey, env, ctx) {
  * - New purchases with variants map directly to tier
  */
 function determineTier(purchase) {
+  // Log all purchase data for debugging tier detection
+  console.log('determineTier: Analyzing purchase:', {
+    variants: purchase.variants,
+    product_name: purchase.product_name,
+    price: purchase.price,
+    variant_category: purchase.variant_category
+  });
+
   // First, check the variants field (most reliable for variant-based products)
+  // Gumroad may send variants in different formats:
+  // - "Tier - Essential" or "Essential" or "(Essential)"
   const variants = (purchase.variants || '').toLowerCase().trim();
 
   // If variants field has content, use it to determine tier
   if (variants && variants.length > 0) {
+    console.log('determineTier: Checking variants field:', variants);
+
     // Check for Power User tier first (most specific)
-    if (variants.includes('power user') || variants.includes('power_user')) {
+    if (variants.includes('power user') || variants.includes('power_user') || variants.includes('poweruser')) {
+      console.log('determineTier: Matched POWER_USER from variants');
       return TIERS.POWER_USER;
     }
 
-    // Check for Pro tier
-    if (variants.includes(' pro') || variants.includes('pro ') || variants === 'pro') {
-      return TIERS.PRO;
+    // Check for Essential tier BEFORE Pro (since "essential" is more specific)
+    if (variants.includes('essential') || variants.includes('basic') || variants.includes('starter')) {
+      console.log('determineTier: Matched ESSENTIAL from variants');
+      return TIERS.ESSENTIAL;
     }
 
-    // Check for Essential tier
-    if (variants.includes('essential') || variants.includes('basic')) {
-      return TIERS.ESSENTIAL;
+    // Check for Pro tier
+    if (variants.includes('pro')) {
+      console.log('determineTier: Matched PRO from variants');
+      return TIERS.PRO;
     }
 
     // BACKWARDS COMPATIBILITY: Existing variant "JT POWER TOOLS" = PRO tier
     // This was the original product before tier system was added
-    if (variants.includes('jt power tools') || variants.includes('jtpowertools') || variants === 'jt power tools') {
-      console.log('Legacy variant "JT POWER TOOLS" detected, assigning PRO tier');
+    if (variants.includes('jt power tools') || variants.includes('jtpowertools')) {
+      console.log('determineTier: Legacy variant "JT POWER TOOLS" detected, assigning PRO tier');
       return TIERS.PRO;
     }
+
+    // Unknown variant - log it but continue to other detection methods
+    console.log('determineTier: Unknown variant, continuing to product name check:', variants);
   }
 
   // Second, check product name for tier-specific products
   const productName = (purchase.product_name || '').toLowerCase();
+  console.log('determineTier: Checking product name:', productName);
 
   // Check for explicit tier names in product name
   if (productName.includes('power user') || productName.includes('power_user')) {
+    console.log('determineTier: Matched POWER_USER from product name');
     return TIERS.POWER_USER;
   }
   if (productName.includes('essential')) {
+    console.log('determineTier: Matched ESSENTIAL from product name');
     return TIERS.ESSENTIAL;
-  }
-
-  // BACKWARDS COMPATIBILITY:
-  // Old product was just "JT Power Tools" with no tier variants
-  // All existing subscribers should be treated as PRO tier
-  if (productName.includes('jt power tools') || productName.includes('jobtread') || productName.includes('jtpowertools')) {
-    console.log('Legacy JT Power Tools product detected, assigning PRO tier:', productName);
-    return TIERS.PRO;
   }
 
   // Check for explicit "pro" in name (but not as part of another word)
   if (productName.includes(' pro') || productName.includes('pro ') || productName === 'pro') {
+    console.log('determineTier: Matched PRO from product name');
     return TIERS.PRO;
   }
 
   // Third, use price as fallback (in cents)
   // $30+ = Power User, $20+ = Pro, $10+ = Essential
   const price = purchase.price || 0;
+  console.log('determineTier: Checking price:', price);
 
   if (price >= 3000) {
+    console.log('determineTier: Matched POWER_USER from price ($30+)');
     return TIERS.POWER_USER;
   }
   if (price >= 2000) {
+    console.log('determineTier: Matched PRO from price ($20+)');
     return TIERS.PRO;
   }
   if (price >= 1000) {
+    console.log('determineTier: Matched ESSENTIAL from price ($10+)');
     return TIERS.ESSENTIAL;
   }
 
-  // Default to PRO for any unrecognized purchase
-  // This ensures backwards compatibility for ALL existing users
-  console.log('Unable to determine tier from variant/product, defaulting to PRO (backwards compat):', {
+  // BACKWARDS COMPATIBILITY (last resort):
+  // Old product was just "JT Power Tools" with no tier variants
+  // All existing subscribers should be treated as PRO tier
+  if (productName.includes('jt power tools') || productName.includes('jobtread') || productName.includes('jtpowertools')) {
+    console.log('determineTier: Legacy JT Power Tools product detected (no tier found), assigning PRO tier');
+    return TIERS.PRO;
+  }
+
+  // Default to ESSENTIAL for any unrecognized purchase (safer default)
+  console.log('determineTier: Unable to determine tier, defaulting to ESSENTIAL:', {
     variants: purchase.variants,
     productName: purchase.product_name,
     price: purchase.price
   });
-  return TIERS.PRO;
+  return TIERS.ESSENTIAL;
 }
 
 /**

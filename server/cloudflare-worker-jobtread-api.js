@@ -50,7 +50,10 @@ export default {
           return await withAuth(env, body, (env, user) => handleGetCustomFields(env, ctx, user));
 
         case 'getFilteredJobs':
-          return await withAuth(env, body, (env, user) => handleGetFilteredJobs(env, ctx, user, body.filters));
+          return await withAuth(env, body, (env, user) => handleGetFilteredJobs(env, ctx, user, body.filters, body.jobStatus));
+
+        case 'getCustomFieldValues':
+          return await withAuth(env, body, (env, user) => handleGetCustomFieldValues(env, ctx, user, body.fieldId, body.fieldName));
 
         case 'getAllJobs':
           return await withAuth(env, body, (env, user) => handleGetAllJobs(env, ctx, user));
@@ -373,17 +376,24 @@ async function handleGetCustomFields(env, ctx, user) {
 }
 
 /**
- * Get jobs filtered by custom field values
+ * Get jobs filtered by custom field values and/or status
+ * @param {Object} env - Environment bindings
+ * @param {Object} ctx - Execution context
+ * @param {Object} user - Authenticated user
+ * @param {Array} filters - Custom field filters [{fieldName, value}]
+ * @param {string} jobStatus - 'open', 'closed', or 'all' (default: 'all')
  */
-async function handleGetFilteredJobs(env, ctx, user, filters) {
-  // If no filters, return all jobs
-  if (!filters || filters.length === 0) {
+async function handleGetFilteredJobs(env, ctx, user, filters, jobStatus = 'all') {
+  // If no filters and status is 'all' (default), return all jobs
+  if ((!filters || filters.length === 0) && jobStatus === 'all') {
     return handleGetAllJobs(env, ctx, user);
   }
 
-  // Generate cache key from filters
-  const filterKey = filters.map(f => `${f.fieldName}:${f.value}`).sort().join('|');
-  const cacheKey = `jobs:${user.jobtread_org_id}:${await hashString(filterKey)}`;
+  // Generate cache key from filters and status
+  const filterKey = filters?.length
+    ? filters.map(f => `${f.fieldName}:${f.value}`).sort().join('|')
+    : 'none';
+  const cacheKey = `jobs:${user.jobtread_org_id}:${jobStatus}:${await hashString(filterKey)}`;
 
   // Check cache
   if (env.CACHE) {
@@ -395,11 +405,11 @@ async function handleGetFilteredJobs(env, ctx, user, filters) {
   }
 
   // Build query with 'with' clauses for server-side filtering
-  const paveQuery = buildFilteredJobsQuery(user.jobtread_org_id, filters);
+  const paveQuery = buildFilteredJobsQuery(user.jobtread_org_id, filters || [], jobStatus);
   const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
   const jobs = data.organization?.jobs?.nodes || [];
 
-  const result = { jobs, filters };
+  const result = { jobs, filters, jobStatus };
 
   // Cache for 2 minutes
   if (env.CACHE) {
@@ -413,52 +423,168 @@ async function handleGetFilteredJobs(env, ctx, user, filters) {
 }
 
 /**
- * Build Pave query with 'with' clause for server-side filtering
- * Fixed to use proper Pave structure without "query" wrapper
+ * Get unique values for a custom field across all jobs
+ * Used to populate filter dropdowns for fields without predefined options
  */
-function buildFilteredJobsQuery(orgId, filters) {
-  // Build "with" clauses for each filter
+async function handleGetCustomFieldValues(env, ctx, user, fieldId, fieldName) {
+  if (!fieldId && !fieldName) {
+    return jsonResponse({ error: 'Missing fieldId or fieldName' }, 400);
+  }
+
+  const cacheKey = `cfvalues:${user.jobtread_org_id}:${fieldId || fieldName}`;
+
+  // Check cache first
+  if (env.CACHE) {
+    const cached = await env.CACHE.get(cacheKey, 'json');
+    if (cached) {
+      await trackUsage(env, user.id, 'getCustomFieldValues', true);
+      return jsonResponse({ ...cached, _cached: true });
+    }
+  }
+
+  // Build query to get all jobs with this custom field's value
+  // We use 'with' clause to get the custom field value for each job
+  const whereClause = fieldName
+    ? [['customField', 'name'], '=', fieldName]
+    : [['customField', 'id'], '=', fieldId];
+
+  // Query jobs with their customFieldValues nested - get all values for this field
+  // Paginate to get all jobs
+  let allValues = new Set();
+  let nextPage = null;
+
+  do {
+    const paveQuery = {
+      organization: {
+        $: { id: user.jobtread_org_id },
+        jobs: {
+          $: {
+            size: 100,
+            ...(nextPage && { page: nextPage })
+          },
+          nextPage: {},
+          nodes: {
+            customFieldValues: {
+              $: { where: whereClause },
+              nodes: {
+                value: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
+    const jobs = data.organization?.jobs?.nodes || [];
+
+    // Extract values from each job's customFieldValues
+    jobs.forEach(job => {
+      const cfNodes = job.customFieldValues?.nodes || [];
+      cfNodes.forEach(node => {
+        if (node.value && String(node.value).trim() !== '') {
+          allValues.add(String(node.value));
+        }
+      });
+    });
+
+    nextPage = data.organization?.jobs?.nextPage;
+  } while (nextPage);
+
+  // Convert to sorted array
+  const values = Array.from(allValues).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: 'base' })
+  );
+
+  const result = { values, fieldId, fieldName };
+
+  // Cache for 1 hour (same as custom field definitions)
+  if (env.CACHE) {
+    ctx.waitUntil(
+      env.CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: CACHE_TTL_FIELDS })
+    );
+  }
+
+  await trackUsage(env, user.id, 'getCustomFieldValues', false);
+  return jsonResponse(result);
+}
+
+/**
+ * Build Pave query with 'with' clause for server-side filtering
+ * Uses the correct Pave 'with' + 'values' aggregation pattern from JobTread API
+ * @param {string} orgId - Organization ID
+ * @param {Array} filters - Custom field filters [{fieldName, value}]
+ * @param {string} jobStatus - 'open', 'closed', or 'all'
+ */
+function buildFilteredJobsQuery(orgId, filters, jobStatus = 'all') {
+  // Build "with" clauses for each filter using the correct pattern:
+  // with.cf uses 'values' aggregation with $: { field: 'value' }
   const withClauses = {};
   filters.forEach((filter, index) => {
-    const key = `filter${index}`;
+    const key = `cf${index}`;
     withClauses[key] = {
       _: 'customFieldValues',
       $: {
-        where: [['customField', 'name'], '=', filter.fieldName],
-        size: 1
+        where: [['customField', 'name'], '=', filter.fieldName]
       },
-      nodes: {
-        value: {}
+      values: {
+        $: { field: 'value' }
       }
     };
   });
 
-  // Build where conditions - check the first node's value
-  const whereConditions = filters.map((filter, index) => {
-    return [[`filter${index}`, 'nodes', 0, 'value'], '=', filter.value];
+  // Build where conditions
+  const whereConditions = [];
+
+  // Add custom field filter conditions
+  filters.forEach((filter, index) => {
+    whereConditions.push([[`cf${index}`, 'values'], '=', filter.value]);
   });
 
-  // Single filter vs multiple filters (AND logic)
-  const whereClause = whereConditions.length === 1
-    ? whereConditions[0]
-    : { and: whereConditions };
+  // Add job status filter condition
+  if (jobStatus === 'open') {
+    whereConditions.push(['closedOn', '=', null]);
+  } else if (jobStatus === 'closed') {
+    whereConditions.push(['closedOn', '!=', null]);
+  }
+  // 'all' status means no status filter
 
-  // Fixed: Return just the paveQuery portion, no "query" wrapper
+  // Build final where clause
+  let whereClause = null;
+  if (whereConditions.length === 1) {
+    whereClause = whereConditions[0];
+  } else if (whereConditions.length > 1) {
+    whereClause = { and: whereConditions };
+  }
+
+  // Build job query params
+  const jobParams = {
+    size: 100,  // JobTread API max is 100
+    sortBy: [{ field: 'name' }]
+  };
+
+  // Only add 'with' if we have custom field filters
+  if (Object.keys(withClauses).length > 0) {
+    jobParams.with = withClauses;
+  }
+
+  // Only add 'where' if we have conditions
+  if (whereClause) {
+    jobParams.where = whereClause;
+  }
+
+  // Return query using correct Pave structure
   return {
     organization: {
       $: { id: orgId },
       jobs: {
-        $: {
-          size: 500,  // Increased to support larger orgs (minimal data = safe)
-          with: withClauses,
-          where: whereClause,
-          sortBy: [{ field: 'name' }]
-        },
+        $: jobParams,
         nodes: {
           id: {},
           name: {},
           number: {},
-          status: {}
+          status: {},
+          closedOn: {}
         }
       }
     }
@@ -466,7 +592,8 @@ function buildFilteredJobsQuery(orgId, filters) {
 }
 
 /**
- * Get all jobs (unfiltered)
+ * Get all jobs (default behavior)
+ * Returns all jobs regardless of status
  */
 async function handleGetAllJobs(env, ctx, user) {
   const cacheKey = `jobs:${user.jobtread_org_id}:all`;
@@ -480,28 +607,39 @@ async function handleGetAllJobs(env, ctx, user) {
     }
   }
 
-  // Fixed: No "query" wrapper, pass grantKey separately
-  const paveQuery = {
-    organization: {
-      $: { id: user.jobtread_org_id },
-      jobs: {
-        $: {
-          size: 500,  // Increased to support larger orgs (minimal data = safe)
-          sortBy: [{ field: 'name' }]
-        },
-        nodes: {
-          id: {},
-          name: {},
-          number: {},
-          status: {}
+  // Paginate through all jobs (max 100 per page per JobTread API)
+  let allJobs = [];
+  let nextPage = null;
+
+  do {
+    const paveQuery = {
+      organization: {
+        $: { id: user.jobtread_org_id },
+        jobs: {
+          $: {
+            size: 100,  // JobTread API max is 100
+            ...(nextPage && { page: nextPage }),
+            sortBy: [{ field: 'name' }]
+          },
+          nextPage: {},
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            closedOn: {}
+          }
         }
       }
-    }
-  };
+    };
 
-  const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
-  const jobs = data.organization?.jobs?.nodes || [];
-  const result = { jobs };
+    const data = await jobtreadRequest(paveQuery, user.jobtread_grant_key);
+    const jobs = data.organization?.jobs?.nodes || [];
+    allJobs = allJobs.concat(jobs);
+    nextPage = data.organization?.jobs?.nextPage;
+  } while (nextPage);
+
+  const result = { jobs: allJobs };
 
   // Cache for 2 minutes
   if (env.CACHE) {

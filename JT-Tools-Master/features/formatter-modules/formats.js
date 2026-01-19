@@ -613,13 +613,10 @@ const FormatterFormats = (() => {
     const lineEnd = text.indexOf('\n', start);
     const currentLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
 
-    console.log('Formatter: Enter pressed, current line:', `"${currentLine}"`);
-
     // Check if current line is a numbered list item (e.g., "1. ", "2. Some text")
     const numberedListMatch = currentLine.match(/^(\d+)\.\s+(.*)$/);
 
     if (numberedListMatch) {
-      console.log('Formatter: Matched numbered list:', numberedListMatch);
       e.preventDefault();
 
       const currentNumber = parseInt(numberedListMatch[1]);
@@ -627,7 +624,6 @@ const FormatterFormats = (() => {
 
       // If the line is empty (just the number), exit list mode
       if (lineContent.trim() === '') {
-        console.log('Formatter: Empty list item, exiting list mode');
         // Remove the empty list item and exit
         const before = text.substring(0, lineStart);
         const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
@@ -641,7 +637,6 @@ const FormatterFormats = (() => {
         const after = text.substring(start);
 
         const newText = `\n${nextNumber}. `;
-        console.log('Formatter: Adding next number:', nextNumber);
         field.value = before + newText + after;
 
         // Position cursor after the new number
@@ -664,14 +659,12 @@ const FormatterFormats = (() => {
     const bulletListMatch = currentLine.match(/^-\s+(.*)$/);
 
     if (bulletListMatch) {
-      console.log('Formatter: Matched bullet list:', bulletListMatch);
       e.preventDefault();
 
       const lineContent = bulletListMatch[1];
 
       // If the line is empty (just the bullet), exit list mode
       if (lineContent.trim() === '') {
-        console.log('Formatter: Empty bullet item, exiting list mode');
         // Remove the empty list item and exit
         const before = text.substring(0, lineStart);
         const after = text.substring(lineEnd === -1 ? text.length : lineEnd);
@@ -684,7 +677,6 @@ const FormatterFormats = (() => {
         const after = text.substring(start);
 
         const newText = `\n- `;
-        console.log('Formatter: Adding new bullet');
         field.value = before + newText + after;
 
         // Position cursor after the new bullet
@@ -703,7 +695,6 @@ const FormatterFormats = (() => {
       return true; // Handled
     }
 
-    console.log('Formatter: No list pattern matched');
     return false; // Not handled, allow default Enter behavior
   }
 

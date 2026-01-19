@@ -1,6 +1,10 @@
 /**
  * Knowledge Lookup Tool
- * Three-tier knowledge retrieval: Team -> Community -> Official (Gemini)
+ * Two-tier knowledge retrieval: User SOPs -> Official (Gemini)
+ *
+ * Priority order:
+ * 1. User SOPs - External documents (Google Docs, Notion) the user has linked
+ * 2. Official - Gemini-powered JobTread documentation
  */
 
 export class KnowledgeLookup {
@@ -11,7 +15,7 @@ export class KnowledgeLookup {
   }
 
   /**
-   * Perform knowledge lookup across all three tiers
+   * Perform knowledge lookup across both tiers
    *
    * @param {string} query - What to look up
    * @param {string} category - Optional category filter
@@ -19,21 +23,18 @@ export class KnowledgeLookup {
    */
   async lookup(query, category = null) {
     const results = {
-      team: null,
-      community: null,
+      userSops: null,
       official: null,
       combined: ''
     };
 
-    // Run all three tiers in parallel for speed
-    const [teamDocs, communityDocs, officialDocs] = await Promise.all([
-      this.queryTeamDocs(query, category),
-      this.queryCommunityDocs(query, category),
+    // Run both tiers in parallel for speed
+    const [userSops, officialDocs] = await Promise.all([
+      this.queryUserSops(query, category),
       this.queryGemini(query)
     ]);
 
-    results.team = teamDocs;
-    results.community = communityDocs;
+    results.userSops = userSops;
     results.official = officialDocs;
 
     // Combine with priority weighting
@@ -43,22 +44,23 @@ export class KnowledgeLookup {
   }
 
   /**
-   * Tier 1: Query team-specific documents (private to org)
+   * Tier 1: Query user's external SOP documents (highest priority)
+   * These are external documents (Google Docs, Notion, etc.) the user has linked
    */
-  async queryTeamDocs(query, category) {
+  async queryUserSops(query, category) {
     try {
-      // Check if AI_KNOWLEDGE_DB binding exists
       if (!this.env.AI_KNOWLEDGE_DB) {
         return [];
       }
 
-      const params = [this.orgId, `%${query}%`, `%${query}%`, `%${query}%`];
+      // Get active SOPs for this org
+      const params = [this.orgId];
       let sql = `
-        SELECT id, title, content, category, tags, save_count
-        FROM process_documents
+        SELECT id, title, description, document_url, cached_content, cached_at,
+               cache_ttl_hours, category, tags, fetch_error
+        FROM user_sops
         WHERE org_id = ?
-          AND visibility IN ('team', 'private')
-          AND (title LIKE ? OR content LIKE ? OR tags LIKE ?)
+          AND is_active = 1
       `;
 
       if (category) {
@@ -66,50 +68,163 @@ export class KnowledgeLookup {
         params.push(category);
       }
 
-      sql += ' ORDER BY save_count DESC LIMIT 5';
+      sql += ' ORDER BY updated_at DESC LIMIT 10';
 
-      const docs = await this.env.AI_KNOWLEDGE_DB.prepare(sql).bind(...params).all();
-      return docs.results || [];
-    } catch (error) {
-      console.error('Team docs query error:', error);
-      return [];
-    }
-  }
+      const sopsResult = await this.env.AI_KNOWLEDGE_DB.prepare(sql).bind(...params).all();
+      const sops = sopsResult.results || [];
 
-  /**
-   * Tier 2: Query community documents (shared public)
-   */
-  async queryCommunityDocs(query, category) {
-    try {
-      if (!this.env.AI_KNOWLEDGE_DB) {
+      if (sops.length === 0) {
         return [];
       }
 
-      const params = [`%${query}%`, `%${query}%`, `%${query}%`];
-      let sql = `
-        SELECT id, title, content, category, tags, save_count, author_name, author_org
-        FROM process_documents
-        WHERE visibility = 'public'
-          AND (title LIKE ? OR content LIKE ? OR tags LIKE ?)
-      `;
+      // Process SOPs - fetch content if needed
+      const processedSops = await Promise.all(
+        sops.map(sop => this.processSop(sop, query))
+      );
 
-      if (category) {
-        sql += ' AND category = ?';
-        params.push(category);
-      }
-
-      sql += ' ORDER BY save_count DESC LIMIT 5';
-
-      const docs = await this.env.AI_KNOWLEDGE_DB.prepare(sql).bind(...params).all();
-      return docs.results || [];
+      // Filter to only SOPs that are relevant to the query
+      return processedSops.filter(sop => sop && sop.content);
     } catch (error) {
-      console.error('Community docs query error:', error);
+      console.error('User SOPs query error:', error);
       return [];
     }
   }
 
   /**
-   * Tier 3: Query official documentation via Gemini
+   * Process a single SOP - check cache, fetch if needed, filter by relevance
+   */
+  async processSop(sop, query) {
+    try {
+      let content = sop.cached_content;
+      const cacheAge = sop.cached_at
+        ? (Date.now() - new Date(sop.cached_at).getTime()) / (1000 * 60 * 60)
+        : Infinity;
+      const cacheTtl = sop.cache_ttl_hours || 24;
+
+      // Fetch fresh content if cache is stale or empty
+      if (!content || cacheAge > cacheTtl) {
+        content = await this.fetchExternalDocument(sop.document_url);
+
+        if (content) {
+          // Update cache in database
+          await this.env.AI_KNOWLEDGE_DB.prepare(`
+            UPDATE user_sops
+            SET cached_content = ?, cached_at = CURRENT_TIMESTAMP, fetch_error = NULL
+            WHERE id = ?
+          `).bind(content, sop.id).run();
+        } else if (!sop.cached_content) {
+          // No cached content and fetch failed
+          return null;
+        }
+        // If fetch failed but we have cached content, use that
+      }
+
+      // Check if content is relevant to query (simple keyword matching)
+      const queryLower = query.toLowerCase();
+      const contentLower = (content || '').toLowerCase();
+      const titleLower = (sop.title || '').toLowerCase();
+      const descLower = (sop.description || '').toLowerCase();
+
+      const isRelevant = queryLower.split(/\s+/).some(word =>
+        word.length > 2 && (
+          contentLower.includes(word) ||
+          titleLower.includes(word) ||
+          descLower.includes(word)
+        )
+      );
+
+      if (!isRelevant) {
+        return null;
+      }
+
+      return {
+        id: sop.id,
+        title: sop.title,
+        description: sop.description,
+        content: content,
+        category: sop.category,
+        source_url: sop.document_url
+      };
+    } catch (error) {
+      console.error('SOP processing error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch content from an external document URL
+   * Supports Google Docs (export), Notion (via share link), and plain text URLs
+   */
+  async fetchExternalDocument(url) {
+    try {
+      let fetchUrl = url;
+
+      // Convert Google Docs URL to export format
+      if (url.includes('docs.google.com/document')) {
+        // Extract document ID
+        const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match) {
+          const docId = match[1];
+          fetchUrl = `https://docs.google.com/document/d/${docId}/export?format=txt`;
+        }
+      }
+
+      // Fetch with timeout
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch(fetchUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'JobTread-Tools-Pro/1.0 (SOP-Fetcher)'
+        }
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        console.error(`SOP fetch failed: ${response.status} for ${url}`);
+        return null;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      let content = await response.text();
+
+      // Basic HTML stripping if needed
+      if (contentType.includes('html')) {
+        content = this.stripHtml(content);
+      }
+
+      // Limit content size (max 50KB)
+      if (content.length > 50000) {
+        content = content.slice(0, 50000) + '\n\n[Content truncated - document too large]';
+      }
+
+      return content;
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.error('SOP fetch timeout:', url);
+      } else {
+        console.error('SOP fetch error:', error);
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Strip HTML tags for basic text extraction
+   */
+  stripHtml(html) {
+    return html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * Tier 2: Query official documentation via Gemini
    */
   async queryGemini(query) {
     try {
@@ -189,47 +304,27 @@ Keep your response concise but complete.`
   combineResults(results) {
     let combined = '';
 
-    // Team docs get highest priority header
-    if (results.team && results.team.length > 0) {
-      combined += "## Your Team's Processes\n\n";
-      combined += "_These are your organization's internal SOPs and best practices._\n\n";
+    // User SOPs get HIGHEST priority - these are the user's own processes
+    if (results.userSops && results.userSops.length > 0) {
+      combined += "## Your Company's SOPs\n\n";
+      combined += "_These are your organization's standard operating procedures. Follow these first._\n\n";
 
-      for (const doc of results.team) {
-        combined += `### ${doc.title}\n`;
-        if (doc.category) {
-          combined += `_Category: ${doc.category}_\n\n`;
+      for (const sop of results.userSops) {
+        combined += `### ${sop.title}\n`;
+        if (sop.description) {
+          combined += `_${sop.description}_\n\n`;
         }
-        combined += `${doc.content}\n\n`;
-        combined += '---\n\n';
-      }
-    }
-
-    // Community docs next
-    if (results.community && results.community.length > 0) {
-      combined += '## Community Best Practices\n\n';
-      combined += '_Processes shared by other JobTread users._\n\n';
-
-      for (const doc of results.community) {
-        combined += `### ${doc.title}`;
-        if (doc.save_count > 0) {
-          combined += ` (${doc.save_count} saves)`;
-        }
-        combined += '\n';
-
-        if (doc.author_name || doc.author_org) {
-          combined += `_by ${doc.author_name || 'Anonymous'}`;
-          if (doc.author_org) {
-            combined += ` @ ${doc.author_org}`;
-          }
-          combined += '_\n\n';
+        if (sop.category) {
+          combined += `**Category:** ${sop.category}\n\n`;
         }
 
-        // Truncate content if too long
-        const content = doc.content.length > 1000
-          ? doc.content.slice(0, 1000) + '...\n\n_(Content truncated)_'
-          : doc.content;
+        // Include content (truncate if very long)
+        const content = sop.content.length > 3000
+          ? sop.content.slice(0, 3000) + '\n\n_(SOP content truncated for brevity)_'
+          : sop.content;
 
         combined += `${content}\n\n`;
+        combined += `_Source: [${sop.title}](${sop.source_url})_\n\n`;
         combined += '---\n\n';
       }
     }

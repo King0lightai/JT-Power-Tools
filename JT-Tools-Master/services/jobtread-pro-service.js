@@ -389,12 +389,29 @@ const JobTreadProService = (() => {
   /**
    * Get filtered jobs through Worker
    * @param {Array} filters - Array of { fieldName, value } objects
+   * @param {string} jobStatus - 'open', 'closed', or 'all' (default: 'all')
    */
-  async function getFilteredJobs(filters) {
+  async function getFilteredJobs(filters, jobStatus = 'all') {
     try {
-      return await workerRequest('getFilteredJobs', { filters });
+      return await workerRequest('getFilteredJobs', { filters, jobStatus });
     } catch (error) {
       console.error('JobTreadProService: getFilteredJobs failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get unique values for a custom field across all jobs
+   * Used to populate filter dropdowns for fields without predefined options
+   * @param {string} fieldId - The custom field ID
+   * @param {string} fieldName - The custom field name (alternative to ID)
+   */
+  async function getCustomFieldValues(fieldId, fieldName) {
+    try {
+      const result = await workerRequest('getCustomFieldValues', { fieldId, fieldName });
+      return result.values || [];
+    } catch (error) {
+      console.error('JobTreadProService: getCustomFieldValues failed:', error);
       throw error;
     }
   }
@@ -475,6 +492,7 @@ const JobTreadProService = (() => {
     getCustomFields,
     getAllJobs,
     getFilteredJobs,
+    getCustomFieldValues,
 
     // Cache management
     clearCache,

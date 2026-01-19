@@ -939,6 +939,72 @@ const QuickNotesFeature = (() => {
     }
   }
 
+  // Find the Time Clock button in a container by its distinctive SVG elements
+  function findTimeClockButton(container) {
+    const buttons = container.querySelectorAll('div[role="button"]');
+    for (const btn of buttons) {
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        // Check for clock circle (cx="12" cy="12" r="10")
+        const circle = svg.querySelector('circle[cx="12"][cy="12"][r="10"]');
+        if (circle) {
+          return btn;
+        }
+        // Also check path for clock hands "M12 6v6l4 2"
+        const paths = svg.querySelectorAll('path');
+        for (const path of paths) {
+          const d = path.getAttribute('d') || '';
+          if (d.includes('M12 6v6l4 2')) {
+            return btn;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // Create Quick Notes button for the header bar (icon-only style)
+  function createQuickNotesHeaderButton(container, beforeElement) {
+    // Remove existing button if present
+    if (notesButton && notesButton.parentNode) {
+      notesButton.remove();
+    }
+
+    notesButton = document.createElement('div');
+    // Match header icon button styling (no text, just icon)
+    notesButton.className = 'relative cursor-pointer flex items-center hover:bg-gray-100 focus:bg-gray-100 px-1 h-10 rounded-sm group active:bg-gray-200 jt-quick-notes-btn';
+    notesButton.setAttribute('role', 'button');
+    notesButton.setAttribute('tabindex', '0');
+    notesButton.setAttribute('title', 'Quick Notes');
+
+    // Icon-only version (matches header icons)
+    notesButton.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] text-2xl" viewBox="0 0 24 24">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+      </svg>
+    `;
+
+    // Add click handler
+    notesButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePanel();
+    });
+
+    // Add keyboard handler for accessibility
+    notesButton.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        togglePanel();
+      }
+    });
+
+    // Insert BEFORE the Time Clock button (to the left of it)
+    container.insertBefore(notesButton, beforeElement);
+  }
+
   // Create Quick Notes button that integrates with Jobtread action buttons
   function createQuickNotesButton(container) {
     // Remove existing button if present
@@ -980,10 +1046,8 @@ const QuickNotesFeature = (() => {
     // Insert at the beginning of the container (leftmost position in action bar)
     if (container.firstChild) {
       container.insertBefore(notesButton, container.firstChild);
-      console.log('Quick Notes: Button inserted at beginning of action bar');
     } else {
       container.appendChild(notesButton);
-      console.log('Quick Notes: Button appended to action bar');
     }
   }
 
@@ -1014,98 +1078,28 @@ const QuickNotesFeature = (() => {
 
   // Find and inject button into action buttons container
   function injectQuickNotesButton() {
-    // Check if we're on a page that should have the button
-    if (!shouldShowButton()) {
-      console.log('Quick Notes: Current page does not support quick notes button');
-      return false;
-    }
-
     // Check if button already exists anywhere
     if (notesButton && document.body.contains(notesButton)) {
-      console.log('Quick Notes: Button already exists in DOM');
       return true;
     }
 
-    // Try multiple selectors to find the action buttons container
-    const selectors = [
-      // Primary target: exact match for the action bar structure
-      'div.absolute.inset-0.flex.justify-end',
-      // Backup selectors with similar patterns
-      'div.flex.justify-end.items-center',
-      'div.flex.items-center.justify-end',
-      // More flexible patterns
-      'div[class*="absolute"][class*="inset-0"][class*="flex"][class*="justify-end"]',
-      'div.flex.justify-end',
-    ];
-
-    let container = null;
-    for (const selector of selectors) {
-      const elements = document.querySelectorAll(selector);
-
-      // Find the first visible container with action button children (div or a tags)
-      for (const el of elements) {
-        const isVisible = el.offsetParent !== null && el.offsetWidth > 0 && el.offsetHeight > 0;
-        if (!isVisible) continue;
-
-        // Check for div elements with role="button" OR a tags with action button styling
-        const divButtons = el.querySelectorAll('div[role="button"]');
-        const linkButtons = el.querySelectorAll('a.inline-block.cursor-pointer.shrink-0');
-        const totalButtons = divButtons.length + linkButtons.length;
-
-        if (totalButtons > 0) {
-          // Verify these buttons have the action button styling
-          const hasActionButtons =
-            Array.from(divButtons).some(btn =>
-              btn.className.includes('inline-block') &&
-              btn.className.includes('cursor-pointer') &&
-              btn.className.includes('shrink-0')
-            ) ||
-            linkButtons.length > 0;
-
-          if (hasActionButtons) {
-            container = el;
-            console.log('Quick Notes: Found action bar with selector:', selector);
-            console.log('Quick Notes: Container classes:', el.className);
-            console.log('Quick Notes: Found', totalButtons, 'action buttons (', divButtons.length, 'divs,', linkButtons.length, 'links)');
-            break;
-          }
-        }
-      }
-      if (container) break;
-    }
-
-    // If still no container, try broader search
-    if (!container) {
-      console.log('Quick Notes: Trying broader search for action bar...');
-      const allFlexContainers = document.querySelectorAll('div.flex.justify-end');
-
-      for (const el of allFlexContainers) {
-        const isVisible = el.offsetParent !== null && el.offsetWidth > 100;
-        const divButtons = el.querySelectorAll('div[role="button"]');
-        const linkButtons = el.querySelectorAll('a.inline-block.cursor-pointer.shrink-0');
-        const totalButtons = divButtons.length + linkButtons.length;
-
-        if (isVisible && totalButtons >= 1) {
-          container = el;
-          console.log('Quick Notes: Found fallback container:', el.className);
-          console.log('Quick Notes: Has', totalButtons, 'buttons (', divButtons.length, 'divs,', linkButtons.length, 'links)');
-          break;
-        }
+    // Priority 1: Try to inject into header bar (left of Time Clock)
+    // Header bar is always visible on all pages, no page restrictions needed
+    const headerIconBar = document.querySelector('div.shrink-0.flex.items-center.pr-1');
+    if (headerIconBar && !headerIconBar.querySelector('.jt-quick-notes-btn')) {
+      const timeClockBtn = findTimeClockButton(headerIconBar);
+      if (timeClockBtn) {
+        createQuickNotesHeaderButton(headerIconBar, timeClockBtn);
+        return true;
+      } else if (headerIconBar.firstChild) {
+        // Fallback: insert as first child of icon bar if Time Clock not found
+        createQuickNotesHeaderButton(headerIconBar, headerIconBar.firstChild);
+        return true;
       }
     }
 
-    if (container && !container.querySelector('.jt-quick-notes-btn')) {
-      console.log('Quick Notes: Injecting button into action bar');
-      createQuickNotesButton(container);
-      return true; // Success
-    } else if (!container) {
-      console.warn('Quick Notes: Could not find action bar container');
-      console.warn('Quick Notes: Checked selectors:', selectors);
-      return false; // Failed
-    }
-
-    console.log('Quick Notes: Button already in container');
-    return true; // Already injected
+    // Header bar not found - don't show Quick Notes button
+    return false;
   }
 
   // Create a floating Quick Notes button as fallback
@@ -1136,13 +1130,10 @@ const QuickNotesFeature = (() => {
     });
 
     document.body.appendChild(notesButton);
-    console.log('Quick Notes: Created floating button as fallback');
   }
 
   // Set up observer to watch for action buttons container
   function setupButtonObserver() {
-    console.log('Quick Notes: Setting up button observer');
-
     // Initial injection attempt
     let injected = injectQuickNotesButton();
 
@@ -1152,23 +1143,16 @@ const QuickNotesFeature = (() => {
       const maxAttempts = 10; // 10 * 500ms = 5 seconds
       const retryInterval = setInterval(() => {
         attempts++;
-        console.log(`Quick Notes: Retry injection attempt ${attempts}/${maxAttempts}`);
 
         injected = injectQuickNotesButton();
 
         if (injected || attempts >= maxAttempts) {
           clearInterval(retryInterval);
-          if (injected) {
-            console.log('Quick Notes: Button successfully injected into action bar');
-          } else {
-            console.warn('Quick Notes: Failed to inject button after', attempts, 'attempts');
-            console.warn('Quick Notes: Creating floating button as last resort');
+          if (!injected) {
             createFloatingButton();
           }
         }
       }, 500);
-    } else {
-      console.log('Quick Notes: Button successfully injected on first attempt');
     }
 
     // Periodic check to ensure button stays injected across page navigations
@@ -1180,7 +1164,6 @@ const QuickNotesFeature = (() => {
         if (!shouldShowButton()) {
           // Remove button if it exists but shouldn't be shown on this page
           if (notesButton && document.body.contains(notesButton)) {
-            console.log('Quick Notes: Removing button - not on allowed page');
             notesButton.remove();
           }
           return;
@@ -1203,7 +1186,6 @@ const QuickNotesFeature = (() => {
         if (!foundButtonInActionBar && actionBars.length > 0) {
           const visibleActionBar = Array.from(actionBars).find(bar => bar.offsetParent !== null);
           if (visibleActionBar) {
-            console.log('Quick Notes: Periodic check - button missing, re-injecting');
             injectQuickNotesButton();
           }
         }
@@ -1221,7 +1203,6 @@ const QuickNotesFeature = (() => {
       if (!shouldShowButton()) {
         // Remove button if it exists but shouldn't be shown on this page
         if (notesButton && document.body.contains(notesButton)) {
-          console.log('Quick Notes: Removing button - not on allowed page');
           notesButton.remove();
         }
         return;
@@ -1229,7 +1210,6 @@ const QuickNotesFeature = (() => {
 
       // Check if our button still exists in the DOM
       if (!notesButton || !document.body.contains(notesButton)) {
-        console.log('Quick Notes: Button removed from DOM, re-injecting');
         injectQuickNotesButton();
         return;
       }
@@ -1248,7 +1228,6 @@ const QuickNotesFeature = (() => {
               const totalButtons = divButtons + linkButtons;
 
               if (totalButtons > 0) {
-                console.log('Quick Notes: Action bar found without button, injecting');
                 injectQuickNotesButton();
                 return;
               }
@@ -1487,8 +1466,6 @@ const QuickNotesFeature = (() => {
     const isAllowedPage = allowedPages.some(page => path.includes(page));
 
     if (!isAllowedPage) {
-      console.log('Quick Notes: Skipping - not on allowed page');
-      console.log('Quick Notes: Current path:', path);
       return;
     }
 
@@ -1520,7 +1497,7 @@ const QuickNotesFeature = (() => {
     chrome.runtime.onMessage.addListener(handleSettingsChange);
 
     isActive = true;
-    console.log('Quick Notes feature activated');
+    console.log('QuickNotes: Activated');
   }
 
   // Cleanup feature
@@ -1575,7 +1552,7 @@ const QuickNotesFeature = (() => {
     searchTerm = '';
     isActive = false;
 
-    console.log('Quick Notes feature deactivated');
+    console.log('QuickNotes: Deactivated');
   }
 
   return {

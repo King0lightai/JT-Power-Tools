@@ -16,7 +16,6 @@ const TaskCompletion = (() => {
     };
 
     const scheduleItems = document.querySelectorAll(selectors.scheduleItems);
-    console.log(`TaskCompletion: Found ${scheduleItems.length} task cards`);
 
     scheduleItems.forEach(item => {
       // Skip if already processed
@@ -27,7 +26,6 @@ const TaskCompletion = (() => {
       // Find the task name container (first div with flex items-center space-x-1)
       const taskNameContainer = item.querySelector('div.flex.items-center.space-x-1');
       if (!taskNameContainer) {
-        console.log('TaskCompletion: Could not find task name container');
         return;
       }
 
@@ -39,7 +37,6 @@ const TaskCompletion = (() => {
       // Skip tasks with subtasks - JT requires all subtasks to be completed first
       // Subtask indicator looks like "0/2" or "1/3" in a div.grow.shrink-0.text-right
       if (hasSubtaskIndicator(taskNameContainer)) {
-        console.log('TaskCompletion: Skipping task with subtasks');
         return;
       }
 
@@ -58,8 +55,6 @@ const TaskCompletion = (() => {
       // Add click handler
       checkbox.addEventListener('click', (e) => handleCheckboxClick(e, item, checkbox));
     });
-
-    console.log(`TaskCompletion: Added checkboxes to task cards`);
   }
 
   /**
@@ -180,8 +175,6 @@ const TaskCompletion = (() => {
     e.stopPropagation();
     e.preventDefault();
 
-    console.log('TaskCompletion: Checkbox clicked, toggling task completion...');
-
     // Detect current completion state
     const taskNameContainer = taskCard.querySelector('div.flex.items-center.space-x-1');
     const wasComplete = isTaskComplete(taskNameContainer);
@@ -201,9 +194,6 @@ const TaskCompletion = (() => {
    * @param {boolean} wasComplete - Whether the task was complete before clicking
    */
   function toggleTaskCompletion(taskCard, checkbox, wasComplete) {
-    console.log('TaskCompletion: Opening sidebar to toggle completion...');
-    console.log('TaskCompletion: Task was complete:', wasComplete);
-
     // Inject CSS to hide sidebar
     const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
 
@@ -211,7 +201,6 @@ const TaskCompletion = (() => {
     const failsafeTimeout = setTimeout(() => {
       if (window.SidebarManager) {
         window.SidebarManager.removeSidebarCSS();
-        console.log('TaskCompletion: Failsafe removed hiding CSS');
       }
       // Restore checkbox
       checkbox.style.opacity = '';
@@ -230,14 +219,10 @@ const TaskCompletion = (() => {
       const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
       if (sidebar) {
-        console.log('TaskCompletion: Sidebar found, looking for progress checkbox...');
-
         // Find the Progress section
         const progressCheckbox = findProgressCheckbox(sidebar);
 
         if (progressCheckbox) {
-          console.log('TaskCompletion: Found progress checkbox, clicking it...');
-
           // Click the checkbox to toggle completion
           progressCheckbox.click();
 
@@ -246,8 +231,6 @@ const TaskCompletion = (() => {
             // Close the sidebar
             if (window.SidebarManager) {
               window.SidebarManager.closeSidebar(failsafeTimeout, () => {
-                console.log('TaskCompletion: Task completion toggled successfully');
-
                 // Update checkbox visual state (toggle from previous state)
                 const newCompletionState = !wasComplete;
                 updateCheckboxState(checkbox, newCompletionState);
@@ -319,17 +302,12 @@ const TaskCompletion = (() => {
     const progressLabel = allLabels.find(span => span.textContent.trim() === 'Progress');
 
     if (!progressLabel) {
-      console.log('TaskCompletion: Progress label not found');
-      console.log('TaskCompletion: Available labels:', allLabels.map(l => l.textContent.trim()));
       return null;
     }
-
-    console.log('TaskCompletion: Found Progress label');
 
     // Find the container with Progress label
     const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
     if (!progressContainer) {
-      console.log('TaskCompletion: Could not find progress container');
       return null;
     }
 
@@ -337,11 +315,9 @@ const TaskCompletion = (() => {
     // It's a div with role="button" containing an SVG with a rect
     const checkboxButton = progressContainer.querySelector('div[role="button"]');
     if (!checkboxButton) {
-      console.log('TaskCompletion: Could not find checkbox button in progress container');
       return null;
     }
 
-    console.log('TaskCompletion: Found progress checkbox button');
     return checkboxButton;
   }
 
@@ -351,7 +327,6 @@ const TaskCompletion = (() => {
   function cleanup() {
     const checkboxes = document.querySelectorAll('.jt-complete-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
-    console.log('TaskCompletion: Cleaned up checkboxes');
   }
 
   // Public API

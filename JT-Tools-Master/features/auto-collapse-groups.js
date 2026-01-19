@@ -185,9 +185,6 @@ const AutoCollapseGroupsFeature = (() => {
       });
     }
 
-    if (collapsedCount > 0) {
-      console.log(`AutoCollapseGroups: Collapsed ${collapsedCount} complete group(s)`);
-    }
   }
 
   // Wait for groups to be rendered then apply collapse
@@ -205,7 +202,6 @@ const AutoCollapseGroupsFeature = (() => {
       if (viewType) {
         initialCollapseApplied = true;
         processGroups();
-        console.log('AutoCollapseGroups: Initial collapse applied');
       } else {
         // View not ready yet, try again
         collapseTimeout = setTimeout(() => applyInitialCollapse(), 500);
@@ -302,7 +298,7 @@ const AutoCollapseGroupsFeature = (() => {
     isActive = true;
     initialCollapseApplied = false;
 
-    console.log('AutoCollapseGroups: Initializing...');
+    console.log('AutoCollapseGroups: Activated');
 
     // Set up navigation listener for SPA
     setupNavigationListener();
@@ -314,8 +310,6 @@ const AutoCollapseGroupsFeature = (() => {
     if (isOnSchedulePage()) {
       applyInitialCollapse();
     }
-
-    console.log('AutoCollapseGroups: Initialized');
   }
 
   // Cleanup the feature
@@ -335,7 +329,7 @@ const AutoCollapseGroupsFeature = (() => {
       observer = null;
     }
 
-    console.log('AutoCollapseGroups: Cleanup complete');
+    console.log('AutoCollapseGroups: Deactivated');
   }
 
   return {

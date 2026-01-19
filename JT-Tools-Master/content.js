@@ -105,6 +105,11 @@ const featureModules = {
     name: 'PDF Markup Tools',
     feature: () => window.PDFMarkupToolsFeature,
     instance: null
+  },
+  customFieldFilter: {
+    name: 'Custom Field Filter',
+    feature: () => window.CustomFieldFilterFeature,
+    instance: null
   }
 };
 

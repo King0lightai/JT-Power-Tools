@@ -46,7 +46,6 @@ const SidebarManager = (() => {
         }
     `;
     document.head.appendChild(hideStyle);
-    console.log('SidebarManager: Sidebar hiding CSS injected');
     return hideStyle;
   }
 
@@ -57,7 +56,6 @@ const SidebarManager = (() => {
     const style = document.getElementById('jt-hide-sidebar-temp');
     if (style) {
       style.remove();
-      console.log('SidebarManager: Removed hiding CSS');
     }
   }
 
@@ -69,14 +67,11 @@ const SidebarManager = (() => {
    * @param {HTMLElement} element - The element to click
    */
   function openSidebar(element) {
-    console.log('SidebarManager: Clicking element to open sidebar');
-
     // Only use non-bubbling click if we're in availability view AND in a popup
     const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
     const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
     if (isAvailabilityView && isInPopup) {
-      console.log('SidebarManager: Using non-bubbling click for availability view in popup');
       // Create a synthetic click event that doesn't bubble
       // This prevents the click from propagating up and closing the popup
       const clickEvent = new MouseEvent('click', {
@@ -86,7 +81,6 @@ const SidebarManager = (() => {
       });
       element.dispatchEvent(clickEvent);
     } else {
-      console.log('SidebarManager: Using regular click');
       // Use regular click for main schedule page (both normal and availability views)
       element.click();
     }
@@ -97,25 +91,19 @@ const SidebarManager = (() => {
    * This is called before opening a new sidebar to prevent conflicts
    */
   function closeAnySidebar() {
-    console.log('SidebarManager: Checking for any open sidebars to close...');
-
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
     if (sidebar) {
-      console.log('SidebarManager: Found open sidebar, closing it...');
       const closeButtons = sidebar.querySelectorAll('div[role="button"]');
 
       for (const button of closeButtons) {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
-          console.log('SidebarManager: Clicking Close button on existing sidebar');
-
           // Only use non-bubbling click if we're in availability view AND in a popup
           const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
           const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
           if (isAvailabilityView && isInPopup) {
-            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
             // Use synthetic click that doesn't bubble to prevent closing popups
             const clickEvent = new MouseEvent('click', {
               bubbles: false,
@@ -124,7 +112,6 @@ const SidebarManager = (() => {
             });
             button.dispatchEvent(clickEvent);
           } else {
-            console.log('SidebarManager: Using regular click');
             // Use regular click for main schedule page
             button.click();
           }
@@ -133,11 +120,9 @@ const SidebarManager = (() => {
         }
       }
 
-      console.log('SidebarManager: Could not find Close button, sidebar may remain open');
       return false;
     }
 
-    console.log('SidebarManager: No open sidebar found');
     return false;
   }
 
@@ -147,12 +132,9 @@ const SidebarManager = (() => {
    * @param {Function} onDateChangeComplete - Callback when date change is complete (called AFTER sidebar closes)
    */
   function closeSidebar(failsafeTimeout, onDateChangeComplete) {
-    console.log('SidebarManager: Attempting to close sidebar...');
-
     // Clear the failsafe timeout since we're handling cleanup now
     if (failsafeTimeout) {
       clearTimeout(failsafeTimeout);
-      console.log('SidebarManager: Cleared failsafe timeout');
     }
 
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
@@ -164,14 +146,11 @@ const SidebarManager = (() => {
       for (const button of closeButtons) {
         const text = button.textContent.trim();
         if (text.includes('Close')) {
-          console.log('SidebarManager: Found and clicking Close button');
-
           // Only use non-bubbling click if we're in availability view AND in a popup
           const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
           const isInPopup = window.ViewDetector && window.ViewDetector.isInPopup();
 
           if (isAvailabilityView && isInPopup) {
-            console.log('SidebarManager: Using non-bubbling click for availability view in popup');
             // Use synthetic click that doesn't bubble to prevent closing popups
             const clickEvent = new MouseEvent('click', {
               bubbles: false,
@@ -180,7 +159,6 @@ const SidebarManager = (() => {
             });
             button.dispatchEvent(clickEvent);
           } else {
-            console.log('SidebarManager: Using regular click');
             // Use regular click for main schedule page
             button.click();
           }
@@ -191,7 +169,6 @@ const SidebarManager = (() => {
 
             // Notify that date change is complete (AFTER sidebar closes)
             if (onDateChangeComplete) {
-              console.log('SidebarManager: Calling onDateChangeComplete callback');
               onDateChangeComplete();
             }
           }, 800);
@@ -200,7 +177,6 @@ const SidebarManager = (() => {
         }
       }
 
-      console.log('SidebarManager: Could not find Close button, sidebar will remain open');
       // Still remove CSS even if close failed
       setTimeout(() => {
         removeSidebarCSS();
@@ -211,7 +187,6 @@ const SidebarManager = (() => {
         }
       }, 800);
     } else {
-      console.log('SidebarManager: Sidebar not found during close');
       // Remove CSS anyway
       removeSidebarCSS();
 
@@ -231,11 +206,8 @@ const SidebarManager = (() => {
    * @returns {Object} {startDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts}
    */
   function findDateField(sidebar, sourceDateInfo, fieldType = 'Start') {
-    console.log(`SidebarManager: findDateField - Looking for "${fieldType}" date field`);
-
     // For ToDos, use the ToDoDragDrop module if available for better detection
     if (fieldType === 'Due' && window.ToDoDragDrop) {
-      console.log('SidebarManager: Using ToDoDragDrop module for Due field');
       const result = window.ToDoDragDrop.findDueDateField(sidebar, sourceDateInfo);
       // Map the result to expected format (dueDateParent -> startDateParent for compatibility)
       return {
@@ -252,11 +224,8 @@ const SidebarManager = (() => {
 
     if (!targetLabel) {
       console.error(`SidebarManager: Could not find "${fieldType}" label in sidebar`);
-      console.log('SidebarManager: Available labels:', allLabels.map(l => l.textContent.trim()));
       return { startDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
     }
-
-    console.log(`SidebarManager: ✓ Found "${fieldType}" label`);
 
     // Find the container for this label (it's in a div.flex-1)
     const labelContainer = targetLabel.closest('div.flex-1');
@@ -267,7 +236,6 @@ const SidebarManager = (() => {
 
     // Find date fields within this container only
     const allDateFields = labelContainer.querySelectorAll('div.text-gray-700.truncate.leading-tight');
-    console.log(`SidebarManager: findDateField - Found ${allDateFields.length} potential date fields in "${fieldType}" section`);
 
     let startDateParent = null;
     let sidebarSourceYear = null;
@@ -277,7 +245,6 @@ const SidebarManager = (() => {
     for (const field of allDateFields) {
       const text = field.textContent.trim();
       fieldTexts.push(text);
-      console.log(`SidebarManager: findDateField - Checking field text: "${text}"`);
 
       // Match formats:
       // 1. "Jan 1, 2026" (Month Day, Year)
@@ -290,10 +257,8 @@ const SidebarManager = (() => {
         if (match) {
           sidebarSourceMonth = match[1];
           sidebarSourceYear = parseInt(match[2]);
-          console.log(`SidebarManager: findDateField - Extracted from sidebar: ${sidebarSourceMonth} ${sidebarSourceYear}`);
         }
         startDateParent = field.closest('div.group.items-center');
-        console.log('SidebarManager: findDateField - Found start date field:', text);
         break;
       } else if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text)) {
         // "Wed, Dec 31" or "Mon, January 15" format - extract month, get year from drag source
@@ -314,37 +279,27 @@ const SidebarManager = (() => {
             const sidebarMonthIndex = monthIndexMap[sidebarSourceMonth];
             const sourceCalendarMonthIndex = monthIndexMap[sourceDateInfo.month];
 
-            console.log(`SidebarManager: findDateField - Sidebar month: ${sidebarSourceMonth} (${sidebarMonthIndex}), Source calendar month: ${sourceDateInfo.month} (${sourceCalendarMonthIndex}), Source year: ${sourceDateInfo.year}`);
-
             // If sidebar shows Dec (11) and source calendar shows Jan (0), sidebar is from previous year
             if (sidebarMonthIndex === 11 && sourceCalendarMonthIndex === 0) {
               sidebarSourceYear = sourceDateInfo.year - 1;
-              console.log(`SidebarManager: findDateField - Dec→Jan year boundary detected, using previous year: ${sidebarSourceYear}`);
             }
             // If sidebar shows Jan (0) and source calendar shows Dec (11), sidebar is from next year
             else if (sidebarMonthIndex === 0 && sourceCalendarMonthIndex === 11) {
               sidebarSourceYear = sourceDateInfo.year + 1;
-              console.log(`SidebarManager: findDateField - Jan→Dec year boundary detected, using next year: ${sidebarSourceYear}`);
             }
             // Otherwise, use source year
             else {
               sidebarSourceYear = sourceDateInfo.year;
-              console.log(`SidebarManager: findDateField - Using year from drag source: ${sidebarSourceYear}`);
             }
           } else {
             // Fallback: use current year
             sidebarSourceYear = new Date().getFullYear();
-            console.log(`SidebarManager: findDateField - No drag source year, using current year: ${sidebarSourceYear}`);
           }
-
-          console.log(`SidebarManager: findDateField - Final extracted: ${sidebarSourceMonth} ${sidebarSourceYear}`);
         }
         startDateParent = field.closest('div.group.items-center');
-        console.log('SidebarManager: findDateField - Found start date field:', text);
         break;
       } else if (/^(Today|Tomorrow|Yesterday)$/.test(text)) {
         startDateParent = field.closest('div.group.items-center');
-        console.log('SidebarManager: findDateField - Found start date field:', text);
         break;
       }
     }
@@ -365,13 +320,10 @@ const SidebarManager = (() => {
   function findInputField(sidebar) {
     let inputField = null;
     const sidebarInputs = sidebar.querySelectorAll('input[type="text"], input:not([type])');
-    console.log(`SidebarManager: findInputField - Found ${sidebarInputs.length} potential input fields in sidebar`);
 
     for (const input of sidebarInputs) {
       const placeholder = input.placeholder || '';
       const style = window.getComputedStyle(input);
-
-      console.log(`SidebarManager: findInputField - Checking input with placeholder: "${placeholder}", display: ${style.display}, opacity: ${style.opacity}`);
 
       // We're looking for any input that looks like a date field
       if (placeholder && (
@@ -381,18 +333,15 @@ const SidebarManager = (() => {
       )) {
         if (style.display !== 'none' && style.opacity !== '0') {
           inputField = input;
-          console.log('SidebarManager: findInputField - Found suitable date input field');
           break;
         }
       }
     }
 
     if (!inputField) {
-      console.log('SidebarManager: findInputField - No input in sidebar, checking for popup date picker input');
       const datePickerPopup = document.querySelector('div.block.relative input[placeholder]');
       if (datePickerPopup) {
         inputField = datePickerPopup;
-        console.log('SidebarManager: findInputField - Found date picker popup input');
       }
     }
 
@@ -405,14 +354,11 @@ const SidebarManager = (() => {
    */
   function checkUpdateCheckboxes(sidebar) {
     const checkboxes = sidebar.querySelectorAll('input[type="checkbox"]');
-    console.log('SidebarManager: Found', checkboxes.length, 'checkboxes in sidebar');
 
-    checkboxes.forEach((checkbox, index) => {
+    checkboxes.forEach((checkbox) => {
       // Look for labels or nearby text to identify the checkbox
       const label = checkbox.closest('label') || checkbox.parentElement;
       const labelText = label ? label.textContent.toLowerCase() : '';
-
-      console.log(`SidebarManager: Checkbox ${index}: "${labelText.substring(0, 50)}", checked=${checkbox.checked}`);
 
       // Check for keywords that suggest this checkbox should be checked
       const shouldCheck = labelText.includes('notify') ||
@@ -423,7 +369,6 @@ const SidebarManager = (() => {
                          labelText.includes('move');
 
       if (shouldCheck && !checkbox.checked) {
-        console.log('SidebarManager: Checking checkbox:', labelText.substring(0, 50));
         checkbox.click();
       }
     });

@@ -280,7 +280,7 @@ export class JobTreadTools {
     if (this.knowledgeLookup) {
       tools.push({
         name: 'jobtread_knowledge_lookup',
-        description: 'Query JobTread documentation and process library before performing operations. Returns official docs, community best practices, and team-specific SOPs. Call this BEFORE create/update/import operations to ensure correct syntax and follow best practices.',
+        description: 'Query JobTread documentation and your company SOPs before performing operations. Returns your SOPs first, then official docs. Call this BEFORE create/update/import operations to ensure you follow your company processes.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -290,11 +290,85 @@ export class JobTreadTools {
             },
             category: {
               type: 'string',
-              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general'],
+              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general', 'company_policies', 'client_communication'],
               description: 'Optional category filter'
             }
           },
           required: ['query']
+        }
+      });
+
+      // SOP Management Tools
+      tools.push({
+        name: 'sop_list',
+        description: 'List all SOP (Standard Operating Procedure) documents linked to your organization. Returns titles, descriptions, and categories.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            category: {
+              type: 'string',
+              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general', 'company_policies', 'client_communication'],
+              description: 'Optional category filter'
+            }
+          }
+        }
+      });
+
+      tools.push({
+        name: 'sop_add',
+        description: 'Add an external SOP document link (Google Docs, Notion, etc.) to your organization. The AI will use this document as context when helping with related tasks.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            title: {
+              type: 'string',
+              description: 'Name/title of the SOP document'
+            },
+            document_url: {
+              type: 'string',
+              description: 'URL to the document (Google Docs, Notion, or public URL)'
+            },
+            description: {
+              type: 'string',
+              description: 'Brief description of what this SOP covers'
+            },
+            category: {
+              type: 'string',
+              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general', 'company_policies', 'client_communication'],
+              description: 'Category for the SOP'
+            }
+          },
+          required: ['title', 'document_url']
+        }
+      });
+
+      tools.push({
+        name: 'sop_remove',
+        description: 'Remove an SOP document from your organization by ID.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sop_id: {
+              type: 'string',
+              description: 'ID of the SOP to remove (get from sop_list)'
+            }
+          },
+          required: ['sop_id']
+        }
+      });
+
+      tools.push({
+        name: 'sop_refresh',
+        description: 'Force refresh the cached content of an SOP document (re-fetch from source URL).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sop_id: {
+              type: 'string',
+              description: 'ID of the SOP to refresh'
+            }
+          },
+          required: ['sop_id']
         }
       });
     }
@@ -317,6 +391,19 @@ export class JobTreadTools {
             throw new Error('Knowledge lookup not available on your tier');
           }
           return await this.knowledgeLookup.lookup(args.query, args.category);
+
+        // SOP Management
+        case 'sop_list':
+          return await this.listSops(args.category);
+
+        case 'sop_add':
+          return await this.addSop(args);
+
+        case 'sop_remove':
+          return await this.removeSop(args.sop_id);
+
+        case 'sop_refresh':
+          return await this.refreshSop(args.sop_id);
 
         case 'jobtread_search_jobs':
           return await this.searchJobs(args);
@@ -703,6 +790,219 @@ export class JobTreadTools {
   async rawQuery(query) {
     const data = await this.jobtreadRequest(query);
     return { data };
+  }
+
+  // ==========================================
+  // SOP Management Methods
+  // ==========================================
+
+  /**
+   * List all SOPs for the organization
+   */
+  async listSops(category) {
+    try {
+      if (!this.env.AI_KNOWLEDGE_DB) {
+        return { error: 'SOP database not configured' };
+      }
+
+      const params = [this.orgId];
+      let sql = `
+        SELECT id, title, description, document_url, category, is_active,
+               cached_at, fetch_error, created_at, updated_at
+        FROM user_sops
+        WHERE org_id = ?
+      `;
+
+      if (category) {
+        sql += ' AND category = ?';
+        params.push(category);
+      }
+
+      sql += ' ORDER BY updated_at DESC';
+
+      const result = await this.env.AI_KNOWLEDGE_DB.prepare(sql).bind(...params).all();
+      const sops = result.results || [];
+
+      return {
+        count: sops.length,
+        sops: sops.map(sop => ({
+          id: sop.id,
+          title: sop.title,
+          description: sop.description,
+          url: sop.document_url,
+          category: sop.category,
+          active: sop.is_active === 1,
+          lastCached: sop.cached_at,
+          error: sop.fetch_error,
+          createdAt: sop.created_at
+        }))
+      };
+    } catch (error) {
+      console.error('List SOPs error:', error);
+      return { error: error.message };
+    }
+  }
+
+  /**
+   * Add a new SOP document
+   */
+  async addSop({ title, document_url, description, category }) {
+    try {
+      if (!this.env.AI_KNOWLEDGE_DB) {
+        return { error: 'SOP database not configured' };
+      }
+
+      // Validate URL format
+      try {
+        new URL(document_url);
+      } catch {
+        return { error: 'Invalid document URL format' };
+      }
+
+      // Generate ID
+      const id = `sop_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+      await this.env.AI_KNOWLEDGE_DB.prepare(`
+        INSERT INTO user_sops (id, org_id, user_id, title, description, document_url, category, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+      `).bind(
+        id,
+        this.orgId,
+        this.user.id,
+        title,
+        description || null,
+        document_url,
+        category || 'general'
+      ).run();
+
+      // Try to fetch and cache the document content immediately
+      let fetchStatus = 'pending';
+      if (this.knowledgeLookup) {
+        try {
+          const content = await this.knowledgeLookup.fetchExternalDocument(document_url);
+          if (content) {
+            await this.env.AI_KNOWLEDGE_DB.prepare(`
+              UPDATE user_sops
+              SET cached_content = ?, cached_at = CURRENT_TIMESTAMP
+              WHERE id = ?
+            `).bind(content, id).run();
+            fetchStatus = 'cached';
+          } else {
+            await this.env.AI_KNOWLEDGE_DB.prepare(`
+              UPDATE user_sops
+              SET fetch_error = 'Could not fetch document - check URL and permissions'
+              WHERE id = ?
+            `).bind(id).run();
+            fetchStatus = 'fetch_failed';
+          }
+        } catch (e) {
+          fetchStatus = 'fetch_error';
+        }
+      }
+
+      return {
+        success: true,
+        id: id,
+        title: title,
+        category: category || 'general',
+        fetchStatus: fetchStatus,
+        message: fetchStatus === 'cached'
+          ? 'SOP added and document content cached successfully'
+          : 'SOP added. Document will be fetched on first use.'
+      };
+    } catch (error) {
+      console.error('Add SOP error:', error);
+      return { error: error.message };
+    }
+  }
+
+  /**
+   * Remove an SOP document
+   */
+  async removeSop(sopId) {
+    try {
+      if (!this.env.AI_KNOWLEDGE_DB) {
+        return { error: 'SOP database not configured' };
+      }
+
+      // Check SOP exists and belongs to this org
+      const existing = await this.env.AI_KNOWLEDGE_DB.prepare(`
+        SELECT id, title FROM user_sops WHERE id = ? AND org_id = ?
+      `).bind(sopId, this.orgId).first();
+
+      if (!existing) {
+        return { error: 'SOP not found or access denied' };
+      }
+
+      await this.env.AI_KNOWLEDGE_DB.prepare(`
+        DELETE FROM user_sops WHERE id = ? AND org_id = ?
+      `).bind(sopId, this.orgId).run();
+
+      return {
+        success: true,
+        message: `SOP "${existing.title}" has been removed`
+      };
+    } catch (error) {
+      console.error('Remove SOP error:', error);
+      return { error: error.message };
+    }
+  }
+
+  /**
+   * Refresh SOP document cache
+   */
+  async refreshSop(sopId) {
+    try {
+      if (!this.env.AI_KNOWLEDGE_DB) {
+        return { error: 'SOP database not configured' };
+      }
+
+      // Get SOP details
+      const sop = await this.env.AI_KNOWLEDGE_DB.prepare(`
+        SELECT id, title, document_url FROM user_sops WHERE id = ? AND org_id = ?
+      `).bind(sopId, this.orgId).first();
+
+      if (!sop) {
+        return { error: 'SOP not found or access denied' };
+      }
+
+      if (!this.knowledgeLookup) {
+        return { error: 'Knowledge lookup not available' };
+      }
+
+      // Fetch fresh content
+      const content = await this.knowledgeLookup.fetchExternalDocument(sop.document_url);
+
+      if (content) {
+        await this.env.AI_KNOWLEDGE_DB.prepare(`
+          UPDATE user_sops
+          SET cached_content = ?, cached_at = CURRENT_TIMESTAMP, fetch_error = NULL
+          WHERE id = ?
+        `).bind(content, sopId).run();
+
+        return {
+          success: true,
+          title: sop.title,
+          contentLength: content.length,
+          message: `SOP "${sop.title}" refreshed successfully (${content.length} characters)`
+        };
+      } else {
+        await this.env.AI_KNOWLEDGE_DB.prepare(`
+          UPDATE user_sops
+          SET fetch_error = 'Could not fetch document - check URL and permissions', last_fetch_attempt = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).bind(sopId).run();
+
+        return {
+          success: false,
+          title: sop.title,
+          error: 'Could not fetch document. Check that the URL is accessible and the document is shared properly.'
+        };
+      }
+    } catch (error) {
+      console.error('Refresh SOP error:', error);
+      return { error: error.message };
+    }
   }
 
   /**

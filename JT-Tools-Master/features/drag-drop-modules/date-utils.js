@@ -56,7 +56,6 @@ const DateUtils = (() => {
     // Find the column index of this cell
     const row = cell.parentElement;
     const cellIndex = Array.from(row.children).indexOf(cell);
-    console.log(`DateUtils: extractDateFromColumnHeader - cell is in column ${cellIndex}`);
 
     // Find the thead element
     const thead = table.querySelector('thead');
@@ -81,7 +80,6 @@ const DateUtils = (() => {
       const dateDiv = headerCell.querySelector('div.font-bold');
       if (dateDiv) {
         const dateNumber = dateDiv.textContent.trim();
-        console.log(`DateUtils: extractDateFromColumnHeader - found date ${dateNumber} in column ${cellIndex}`);
         return dateNumber;
       }
     }
@@ -105,7 +103,6 @@ const DateUtils = (() => {
 
     // Check if we're in availability view
     const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
-    console.log(`DateUtils: extractFullDateInfo - isAvailabilityView: ${isAvailabilityView}`);
 
     let dateNumber;
     if (isAvailabilityView) {
@@ -125,8 +122,6 @@ const DateUtils = (() => {
       dateNumber = dateDiv.textContent.trim();
     }
 
-    console.log(`DateUtils: extractFullDateInfo - extracted day number: "${dateNumber}"`);
-
     let month = null;
     let year = null;
 
@@ -136,7 +131,6 @@ const DateUtils = (() => {
       const allCells = table.querySelectorAll('td');
       const cellArray = Array.from(allCells);
       const currentCellIndex = cellArray.indexOf(cell);
-      console.log(`DateUtils: extractFullDateInfo - searching ${currentCellIndex + 1} cells backwards for month/year`);
 
       for (let i = currentCellIndex; i >= 0; i--) {
         const cellToCheck = cellArray[i];
@@ -149,7 +143,6 @@ const DateUtils = (() => {
           const yearMatch = text.match(/\b(20\d{2})\b/);
           if (yearMatch && !year) {
             year = parseInt(yearMatch[1]);
-            console.log(`DateUtils: extractFullDateInfo - found year: ${year} in cell ${i}`);
           }
 
           // Check for month name
@@ -157,7 +150,6 @@ const DateUtils = (() => {
             for (let m = 0; m < MONTH_NAMES.length; m++) {
               if (text === MONTH_NAMES[m]) {
                 month = MONTH_ABBREV[m];
-                console.log(`DateUtils: extractFullDateInfo - found month: ${month} in cell ${i}`);
                 break;
               }
             }
@@ -166,18 +158,10 @@ const DateUtils = (() => {
         // Continue searching until we have both month AND year, or reach the beginning
         if (month && year) break;
       }
-
-      if (month && !year) {
-        console.log('DateUtils: extractFullDateInfo - Found month in table but NO year - will search page');
-      }
-    } else {
-      console.error('DateUtils: extractFullDateInfo - no table found for cell');
     }
 
     // If month or year not found in table, search the entire page
     if (!month || !year) {
-      console.log('DateUtils: extractFullDateInfo - Searching entire page for month/year...');
-
       // Strategy 1: Look for calendar navigation/header elements with specific selectors
       const calendarHeaders = document.querySelectorAll('h1, h2, h3, h4, button, div[class*="header"], div[class*="nav"]');
       for (const header of calendarHeaders) {
@@ -191,11 +175,9 @@ const DateUtils = (() => {
           if (monthIndex >= 0) {
             if (!month) {
               month = MONTH_ABBREV[monthIndex];
-              console.log(`DateUtils: extractFullDateInfo - Found month in calendar header: ${month}`);
             }
             if (!year) {
               year = foundYear;
-              console.log(`DateUtils: extractFullDateInfo - Found year in calendar header: ${year}`);
             }
             if (month && year) break;
           }
@@ -218,12 +200,10 @@ const DateUtils = (() => {
           if (monthIndex >= 0) {
             if (!month) {
               month = MONTH_ABBREV[monthIndex];
-              console.log(`DateUtils: extractFullDateInfo - Found month in bold element: ${month}`);
             }
             if (!year) {
               year = foundYear;
               pageFoundMonth = MONTH_ABBREV[monthIndex];
-              console.log(`DateUtils: extractFullDateInfo - Found year ${year} associated with month ${pageFoundMonth}`);
             }
             if (month && year) break;
           }
@@ -237,8 +217,6 @@ const DateUtils = (() => {
       const monthYearMatches = pageText.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/g);
 
       if (monthYearMatches && monthYearMatches.length > 0) {
-        console.log('DateUtils: extractFullDateInfo - Found potential month/year patterns:', monthYearMatches.slice(0, 5));
-
         // Try each match to see if it's a valid month
         for (const match of monthYearMatches) {
           const parts = match.match(/\b([A-Z][a-z]+)\s+(20\d{2})\b/);
@@ -251,12 +229,10 @@ const DateUtils = (() => {
             if (monthIndex >= 0) {
               if (!month) {
                 month = MONTH_ABBREV[monthIndex];
-                console.log(`DateUtils: extractFullDateInfo - Found month in page text: ${month}`);
               }
               if (!year) {
                 year = foundYear;
                 pageFoundMonth = MONTH_ABBREV[monthIndex];
-                console.log(`DateUtils: extractFullDateInfo - Found year ${year} associated with month ${pageFoundMonth}`);
               }
               if (month && year) break;
             }
@@ -274,12 +250,10 @@ const DateUtils = (() => {
       // If page shows Nov/Dec with year X, but cell is Jan/Feb, cell is likely year X+1
       if (pageMonthIndex >= 10 && targetMonthIndex <= 1) {
         year = year + 1;
-        console.warn(`DateUtils: extractFullDateInfo - ✓ Adjusted year to ${year} (page showed ${pageFoundMonth} ${year - 1}, but cell is ${month})`);
       }
       // If page shows Jan/Feb with year X, but cell is Nov/Dec, cell is likely year X-1
       else if (pageMonthIndex <= 1 && targetMonthIndex >= 10) {
         year = year - 1;
-        console.warn(`DateUtils: extractFullDateInfo - ✓ Adjusted year to ${year} (page showed ${pageFoundMonth} ${year + 1}, but cell is ${month})`);
       }
     }
 
@@ -291,18 +265,15 @@ const DateUtils = (() => {
       if (sourceDateInfo && sourceDateInfo.month && sourceDateInfo.year) {
         baselineMonth = MONTH_MAP[sourceDateInfo.month];
         baselineYear = sourceDateInfo.year;
-        console.log(`DateUtils: extractFullDateInfo - Using source date as baseline: ${sourceDateInfo.month} ${baselineYear}`);
       } else {
         // Fall back to real-world current date
         const now = new Date();
         baselineMonth = now.getMonth();
         baselineYear = now.getFullYear();
-        console.log(`DateUtils: extractFullDateInfo - Using real-world date as baseline: ${MONTH_ABBREV[baselineMonth]} ${baselineYear}`);
       }
 
       if (!month) {
         month = MONTH_ABBREV[baselineMonth];
-        console.warn(`DateUtils: extractFullDateInfo - month not found, using baseline month: ${month}`);
       }
 
       if (!year && month) {
@@ -312,17 +283,14 @@ const DateUtils = (() => {
         // If baseline is Nov/Dec and target is Jan/Feb, likely next year
         if (baselineMonth >= 10 && targetMonthIndex <= 1) {
           year = baselineYear + 1;
-          console.warn(`DateUtils: extractFullDateInfo - year not found, inferred next year ${year} (baseline: ${MONTH_ABBREV[baselineMonth]} ${baselineYear}, target: ${month})`);
         }
         // If baseline is Jan/Feb and target is Nov/Dec, likely previous year
         else if (baselineMonth <= 1 && targetMonthIndex >= 10) {
           year = baselineYear - 1;
-          console.warn(`DateUtils: extractFullDateInfo - year not found, inferred previous year ${year} (baseline: ${MONTH_ABBREV[baselineMonth]} ${baselineYear}, target: ${month})`);
         }
         // Otherwise, assume baseline year
         else {
           year = baselineYear;
-          console.warn(`DateUtils: extractFullDateInfo - year not found, using baseline year: ${year}`);
         }
       }
     }
@@ -335,7 +303,6 @@ const DateUtils = (() => {
       fullDisplay: `${month} ${dateNumber}, ${year}`
     };
 
-    console.log('DateUtils: extractFullDateInfo - result:', JSON.stringify(result));
     return result;
   }
 
@@ -347,8 +314,6 @@ const DateUtils = (() => {
    * @returns {string} Formatted date string (e.g., "Jan 15 2026")
    */
   function formatDateForInput(dateInfo, sourceMonth = null) {
-    console.log('DateUtils: formatDateForInput - input:', JSON.stringify(dateInfo));
-
     if (!dateInfo) {
       console.error('DateUtils: formatDateForInput - dateInfo is null/undefined');
       return '';
@@ -364,7 +329,6 @@ const DateUtils = (() => {
     if (!month) {
       const now = new Date();
       month = MONTH_ABBREV[now.getMonth()];
-      console.warn(`DateUtils: formatDateForInput - month missing, using current: ${month}`);
     }
 
     // Always include the year if available - no ambiguity, no inference needed
@@ -372,10 +336,8 @@ const DateUtils = (() => {
     let formattedDate;
     if (dateInfo.year) {
       formattedDate = `${month} ${dateInfo.day} ${dateInfo.year}`;
-      console.log(`DateUtils: formatDateForInput - output: "${formattedDate}"`);
     } else {
       formattedDate = `${month} ${dateInfo.day}`;
-      console.log(`DateUtils: formatDateForInput - output: "${formattedDate}" (no year available)`);
     }
 
     return formattedDate;

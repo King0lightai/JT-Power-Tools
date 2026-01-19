@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+/* Utility Classes */
+.hidden {
+  display: none !important;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   width: 360px;
@@ -245,7 +250,7 @@ header h1 {
   transform: rotate(180deg);
 }
 
-/* Premium Badge */
+/* Tier Badges */
 .badge {
   display: inline-block;
   font-size: 9px;
@@ -256,6 +261,34 @@ header h1 {
   border-radius: 2px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+/* Essential Tier - Teal/Blue */
+.badge.essential {
+  background: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+  color: #00796b;
+  border: 1px solid #4db6ac;
+}
+
+/* Pro Tier - Purple/Violet */
+.badge.pro {
+  background: linear-gradient(135deg, #ede7f6, #d1c4e9);
+  color: #5e35b1;
+  border: 1px solid #9575cd;
+}
+
+/* Power User Tier - Gold/Orange */
+.badge.power-user {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  color: #e65100;
+  border: 1px solid #ffb74d;
+}
+
+/* New badge */
+.badge.new {
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  color: #2e7d32;
+  border: 1px solid #81c784;
 }
 
 /* Toggle Switch */
@@ -887,6 +920,30 @@ body.dark-theme .badge {
   color: #999;
 }
 
+body.dark-theme .badge.essential {
+  background: linear-gradient(135deg, #1a3d3a, #264d49);
+  color: #4db6ac;
+  border-color: #26a69a;
+}
+
+body.dark-theme .badge.pro {
+  background: linear-gradient(135deg, #2d2440, #3a2d5a);
+  color: #b39ddb;
+  border-color: #7e57c2;
+}
+
+body.dark-theme .badge.power-user {
+  background: linear-gradient(135deg, #3d2e1a, #4d3a20);
+  color: #ffb74d;
+  border-color: #ffa726;
+}
+
+body.dark-theme .badge.new {
+  background: linear-gradient(135deg, #1a3d1f, #264d2a);
+  color: #81c784;
+  border-color: #66bb6a;
+}
+
 body.dark-theme .slider {
   background: #444;
 }
@@ -1134,4 +1191,434 @@ body.dark-theme .footer-link:hover {
 
 body.dark-theme .footer-separator {
   color: #444;
+}
+
+/* ===================================
+   AI Integration Section Styles
+   =================================== */
+
+.ai-integration-section {
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f4ff 0%, #f0f7ff 100%);
+  border-radius: 12px;
+  margin: 16px;
+  border: 1px solid #e0d4f7;
+}
+
+.ai-integration-section .section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.ai-integration-section .ai-icon {
+  font-size: 18px;
+}
+
+.ai-integration-section .badge.power-user {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Connection Status */
+.ai-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid #e5e5e5;
+}
+
+.ai-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-status-indicator .status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: pulse 2s infinite;
+}
+
+.ai-status-indicator.connected .status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.ai-status-indicator.disconnected .status-dot {
+  background: #94a3b8;
+  animation: none;
+}
+
+.ai-status-indicator.error .status-dot {
+  background: #ef4444;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.ai-status-indicator .status-text {
+  font-size: 13px;
+  color: #666;
+}
+
+.ai-status-indicator.connected .status-text {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.btn-test-connection {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6366f1;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-test-connection:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+}
+
+.btn-test-connection:active {
+  transform: scale(0.98);
+}
+
+.btn-test-connection.testing {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Platform Selector */
+.ai-platform-selector {
+  margin-bottom: 16px;
+}
+
+.ai-platform-selector label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.platform-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.platform-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.platform-tab:hover {
+  background: #f8f9fa;
+  border-color: #d1d5db;
+}
+
+.platform-tab.active {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.platform-tab .platform-icon {
+  font-size: 14px;
+}
+
+/* Config Panel */
+.ai-config-panel {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+}
+
+.config-instructions {
+  padding: 12px;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.config-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.config-instructions li {
+  margin-bottom: 4px;
+}
+
+.config-instructions code {
+  background: #e5e5e5;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 11px;
+}
+
+.config-code-wrapper {
+  position: relative;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.config-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6366f1;
+  background: white;
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+  background: #eef2ff;
+}
+
+.btn-copy.copied {
+  color: #16a34a;
+  border-color: #86efac;
+  background: #dcfce7;
+}
+
+.btn-copy .copy-icon {
+  font-size: 12px;
+}
+
+.config-code {
+  margin: 0;
+  padding: 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #374151;
+  background: #fafafa;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.config-file-path {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #9ca3af;
+  background: #f9fafb;
+  border-top: 1px solid #e5e5e5;
+}
+
+.config-file-path code {
+  background: #e5e5e5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* Quick Links */
+.ai-quick-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.ai-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6366f1;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.ai-link:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+/* ===================================
+   AI Integration - Dark Theme
+   =================================== */
+
+body.dark-theme .ai-integration-section {
+  background: linear-gradient(135deg, #1e1b2e 0%, #1a1f2e 100%);
+  border-color: #3f3a5e;
+}
+
+body.dark-theme .ai-integration-section .section-label {
+  color: #e5e5e5;
+}
+
+body.dark-theme .ai-status {
+  background: #252525;
+  border-color: #3a3a3a;
+}
+
+body.dark-theme .ai-status-indicator .status-text {
+  color: #999;
+}
+
+body.dark-theme .ai-status-indicator.connected .status-text {
+  color: #4ade80;
+}
+
+body.dark-theme .btn-test-connection {
+  background: #2a2a3e;
+  border-color: #4a4a6e;
+  color: #a5b4fc;
+}
+
+body.dark-theme .btn-test-connection:hover {
+  background: #3a3a5e;
+  border-color: #6366f1;
+}
+
+body.dark-theme .ai-platform-selector label {
+  color: #999;
+}
+
+body.dark-theme .platform-tab {
+  background: #252525;
+  border-color: #3a3a3a;
+  color: #999;
+}
+
+body.dark-theme .platform-tab:hover {
+  background: #2a2a2a;
+  border-color: #4a4a4a;
+}
+
+body.dark-theme .platform-tab.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  color: white;
+}
+
+body.dark-theme .ai-config-panel {
+  background: #1f1f1f;
+  border-color: #3a3a3a;
+}
+
+body.dark-theme .config-instructions {
+  background: #252525;
+  border-color: #3a3a3a;
+  color: #999;
+}
+
+body.dark-theme .config-instructions code {
+  background: #3a3a3a;
+  color: #e5e5e5;
+}
+
+body.dark-theme .config-header {
+  background: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+body.dark-theme .config-label {
+  color: #888;
+}
+
+body.dark-theme .btn-copy {
+  background: #252525;
+  border-color: #4a4a6e;
+  color: #a5b4fc;
+}
+
+body.dark-theme .btn-copy:hover {
+  background: #2a2a3e;
+}
+
+body.dark-theme .btn-copy.copied {
+  color: #4ade80;
+  border-color: #22c55e;
+  background: #1a3a2e;
+}
+
+body.dark-theme .config-code {
+  background: #1a1a1a;
+  color: #e5e5e5;
+}
+
+body.dark-theme .config-file-path {
+  background: #1f1f1f;
+  border-color: #3a3a3a;
+  color: #666;
+}
+
+body.dark-theme .config-file-path code {
+  background: #3a3a3a;
+  color: #999;
+}
+
+body.dark-theme .ai-quick-links {
+  border-color: #3a3a3a;
+}
+
+body.dark-theme .ai-link {
+  color: #a5b4fc;
+}
+
+body.dark-theme .ai-link:hover {
+  color: #c7d2fe;
 }

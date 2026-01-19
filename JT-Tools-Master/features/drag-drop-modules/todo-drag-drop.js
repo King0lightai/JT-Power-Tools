@@ -8,10 +8,7 @@ const ToDoDragDrop = (() => {
    * @returns {boolean} True if URL contains "to-dos"
    */
   function isToDosPage() {
-    const url = window.location.href;
-    const isToDos = url.includes('to-dos');
-    console.log('ToDoDragDrop: isToDosPage check - URL:', url, 'Result:', isToDos);
-    return isToDos;
+    return window.location.href.includes('to-dos');
   }
 
   /**
@@ -34,13 +31,7 @@ const ToDoDragDrop = (() => {
 
     // If we have Due but not Start AND not End, this is likely a ToDo
     // (Some task types may have Due + Start/End, but pure ToDos only have Due)
-    const isToDo = hasDue && !hasStart && !hasEnd;
-
-    console.log('ToDoDragDrop: isToDoItem check - Labels:', labelTexts);
-    console.log('ToDoDragDrop: hasDue:', hasDue, 'hasStart:', hasStart, 'hasEnd:', hasEnd);
-    console.log('ToDoDragDrop: isToDo:', isToDo);
-
-    return isToDo;
+    return hasDue && !hasStart && !hasEnd;
   }
 
   /**
@@ -52,13 +43,11 @@ const ToDoDragDrop = (() => {
   function shouldUseToDoDragDrop(sidebar = null) {
     // Primary check: URL contains "to-dos"
     if (isToDosPage()) {
-      console.log('ToDoDragDrop: Using ToDo mode (URL-based detection)');
       return true;
     }
 
     // Secondary check: Verify by sidebar content if provided
     if (sidebar && isToDoItem(sidebar)) {
-      console.log('ToDoDragDrop: Using ToDo mode (sidebar-based detection)');
       return true;
     }
 
@@ -76,14 +65,11 @@ const ToDoDragDrop = (() => {
   function getFieldTypeForContext(altKeyPressed = false, sidebar = null) {
     if (shouldUseToDoDragDrop(sidebar)) {
       // ToDos only have Due date - Alt key doesn't change this
-      console.log('ToDoDragDrop: ToDo detected, using "Due" field');
       return 'Due';
     }
 
     // Default behavior for non-ToDo items
-    const fieldType = altKeyPressed ? 'End' : 'Start';
-    console.log('ToDoDragDrop: Non-ToDo item, using "' + fieldType + '" field');
-    return fieldType;
+    return altKeyPressed ? 'End' : 'Start';
   }
 
   /**
@@ -93,19 +79,14 @@ const ToDoDragDrop = (() => {
    * @returns {Object} {dueDateParent, sidebarSourceYear, sidebarSourceMonth, fieldTexts}
    */
   function findDueDateField(sidebar, sourceDateInfo) {
-    console.log('ToDoDragDrop: findDueDateField - Looking for "Due" date field');
-
     // Find the label "Due"
     const allLabels = Array.from(sidebar.querySelectorAll('span.font-bold'));
     const dueLabel = allLabels.find(span => span.textContent.trim() === 'Due');
 
     if (!dueLabel) {
       console.error('ToDoDragDrop: Could not find "Due" label in sidebar');
-      console.log('ToDoDragDrop: Available labels:', allLabels.map(l => l.textContent.trim()));
       return { dueDateParent: null, sidebarSourceYear: null, sidebarSourceMonth: null, fieldTexts: [] };
     }
-
-    console.log('ToDoDragDrop: ✓ Found "Due" label');
 
     // Find the container for the Due label
     // The structure is: div.flex-1 > div.flex > span.font-bold "Due"
@@ -118,7 +99,6 @@ const ToDoDragDrop = (() => {
 
     // Find date fields within this container
     const allDateFields = labelContainer.querySelectorAll('div.text-gray-700.truncate.leading-tight');
-    console.log('ToDoDragDrop: Found', allDateFields.length, 'potential date fields in "Due" section');
 
     let dueDateParent = null;
     let sidebarSourceYear = null;
@@ -128,7 +108,6 @@ const ToDoDragDrop = (() => {
     for (const field of allDateFields) {
       const text = field.textContent.trim();
       fieldTexts.push(text);
-      console.log('ToDoDragDrop: Checking field text:', text);
 
       // Match date formats:
       // 1. "Jan 1, 2026" (Month Day, Year)
@@ -140,10 +119,8 @@ const ToDoDragDrop = (() => {
         if (match) {
           sidebarSourceMonth = match[1];
           sidebarSourceYear = parseInt(match[2]);
-          console.log('ToDoDragDrop: Extracted from sidebar:', sidebarSourceMonth, sidebarSourceYear);
         }
         dueDateParent = field.closest('div.group.items-center');
-        console.log('ToDoDragDrop: Found Due date field:', text);
         break;
       } else if (/^[A-Z][a-z]{2},\s+[A-Z][a-z]{2,}\s+\d{1,2}$/.test(text)) {
         // "Wed, Dec 31" format - extract month, infer year
@@ -163,31 +140,22 @@ const ToDoDragDrop = (() => {
             const sidebarMonthIndex = monthIndexMap[sidebarSourceMonth];
             const sourceCalendarMonthIndex = monthIndexMap[sourceDateInfo.month];
 
-            console.log('ToDoDragDrop: Sidebar month:', sidebarSourceMonth, '(' + sidebarMonthIndex + ')');
-            console.log('ToDoDragDrop: Source calendar month:', sourceDateInfo.month, '(' + sourceCalendarMonthIndex + ')');
-
             // Apply year boundary logic
             if (sidebarMonthIndex === 11 && sourceCalendarMonthIndex === 0) {
               sidebarSourceYear = sourceDateInfo.year - 1;
-              console.log('ToDoDragDrop: Dec→Jan boundary, using previous year:', sidebarSourceYear);
             } else if (sidebarMonthIndex === 0 && sourceCalendarMonthIndex === 11) {
               sidebarSourceYear = sourceDateInfo.year + 1;
-              console.log('ToDoDragDrop: Jan→Dec boundary, using next year:', sidebarSourceYear);
             } else {
               sidebarSourceYear = sourceDateInfo.year;
-              console.log('ToDoDragDrop: Using source year:', sidebarSourceYear);
             }
           } else {
             sidebarSourceYear = new Date().getFullYear();
-            console.log('ToDoDragDrop: No source year available, using current year:', sidebarSourceYear);
           }
         }
         dueDateParent = field.closest('div.group.items-center');
-        console.log('ToDoDragDrop: Found Due date field:', text);
         break;
       } else if (/^(Today|Tomorrow|Yesterday)$/.test(text)) {
         dueDateParent = field.closest('div.group.items-center');
-        console.log('ToDoDragDrop: Found Due date field:', text);
         break;
       }
     }

@@ -43,13 +43,10 @@ const CustomThemeFeature = (() => {
 
   // Initialize the feature
   function init(colors = null) {
-    if (isActive) {
-      console.log('CustomTheme: Already initialized');
-      return;
-    }
+    if (isActive) return;
 
-    console.log('CustomTheme: Initializing...');
     isActive = true;
+    console.log('RGBTheme: Activated');
 
     // Add custom theme class to body for other features to detect
     document.body.classList.add('jt-custom-theme');
@@ -74,19 +71,14 @@ const CustomThemeFeature = (() => {
 
     // Start observing for new elements
     startObserver();
-
-    console.log('CustomTheme: Custom theme applied with palette', palette);
   }
 
   // Cleanup the feature
   function cleanup() {
-    if (!isActive) {
-      console.log('CustomTheme: Not active, nothing to cleanup');
-      return;
-    }
+    if (!isActive) return;
 
-    console.log('CustomTheme: Cleaning up...');
     isActive = false;
+    console.log('RGBTheme: Deactivated');
 
     // Remove custom theme class from body
     document.body.classList.remove('jt-custom-theme');
@@ -108,8 +100,6 @@ const CustomThemeFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
-
-    console.log('CustomTheme: Custom theme removed');
   }
 
   // Update colors dynamically
@@ -138,8 +128,6 @@ const CustomThemeFeature = (() => {
 
       // Reapply contrast fixes with new colors
       applyContrastFixes();
-
-      console.log('CustomTheme: Colors updated with palette', palette);
     }
   }
 

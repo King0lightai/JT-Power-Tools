@@ -1323,6 +1323,36 @@ a.feature-card h3 {
     margin: 0 auto;
 }
 
+.pricing-cards.four-tier {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1400px;
+    gap: 24px;
+}
+
+.pricing-cards.four-tier .pricing-card {
+    padding: 32px 24px;
+}
+
+.pricing-cards.four-tier .pricing-price {
+    font-size: 42px;
+}
+
+.pricing-cards.four-tier .pricing-tier {
+    font-size: 22px;
+}
+
+@media (max-width: 1200px) {
+    .pricing-cards.four-tier {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .pricing-cards.four-tier {
+        grid-template-columns: 1fr;
+    }
+}
+
 .pricing-card {
     background: var(--dark-card);
     border: 1px solid var(--dark-border);

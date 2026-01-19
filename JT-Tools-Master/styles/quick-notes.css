@@ -63,7 +63,7 @@
 /* Notes Panel - Jobtread Sidebar Style */
 .jt-quick-notes-panel {
   position: fixed;
-  top: 0;
+  top: 52px; /* Below header bar and shadow line */
   right: 0;
   bottom: 0;
   width: 280px;

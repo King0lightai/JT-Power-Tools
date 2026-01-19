@@ -14,33 +14,20 @@ const DateChanger = (() => {
    * @returns {Promise} Resolves when date change is complete
    */
   function attemptDateChange(element, newDateNumber, targetCell, providedDateInfo, sourceDateInfo, onDateChangeComplete, changeEndDate = false) {
-    console.log('DateChanger: ==========================================');
-    console.log('DateChanger: attemptDateChange - *** START ***');
-    console.log('DateChanger: changeEndDate?', changeEndDate, '(Alt key pressed)');
-    console.log('DateChanger: ==========================================');
-
     try {
-      console.log('DateChanger: attemptDateChange - element:', element);
-      console.log('DateChanger: attemptDateChange - newDateNumber:', newDateNumber);
-      console.log('DateChanger: attemptDateChange - providedDateInfo:', JSON.stringify(providedDateInfo));
-
       const dateInfo = providedDateInfo || (window.DateUtils && window.DateUtils.extractFullDateInfo(targetCell, sourceDateInfo));
 
       if (!dateInfo) {
-        console.error('DateChanger: attemptDateChange - Failed to get dateInfo');
         if (window.UIUtils) {
           window.UIUtils.showNotification('Error: Could not extract date information');
         }
         return;
       }
 
-      console.log('DateChanger: attemptDateChange - Using dateInfo:', JSON.stringify(dateInfo));
-
       // Close any open sidebar first to prevent conflicts
       if (window.SidebarManager) {
         const hadOpenSidebar = window.SidebarManager.closeAnySidebar();
         if (hadOpenSidebar) {
-          console.log('DateChanger: Closed existing sidebar, waiting before opening new one...');
           // Wait a bit for the sidebar to close
           setTimeout(() => continueWithDateChange(), 300);
           return;
@@ -50,8 +37,6 @@ const DateChanger = (() => {
       continueWithDateChange();
 
       function continueWithDateChange() {
-        console.log('DateChanger: Continuing with date change operation...');
-
         // Inject CSS to hide sidebar
         const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
 
@@ -59,7 +44,6 @@ const DateChanger = (() => {
         const failsafeTimeout = setTimeout(() => {
           if (window.SidebarManager) {
             window.SidebarManager.removeSidebarCSS();
-            console.log('DateChanger: Failsafe removed hiding CSS');
           }
         }, 5000);
 
@@ -75,19 +59,13 @@ const DateChanger = (() => {
           const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
 
           if (sidebar) {
-            console.log('DateChanger: attemptDateChange - Sidebar found, processing date change...');
-
             // Determine which field to change based on context
-            // For ToDos (URL contains "to-dos" or sidebar shows ToDo pattern), use 'Due'
-            // For other items, use 'Start' or 'End' based on Alt key
             let fieldType;
             if (window.ToDoDragDrop && window.ToDoDragDrop.shouldUseToDoDragDrop(sidebar)) {
               fieldType = 'Due';
-              console.log('DateChanger: ToDo detected, using "Due" field (ignoring Alt key for ToDos)');
             } else {
               fieldType = changeEndDate ? 'End' : 'Start';
             }
-            console.log(`DateChanger: Looking for "${fieldType}" date field`);
 
             // Find date field (Start, End, or Due for ToDos)
             const fieldResult = window.SidebarManager
@@ -104,10 +82,6 @@ const DateChanger = (() => {
 
             // If we found year and month in sidebar, recalculate target year
             if (sidebarSourceYear && sidebarSourceMonth && providedDateInfo && window.DateUtils) {
-              console.log(`DateChanger: attemptDateChange - *** USING SIDEBAR DATA FOR YEAR CALCULATION ***`);
-              console.log(`DateChanger: attemptDateChange - Sidebar source: ${sidebarSourceMonth} ${sidebarSourceYear}`);
-              console.log(`DateChanger: attemptDateChange - Original target: ${dateInfo.month} ${dateInfo.year}`);
-
               const monthMap = window.DateUtils.MONTH_MAP;
               const sourceMonthIndex = monthMap[sidebarSourceMonth];
               const targetMonthIndex = monthMap[dateInfo.month];
@@ -116,19 +90,15 @@ const DateChanger = (() => {
               if (sourceMonthIndex === targetMonthIndex) {
                 // Same month - use source year
                 dateInfo.year = sidebarSourceYear;
-                console.log(`DateChanger: attemptDateChange - ✓ Same month, corrected target year to: ${dateInfo.year}`);
               } else if (sourceMonthIndex === 11 && targetMonthIndex === 0) {
                 // Dec → Jan: next year
                 dateInfo.year = sidebarSourceYear + 1;
-                console.log(`DateChanger: attemptDateChange - ✓ Dec→Jan transition, corrected target year to: ${dateInfo.year}`);
               } else if (sourceMonthIndex === 0 && targetMonthIndex === 11) {
                 // Jan → Dec: previous year
                 dateInfo.year = sidebarSourceYear - 1;
-                console.log(`DateChanger: attemptDateChange - ✓ Jan→Dec transition, corrected target year to: ${dateInfo.year}`);
               } else {
                 // Other month change - use source year
                 dateInfo.year = sidebarSourceYear;
-                console.log(`DateChanger: attemptDateChange - ✓ Different month, corrected target year to: ${dateInfo.year}`);
               }
             }
 
@@ -137,19 +107,14 @@ const DateChanger = (() => {
                 ? window.DateUtils.formatDateForInput(dateInfo, sidebarSourceMonth)
                 : `${dateInfo.month} ${dateInfo.day} ${dateInfo.year}`;
 
-              console.log('DateChanger: attemptDateChange - Formatted date for input:', formattedDate);
-
               // Check update checkboxes
               if (window.SidebarManager) {
                 window.SidebarManager.checkUpdateCheckboxes(sidebar);
               }
 
-              console.log('DateChanger: attemptDateChange - Clicking start date parent to open date picker');
               startDateParent.click();
 
               setTimeout(() => {
-                console.log('DateChanger: attemptDateChange - Looking for date input method...');
-
                 // PRIORITY 1: Try to find a date input field to type into
                 const inputField = window.SidebarManager
                   ? window.SidebarManager.findInputField(sidebar)
@@ -164,9 +129,6 @@ const DateChanger = (() => {
                 }
               }, 400);
             } else {
-              console.error('DateChanger: attemptDateChange - *** ERROR *** Could not find start date field');
-              console.error(`DateChanger: attemptDateChange - Checked ${fieldResult.fieldTexts.length} fields in sidebar`);
-              console.error('DateChanger: attemptDateChange - Field texts found:', JSON.stringify(fieldTexts));
               if (window.UIUtils) {
                 window.UIUtils.showNotification('Could not find date field. Check console for details.');
               }
@@ -175,7 +137,6 @@ const DateChanger = (() => {
               }
             }
           } else {
-            console.error('DateChanger: attemptDateChange - *** ERROR *** Sidebar did not open after clicking element');
             if (window.UIUtils) {
               window.UIUtils.showNotification('Sidebar did not open. Please try manually.');
             }
@@ -184,15 +145,10 @@ const DateChanger = (() => {
             }
           }
         }, 500);
-
-        console.log('DateChanger: attemptDateChange - END (async operations still running)');
       }  // End of continueWithDateChange function
 
     } catch (error) {
-      console.error('DateChanger: *** EXCEPTION IN attemptDateChange ***');
-      console.error('DateChanger: Error name:', error.name);
-      console.error('DateChanger: Error message:', error.message);
-      console.error('DateChanger: Error stack:', error.stack);
+      console.error('DateChanger: Error:', error.message);
       if (window.UIUtils) {
         window.UIUtils.showNotification('Error during date change. Check console for details.');
       }
@@ -222,17 +178,11 @@ const DateChanger = (() => {
       const isAvailabilityView = window.ViewDetector && window.ViewDetector.isAvailabilityView();
 
       if (!isAvailabilityView) {
-        console.log('DateChanger: Not in availability view, skipping Save button');
         resolve();
         return;
       }
 
-      console.log('DateChanger: In availability view, looking for Save button on main page...');
-
       // Look for the Save button on the main page (not in sidebar)
-      // <div role="button" ... class="... bg-blue-500 border-blue-600 ...">
-      //   <svg>...</svg> Save
-      // </div>
       const buttons = document.querySelectorAll('div[role="button"]');
       let saveButton = null;
 
@@ -244,22 +194,18 @@ const DateChanger = (() => {
         if (text.includes('Save') &&
             (classes.includes('bg-blue-500') || classes.includes('bg-blue-600'))) {
           saveButton = button;
-          console.log('DateChanger: Found Save button on main page:', text);
           break;
         }
       }
 
       if (saveButton) {
-        console.log('DateChanger: Clicking Save button...');
         saveButton.click();
 
         // Wait a bit for the save to complete
         setTimeout(() => {
-          console.log('DateChanger: Save button clicked, date should be saved');
           resolve();
         }, 300);
       } else {
-        console.warn('DateChanger: Save button not found on main page');
         resolve();
       }
     });
@@ -269,19 +215,12 @@ const DateChanger = (() => {
    * Type the date into an input field (most reliable method)
    */
   function typeIntoDateField(inputField, formattedDate, dateInfo, failsafeTimeout, onDateChangeComplete) {
-    console.log('DateChanger: Using typing method');
-    console.log(`DateChanger: Current input value: "${inputField.value}"`);
-    console.log(`DateChanger: Will set to: "${formattedDate}"`);
-    console.log(`DateChanger: Note: Year ${dateInfo.year} tracked internally but JobTread infers from calendar`);
-
     inputField.value = '';
     inputField.focus();
     inputField.value = formattedDate;
-    console.log(`DateChanger: Input value set to: "${inputField.value}"`);
 
     // Dispatch input event
     inputField.dispatchEvent(new Event('input', { bubbles: true }));
-    console.log('DateChanger: Dispatched input event');
 
     // Simulate pressing Enter key to trigger the full update
     const enterEvent = new KeyboardEvent('keydown', {
@@ -293,7 +232,6 @@ const DateChanger = (() => {
       cancelable: true
     });
     inputField.dispatchEvent(enterEvent);
-    console.log('DateChanger: Dispatched Enter keydown event');
 
     // Also dispatch keyup for Enter
     const enterUpEvent = new KeyboardEvent('keyup', {
@@ -305,14 +243,10 @@ const DateChanger = (() => {
       cancelable: true
     });
     inputField.dispatchEvent(enterUpEvent);
-    console.log('DateChanger: Dispatched Enter keyup event');
 
     // Dispatch change and blur events
     inputField.dispatchEvent(new Event('change', { bubbles: true }));
     inputField.dispatchEvent(new Event('blur', { bubbles: true }));
-    console.log('DateChanger: Dispatched change and blur events');
-
-    console.log('DateChanger: Date typed and Enter key simulated - COMPLETE');
 
     setTimeout(() => {
       // Close the sidebar first
@@ -334,8 +268,6 @@ const DateChanger = (() => {
    * Use calendar dropdown method (fallback when no input field found)
    */
   function useCalendarPicker(dateInfo, failsafeTimeout, onDateChangeComplete) {
-    console.log('DateChanger: No input field found, trying calendar dropdown method...');
-
     const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
     let monthSelect = null;
     let yearSelect = null;
@@ -352,7 +284,6 @@ const DateChanger = (() => {
         if (monthOptions.length === 12) {
           monthSelect = popupMonthSelect;
           yearSelect = popupYearSelect;
-          console.log('DateChanger: Found date picker in popup container');
           break;
         }
       }
@@ -368,7 +299,6 @@ const DateChanger = (() => {
         if (monthOptions.length === 12) {
           monthSelect = sidebarMonthSelect;
           yearSelect = sidebarYearSelect;
-          console.log('DateChanger: Found date picker in sidebar');
         }
       }
     }
@@ -376,7 +306,6 @@ const DateChanger = (() => {
     if (monthSelect && yearSelect) {
       setDatePickerAndClickDay(monthSelect, yearSelect, dateInfo, failsafeTimeout, onDateChangeComplete);
     } else {
-      console.error('DateChanger: *** ERROR *** No input field or calendar picker found');
       if (window.UIUtils) {
         window.UIUtils.showNotification('Could not find date input method. Please try manually.');
       }
@@ -392,8 +321,6 @@ const DateChanger = (() => {
    * Set the date picker dropdowns and click the day
    */
   function setDatePickerAndClickDay(monthSelect, yearSelect, dateInfo, failsafeTimeout, onDateChangeComplete) {
-    console.log('DateChanger: Found date picker with month and year selects');
-
     // Map month names to select values (1-12, JobTread's select format)
     const monthMap = {
       'Jan': '1', 'Feb': '2', 'Mar': '3', 'Apr': '4', 'May': '5', 'Jun': '6',
@@ -403,21 +330,14 @@ const DateChanger = (() => {
     const targetMonthValue = monthMap[dateInfo.month];
     const targetYearValue = dateInfo.year.toString();
 
-    console.log(`DateChanger: Setting date picker to: ${dateInfo.month} (${targetMonthValue}) ${dateInfo.year}`);
-
     // Set year AND month rapidly in succession
-    console.log(`DateChanger: Setting year to: ${targetYearValue}`);
     yearSelect.value = targetYearValue;
     yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
     yearSelect.dispatchEvent(new Event('input', { bubbles: true }));
 
-    console.log(`DateChanger: Immediately setting month to: ${targetMonthValue}`);
     monthSelect.value = targetMonthValue;
     monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
     monthSelect.dispatchEvent(new Event('input', { bubbles: true }));
-
-    console.log(`DateChanger: Both year (${targetYearValue}) and month (${targetMonthValue}) set`);
-    console.log(`DateChanger: Waiting for React to render calendar with both changes...`);
 
     // Retry mechanism to ensure dropdowns stay set correctly
     let retryCount = 0;
@@ -426,16 +346,11 @@ const DateChanger = (() => {
     function verifyAndRetry() {
       setTimeout(() => {
         retryCount++;
-        console.log(`DateChanger: Verification attempt ${retryCount}/${maxRetries}`);
 
         try {
           if (monthSelect && yearSelect) {
-            console.log(`DateChanger: VERIFY: Month=${monthSelect.value}, Year=${yearSelect.value}`);
-            console.log(`DateChanger: Expected: Month=${targetMonthValue}, Year=${targetYearValue}`);
-
             if (monthSelect.value !== targetMonthValue || yearSelect.value !== targetYearValue) {
               if (retryCount < maxRetries) {
-                console.warn(`DateChanger: Dropdowns reverted! Retry ${retryCount}/${maxRetries}`);
                 // Re-set both rapidly
                 yearSelect.value = targetYearValue;
                 yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -447,7 +362,6 @@ const DateChanger = (() => {
                 verifyAndRetry();
                 return;
               } else {
-                console.error(`DateChanger: Max retries (${maxRetries}) reached, dropdowns still incorrect!`);
                 if (window.UIUtils) {
                   window.UIUtils.showNotification('Date picker not responding correctly. Please try manually.');
                 }
@@ -460,11 +374,9 @@ const DateChanger = (() => {
           }
 
           // Dropdowns are correct, proceed with clicking
-          console.log('DateChanger: Dropdowns verified correct, proceeding...');
           clickDayInCalendar(dateInfo, failsafeTimeout, onDateChangeComplete);
 
         } catch (error) {
-          console.error('DateChanger: Error during verification:', error);
           if (window.UIUtils) {
             window.UIUtils.showNotification('Error during date picker verification: ' + error.message);
           }
@@ -489,11 +401,9 @@ const DateChanger = (() => {
 
       // Strategy 1: Look for table in the date picker popup
       const popupTables = document.querySelectorAll('div.p-1 table');
-      console.log(`DateChanger: Found ${popupTables.length} tables in date picker popups`);
 
       if (popupTables.length > 0) {
         calendarTable = popupTables[popupTables.length - 1];
-        console.log('DateChanger: Using last found table');
       }
 
       // Strategy 2: Find by the thead with S M T W T F S header
@@ -503,20 +413,12 @@ const DateChanger = (() => {
           const headers = table.querySelectorAll('thead th');
           if (headers.length === 7 && headers[0].textContent.trim() === 'S') {
             calendarTable = table;
-            console.log('DateChanger: Found table by day headers');
             break;
           }
         }
       }
 
-      console.log('DateChanger: Calendar table:', calendarTable);
-
       if (calendarTable) {
-        // VERIFY: Log what month/year the calendar is showing
-        const calendarCells = calendarTable.querySelectorAll('td');
-        const sampleCells = Array.from(calendarCells).slice(0, 10).map(c => c.textContent.trim());
-        console.log(`DateChanger: Calendar showing days: ${sampleCells.join(', ')}`);
-
         const dayCells = calendarTable.querySelectorAll('td');
         let targetDayCell = null;
         const candidateCells = [];
@@ -527,45 +429,30 @@ const DateChanger = (() => {
           if (cellText === dateInfo.day) {
             const classes = cell.className;
             const computedStyle = window.getComputedStyle(cell);
-            const color = computedStyle.color;
             const opacity = computedStyle.opacity;
 
             candidateCells.push({
               cell,
-              classes,
-              color,
-              opacity,
               isGrayed: classes.includes('text-gray') || parseFloat(opacity) < 1
             });
-
-            console.log(`DateChanger: Candidate day ${dateInfo.day}: classes="${classes}", color="${color}", opacity="${opacity}", grayed=${classes.includes('text-gray') || parseFloat(opacity) < 1}`);
           }
         }
-
-        console.log(`DateChanger: Found ${candidateCells.length} cells with day ${dateInfo.day}`);
 
         // Select the FIRST non-grayed cell
         for (const candidate of candidateCells) {
           if (!candidate.isGrayed) {
             targetDayCell = candidate.cell;
-            console.log(`DateChanger: Selected non-grayed cell for day ${dateInfo.day}`);
             break;
           }
         }
 
         // Fallback if all are grayed
         if (!targetDayCell && candidateCells.length > 0) {
-          console.error(`DateChanger: All ${candidateCells.length} cells for day ${dateInfo.day} appear grayed out!`);
           targetDayCell = candidateCells[0].cell;
-          console.log('DateChanger: Using first cell as fallback');
         }
 
         if (targetDayCell) {
-          console.log(`DateChanger: Final selected cell classes: ${targetDayCell.className}`);
           targetDayCell.click();
-          console.log('DateChanger: Day clicked, waiting for JobTread to process...');
-
-          console.log('DateChanger: Date picker selection COMPLETE');
 
           setTimeout(() => {
             // Close the sidebar first
@@ -582,7 +469,6 @@ const DateChanger = (() => {
             }
           }, 500);
         } else {
-          console.error(`DateChanger: Could not find day ${dateInfo.day} in calendar`);
           if (window.UIUtils) {
             window.UIUtils.showNotification('Could not find target day in calendar');
           }
@@ -591,7 +477,6 @@ const DateChanger = (() => {
           }
         }
       } else {
-        console.error('DateChanger: Could not find calendar table');
         if (window.UIUtils) {
           window.UIUtils.showNotification('Could not find calendar');
         }
@@ -601,9 +486,7 @@ const DateChanger = (() => {
       }
 
     } catch (error) {
-      console.error('DateChanger: *** EXCEPTION in clickDayInCalendar ***');
-      console.error('DateChanger: Error:', error.name, error.message);
-      console.error('DateChanger: Stack:', error.stack);
+      console.error('DateChanger: Error in clickDayInCalendar:', error.message);
       if (window.UIUtils) {
         window.UIUtils.showNotification('Error during day selection. Check console.');
       }

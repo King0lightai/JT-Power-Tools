@@ -26,7 +26,6 @@ const KanbanTypeFilterFeature = (() => {
     styleElement.id = 'jt-kanban-type-filter-styles';
     styleElement.textContent = KANBAN_FILTER_STYLES;
     document.head.appendChild(styleElement);
-    console.log('KanbanTypeFilter: Styles injected');
   }
 
   /**
@@ -36,7 +35,6 @@ const KanbanTypeFilterFeature = (() => {
     if (styleElement) {
       styleElement.remove();
       styleElement = null;
-      console.log('KanbanTypeFilter: Styles removed');
     }
   }
 
@@ -184,11 +182,8 @@ const KanbanTypeFilterFeature = (() => {
     const columns = findKanbanColumns();
 
     if (columns.length === 0) {
-      console.log('KanbanTypeFilter: No Kanban columns found');
       return;
     }
-
-    console.log(`KanbanTypeFilter: Found ${columns.length} Kanban columns`);
 
     let hiddenCount = 0;
     let shownCount = 0;
@@ -206,8 +201,6 @@ const KanbanTypeFilterFeature = (() => {
         shownCount++;
       }
     }
-
-    console.log(`KanbanTypeFilter: Hidden ${hiddenCount} empty columns, showing ${shownCount} columns`);
   }
 
   /**
@@ -224,12 +217,11 @@ const KanbanTypeFilterFeature = (() => {
    */
   function init() {
     if (isActiveState) {
-      console.log('KanbanTypeFilter: Already initialized');
       return;
     }
 
-    console.log('KanbanTypeFilter: Initializing...');
     isActiveState = true;
+    console.log('KanbanTypeFilter: Activated');
 
     // Create debounced filtering function using TimingUtils
     debouncedApplyFiltering = window.TimingUtils.debounce(applyFiltering, 150);
@@ -310,7 +302,6 @@ const KanbanTypeFilterFeature = (() => {
       }
       if (location.href !== lastUrl) {
         lastUrl = location.href;
-        console.log('KanbanTypeFilter: URL changed, re-applying filtering');
         // Small delay to let page content load
         setTimeout(() => {
           removeFiltering();
@@ -318,8 +309,6 @@ const KanbanTypeFilterFeature = (() => {
         }, 500);
       }
     }, 500);
-
-    console.log('KanbanTypeFilter: Feature loaded');
   }
 
   /**
@@ -327,11 +316,9 @@ const KanbanTypeFilterFeature = (() => {
    */
   function cleanup() {
     if (!isActiveState) {
-      console.log('KanbanTypeFilter: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('KanbanTypeFilter: Cleaning up...');
     isActiveState = false;
 
     // Disconnect observer
@@ -351,7 +338,7 @@ const KanbanTypeFilterFeature = (() => {
     removeFiltering();
     document.body.classList.remove('jt-kanban-filter-active');
 
-    console.log('KanbanTypeFilter: Cleanup complete');
+    console.log('KanbanTypeFilter: Deactivated');
   }
 
   // Public API

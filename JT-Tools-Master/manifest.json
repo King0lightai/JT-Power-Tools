@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.4.04",
+  "version": "3.5.0",
   "description": "Supercharge JobTread with drag & drop scheduling, dark mode, text formatting, and 12+ productivity features for contractors.",
   "icons": {
     "16": "icons/icon16-light.png",
@@ -78,6 +78,7 @@
         "features/kanban-type-filter.js",
         "features/auto-collapse-groups.js",
         "features/pdf-markup-tools.js",
+        "features/custom-field-filter.js",
         "content.js"
       ],
       "run_at": "document_end"

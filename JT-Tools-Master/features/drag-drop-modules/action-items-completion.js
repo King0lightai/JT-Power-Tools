@@ -14,11 +14,9 @@ const ActionItemsCompletion = (() => {
    */
   function init() {
     if (isActive) {
-      console.log('ActionItemsCompletion: Already initialized');
       return;
     }
 
-    console.log('ActionItemsCompletion: Initializing...');
     isActive = true;
 
     // Add checkboxes to action items
@@ -33,8 +31,6 @@ const ActionItemsCompletion = (() => {
       childList: true,
       subtree: true
     });
-
-    console.log('ActionItemsCompletion: Initialized');
   }
 
   /**
@@ -50,7 +46,6 @@ const ActionItemsCompletion = (() => {
         // Find the parent container
         const card = heading.closest('div.bg-white, div.rounded, div.shadow, div[class*="card"]');
         if (card) {
-          console.log('ActionItemsCompletion: Found Action Items card');
           return card;
         }
       }
@@ -71,7 +66,6 @@ const ActionItemsCompletion = (() => {
     // Find all action item links
     // These are <a> tags with href containing /schedule?taskId= or /to-dos
     const actionItems = card.querySelectorAll('a[href*="/schedule?taskId="], a[href*="/to-dos"]');
-    console.log(`ActionItemsCompletion: Found ${actionItems.length} action items`);
 
     actionItems.forEach(item => {
       // Skip if already processed
@@ -268,15 +262,12 @@ const ActionItemsCompletion = (() => {
     e.stopPropagation();
     e.preventDefault();
 
-    console.log('ActionItemsCompletion: Checkbox clicked for task:', taskId);
-
     // Show loading state
     checkbox.style.opacity = '0.5';
     checkbox.style.pointerEvents = 'none';
 
     // Get the target URL
     const targetUrl = item.getAttribute('href');
-    console.log('ActionItemsCompletion: Completing task in hidden iframe:', targetUrl);
 
     // Complete the task in a hidden iframe (no page navigation)
     completeTaskInIframe(targetUrl, taskId, item, (success) => {
@@ -323,7 +314,6 @@ const ActionItemsCompletion = (() => {
 
     // Failsafe timeout
     const failsafeTimeout = setTimeout(() => {
-      console.error('ActionItemsCompletion: Failsafe timeout - removing iframe');
       if (iframe.parentNode) {
         iframe.remove();
       }
@@ -352,13 +342,11 @@ const ActionItemsCompletion = (() => {
             for (const selector of sidebarSelectors) {
               sidebar = iframeDoc.querySelector(selector);
               if (sidebar) {
-                console.log('ActionItemsCompletion: Found sidebar with selector:', selector);
                 break;
               }
             }
 
             if (!sidebar) {
-              console.error('ActionItemsCompletion: Sidebar not found in iframe (tried multiple selectors)');
               clearTimeout(failsafeTimeout);
               iframe.remove();
               callback(false);
@@ -369,14 +357,12 @@ const ActionItemsCompletion = (() => {
             const checklistItems = findChecklistItemsInDoc(iframeDoc);
 
             if (checklistItems.length > 0) {
-              console.log('ActionItemsCompletion: Found', checklistItems.length, 'checklist items');
               // Click all unchecked checklist items
               completeChecklistItems(checklistItems, iframeDoc, iframe, failsafeTimeout, callback);
             } else {
               // No checklist - use Progress checkbox approach
               const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
               if (!progressCheckbox) {
-                console.error('ActionItemsCompletion: Could not find progress checkbox in iframe');
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(false);
@@ -388,7 +374,6 @@ const ActionItemsCompletion = (() => {
               setTimeout(async () => {
                 const saveButton = findSaveButtonInDoc(iframeDoc);
                 if (!saveButton) {
-                  console.error('ActionItemsCompletion: Could not find Save button in iframe');
                   clearTimeout(failsafeTimeout);
                   iframe.remove();
                   callback(false);
@@ -398,7 +383,6 @@ const ActionItemsCompletion = (() => {
                 // Wait for Save button to become enabled
                 const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
                 if (!isEnabled) {
-                  console.error('ActionItemsCompletion: Save button did not enable in time');
                   clearTimeout(failsafeTimeout);
                   iframe.remove();
                   callback(false);
@@ -426,7 +410,6 @@ const ActionItemsCompletion = (() => {
             }
           }, 1000);
         } catch (error) {
-          console.error('ActionItemsCompletion: Error completing task in iframe:', error);
           clearTimeout(failsafeTimeout);
           iframe.remove();
           callback(false);
@@ -435,7 +418,6 @@ const ActionItemsCompletion = (() => {
     };
 
     iframe.onerror = () => {
-      console.error('ActionItemsCompletion: Iframe failed to load');
       clearTimeout(failsafeTimeout);
       iframe.remove();
       callback(false);
@@ -672,12 +654,10 @@ const ActionItemsCompletion = (() => {
     function clickNextItem() {
       if (currentIndex >= checklistItems.length) {
         // All items checked, now wait for Save button and click it
-        console.log('ActionItemsCompletion: All checklist items checked, looking for Save button');
 
         setTimeout(async () => {
           const saveButton = findSaveButtonInDoc(iframeDoc);
           if (!saveButton) {
-            console.error('ActionItemsCompletion: Could not find Save button after checking all items');
             clearTimeout(failsafeTimeout);
             iframe.remove();
             callback(false);
@@ -687,7 +667,6 @@ const ActionItemsCompletion = (() => {
           // Wait for Save button to become enabled
           const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 3000);
           if (!isEnabled) {
-            console.error('ActionItemsCompletion: Save button did not enable in time');
             clearTimeout(failsafeTimeout);
             iframe.remove();
             callback(false);
@@ -716,7 +695,6 @@ const ActionItemsCompletion = (() => {
       }
 
       const item = checklistItems[currentIndex];
-      console.log('ActionItemsCompletion: Clicking checklist item', currentIndex + 1, 'of', checklistItems.length);
       item.click();
 
       currentIndex++;
@@ -733,11 +711,9 @@ const ActionItemsCompletion = (() => {
    */
   function cleanup() {
     if (!isActive) {
-      console.log('ActionItemsCompletion: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('ActionItemsCompletion: Cleaning up...');
     isActive = false;
 
     // Disconnect observer
@@ -749,8 +725,6 @@ const ActionItemsCompletion = (() => {
     // Remove all checkboxes
     const checkboxes = document.querySelectorAll('.jt-action-item-checkbox');
     checkboxes.forEach(checkbox => checkbox.remove());
-
-    console.log('ActionItemsCompletion: Cleanup complete');
   }
 
   // Public API

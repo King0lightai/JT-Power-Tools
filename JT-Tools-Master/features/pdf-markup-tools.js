@@ -364,7 +364,6 @@ const PDFMarkupToolsFeature = (() => {
     styleElement.textContent = css;
     styleElement.id = 'jt-pdf-markup-tools-styles';
     document.head.appendChild(styleElement);
-    console.log('PDF Markup Tools: CSS injected (with dark mode & RGB theme support)');
   }
 
   /**
@@ -520,7 +519,6 @@ const PDFMarkupToolsFeature = (() => {
     }
 
     if (!toolbar) {
-      console.warn('PDF Markup Tools: Could not find PDF toolbar');
       return null;
     }
 
@@ -528,11 +526,8 @@ const PDFMarkupToolsFeature = (() => {
     const buttons = toolbar.querySelectorAll('[role="button"]:not(.jt-pdf-tool-btn)');
 
     if (buttons.length === 0) {
-      console.warn('PDF Markup Tools: Could not find JobTread native buttons');
       return null;
     }
-
-    console.log(`PDF Markup Tools: Found ${buttons.length} JobTread native buttons`);
 
     // Map buttons by their function based on SVG content analysis
     // We identify buttons by their SVG path content for reliability
@@ -604,14 +599,6 @@ const PDFMarkupToolsFeature = (() => {
       }
     });
 
-    console.log('PDF Markup Tools: Button mapping:', {
-      select: !!jtNativeButtons.select,
-      line: !!jtNativeButtons.line,
-      rectangle: !!jtNativeButtons.rectangle,
-      freedraw: !!jtNativeButtons.freedraw,
-      text: !!jtNativeButtons.text
-    });
-
     return jtNativeButtons;
   }
 
@@ -644,12 +631,10 @@ const PDFMarkupToolsFeature = (() => {
 
     // Only click if not already active
     if (!isJobTreadButtonActive(button)) {
-      console.log(`PDF Markup Tools: Activating JobTread ${buttonKey} tool`);
       button.click();
       return true;
     }
 
-    console.log(`PDF Markup Tools: JobTread ${buttonKey} tool already active`);
     return true;
   }
 
@@ -676,8 +661,6 @@ const PDFMarkupToolsFeature = (() => {
 
     const changeEvent = new Event('change', { bubbles: true });
     input.dispatchEvent(changeEvent);
-
-    console.log(`PDF Markup Tools: Set color to ${hexColor}`);
   }
 
   // Note: Old setOpacitySlider() and openMoreOptionsAndSetPresets() functions removed
@@ -688,8 +671,6 @@ const PDFMarkupToolsFeature = (() => {
    * @deprecated Use setHighlightPresets() instead for highlight tool
    */
   function setJobTreadColor(hexColor) {
-    console.log(`PDF Markup Tools: Attempting to set color to ${hexColor}`);
-
     // Convert hex to RGB
     const rgb = hexToRgb(hexColor);
     if (!rgb) {
@@ -702,15 +683,12 @@ const PDFMarkupToolsFeature = (() => {
     const colorPicker = document.querySelector('.w-7.h-7.border.flex.items-center.justify-center.rounded-sm.border-gray-300.shadow-xs.self-center.cursor-pointer');
 
     if (colorPicker) {
-      console.log('PDF Markup Tools: Found color picker, clicking to open...');
       colorPicker.click();
 
       // Wait for color picker modal to open and render RGB inputs
       setTimeout(() => {
         setRgbValues(rgb.r, rgb.g, rgb.b);
       }, 200);
-    } else {
-      console.log('PDF Markup Tools: Color picker not found (tool may not be active yet)');
     }
   }
 
@@ -737,8 +715,6 @@ const PDFMarkupToolsFeature = (() => {
    * Set RGB values in JobTread's color picker
    */
   function setRgbValues(r, g, b) {
-    console.log(`PDF Markup Tools: Setting RGB values: R=${r}, G=${g}, B=${b}`);
-
     // Find all number inputs in the color picker area
     const allInputs = Array.from(document.querySelectorAll('input[type="number"], input[type="text"]'));
 
@@ -748,8 +724,6 @@ const PDFMarkupToolsFeature = (() => {
       return !isNaN(value) && value >= 0 && value <= 255 && input.parentElement;
     });
 
-    console.log(`PDF Markup Tools: Found ${rgbInputs.length} potential RGB inputs`);
-
     if (rgbInputs.length >= 3) {
       // Assume first 3 inputs are R, G, B in order
       const [rInput, gInput, bInput] = rgbInputs.slice(0, 3);
@@ -758,10 +732,8 @@ const PDFMarkupToolsFeature = (() => {
       setInputValue(gInput, g);
       setInputValue(bInput, b);
 
-      console.log('PDF Markup Tools: Successfully set RGB values');
       showNotification(`Color set to yellow (RGB: ${r}, ${g}, ${b})`);
     } else {
-      console.warn('PDF Markup Tools: Could not find RGB inputs');
       showNotification('Please manually select yellow color', 'info');
     }
   }
@@ -795,7 +767,6 @@ const PDFMarkupToolsFeature = (() => {
    * Theme-aware - respects dark mode and RGB theme settings
    */
   function showNotification(message, type = 'info') {
-    console.log(`PDF Markup Tools: ${message}`);
 
     // Detect current theme for fallback colors
     const isDarkMode = document.body.classList.contains('jt-dark-mode');
@@ -865,8 +836,6 @@ const PDFMarkupToolsFeature = (() => {
    * Workflow: Rectangle tool → Line/Fill swatches appear → Configure colors and opacity
    */
   function handleHighlightClick() {
-    console.log('PDF Markup Tools: Highlight tool clicked');
-
     const highlightBtn = document.querySelector('[data-jt-tool="highlight"]');
     if (!highlightBtn) return;
 
@@ -884,13 +853,11 @@ const PDFMarkupToolsFeature = (() => {
         // After rectangle is activated, the line/fill swatches appear in the toolbar
         // Wait for them to render, then configure (need more time for DOM update)
         setTimeout(() => {
-          console.log('PDF Markup Tools: Looking for line/fill swatches...');
           configureHighlightSettings();
         }, 500);
 
-        showNotification('Highlight mode - configuring yellow highlight...');
+        showNotification('Highlight tool activated');
       } else {
-        console.error('PDF Markup Tools: Failed to activate highlight tool');
         showNotification('Could not activate highlight tool', 'error');
       }
     } else {
@@ -900,7 +867,7 @@ const PDFMarkupToolsFeature = (() => {
       if (buttons && buttons.select) {
         buttons.select.click();
       }
-      showNotification('Highlight mode deactivated');
+      showNotification('Highlight tool deactivated');
     }
   }
 
@@ -913,8 +880,6 @@ const PDFMarkupToolsFeature = (() => {
    * 4. Click FILL → color picker popover, click again → opacity slider
    */
   function configureHighlightSettings() {
-    console.log('PDF Markup Tools: Configuring highlight settings...');
-
     // Find the line swatch - it's a div with w-7 h-7 border and has a background-color or diagonal line
     // The line swatch is in a flex-col container
     let lineSwatch = null;
@@ -922,7 +887,6 @@ const PDFMarkupToolsFeature = (() => {
 
     // Method 1: Look for the swatch container (flex flex-col space-y-1)
     const swatchContainers = document.querySelectorAll('div.flex.flex-col.space-y-1');
-    console.log(`PDF Markup Tools: Found ${swatchContainers.length} potential swatch containers`);
 
     for (const container of swatchContainers) {
       // Line swatch: div.w-7.h-7.border with style background-color or has diagonal SVG
@@ -934,15 +898,12 @@ const PDFMarkupToolsFeature = (() => {
         lineSwatch = possibleLine;
         // Fill swatch is the parent container of the SVG
         fillSwatch = possibleFill.closest('div.w-7.h-7');
-        console.log('PDF Markup Tools: Found swatches in flex-col container');
         break;
       }
     }
 
     // Method 2: Search for swatches in toolbar area specifically
     if (!lineSwatch || !fillSwatch) {
-      console.log('PDF Markup Tools: Using toolbar-specific swatch detection...');
-
       // Find the toolbar first
       const toolbar = document.querySelector('.flex.relative.shadow-line-left.p-1') ||
                      document.querySelector('.bg-gray-800 .relative');
@@ -956,17 +917,11 @@ const PDFMarkupToolsFeature = (() => {
         if (dropletPath) {
           fillSwatch = dropletPath.closest('div.w-7.h-7');
         }
-
-        if (lineSwatch && fillSwatch) {
-          console.log('PDF Markup Tools: Found swatches in toolbar');
-        }
       }
     }
 
     // Method 3: Fallback - search entire document
     if (!lineSwatch || !fillSwatch) {
-      console.log('PDF Markup Tools: Using document-wide swatch detection...');
-
       // Line swatch has border-gray-300 class
       lineSwatch = document.querySelector('div.w-7.h-7.border.border-gray-300.cursor-pointer') ||
                    document.querySelector('div.w-7.h-7.border.cursor-pointer');
@@ -981,9 +936,7 @@ const PDFMarkupToolsFeature = (() => {
 
     // Method 4: Final fallback - any w-7 h-7 elements that look like swatches
     if (!lineSwatch || !fillSwatch) {
-      console.log('PDF Markup Tools: Using broad fallback...');
       const allSwatches = document.querySelectorAll('div.w-7.h-7.cursor-pointer');
-      console.log(`PDF Markup Tools: Found ${allSwatches.length} potential swatch elements`);
 
       if (allSwatches.length >= 2) {
         // Typically line is first, fill is second
@@ -993,16 +946,10 @@ const PDFMarkupToolsFeature = (() => {
     }
 
     if (!lineSwatch || !fillSwatch) {
-      console.log('PDF Markup Tools: Could not find line/fill swatches');
-      console.log('PDF Markup Tools: lineSwatch:', lineSwatch);
-      console.log('PDF Markup Tools: fillSwatch:', fillSwatch);
       showNotification('Set colors manually: yellow fill, 50% opacity', 'info');
       return;
     }
 
-    console.log('PDF Markup Tools: Found swatches, starting configuration...');
-    console.log('PDF Markup Tools: lineSwatch:', lineSwatch);
-    console.log('PDF Markup Tools: fillSwatch:', fillSwatch);
     configureWithSwatches(lineSwatch, fillSwatch);
   }
 
@@ -1015,7 +962,6 @@ const PDFMarkupToolsFeature = (() => {
    */
   function configureWithSwatches(lineSwatch, fillSwatch) {
     // Step 1: Click LINE swatch to set yellow color and minimum thickness
-    console.log('PDF Markup Tools: Step 1 - Clicking line swatch...');
     lineSwatch.click();
 
     setTimeout(() => {
@@ -1023,29 +969,22 @@ const PDFMarkupToolsFeature = (() => {
       const lineColorInput = document.querySelector('div.z-50 input[type="color"]');
       if (lineColorInput) {
         setColorInputValue(lineColorInput, '#FFFF00');
-        console.log('PDF Markup Tools: Line color set to yellow');
-      } else {
-        console.log('PDF Markup Tools: No line color input found');
+        // Update the swatch background to show the selected color
+        lineSwatch.style.backgroundColor = '#FFFF00';
       }
 
       // Set thickness to minimum
       const thicknessSlider = document.querySelector('div.z-50 input[type="range"]');
       if (thicknessSlider) {
         setSliderValue(thicknessSlider, 1); // Minimum thickness
-        console.log('PDF Markup Tools: Line thickness set to minimum');
-      } else {
-        console.log('PDF Markup Tools: No thickness slider found');
       }
 
       // Step 2: Click line swatch AGAIN to close the popup (it covers fill swatch)
       setTimeout(() => {
-        console.log('PDF Markup Tools: Step 2 - Clicking line swatch again to close popup...');
         lineSwatch.click();
 
         // Step 3: Set fill color directly - the input is INSIDE the fill swatch (hidden)
         setTimeout(() => {
-          console.log('PDF Markup Tools: Step 3 - Setting fill color directly...');
-
           // Find the hidden color input inside the fill swatch (may be nested in div.relative)
           let fillColorInput = fillSwatch.querySelector('input[type="color"]');
 
@@ -1067,15 +1006,12 @@ const PDFMarkupToolsFeature = (() => {
 
           if (fillColorInput) {
             setColorInputValue(fillColorInput, '#FFFF00');
-            console.log('PDF Markup Tools: Fill color set to yellow via hidden input');
-          } else {
-            console.log('PDF Markup Tools: No fill color input found inside swatch');
-            console.log('PDF Markup Tools: fillSwatch innerHTML:', fillSwatch.innerHTML);
+            // Update the fill swatch background to show the selected color
+            fillSwatch.style.backgroundColor = '#FFFF00';
           }
 
           // Step 4: Click fill swatch to access opacity slider
           setTimeout(() => {
-            console.log('PDF Markup Tools: Step 4 - Clicking fill swatch for opacity...');
             fillSwatch.click();
 
             setTimeout(() => {
@@ -1084,14 +1020,10 @@ const PDFMarkupToolsFeature = (() => {
 
               if (opacitySlider) {
                 setSliderValue(opacitySlider, 5); // 50% opacity (5 out of 10)
-                console.log('PDF Markup Tools: Opacity set to 50%');
-              } else {
-                console.log('PDF Markup Tools: No opacity slider found');
               }
 
               // Step 5: Close the popover by clicking fill swatch again
               setTimeout(() => {
-                console.log('PDF Markup Tools: Step 5 - Closing opacity popup...');
                 fillSwatch.click();
                 showNotification('Highlight ready! Draw rectangles to highlight.');
               }, 200);
@@ -1151,8 +1083,6 @@ const PDFMarkupToolsFeature = (() => {
    * Handle line tool click - activates JobTread's arrow/line tool for straight lines
    */
   function handleLineClick() {
-    console.log('PDF Markup Tools: Line tool clicked');
-
     const lineBtn = document.querySelector('[data-jt-tool="line"]');
     if (!lineBtn) return;
 
@@ -1165,9 +1095,8 @@ const PDFMarkupToolsFeature = (() => {
       if (success) {
         deactivateOtherTools('line');
         lineBtn.classList.add('active');
-        showNotification('Line tool active - Click and drag to draw straight lines');
+        showNotification('Line tool activated');
       } else {
-        console.error('PDF Markup Tools: Failed to activate line tool');
         showNotification('Could not activate line tool', 'error');
       }
     } else {
@@ -1181,16 +1110,12 @@ const PDFMarkupToolsFeature = (() => {
     }
   }
 
-  // Old line drawing mode functions removed - using JobTread's freedraw tool instead
-
   /**
    * Handle eraser tool click
    * Activates JobTread's select tool so user can click annotations to select them,
    * then press Delete key to remove them
    */
   function handleEraserClick() {
-    console.log('PDF Markup Tools: Eraser tool clicked');
-
     const eraserBtn = document.querySelector('[data-jt-tool="eraser"]');
     if (!eraserBtn) return;
 
@@ -1207,16 +1132,15 @@ const PDFMarkupToolsFeature = (() => {
         // Enable delete-on-click mode
         enableDeleteOnClick();
 
-        showNotification('Eraser mode active - Click annotations to delete them');
+        showNotification('Eraser tool activated');
       } else {
-        console.error('PDF Markup Tools: Failed to activate eraser/select tool');
         showNotification('Could not activate eraser tool', 'error');
       }
     } else {
       // Deactivate
       eraserBtn.classList.remove('active');
       disableDeleteOnClick();
-      showNotification('Eraser mode deactivated');
+      showNotification('Eraser tool deactivated');
     }
   }
 
@@ -1261,8 +1185,6 @@ const PDFMarkupToolsFeature = (() => {
               clickedElement.tagName === 'circle' || clickedElement.tagName === 'line' ||
               clickedElement.tagName === 'text') {
 
-            console.log('PDF Markup Tools: Annotation clicked, selecting and waiting for delete button...');
-
             // Let the click propagate first to select the element
             // Don't stop propagation - let JobTread's select tool handle the selection
 
@@ -1277,7 +1199,6 @@ const PDFMarkupToolsFeature = (() => {
 
     // Add click listener - don't use capture so the selection happens first
     document.addEventListener('click', deleteClickHandler, false);
-    console.log('PDF Markup Tools: Delete-on-click mode enabled');
   }
 
   /**
@@ -1306,9 +1227,7 @@ const PDFMarkupToolsFeature = (() => {
       }
 
       if (hasTrashIcon) {
-        console.log('PDF Markup Tools: Found delete button with trash icon, clicking...');
         btn.click();
-        console.log('PDF Markup Tools: Delete button clicked');
         return true;
       }
     }
@@ -1316,12 +1235,10 @@ const PDFMarkupToolsFeature = (() => {
     // Fallback: Look for red delete button (old selector)
     const redDeleteButton = document.querySelector('div[role="button"].text-red-500');
     if (redDeleteButton) {
-      console.log('PDF Markup Tools: Found red delete button, clicking...');
       redDeleteButton.click();
       return true;
     }
 
-    console.log('PDF Markup Tools: Delete button not found - annotation may not be selected');
     return false;
   }
 
@@ -1336,7 +1253,6 @@ const PDFMarkupToolsFeature = (() => {
       document.removeEventListener('click', deleteClickHandler, false);
       deleteClickHandler = null;
     }
-    console.log('PDF Markup Tools: Delete-on-click mode disabled');
   }
 
   /**
@@ -1385,12 +1301,9 @@ const PDFMarkupToolsFeature = (() => {
     if (!toolbar) return;
     if (toolbarEnhancements.has(toolbar)) return; // Already injected
 
-    console.log('PDF Markup Tools: Injecting tools into vertical toolbar');
-
     // Find the container where tools are added
     const toolContainer = toolbar.querySelector('.relative.grow > .absolute.inset-0 > .flex.flex-col');
     if (!toolContainer) {
-      console.warn('PDF Markup Tools: Could not find vertical tool container');
       return;
     }
 
@@ -1426,8 +1339,6 @@ const PDFMarkupToolsFeature = (() => {
     });
 
     injectedTools.push({ toolbar, separator, highlightBtn, eraserBtn });
-
-    console.log('PDF Markup Tools: Vertical tools injected successfully');
   }
 
   /**
@@ -1436,8 +1347,6 @@ const PDFMarkupToolsFeature = (() => {
   function injectToolsHorizontal(toolbar) {
     if (!toolbar) return;
     if (toolbarEnhancements.has(toolbar)) return; // Already injected
-
-    console.log('PDF Markup Tools: Injecting tools into horizontal toolbar');
 
     // The horizontal toolbar is the flex container with the tool buttons
     // We need to append our buttons to the end of this container
@@ -1470,8 +1379,6 @@ const PDFMarkupToolsFeature = (() => {
     });
 
     injectedTools.push({ toolbar, highlightBtn, eraserBtn });
-
-    console.log('PDF Markup Tools: Horizontal tools injected successfully');
   }
 
   /**
@@ -1501,8 +1408,6 @@ const PDFMarkupToolsFeature = (() => {
       }
     });
 
-    const totalFound = verticalToolbars.length + horizontalContainers.length;
-    console.log(`PDF Markup Tools: Found ${totalFound} potential PDF toolbars`);
   }
 
   /**
@@ -1643,7 +1548,6 @@ const PDFMarkupToolsFeature = (() => {
           currentTextarea.focus();
           currentTextarea.selectionStart = currentTextarea.selectionEnd = start + text.length;
 
-          console.log(`PDF Markup Tools: Inserted "${text}" into text modal`);
         });
 
         stampsContainer.appendChild(btn);
@@ -1694,8 +1598,6 @@ const PDFMarkupToolsFeature = (() => {
 
     // Render initial stamps
     renderStamps(activeCategory);
-
-    console.log('PDF Markup Tools: Injected stamp buttons into Input Text modal (theme-aware)');
   }
 
   /**
@@ -1736,7 +1638,6 @@ const PDFMarkupToolsFeature = (() => {
                                svg.querySelector('[aria-selected="true"]');
 
     if (selectedAnnotation) {
-      console.log('PDF Markup Tools: Deleting selected annotation via Delete key');
       e.preventDefault();
 
       // Try to trigger JobTread's delete button
@@ -1756,11 +1657,9 @@ const PDFMarkupToolsFeature = (() => {
    */
   function init() {
     if (isActive) {
-      console.log('PDF Markup Tools: Already initialized');
       return;
     }
 
-    console.log('PDF Markup Tools: Initializing...');
     isActive = true;
 
     try {
@@ -1787,9 +1686,8 @@ const PDFMarkupToolsFeature = (() => {
       // Handle Delete key for removing annotations
       document.addEventListener('keydown', handleDeleteKey);
 
-      console.log('PDF Markup Tools: Feature loaded successfully');
+      console.log('PDF Markup Tools: Activated');
     } catch (error) {
-      console.error('PDF Markup Tools: Error during initialization:', error);
       isActive = false;
       throw error;
     }
@@ -1800,11 +1698,9 @@ const PDFMarkupToolsFeature = (() => {
    */
   function cleanup() {
     if (!isActive) {
-      console.log('PDF Markup Tools: Not active, nothing to cleanup');
       return;
     }
 
-    console.log('PDF Markup Tools: Cleaning up...');
     isActive = false;
 
     // Disable delete-on-click mode if active
@@ -1834,7 +1730,7 @@ const PDFMarkupToolsFeature = (() => {
     // Clear button cache
     jtNativeButtons = null;
 
-    console.log('PDF Markup Tools: Cleanup complete');
+    console.log('PDF Markup Tools: Deactivated');
   }
 
   /**

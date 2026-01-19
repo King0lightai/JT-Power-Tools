@@ -8,13 +8,10 @@ const DarkModeFeature = (() => {
 
   // Initialize the feature
   function init() {
-    if (isActive) {
-      console.log('DarkMode: Already initialized');
-      return;
-    }
+    if (isActive) return;
 
-    console.log('DarkMode: Initializing...');
     isActive = true;
+    console.log('DarkMode: Activated');
 
     // Add dark mode class to body for other features to detect
     document.body.classList.add('jt-dark-mode');
@@ -27,19 +24,14 @@ const DarkModeFeature = (() => {
 
     // Watch for DOM changes to highlight new date cells
     startObserver();
-
-    console.log('DarkMode: Dark theme applied');
   }
 
   // Cleanup the feature
   function cleanup() {
-    if (!isActive) {
-      console.log('DarkMode: Not active, nothing to cleanup');
-      return;
-    }
+    if (!isActive) return;
 
-    console.log('DarkMode: Cleaning up...');
     isActive = false;
+    console.log('DarkMode: Deactivated');
 
     // Remove dark mode class from body
     document.body.classList.remove('jt-dark-mode');
@@ -55,8 +47,6 @@ const DarkModeFeature = (() => {
       styleElement.remove();
       styleElement = null;
     }
-
-    console.log('DarkMode: Dark theme removed');
   }
 
   // Inject dark mode CSS
