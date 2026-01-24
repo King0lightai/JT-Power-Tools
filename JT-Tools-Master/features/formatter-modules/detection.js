@@ -3,6 +3,114 @@
 
 const FormatterDetection = (() => {
   /**
+   * Check if a textarea is inside the ADD / EDIT ITEMS table overlay
+   * This table slides in from the right and should NOT have the formatter
+   * NOTE: The ADD/EDIT ITEMS table only appears on Documents pages, NOT on Budget pages
+   * Budget table uses similar structure but SHOULD have the formatter
+   * @param {HTMLTextAreaElement} textarea - The textarea element to check
+   * @returns {boolean} True if inside the ADD / EDIT ITEMS table
+   */
+  function isInAddEditItemsTable(textarea) {
+    if (!textarea) return false;
+
+    // CRITICAL: Budget page has similar table structure but SHOULD have the formatter
+    // The ADD/EDIT ITEMS table only appears on Documents pages when editing line items
+    // Do NOT exclude Budget table fields
+    if (window.location.pathname.endsWith('/budget')) {
+      return false;
+    }
+
+    // Check if textarea is inside a row with BOTH "flex" AND "min-w-max" classes
+    // This is the specific table row structure used by the ADD / EDIT ITEMS table
+    // The row also has multiple column cells with specific width styles
+    const tableRow = textarea.closest('.flex.min-w-max');
+    if (tableRow) {
+      // Verify this is actually a table row by checking for multiple styled columns
+      // Table rows have child divs with inline width styles like "width: 350px"
+      const styledColumns = tableRow.querySelectorAll(':scope > div[style*="width"]');
+      if (styledColumns.length >= 3) {
+        // This is definitely a table row with multiple columns
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a textarea is inside the COST ITEM DETAILS sidebar panel
+   * This is the ONLY place on Documents pages where we want the formatter
+   * @param {HTMLTextAreaElement} textarea - The textarea element to check
+   * @returns {boolean} True if inside the COST ITEM DETAILS sidebar
+   */
+  function isInCostItemDetailsSidebar(textarea) {
+    if (!textarea) return false;
+
+    // FIRST: Exclude if inside the ADD / EDIT ITEMS table
+    // This check must come first because both panels can be on the right side
+    if (isInAddEditItemsTable(textarea)) {
+      return false;
+    }
+
+    // Now check if inside COST ITEM DETAILS sidebar
+    let container = textarea.parentElement;
+    while (container && container !== document.body) {
+      const textContent = container.textContent || '';
+      if (textContent.includes('COST ITEM DETAILS')) {
+        return true;
+      }
+      container = container.parentElement;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a textarea is inside a sidebar/panel
+   * Used to allow formatter in sidebars on pages where main area has native formatter
+   * @param {HTMLTextAreaElement} textarea - The textarea element to check
+   * @returns {boolean} True if inside a sidebar
+   */
+  function isInSidebar(textarea) {
+    if (!textarea) return false;
+
+    // Exclude modals/popups - they use centered auto-margin layout
+    const modalContainer = textarea.closest('.m-auto');
+    if (modalContainer) {
+      return false;
+    }
+
+    // On documents pages, ONLY the COST ITEM DETAILS sidebar should have formatter
+    // This is the most reliable way to exclude all table/grid textareas
+    if (window.location.pathname.includes('/documents/')) {
+      return isInCostItemDetailsSidebar(textarea);
+    }
+
+    // For non-documents pages, use the general sidebar detection
+    // Check for common sidebar/panel patterns
+    const sidebar = textarea.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
+    if (sidebar) return true;
+
+    // Check if inside a fixed/absolute positioned container on the RIGHT side of screen
+    // But ensure it's actually narrow like a sidebar (not the main content area)
+    let parent = textarea.parentElement;
+    while (parent && parent !== document.body) {
+      const style = window.getComputedStyle(parent);
+      if (style.position === 'fixed' || style.position === 'absolute') {
+        const rect = parent.getBoundingClientRect();
+        // Sidebars are typically narrow (< 450px), tall, and positioned on the right
+        const isOnRight = rect.left > window.innerWidth * 0.6;
+        if (rect.width < 450 && rect.height > 200 && isOnRight) {
+          return true;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
+  }
+
+  /**
    * Check if field already has JobTread's native formatter
    * @param {HTMLTextAreaElement} textarea - The textarea element to check
    * @returns {boolean} True if native formatter exists
@@ -73,11 +181,34 @@ const FormatterDetection = (() => {
   function isFormatterField(textarea) {
     if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
 
+    // Exclude textareas explicitly marked to skip formatter (check both ways)
+    if (textarea.dataset.jtNoFormatter === 'true' ||
+        textarea.hasAttribute('data-jt-no-formatter')) {
+      return false;
+    }
+
     // Exclude textareas inside our own Alert modal (it has built-in toolbar)
+    // This check MUST come before other checks to ensure alert modal is always excluded
     if (textarea.closest('.jt-alert-modal') ||
         textarea.closest('.jt-alert-modal-overlay') ||
         textarea.classList.contains('jt-alert-message')) {
       return false;
+    }
+
+    // CRITICAL: Always exclude textareas inside the ADD / EDIT ITEMS table
+    // This check runs on ALL pages, not just documents pages
+    if (isInAddEditItemsTable(textarea)) {
+      return false;
+    }
+
+    // On documents pages, only allow formatter in the COST ITEM DETAILS sidebar
+    // JobTread has native formatter in the main document area
+    // URL pattern: /jobs/[id]/documents/[id]
+    if (window.location.pathname.includes('/documents/')) {
+      // Allow sidebar fields on Documents pages - they get the compact embedded toolbar
+      if (!isInSidebar(textarea)) {
+        return false;
+      }
     }
 
     // First, check if field already has JobTread's native formatter
@@ -306,6 +437,7 @@ const FormatterDetection = (() => {
   return {
     hasNativeFormatter,
     isFormatterField,
+    isInAddEditItemsTable,
     detectActiveFormats
   };
 })();

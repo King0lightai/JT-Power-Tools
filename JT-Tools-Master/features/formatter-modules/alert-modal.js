@@ -117,9 +117,36 @@ const AlertModal = (() => {
               <input type="text" class="jt-alert-subject" placeholder="Subject" value="">
             </div>
 
-            <!-- Message Textarea -->
+            <!-- Message Textarea with Embedded Toolbar -->
             <div class="jt-alert-message-container">
-              <textarea class="jt-alert-message" placeholder="Message"></textarea>
+              <div class="jt-alert-toolbar">
+                <!-- Text Formatting -->
+                <button type="button" class="jt-alert-format-btn jt-bold" data-format="bold" title="Bold (Ctrl+B)">B</button>
+                <button type="button" class="jt-alert-format-btn jt-italic" data-format="italic" title="Italic (Ctrl+I)">I</button>
+                <button type="button" class="jt-alert-format-btn jt-underline" data-format="underline" title="Underline (Ctrl+U)">U</button>
+                <button type="button" class="jt-alert-format-btn jt-strikethrough" data-format="strikethrough" title="Strikethrough">S</button>
+                <span class="jt-alert-toolbar-divider"></span>
+                <!-- Headings -->
+                <button type="button" class="jt-alert-format-btn" data-format="h1" title="Heading 1">H<sub>1</sub></button>
+                <button type="button" class="jt-alert-format-btn" data-format="h2" title="Heading 2">H<sub>2</sub></button>
+                <button type="button" class="jt-alert-format-btn" data-format="h3" title="Heading 3">H<sub>3</sub></button>
+                <span class="jt-alert-toolbar-divider"></span>
+                <!-- Lists -->
+                <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">•</button>
+                <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1.</button>
+                <span class="jt-alert-toolbar-divider"></span>
+                <!-- Colors -->
+                <button type="button" class="jt-alert-format-btn jt-color-green" data-format="color" data-color="green" title="Green">A</button>
+                <button type="button" class="jt-alert-format-btn jt-color-yellow" data-format="color" data-color="yellow" title="Yellow">A</button>
+                <button type="button" class="jt-alert-format-btn jt-color-blue" data-format="color" data-color="blue" title="Blue">A</button>
+                <button type="button" class="jt-alert-format-btn jt-color-red" data-format="color" data-color="red" title="Red">A</button>
+                <span class="jt-alert-toolbar-divider"></span>
+                <!-- Other -->
+                <button type="button" class="jt-alert-format-btn" data-format="link" title="Insert Link">🔗</button>
+                <button type="button" class="jt-alert-format-btn" data-format="quote" title="Quote">"</button>
+                <button type="button" class="jt-alert-format-btn" data-format="hr" title="Horizontal Rule">―</button>
+              </div>
+              <textarea class="jt-alert-message" placeholder="Message" data-jt-no-formatter="true"></textarea>
             </div>
           </div>
           <div class="jt-alert-modal-footer">
@@ -229,33 +256,145 @@ const AlertModal = (() => {
         }
       });
 
+      // Update toolbar button states based on cursor position
+      function updateToolbarButtonStates() {
+        if (!window.FormatterDetection) return;
+
+        const activeFormats = window.FormatterDetection.detectActiveFormats(messageTextarea);
+        const toolbar = overlay.querySelector('.jt-alert-toolbar');
+        if (!toolbar) return;
+
+        // Update basic format buttons
+        const boldBtn = toolbar.querySelector('[data-format="bold"]');
+        const italicBtn = toolbar.querySelector('[data-format="italic"]');
+        const underlineBtn = toolbar.querySelector('[data-format="underline"]');
+        const strikeBtn = toolbar.querySelector('[data-format="strikethrough"]');
+
+        boldBtn?.classList.toggle('active', activeFormats.bold);
+        italicBtn?.classList.toggle('active', activeFormats.italic);
+        underlineBtn?.classList.toggle('active', activeFormats.underline);
+        strikeBtn?.classList.toggle('active', activeFormats.strikethrough);
+
+        // Update color buttons
+        toolbar.querySelectorAll('[data-format="color"]').forEach(btn => {
+          const color = btn.dataset.color;
+          btn.classList.toggle('active', color === activeFormats.color);
+        });
+      }
+
+      // Update toolbar states on cursor move, selection change, and input
+      messageTextarea.addEventListener('keyup', updateToolbarButtonStates);
+      messageTextarea.addEventListener('mouseup', updateToolbarButtonStates);
+      messageTextarea.addEventListener('input', updateToolbarButtonStates);
+
       // Handle keyboard shortcuts in message textarea - reuse existing FormatterFormats module
       messageTextarea.addEventListener('keydown', (e) => {
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
         const modifier = isMac ? e.metaKey : e.ctrlKey;
 
-        if (!modifier) return;
+        // Handle Ctrl+key shortcuts
+        if (modifier) {
+          let format = null;
+          switch(e.key.toLowerCase()) {
+            case 'b': format = 'bold'; break;
+            case 'i': format = 'italic'; break;
+            case 'u': format = 'underline'; break;
+          }
 
-        let format = null;
-        switch(e.key.toLowerCase()) {
-          case 'b': format = 'bold'; break;
-          case 'i': format = 'italic'; break;
-          case 'u': format = 'underline'; break;
+          if (format && window.FormatterFormats) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.FormatterFormats.applyFormat(messageTextarea, format);
+            updateToolbarButtonStates();
+          }
+          return;
         }
 
-        if (format && window.FormatterFormats) {
+        // Handle Enter key for list continuation
+        if (e.key === 'Enter' && !e.shiftKey) {
+          const text = messageTextarea.value;
+          const cursorPos = messageTextarea.selectionStart;
+
+          // Find the current line
+          const lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
+          const currentLine = text.substring(lineStart, cursorPos);
+
+          // Check for bullet list: starts with "- " or "• "
+          const bulletMatch = currentLine.match(/^(\s*)([-•])\s/);
+          if (bulletMatch) {
+            const indent = bulletMatch[1];
+            const bullet = bulletMatch[2];
+            // If line only contains the bullet (empty item), remove it instead of continuing
+            if (currentLine.trim() === bullet) {
+              e.preventDefault();
+              // Remove the empty bullet line
+              const before = text.substring(0, lineStart);
+              const after = text.substring(cursorPos);
+              messageTextarea.value = before + after;
+              messageTextarea.selectionStart = messageTextarea.selectionEnd = lineStart;
+              messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+              e.preventDefault();
+              const newBullet = `\n${indent}${bullet} `;
+              const before = text.substring(0, cursorPos);
+              const after = text.substring(cursorPos);
+              messageTextarea.value = before + newBullet + after;
+              messageTextarea.selectionStart = messageTextarea.selectionEnd = cursorPos + newBullet.length;
+              messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            return;
+          }
+
+          // Check for numbered list: starts with "1. ", "2. ", etc.
+          const numberMatch = currentLine.match(/^(\s*)(\d+)\.\s/);
+          if (numberMatch) {
+            const indent = numberMatch[1];
+            const num = parseInt(numberMatch[2], 10);
+            // If line only contains the number (empty item), remove it instead of continuing
+            if (currentLine.trim() === `${num}.`) {
+              e.preventDefault();
+              // Remove the empty numbered line
+              const before = text.substring(0, lineStart);
+              const after = text.substring(cursorPos);
+              messageTextarea.value = before + after;
+              messageTextarea.selectionStart = messageTextarea.selectionEnd = lineStart;
+              messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+            } else {
+              e.preventDefault();
+              const newNumber = `\n${indent}${num + 1}. `;
+              const before = text.substring(0, cursorPos);
+              const after = text.substring(cursorPos);
+              messageTextarea.value = before + newNumber + after;
+              messageTextarea.selectionStart = messageTextarea.selectionEnd = cursorPos + newNumber.length;
+              messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            return;
+          }
+        }
+      });
+
+      // Handle embedded toolbar button clicks
+      const toolbarButtons = overlay.querySelectorAll('.jt-alert-format-btn');
+      toolbarButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
-          window.FormatterFormats.applyFormat(messageTextarea, format);
-        }
+          const format = btn.dataset.format;
+          if (format && window.FormatterFormats) {
+            // Focus textarea first to ensure selection is preserved
+            messageTextarea.focus();
+            // Pass color option if this is a color button
+            const options = {};
+            if (format === 'color' && btn.dataset.color) {
+              options.color = btn.dataset.color;
+            }
+            window.FormatterFormats.applyFormat(messageTextarea, format, options);
+          }
+        });
       });
 
-      // Close modal on overlay click
-      overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-          closeModal(null);
-        }
-      });
+      // NOTE: We intentionally do NOT close the modal when clicking outside
+      // User requested that modal only closes via buttons (Close, Cancel, Add)
 
       // Close modal on close/cancel button
       closeBtn.addEventListener('click', () => closeModal(null));

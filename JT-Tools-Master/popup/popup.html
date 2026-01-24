@@ -16,7 +16,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>JT Power Tools</h1>
-        <span class="version">v3.5.0 BETA</span>
+        <span class="version">v3.5.1 BETA</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <span class="theme-icon light-icon">☀️</span>
           <span class="theme-icon dark-icon">🌙</span>
@@ -215,6 +215,85 @@
               <span class="slider"></span>
             </label>
           </div>
+
+          <!-- Custom Theme Panel - Inside Appearance category -->
+          <div class="theme-customization" id="themeCustomization" style="display: none;">
+            <div class="section-label">Theme Customization</div>
+
+            <div class="color-pickers">
+              <div class="color-group">
+                <label>Primary Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="primaryColorPicker" value="#3B82F6">
+                    <span class="color-value" id="primaryColorValue">#3B82F6</span>
+                  </div>
+                  <div class="preview-box primary" id="previewPrimary">Primary</div>
+                </div>
+              </div>
+
+              <div class="color-group">
+                <label>Background Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="backgroundColorPicker" value="#F3E8FF">
+                    <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
+                  </div>
+                  <div class="preview-box background" id="previewBackground">Background</div>
+                </div>
+              </div>
+
+              <div class="color-group">
+                <label>Text Color</label>
+                <div class="color-row">
+                  <div class="color-input-wrapper">
+                    <input type="color" id="textColorPicker" value="#1F1B29">
+                    <span class="color-value" id="textColorValue">#1F1B29</span>
+                  </div>
+                  <div class="preview-box text" id="previewText">Text</div>
+                </div>
+              </div>
+            </div>
+
+            <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
+
+            <!-- Saved Themes -->
+            <div class="saved-themes">
+              <div class="preview-label">Saved Themes</div>
+              <div class="theme-slots">
+                <div class="theme-slot" data-slot="0">
+                  <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot0Primary"></span>
+                    <span class="color-dot" id="slot0Background"></span>
+                    <span class="color-dot" id="slot0Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="0">Save</button>
+                  <button class="load-theme-btn" data-slot="0" style="display: none;">Load</button>
+                </div>
+                <div class="theme-slot" data-slot="1">
+                  <input type="text" class="theme-name" id="themeName1" placeholder="Theme 2" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot1Primary"></span>
+                    <span class="color-dot" id="slot1Background"></span>
+                    <span class="color-dot" id="slot1Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="1">Save</button>
+                  <button class="load-theme-btn" data-slot="1" style="display: none;">Load</button>
+                </div>
+                <div class="theme-slot" data-slot="2">
+                  <input type="text" class="theme-name" id="themeName2" placeholder="Theme 3" maxlength="20">
+                  <div class="theme-colors">
+                    <span class="color-dot" id="slot2Primary"></span>
+                    <span class="color-dot" id="slot2Background"></span>
+                    <span class="color-dot" id="slot2Text"></span>
+                  </div>
+                  <button class="save-theme-btn" data-slot="2">Save</button>
+                  <button class="load-theme-btn" data-slot="2" style="display: none;">Load</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -330,85 +409,6 @@
       </div>
     </div>
     -->
-
-    <!-- Custom Theme Panel -->
-    <div class="theme-customization" id="themeCustomization" style="display: none;">
-      <div class="section-label">Theme Customization</div>
-
-      <div class="color-pickers">
-        <div class="color-group">
-          <label>Primary Color</label>
-          <div class="color-row">
-            <div class="color-input-wrapper">
-              <input type="color" id="primaryColorPicker" value="#3B82F6">
-              <span class="color-value" id="primaryColorValue">#3B82F6</span>
-            </div>
-            <div class="preview-box primary" id="previewPrimary">Primary</div>
-          </div>
-        </div>
-
-        <div class="color-group">
-          <label>Background Color</label>
-          <div class="color-row">
-            <div class="color-input-wrapper">
-              <input type="color" id="backgroundColorPicker" value="#F3E8FF">
-              <span class="color-value" id="backgroundColorValue">#F3E8FF</span>
-            </div>
-            <div class="preview-box background" id="previewBackground">Background</div>
-          </div>
-        </div>
-
-        <div class="color-group">
-          <label>Text Color</label>
-          <div class="color-row">
-            <div class="color-input-wrapper">
-              <input type="color" id="textColorPicker" value="#1F1B29">
-              <span class="color-value" id="textColorValue">#1F1B29</span>
-            </div>
-            <div class="preview-box text" id="previewText">Text</div>
-          </div>
-        </div>
-      </div>
-
-      <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
-
-      <!-- Saved Themes -->
-      <div class="saved-themes">
-        <div class="preview-label">Saved Themes</div>
-        <div class="theme-slots">
-          <div class="theme-slot" data-slot="0">
-            <input type="text" class="theme-name" id="themeName0" placeholder="Theme 1" maxlength="20">
-            <div class="theme-colors">
-              <span class="color-dot" id="slot0Primary"></span>
-              <span class="color-dot" id="slot0Background"></span>
-              <span class="color-dot" id="slot0Text"></span>
-            </div>
-            <button class="save-theme-btn" data-slot="0">Save</button>
-            <button class="load-theme-btn" data-slot="0" style="display: none;">Load</button>
-          </div>
-          <div class="theme-slot" data-slot="1">
-            <input type="text" class="theme-name" id="themeName1" placeholder="Theme 2" maxlength="20">
-            <div class="theme-colors">
-              <span class="color-dot" id="slot1Primary"></span>
-              <span class="color-dot" id="slot1Background"></span>
-              <span class="color-dot" id="slot1Text"></span>
-            </div>
-            <button class="save-theme-btn" data-slot="1">Save</button>
-            <button class="load-theme-btn" data-slot="1" style="display: none;">Load</button>
-          </div>
-          <div class="theme-slot" data-slot="2">
-            <input type="text" class="theme-name" id="themeName2" placeholder="Theme 3" maxlength="20">
-            <div class="theme-colors">
-              <span class="color-dot" id="slot2Primary"></span>
-              <span class="color-dot" id="slot2Background"></span>
-              <span class="color-dot" id="slot2Text"></span>
-            </div>
-            <button class="save-theme-btn" data-slot="2">Save</button>
-            <button class="load-theme-btn" data-slot="2" style="display: none;">Load</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Actions -->
     <div class="actions-section">

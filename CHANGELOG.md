@@ -5,18 +5,50 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1] - 2026-01-24 (Beta)
+
+### Fixed
+
+#### Freeze Header - Documents Page Panel Fix
+- Fixed ADD/EDIT ITEMS panel and COST ITEM DETAILS sidebar appearing behind frozen headers on Documents page
+- Panel now correctly adjusts its sticky position to stay below frozen headers when scrolling
+- Lowered frozen header z-index when edit panel is open to prevent overlap
+- Added dedicated detection for the ADD/EDIT ITEMS panel on Documents pages
+
+#### Text Formatter Enhancements
+- Text formatter now appears in COST ITEM DETAILS sidebar when editing document line items
+- Built custom embedded text formatter toolbar for the Alert Builder modal
+- Alert modal toolbar supports bold, italic, underline, strikethrough, headings, lists, colors, links, quotes, and horizontal rules
+
+#### Popup Layout Fix
+- Fixed Custom Theme customization panel appearing below API Integration section
+- Theme customization options now appear directly below the Custom Theme toggle in the Appearance category
+
+### Improved
+
+#### Custom Theme (RGB Theme) Support
+- Added RGB theme support to Alert Modal (text formatter's alert builder)
+- Added RGB theme support to Message Templates modals (templates dropdown, manager, edit modal)
+- All modal elements now properly inherit Custom Theme colors when RGB theme is active
+- Uses CSS custom properties (--jt-theme-*) for consistent theming across extension features
+
+---
+
 ## [3.5.0] - 2026-01-18 (Beta)
 
 ### Added
 
-#### Message Signature Feature
-- Added message signature functionality to Character Counter feature
-- Edit Signature button opens modal to create/edit your signature text
-- Insert button injects saved signature into message fields at cursor position
-- Signature syncs across devices via Chrome storage
-- Signature container with subtle border groups buttons and counter together
-- Ctrl+Enter keyboard shortcut to save signature in modal
-- Full dark mode support for signature UI and modal
+#### Message Templates Feature (formerly Signature)
+- Upgraded single signature to multi-template system with named templates
+- Templates dropdown button shows list of saved templates for quick insertion
+- Settings button (⚙) opens Template Manager modal for CRUD operations
+- Create, edit, and delete multiple named message templates
+- Set any template as default (marked with ★) for quick reference
+- Automatic migration from old single-signature format to new templates format
+- Templates sync across devices via Chrome storage
+- Template edit modal with name input, content textarea, and "set as default" option
+- Ctrl+Enter keyboard shortcut to save template in modal
+- Full dark mode support using neutral dark grays for all template UI elements
 
 #### License Tier System
 - Added four-tier license system: FREE, Essential ($10), Pro ($20), Power User ($30)
@@ -50,9 +82,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Text Formatter Budget Table Fix
+- Fixed expanded toolbar not appearing for Budget table Description fields
+- The `isInAddEditItemsTable` detection was incorrectly matching Budget table rows
+- Added Budget page exclusion to ensure Budget table fields get the expanded floating toolbar
+
+#### Freeze Header ADD/EDIT ITEMS Panel Fix
+- Fixed ADD/EDIT ITEMS panel and COST ITEM DETAILS sidebar appearing behind frozen headers on Documents page
+- When the ADD/EDIT ITEMS panel is detected, frozen headers z-index is lowered (tabs to 30, toolbar to 29)
+- Adjusted panel's sticky `top` position to account for frozen headers (prevents sliding under when scrolling)
+- This allows the panel to appear in its natural stacking context without breaking layout
+- Added `jt-edit-panel-open` class to body when panel is open
+- Panel is excluded from global sidebar marking to prevent incorrect positioning
+- Added dedicated `findAndMarkEditItemsPanel()` function for reliable panel detection on Documents pages
+
+#### Popup Layout Fix
+- Fixed Custom Theme customization panel appearing below API Integration section
+- Theme customization options now appear directly below the Custom Theme toggle in the Appearance category
+
+#### Task Completion Checkbox Fix
+- Fixed task completion checkbox being covered by JobTread's "Add Task" button in Week/Day view
+- Moved checkbox to left side of task name to avoid z-index conflicts with native JobTread elements
+
+#### Text Formatter Documents Page Support
+- Compact embedded toolbar now appears in Documents page sidebar description fields
+- Fixed URL blocker that was preventing formatter from initializing on Documents pages
+- Main document editor area still uses JobTread's native formatter (no conflict)
+- Fixed formatter exclusion for ADD / EDIT ITEMS table to prevent toolbar stretching across empty rows
+- Detection now properly distinguishes between COST ITEM DETAILS sidebar (formatter allowed) and ADD / EDIT ITEMS table (excluded)
+
+#### Character Counter & Signature in Document Modals
+- Character counter and signature buttons now appear in document-sending modals (Send Estimate, Send Change Order, Send Invoice, etc.)
+- Detects "Email Message" textarea in send modals alongside existing message dialog support
+- Signature container positioned below the textarea for easy access
+- Fixed formatter incorrectly appearing in "Add / Edit Items" line item table textareas
+- Sidebar detection now specifically targets "COST ITEM DETAILS" panel only
+
+#### Alert Modal Embedded Toolbar
+- Added embedded/compact formatter toolbar directly inside the Alert Builder modal
+- Full formatting support: Bold, Italic, Underline, Strikethrough, Headings (H1-H3), Lists (bullet/numbered), Colors (green/yellow/blue/red), Links, Quotes, and Horizontal Rules
+- Prevents the floating expanded toolbar from appearing and blocking the message textarea
+- Full dark mode support for the embedded toolbar
+- Toolbar buttons now show active state (blue highlight) when cursor is inside formatted text
+- Auto-continue lists: pressing Enter on bullet or numbered lists automatically adds next item
+- Pressing Enter on empty list item removes it instead of adding another
+- Modal no longer closes when clicking outside - only closes via Close, Cancel, or Add buttons
+
 #### AI Integration Panel Bug Fixes
 - Fixed Test Connection sending undefined license key (was using wrong property name)
 - Fixed license key retrieval using correct property (`key` instead of `licenseKey`)
+
+#### PDF Markup Tools Auto-Deselect
+- Fixed custom PDF tools (Highlight, Eraser) staying active when clicking JobTread native tools
+- Custom tools now automatically deactivate when any native JobTread tool (Move, Select, Freedraw, etc.) is clicked
+- Handles dynamically added toolbar buttons for consistent behavior
 
 ### Changed
 

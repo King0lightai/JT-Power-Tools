@@ -2058,3 +2058,345 @@
 
 /* System dark mode preference - only apply if explicitly opted in with class */
 /* Note: Removed auto-detection to prevent conflicts with JobTread's theme */
+
+/* ========================================
+   Alert Modal Embedded Toolbar
+   Compact toolbar inside the alert modal
+   ======================================== */
+
+.jt-alert-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.jt-alert-format-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0.25rem 0.375rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #64748b;
+  transition: all 0.1s ease;
+}
+
+.jt-alert-format-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.jt-alert-format-btn:active {
+  background: #e2e8f0;
+}
+
+.jt-alert-format-btn.jt-bold {
+  font-weight: 700;
+}
+
+.jt-alert-format-btn.jt-italic {
+  font-style: italic;
+}
+
+.jt-alert-format-btn.jt-underline {
+  text-decoration: underline;
+}
+
+.jt-alert-format-btn.jt-strikethrough {
+  text-decoration: line-through;
+}
+
+/* Heading subscripts */
+.jt-alert-format-btn sub {
+  font-size: 9px;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+/* Color buttons in alert toolbar */
+.jt-alert-format-btn.jt-color-green {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.jt-alert-format-btn.jt-color-green:hover {
+  background: #d1fae5;
+}
+
+.jt-alert-format-btn.jt-color-yellow {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.jt-alert-format-btn.jt-color-yellow:hover {
+  background: #fef3c7;
+}
+
+.jt-alert-format-btn.jt-color-blue {
+  color: #3b82f6;
+  font-weight: 700;
+}
+
+.jt-alert-format-btn.jt-color-blue:hover {
+  background: #dbeafe;
+}
+
+.jt-alert-format-btn.jt-color-red {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.jt-alert-format-btn.jt-color-red:hover {
+  background: #fee2e2;
+}
+
+.jt-alert-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+/* Dark mode for alert modal toolbar - using neutral grays to match modal */
+.jt-dark-mode .jt-alert-toolbar,
+.dark .jt-alert-toolbar,
+[data-theme="dark"] .jt-alert-toolbar,
+[data-mode="dark"] .jt-alert-toolbar {
+  background: #2a2a2a;
+  border-color: #404040;
+}
+
+.jt-dark-mode .jt-alert-format-btn,
+.dark .jt-alert-format-btn,
+[data-theme="dark"] .jt-alert-format-btn,
+[data-mode="dark"] .jt-alert-format-btn {
+  background: #404040;
+  border-color: #505050;
+  color: #e0e0e0;
+}
+
+.jt-dark-mode .jt-alert-format-btn:hover,
+.dark .jt-alert-format-btn:hover,
+[data-theme="dark"] .jt-alert-format-btn:hover,
+[data-mode="dark"] .jt-alert-format-btn:hover {
+  background: #505050;
+  border-color: #606060;
+  color: #ffffff;
+}
+
+.jt-dark-mode .jt-alert-toolbar-divider,
+.dark .jt-alert-toolbar-divider,
+[data-theme="dark"] .jt-alert-toolbar-divider,
+[data-mode="dark"] .jt-alert-toolbar-divider {
+  background: #505050;
+}
+
+/* Dark mode color buttons - brighter colors for visibility, neutral gray hover */
+.jt-dark-mode .jt-alert-format-btn.jt-color-green,
+.dark .jt-alert-format-btn.jt-color-green,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-green,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-green {
+  color: #34d399;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-green:hover,
+.dark .jt-alert-format-btn.jt-color-green:hover,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-green:hover,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-green:hover {
+  background: #505050;
+  color: #34d399;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-yellow,
+.dark .jt-alert-format-btn.jt-color-yellow,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-yellow,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-yellow {
+  color: #fbbf24;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-yellow:hover,
+.dark .jt-alert-format-btn.jt-color-yellow:hover,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-yellow:hover,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-yellow:hover {
+  background: #505050;
+  color: #fbbf24;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-blue,
+.dark .jt-alert-format-btn.jt-color-blue,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-blue,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-blue {
+  color: #60a5fa;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-blue:hover,
+.dark .jt-alert-format-btn.jt-color-blue:hover,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-blue:hover,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-blue:hover {
+  background: #505050;
+  color: #60a5fa;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-red,
+.dark .jt-alert-format-btn.jt-color-red,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-red,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-red {
+  color: #f87171;
+}
+
+.jt-dark-mode .jt-alert-format-btn.jt-color-red:hover,
+.dark .jt-alert-format-btn.jt-color-red:hover,
+[data-theme="dark"] .jt-alert-format-btn.jt-color-red:hover,
+[data-mode="dark"] .jt-alert-format-btn.jt-color-red:hover {
+  background: #505050;
+  color: #f87171;
+}
+
+/* ===========================================
+   RGB THEME (Custom Theme) Support
+   Uses CSS custom properties from rgb-theme.js
+   Body has .jt-custom-theme class when active
+   =========================================== */
+
+/* Alert Modal - RGB Theme */
+.jt-custom-theme .jt-alert-modal {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  color: var(--jt-theme-text, #1f2937);
+  border-color: var(--jt-theme-border, #e5e7eb);
+}
+
+.jt-custom-theme .jt-alert-modal-header {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+}
+
+.jt-custom-theme .jt-alert-modal-title {
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-modal-close {
+  color: var(--jt-theme-text-secondary, #6b7280);
+}
+
+.jt-custom-theme .jt-alert-modal-close:hover {
+  color: var(--jt-theme-text, #1f2937);
+  background: var(--jt-theme-background-muted, #f3f4f6);
+}
+
+.jt-custom-theme .jt-alert-modal-body {
+  background: var(--jt-theme-background-elevated, #ffffff);
+}
+
+.jt-custom-theme .jt-alert-modal-footer {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+}
+
+/* Alert Modal Inputs - RGB Theme */
+.jt-custom-theme .jt-alert-subject,
+.jt-custom-theme .jt-alert-message {
+  background: var(--jt-theme-background, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-subject:focus,
+.jt-custom-theme .jt-alert-message:focus {
+  border-color: var(--jt-theme-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(var(--jt-theme-primary, #3b82f6), 0.15);
+}
+
+.jt-custom-theme .jt-alert-subject::placeholder,
+.jt-custom-theme .jt-alert-message::placeholder {
+  color: var(--jt-theme-text-muted, #9ca3af);
+}
+
+/* Alert Modal Dropdowns - RGB Theme */
+.jt-custom-theme .jt-alert-dropdown-button {
+  background: var(--jt-theme-background, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-dropdown-button:hover {
+  border-color: var(--jt-theme-border-strong, #d1d5db);
+}
+
+.jt-custom-theme .jt-alert-dropdown-menu {
+  background: var(--jt-theme-background-elevated, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.jt-custom-theme .jt-alert-dropdown-item {
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-dropdown-item:hover {
+  background: var(--jt-theme-background-muted, #f3f4f6);
+}
+
+.jt-custom-theme .jt-alert-dropdown-item.active {
+  background: var(--jt-theme-primary, #3b82f6);
+  color: #ffffff;
+}
+
+/* Alert Modal Buttons - RGB Theme */
+.jt-custom-theme .jt-alert-btn-cancel {
+  background: var(--jt-theme-background, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-btn-cancel:hover {
+  background: var(--jt-theme-background-muted, #f3f4f6);
+  border-color: var(--jt-theme-border-strong, #d1d5db);
+}
+
+.jt-custom-theme .jt-alert-btn-add {
+  background: var(--jt-theme-primary, #3b82f6);
+  border-color: var(--jt-theme-primary, #3b82f6);
+  color: #ffffff;
+}
+
+.jt-custom-theme .jt-alert-btn-add:hover {
+  background: var(--jt-theme-primary-hover, #2563eb);
+  border-color: var(--jt-theme-primary-hover, #2563eb);
+}
+
+/* Alert Toolbar - RGB Theme */
+.jt-custom-theme .jt-alert-toolbar {
+  background: var(--jt-theme-background-subtle, #f9fafb);
+  border-color: var(--jt-theme-border, #e5e7eb);
+}
+
+.jt-custom-theme .jt-alert-format-btn {
+  background: var(--jt-theme-background, #ffffff);
+  border-color: var(--jt-theme-border, #e5e7eb);
+  color: var(--jt-theme-text, #1f2937);
+}
+
+.jt-custom-theme .jt-alert-format-btn:hover {
+  background: var(--jt-theme-background-muted, #f3f4f6);
+  border-color: var(--jt-theme-border-strong, #d1d5db);
+}
+
+.jt-custom-theme .jt-alert-format-btn.active {
+  background: var(--jt-theme-primary, #3b82f6);
+  border-color: var(--jt-theme-primary, #3b82f6);
+  color: #ffffff;
+}
+
+.jt-custom-theme .jt-alert-toolbar-divider {
+  background: var(--jt-theme-border, #e5e7eb);
+}

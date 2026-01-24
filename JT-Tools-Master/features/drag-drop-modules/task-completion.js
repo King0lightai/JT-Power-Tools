@@ -46,8 +46,9 @@ const TaskCompletion = (() => {
       // Create checkbox button with current completion status
       const checkbox = createCheckboxButton(isComplete);
 
-      // Add to the end of the task name container
-      taskNameContainer.appendChild(checkbox);
+      // Add to the BEGINNING of the task name container (left side)
+      // to avoid conflicting with JobTread's "Add Task" button on the right
+      taskNameContainer.insertBefore(checkbox, taskNameContainer.firstChild);
 
       // Mark as processed
       processedTasks.add(item);
@@ -99,7 +100,8 @@ const TaskCompletion = (() => {
     button.className = 'jt-complete-checkbox inline-block align-bottom relative cursor-pointer p-0.5 rounded-sm hover:bg-gray-100';
     button.setAttribute('role', 'button');
     button.setAttribute('tabindex', '0');
-    button.style.cssText = 'margin-left: auto; flex-shrink: 0;';
+    // Position on left side to avoid conflicting with JobTread's "Add Task" button on right
+    button.style.cssText = 'flex-shrink: 0; margin-right: 4px;';
 
     // Create SVG checkbox icon
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');

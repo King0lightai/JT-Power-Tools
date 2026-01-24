@@ -30,6 +30,9 @@ const PDFMarkupToolsFeature = (() => {
   // Cache for JobTread's native tool buttons
   let jtNativeButtons = null;
 
+  // Track toolbars where we've attached native button listeners
+  const toolbarsWithNativeListeners = new WeakSet();
+
   // Stamp library - using clear text abbreviations for markup/redlining
   // These are universally readable without special fonts
   const stampLibrary = {
@@ -1056,6 +1059,7 @@ const PDFMarkupToolsFeature = (() => {
   /**
    * Deactivate all other JT tools (visual state only)
    * JobTread's buttons manage their own state
+   * @param {string|null} exceptTool - Tool to keep active, or null to deactivate all
    */
   function deactivateOtherTools(exceptTool) {
     const tools = ['highlight', 'eraser', 'line'];
@@ -1073,6 +1077,37 @@ const PDFMarkupToolsFeature = (() => {
         }
       }
     });
+  }
+
+  /**
+   * Attach click listeners to JobTread's native tool buttons
+   * When any native button is clicked, deactivate all our custom tools
+   * @param {HTMLElement} toolbar - The toolbar element containing native buttons
+   */
+  function attachNativeButtonListeners(toolbar) {
+    if (!toolbar) return;
+    if (toolbarsWithNativeListeners.has(toolbar)) return; // Already attached
+
+    // Get all native JT buttons (exclude our custom .jt-pdf-tool-btn buttons)
+    const nativeButtons = toolbar.querySelectorAll('[role="button"]:not(.jt-pdf-tool-btn):not(.jt-pdf-tool-btn-horizontal)');
+
+    if (nativeButtons.length === 0) return;
+
+    nativeButtons.forEach(btn => {
+      btn.addEventListener('click', handleNativeButtonClick, true); // Use capture to fire before JT's handlers
+      btn.setAttribute('data-jt-listener-attached', 'true'); // Mark as having listener
+    });
+
+    toolbarsWithNativeListeners.add(toolbar);
+  }
+
+  /**
+   * Handle click on JobTread native button
+   * Deactivates all our custom tools
+   */
+  function handleNativeButtonClick() {
+    // Deactivate all our custom tools (pass null to deactivate all)
+    deactivateOtherTools(null);
   }
 
   // Note: Old drawing mode functions removed - we now use JobTread's native tools
@@ -1331,6 +1366,9 @@ const PDFMarkupToolsFeature = (() => {
     toolContainer.appendChild(highlightBtn);
     toolContainer.appendChild(eraserBtn);
 
+    // Attach listeners to native buttons so our tools deactivate when JT tools are clicked
+    attachNativeButtonListeners(toolbar);
+
     // Track injected elements
     toolbarEnhancements.set(toolbar, {
       separator,
@@ -1372,6 +1410,9 @@ const PDFMarkupToolsFeature = (() => {
     toolbar.appendChild(highlightBtn);
     toolbar.appendChild(eraserBtn);
 
+    // Attach listeners to native buttons so our tools deactivate when JT tools are clicked
+    attachNativeButtonListeners(toolbar);
+
     // Track injected elements
     toolbarEnhancements.set(toolbar, {
       highlightBtn,
@@ -1393,6 +1434,8 @@ const PDFMarkupToolsFeature = (() => {
       const hasTools = toolbar.querySelector('[role="button"] svg');
       if (hasTools) {
         injectToolsVertical(toolbar);
+        // Also reattach listeners in case new buttons were added
+        reattachNativeButtonListeners(toolbar);
       }
     });
 
@@ -1405,9 +1448,28 @@ const PDFMarkupToolsFeature = (() => {
       const hasNumberedTools = toolbar.querySelector('.text-xs.text-gray-500');
       if (hasNumberedTools) {
         injectToolsHorizontal(toolbar);
+        // Also reattach listeners in case new buttons were added
+        reattachNativeButtonListeners(toolbar);
       }
     });
 
+  }
+
+  /**
+   * Reattach listeners to any new native buttons that may have been added
+   * This handles dynamically added buttons (e.g., "More" menu items)
+   * @param {HTMLElement} toolbar - The toolbar element
+   */
+  function reattachNativeButtonListeners(toolbar) {
+    if (!toolbar) return;
+
+    // Get all native JT buttons that don't have our listener marker
+    const nativeButtons = toolbar.querySelectorAll('[role="button"]:not(.jt-pdf-tool-btn):not(.jt-pdf-tool-btn-horizontal):not([data-jt-listener-attached])');
+
+    nativeButtons.forEach(btn => {
+      btn.addEventListener('click', handleNativeButtonClick, true);
+      btn.setAttribute('data-jt-listener-attached', 'true');
+    });
   }
 
   /**
