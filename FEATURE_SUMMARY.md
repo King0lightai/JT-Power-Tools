@@ -21,8 +21,7 @@
 | **Dark Mode** | Complete dark theme for reduced eye strain |
 | **Text Formatter** | Rich text toolbar for descriptions & notes |
 | **Month View Contrast Fix** | Auto-adjusts text colors for readability on colored backgrounds |
-| **Character Counter** | Real-time character count in message fields |
-| **Message Signature** | Auto-append signatures to messages |
+| **Character Counter & Templates** | Real-time character count plus reusable message templates |
 | **Budget Hierarchy Shading** | Visual depth indicators for nested budget groups (up to 5 levels) |
 | **Kanban Type Filter** | Auto-hide empty columns when grouping by type |
 | **Auto Collapse Groups** | Automatically collapse 100% complete budget sections |
@@ -75,8 +74,7 @@
 | **Smart Job Switcher** | Essential+ | `J+S` or `Alt+J` | Instantly search and navigate to any job with real-time filtering |
 | **Quick Notes** | Essential+ | `Ctrl+Shift+N` | Persistent notepad accessible from any page with markdown support |
 | **Text Formatter** | Free | `Ctrl+B/I/U` | Rich text toolbar with bold, italic, headings, tables, links, alerts |
-| **Character Counter** | Free | Automatic | Shows real-time character count in message fields |
-| **Message Signature** | Free | Automatic | Auto-appends your signature to outgoing messages |
+| **Character Counter & Templates** | Free | Automatic | Real-time character count plus reusable message templates for quick insertion |
 | **Schedule Task Checkboxes** | Pro+ | Click to toggle | Mark schedule items complete directly from the schedule |
 
 ### Visual Enhancements
