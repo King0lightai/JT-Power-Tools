@@ -10,25 +10,9 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ## 🎯 Features
 
-### 📅 Schedule Checkboxes (Premium)
-- Checkboxes added to task cards in month schedule view for instant task completion
-- Checkboxes added to Action Items card for instant task completion
+### 🆓 FREE TIER (No License Required)
 
-### ⚠️ Kanban Type Filter
-- Automatically hides empty columns (0 items) when in Kanban view grouped by type
-- Clean up your Kanban board by removing clutter from empty type columns
-- Works on both Schedule and Tasks/To-Dos pages
-- Real-time updates as filters are applied or content changes
-- Easy toggle on/off from the extension popup
-
-### 📁 Auto Collapse Completed Groups
-- Automatically collapses schedule groups that are 100% complete on page load
-- Reduces clutter by hiding completed work while keeping active items visible
-- Works on Schedule views with grouped tasks
-- Groups expand normally when clicked to view completed items
-- Helps focus on remaining work without manual collapsing
-
-### 🎨 Contrast Fix
+#### 🎨 Contrast Fix
 - Automatically adjusts text colors for better readability in schedule views
 - Works on Month, Week, and Day schedule views only
 - Uses WCAG contrast formula for optimal visibility
@@ -36,7 +20,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Real-time updates as content changes
 - Mutual exclusivity with Dark Mode and Custom Theme
 
-### 📝 Text Formatter
+#### 📝 Text Formatter
 - Rich text formatting toolbar for text fields
 - Supports bold, italic, underline, strikethrough
 - Headings (H1, H2, H3)
@@ -49,16 +33,55 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - MS Word-style active button states
 - Works on budget descriptions and other text areas
 
-### 👁️ Preview Mode (Premium)
-- Live preview of formatted text with floating preview panel
-- Click the preview button (eye icon) on textareas to see rendered formatting
-- Converts markdown to beautifully styled HTML
-- Works on budget descriptions and daily log fields
-- Real-time updates as you type
-- Intelligent positioning to avoid viewport edges
-- Click outside preview to close
+#### 🌙 Dark Mode
+- Beautiful dark theme for JobTread interface
+- Reduces eye strain during long work sessions
+- Customized for construction management workflows
+- Smooth toggle on/off
+- Syncs across devices
+- Mutual exclusivity with Contrast Fix and Custom Theme
 
-### ⚡ Smart Job Switcher
+#### 🔢 Character Counter & Templates
+- Displays character count for message text fields
+- Shows current character count in real-time as you type
+- Counter appears in the toolbar next to the writing assistant
+- Helps stay within character limits before submitting messages
+- **Message Templates**: Create and save reusable message templates
+  - Click "Templates" to manage your templates
+  - Click "Insert" to add a template at cursor position
+  - Templates sync across devices via Chrome storage
+  - Ctrl+Enter to quickly save in the modal
+
+#### 📊 Budget Hierarchy Shading
+- Progressive visual shading for nested budget groups (up to 5 levels)
+- Level 1 (top-level groups) = Lightest shade
+- Level 5 (deepest nested groups) = Darkest shade
+- Line items automatically match their parent group's shading
+- Adapts intelligently to Dark Mode and Custom Theme
+- Preserves yellow highlighting for unsaved changes
+- Smooth hover states for better visual feedback
+- Real-time updates when expanding/collapsing groups
+- Helps quickly identify group hierarchy and relationships at a glance
+
+#### ⚠️ Kanban Type Filter
+- Automatically hides empty columns (0 items) when in Kanban view grouped by type
+- Clean up your Kanban board by removing clutter from empty type columns
+- Works on both Schedule and Tasks/To-Dos pages
+- Real-time updates as filters are applied or content changes
+- Easy toggle on/off from the extension popup
+
+#### 📁 Auto Collapse Completed Groups
+- Automatically collapses schedule groups that are 100% complete on page load
+- Reduces clutter by hiding completed work while keeping active items visible
+- Works on Schedule views with grouped tasks
+- Groups expand normally when clicked to view completed items
+- Helps focus on remaining work without manual collapsing
+
+---
+
+### 📦 ESSENTIAL TIER ($10/company)
+
+#### ⚡ Smart Job Switcher
 - Keyboard shortcuts (J+S or Alt+J) to instantly open job switcher
 - Resizable sidebar - drag the left edge to customize width (280-800px)
 - Width preference remembered across sessions
@@ -67,7 +90,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Press Escape to cancel and close
 - Fully keyboard-driven workflow for power users
 
-### 📒 Quick Notes
+#### 📒 Quick Notes
 - Persistent notepad accessible from any JobTread page
 - Keyboard shortcut (Ctrl+Shift+N) to toggle notes panel
 - Create, edit, search, and organize multiple notes
@@ -79,19 +102,28 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Click Quick Notes button in header or use keyboard shortcut
 - Press Escape to close editor or panel
 
-### ✏️ PDF Markup Tools
+#### 📌 Freeze Header
+- Keeps job info and navigation tabs visible while scrolling
+- Sticky header stays at top of viewport for easy access
+- Quick access to job details without scrolling back up
+- Works seamlessly with sidebar content
+- Prevents frozen elements from overlapping scrollable content
+
+#### ✏️ PDF Markup Tools
 - Stamp Selector for Text and Callout tools
-- Erease elements faster with the erease button!
+- Erase elements faster with the erase button!
 
-### 🌙 Dark Mode
-- Beautiful dark theme for JobTread interface
-- Reduces eye strain during long work sessions
-- Customized for construction management workflows
-- Smooth toggle on/off
-- Syncs across devices
-- Mutual exclusivity with Contrast Fix and Custom Theme
+---
 
-### 🎨 Custom Theme (Premium)
+### ⭐ PRO TIER ($20/company)
+
+#### 📅 Schedule & Task Checkboxes
+- Checkboxes added to task cards in month schedule view for instant task completion
+- Checkboxes added to Action Items card for instant task completion
+- Mark tasks complete or incomplete directly from the calendar
+- Visual feedback with smooth animations
+
+#### 🎨 Custom Theme
 - Personalize JobTread with your own color palette
 - Choose primary, background, and text colors with inline previews
 - Intelligent color coordination across entire interface
@@ -103,34 +135,28 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - Task cards blend seamlessly with custom background
 - Mutual exclusivity with Contrast Fix and Dark Mode
 
-### 📊 Budget Hierarchy Shading
-- Progressive visual shading for nested budget groups (up to 5 levels)
-- Level 1 (top-level groups) = Lightest shade
-- Level 5 (deepest nested groups) = Darkest shade
-- Line items automatically match their parent group's shading
-- Adapts intelligently to Dark Mode and Custom Theme
-- Preserves yellow highlighting for unsaved changes
-- Smooth hover states for better visual feedback
-- Real-time updates when expanding/collapsing groups
-- Helps quickly identify group hierarchy and relationships at a glance
+#### 👁️ Preview Mode
+- Live preview of formatted text with floating preview panel
+- Click the preview button (eye icon) on textareas to see rendered formatting
+- Converts markdown to beautifully styled HTML
+- Works on budget descriptions and daily log fields
+- Real-time updates as you type
+- Intelligent positioning to avoid viewport edges
+- Click outside preview to close
 
-### 📌 Freeze Header
-- Keeps job info and navigation tabs visible while scrolling
-- Sticky header stays at top of viewport for easy access
-- Quick access to job details without scrolling back up
-- Works seamlessly with sidebar content
-- Prevents frozen elements from overlapping scrollable content
+---
 
-### 🔢 Message Character Counter & Signature
-- Displays character count for message text fields
-- Shows current character count in real-time as you type
-- Counter appears in the toolbar next to the writing assistant
-- Helps stay within character limits before submitting messages
-- **Message Signature**: Create and save a reusable signature
-  - Click "Signature" to edit your signature text
-  - Click "Insert" to add signature at cursor position
-  - Signature syncs across devices via Chrome storage
-  - Ctrl+Enter to quickly save in the modal
+### 🚀 POWER USER TIER ($30/company)
+
+#### 🔍 Custom Field Filter
+- Filter jobs by custom field values in the Job Switcher
+- API-powered dropdown auto-populates with your custom field values
+- Quickly find jobs based on project manager, status, or any custom field
+
+#### 🤖 MCP Server Access (Coming Soon)
+- Connect AI assistants (Claude, ChatGPT, Cursor, Gemini) to your JobTread data
+- One-click configuration generator
+- Priority support for AI integration issues
 
 ## 📦 Installation
 
@@ -231,7 +257,7 @@ Works immediately after installation - no signup needed:
 - **Text Formatter** - Rich text formatting toolbar
 - **Dark Mode** - Beautiful dark theme
 - **Contrast Fix** - WCAG-compliant text readability
-- **Character Counter** - Real-time character count
+- **Character Counter & Templates** - Real-time count + reusable message templates
 - **Budget Hierarchy Shading** - Visual nesting indicators
 - **Kanban Type Filter** - Auto-hide empty columns
 - **Auto Collapse Groups** - Collapse completed groups
