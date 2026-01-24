@@ -98,6 +98,16 @@ const FreezeHeaderFeature = (() => {
       z-index: 41 !important;
     }
 
+    /* COST ITEM DETAILS sidebar on Documents page - override Tailwind's z-30 class */
+    /* This sidebar has class="z-30 absolute..." which gives it z-index: 30 */
+    /* We need higher specificity to override it and ensure it appears above frozen headers */
+    /* Use multiple selectors for maximum specificity against Tailwind's utility classes */
+    .jt-freeze-header-active .z-30.absolute[data-is-drag-scroll-boundary="true"],
+    .jt-freeze-header-active .z-30[data-is-drag-scroll-boundary="true"],
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"].z-30 {
+      z-index: 42 !important;
+    }
+
     /* Sticky scroll containers with overscroll-contain (sidebar panels like Cost Item Details) */
     /* These sidebars don't use data-is-drag-scroll-boundary but need positioning below frozen headers */
     /* Adjust top position to be below the frozen toolbar, not just below the main header */
@@ -108,11 +118,75 @@ const FreezeHeaderFeature = (() => {
     }
 
     /* Global sidebars (Time Clock, Daily Log, Notifications) - keep at native position just below main header */
-    /* Use both class-based and attribute-based selectors for reliability */
-    .jt-freeze-header-active .jt-global-sidebar,
-    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain[style*="top: 48"] {
+    /* Use class-based selector ONLY - inline style selector was conflicting with edit panel CSS */
+    .jt-freeze-header-active .jt-global-sidebar {
       top: 48px !important;
-      z-index: 41 !important;
+      z-index: 42 !important;
+    }
+
+    /* OVERRIDE: Sidebar scroll containers INSIDE data-is-drag-scroll-boundary should NOT be treated as global */
+    /* These are job-specific sidebars (COST ITEM DETAILS, Task Details) that should keep their native top position */
+    /* The top: 48px is relative to their container, not the viewport */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.sticky.overflow-y-auto.overscroll-contain {
+      top: 48px !important;
+      z-index: 1 !important;
+    }
+
+    /* ADD / EDIT ITEMS table panel on Documents page */
+    /* This panel appears when clicking "Edit Item Details" on a document */
+    /* It contains the line items table AND the COST ITEM DETAILS sidebar when an item is clicked */
+    /* CRITICAL: This panel is a sibling to the main content area and needs position: fixed behavior */
+    /* to appear above frozen headers. The panel structure is: */
+    /* div.sticky.overflow-y-auto.overscroll-contain[style="top: 48px"] */
+
+    /* ADD/EDIT ITEMS panel - no z-index boosting needed */
+    /* Instead, we lower the frozen header z-index when the panel is open (see above) */
+    /* The panel keeps its native positioning and stacking context */
+
+    /* When the ADD/EDIT ITEMS panel is open, lower the frozen tabs z-index */
+    /* This allows the panel (which has its own stacking context) to appear above */
+    /* The panel is detected by JS and body gets .jt-edit-panel-open class */
+    .jt-freeze-header-active.jt-edit-panel-open .jt-job-tabs-container {
+      z-index: 30 !important;
+    }
+
+    .jt-freeze-header-active.jt-edit-panel-open .jt-action-toolbar {
+      z-index: 29 !important;
+    }
+
+    /* CRITICAL: The ADD/EDIT ITEMS panel needs its top position adjusted to account for frozen headers */
+    /* The panel has sticky positioning with top: 48px, but frozen headers take more space */
+    /* Adjust the panel's top to be below the frozen toolbar so it doesn't slide under */
+    /* HIGH SPECIFICITY: Use multiple selectors to win over other rules */
+    .jt-freeze-header-active .jt-edit-items-panel,
+    .jt-freeze-header-active.jt-edit-panel-open .jt-edit-items-panel,
+    body.jt-freeze-header-active .jt-edit-items-panel {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+      max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
+      z-index: 35 !important;
+    }
+
+    /* Fallback: Target edit panel via inline style when body has jt-edit-panel-open */
+    /* This catches the panel before it gets marked with the class */
+    /* Match both "top: 48" (with space) and "top:48" (without space) */
+    body.jt-freeze-header-active.jt-edit-panel-open div.sticky.overflow-y-auto.overscroll-contain[style*="top: 48"]:not(.jt-global-sidebar),
+    body.jt-freeze-header-active.jt-edit-panel-open div.sticky.overflow-y-auto.overscroll-contain[style*="top:48"]:not(.jt-global-sidebar) {
+      top: var(--jt-toolbar-bottom, 138px) !important;
+      max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
+      z-index: 35 !important;
+    }
+
+    /* COST ITEM DETAILS sidebar (and similar) INSIDE the edit panel should keep relative positioning */
+    /* These nested sidebars position relative to their parent container, not the viewport */
+    .jt-freeze-header-active .jt-edit-items-panel .sticky,
+    .jt-freeze-header-active .jt-edit-items-panel [data-is-drag-scroll-boundary="true"] {
+      top: 0px !important;
+      z-index: auto !important;
+    }
+
+    /* But preserve the sticky header inside COST ITEM DETAILS if it exists */
+    .jt-freeze-header-active .jt-edit-items-panel .sticky .sticky {
+      top: 0px !important;
     }
 
     /* Main content area should have lower z-index than sidebars */
@@ -900,7 +974,30 @@ const FreezeHeaderFeature = (() => {
         continue;
       }
 
+      // CRITICAL: Skip if inside a data-is-drag-scroll-boundary container
+      // These are job-specific sidebars (Cost Item Details, Task Details, Job Switcher)
+      // that should NOT be marked as global, even if they have top: 48px
+      if (sidebar.closest('[data-is-drag-scroll-boundary="true"]')) {
+        continue;
+      }
+
       const text = sidebar.textContent || '';
+
+      // CRITICAL: Skip the ADD / EDIT ITEMS panel on Documents page
+      // This panel has "Add / Edit Items" header and should NOT be marked as global sidebar
+      // It needs to stay above frozen headers with z-index 43 (see CSS rules)
+      if (text.includes('Add / Edit Items') || text.includes('ADD / EDIT ITEMS')) {
+        // Mark it with a special class instead for proper z-index handling
+        sidebar.classList.add('jt-edit-items-panel');
+
+        // Also mark the parent container (div.absolute.top-0.bottom-0.right-0) for z-index stacking
+        const parentContainer = sidebar.closest('div.absolute.top-0.bottom-0.right-0') ||
+                                sidebar.closest('div.absolute.right-0');
+        if (parentContainer && !parentContainer.classList.contains('jt-edit-items-panel-container')) {
+          parentContainer.classList.add('jt-edit-items-panel-container');
+        }
+        continue;
+      }
 
       // Detect global sidebars by their characteristic content
       const isTimeClock = text.includes('TIME CLOCK') ||
@@ -921,9 +1018,72 @@ const FreezeHeaderFeature = (() => {
       const topValue = parseInt(computedStyle.top, 10);
       const isNearHeaderLevel = !isNaN(topValue) && topValue >= 40 && topValue <= 60;
 
+      // CRITICAL: Don't mark as global sidebar if it's inside an edit-items-panel
+      // This handles the COST ITEM DETAILS sidebar that appears inside the ADD/EDIT ITEMS panel
+      if (sidebar.closest('.jt-edit-items-panel') || sidebar.closest('.jt-edit-items-panel-container')) {
+        continue;
+      }
+
+      // Also check if this is a COST ITEM DETAILS sidebar (content-based detection)
+      // This sidebar contains item details and should stay with the edit items panel
+      if (text.includes('COST ITEM DETAILS') || text.includes('Item Details')) {
+        // If it has a parent that could be an edit items panel container, skip
+        const editItemsPanel = sidebar.closest('div.absolute.right-0');
+        if (editItemsPanel) {
+          editItemsPanel.classList.add('jt-edit-items-panel-container');
+          continue;
+        }
+      }
+
       if (isTimeClock || isDailyLog || isNotifications || isNearHeaderLevel) {
         sidebar.classList.add('jt-global-sidebar');
       }
+    }
+  }
+
+  /**
+   * Find and mark the ADD/EDIT ITEMS panel on Documents page
+   * When the panel is open, we add a class to body to lower frozen header z-index
+   * This allows the panel to appear above the frozen headers without breaking layout
+   */
+  function findAndMarkEditItemsPanel() {
+    // Only run on Documents pages
+    if (!window.location.pathname.includes('/documents/')) {
+      // Remove the class if we're not on a Documents page
+      document.body.classList.remove('jt-edit-panel-open');
+      return;
+    }
+
+    // Find the ADD/EDIT ITEMS panel by looking for sticky panels with "Add / Edit Items" text
+    const sidebars = document.querySelectorAll('div.sticky.overflow-y-auto.overscroll-contain');
+    let panelFound = false;
+
+    for (const sidebar of sidebars) {
+      // Skip if already marked as global sidebar
+      if (sidebar.classList.contains('jt-global-sidebar')) continue;
+
+      const text = sidebar.textContent || '';
+
+      // Check if this is the ADD/EDIT ITEMS panel
+      if (text.includes('Add / Edit Items') || text.includes('ADD / EDIT ITEMS')) {
+        panelFound = true;
+
+        // Mark the panel itself (for potential CSS targeting)
+        if (!sidebar.classList.contains('jt-edit-items-panel')) {
+          sidebar.classList.add('jt-edit-items-panel');
+          console.log('FreezeHeader: Marked ADD/EDIT ITEMS panel, lowering frozen header z-index');
+        }
+        break;
+      }
+    }
+
+    // Add or remove class from body based on whether panel is open
+    if (panelFound) {
+      if (!document.body.classList.contains('jt-edit-panel-open')) {
+        document.body.classList.add('jt-edit-panel-open');
+      }
+    } else {
+      document.body.classList.remove('jt-edit-panel-open');
     }
   }
 
@@ -1120,6 +1280,7 @@ const FreezeHeaderFeature = (() => {
     findAndMarkFilesListHeader();
     findAndMarkFilesSidebar();
     findAndMarkGlobalSidebars();
+    findAndMarkEditItemsPanel();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(updatePositions, 100);
   }
@@ -1158,6 +1319,13 @@ const FreezeHeaderFeature = (() => {
     document.querySelectorAll('.jt-global-sidebar').forEach(el => {
       el.classList.remove('jt-global-sidebar');
     });
+    document.querySelectorAll('.jt-edit-items-panel').forEach(el => {
+      el.classList.remove('jt-edit-items-panel');
+    });
+    document.querySelectorAll('.jt-edit-items-panel-container').forEach(el => {
+      el.classList.remove('jt-edit-items-panel-container');
+    });
+    document.body.classList.remove('jt-edit-panel-open');
 
     // Remove CSS custom properties
     document.documentElement.style.removeProperty('--jt-header-height');
@@ -1234,6 +1402,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkFilesListHeader();
           findAndMarkFilesSidebar();
           findAndMarkGlobalSidebars();
+          findAndMarkEditItemsPanel();
           updatePositions();
         }, 200);
       }
@@ -1274,6 +1443,7 @@ const FreezeHeaderFeature = (() => {
             findAndMarkFilesListHeader();
             findAndMarkFilesSidebar();
             findAndMarkGlobalSidebars();
+            findAndMarkEditItemsPanel();
             updatePositions();
           }, 300);
         } else if (wasOnJobPage) {

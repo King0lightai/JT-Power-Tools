@@ -125,7 +125,7 @@ const FormatterFeature = (() => {
   function initializeFields() {
     if (!isActive) return;
 
-    // Skip if on excluded paths
+    // Skip if on excluded paths (but NOT documents - sidebar fields are allowed there)
     const path = window.location.pathname;
     if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
       return;
@@ -214,6 +214,19 @@ const FormatterFeature = (() => {
 
     // Filter out time entry notes fields, Time Clock notes fields, and subtask fields
     const filteredFields = fields.filter(field => {
+      // Exclude textareas explicitly marked to skip formatter
+      if (field.dataset.jtNoFormatter === 'true' ||
+          field.hasAttribute('data-jt-no-formatter')) {
+        return false;
+      }
+
+      // Exclude textareas inside our own Alert modal
+      if (field.closest('.jt-alert-modal') ||
+          field.closest('.jt-alert-modal-overlay') ||
+          field.classList.contains('jt-alert-message')) {
+        return false;
+      }
+
       const placeholder = field.getAttribute('placeholder');
       if (placeholder === 'Set notes') {
         return false; // Exclude time entry notes
@@ -269,12 +282,29 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude fields in Documents ADD/EDIT ITEMS table (but NOT the sidebar)
-      if (path.includes('/documents')) {
-        // Check if field is inside the Cost Item Details sidebar
-        // Sidebar has overscroll-contain class on a sticky container
-        const isInSidebar = field.closest('div.sticky.overflow-y-auto.overscroll-contain') !== null;
+      // CRITICAL: Exclude fields in the ADD / EDIT ITEMS table (Documents page only)
+      // NOTE: Budget page has similar structure but SHOULD have the formatter
+      // Use the Detection module for reliable detection
+      if (window.FormatterDetection && window.FormatterDetection.isInAddEditItemsTable) {
+        if (window.FormatterDetection.isInAddEditItemsTable(field)) {
+          return false;
+        }
+      } else {
+        // Fallback: Check for flex.min-w-max table row with multiple styled columns
+        // But NOT on Budget page - Budget table fields should have formatter
+        if (!path.endsWith('/budget')) {
+          const tableRow = field.closest('.flex.min-w-max');
+          if (tableRow) {
+            const styledColumns = tableRow.querySelectorAll(':scope > div[style*="width"]');
+            if (styledColumns.length >= 3) {
+              return false;
+            }
+          }
+        }
+      }
 
+      // Exclude fields in Documents page main area (but NOT the sidebar)
+      if (path.includes('/documents')) {
         // Exclude "Prepared by" / "Prepared for" document header fields
         const gridContainer = field.closest('div.grid.grid-cols-2');
         if (gridContainer && gridContainer.classList.contains('border-b-2')) {
@@ -284,19 +314,6 @@ const FormatterFeature = (() => {
             if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
               return false;
             }
-          }
-        }
-
-        // Only exclude table fields, NOT sidebar fields
-        if (!isInSidebar) {
-          // Exclude Description fields in the ADD/EDIT ITEMS table
-          if (placeholder === 'Description') {
-            return false;
-          }
-
-          // Exclude caret-black textareas in the edit items table (they don't have placeholder)
-          if (field.classList.contains('caret-black') && field.classList.contains('absolute')) {
-            return false;
           }
         }
       }
