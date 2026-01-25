@@ -52,6 +52,7 @@ const LicenseService = (() => {
   // POWER USER tier features ($30) - "I want everything + AI"
   const POWER_USER_FEATURES = [
     'customFieldFilter', // API-powered job filtering
+    'budgetChangelog',   // Compare budget backups
     'mcpAccess',         // AI integration
     'aiKnowledge'        // AI-powered assistance
   ];

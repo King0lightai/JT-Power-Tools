@@ -94,6 +94,8 @@ async function checkApiStatus() {
   const orgIdInput = document.getElementById('orgId');
   const customFieldFilterToggle = document.getElementById('customFieldFilter');
   const customFieldFilterFeature = document.getElementById('customFieldFilterFeature');
+  const budgetChangelogToggle = document.getElementById('budgetChangelog');
+  const budgetChangelogFeature = document.getElementById('budgetChangelogFeature');
 
   // Check if Pro Service is configured (uses Worker)
   const isProConfigured = await JobTreadProService.isConfigured();
@@ -112,6 +114,12 @@ async function checkApiStatus() {
       customFieldFilterFeature.classList.remove('disabled');
       customFieldFilterFeature.title = '';
     }
+    // Enable Budget Changelog toggle
+    if (budgetChangelogToggle) budgetChangelogToggle.disabled = false;
+    if (budgetChangelogFeature) {
+      budgetChangelogFeature.classList.remove('disabled');
+      budgetChangelogFeature.title = '';
+    }
   } else {
     // Fall back to check old direct API configuration
     const isDirectConfigured = await JobTreadAPI.isFullyConfigured();
@@ -128,6 +136,12 @@ async function checkApiStatus() {
       if (customFieldFilterFeature) {
         customFieldFilterFeature.classList.remove('disabled');
         customFieldFilterFeature.title = '';
+      }
+      // Enable Budget Changelog toggle
+      if (budgetChangelogToggle) budgetChangelogToggle.disabled = false;
+      if (budgetChangelogFeature) {
+        budgetChangelogFeature.classList.remove('disabled');
+        budgetChangelogFeature.title = '';
       }
     } else {
       apiStatus.className = 'api-status inactive';
@@ -150,6 +164,15 @@ async function checkApiStatus() {
       if (customFieldFilterFeature) {
         customFieldFilterFeature.classList.add('disabled');
         customFieldFilterFeature.title = 'Connect your JobTread API first (enter Grant Key below)';
+      }
+      // Disable Budget Changelog toggle and uncheck it
+      if (budgetChangelogToggle) {
+        budgetChangelogToggle.disabled = true;
+        budgetChangelogToggle.checked = false;
+      }
+      if (budgetChangelogFeature) {
+        budgetChangelogFeature.classList.add('disabled');
+        budgetChangelogFeature.title = 'Connect your JobTread API first (enter Grant Key below)';
       }
     }
   }
@@ -263,6 +286,8 @@ async function checkLicenseStatus() {
   const apiConfigPanel = document.getElementById('apiConfigPanel');
   const customFieldFilterFeature = document.getElementById('customFieldFilterFeature');
   const customFieldFilterCheckbox = document.getElementById('customFieldFilter');
+  const budgetChangelogFeature = document.getElementById('budgetChangelogFeature');
+  const budgetChangelogCheckbox = document.getElementById('budgetChangelog');
 
   if (licenseData && licenseData.valid && tier) {
     // Valid license - show tier name
@@ -303,12 +328,16 @@ async function checkLicenseStatus() {
       if (apiConfigPanel) apiConfigPanel.style.display = 'block';
       customFieldFilterFeature?.classList.remove('locked');
       if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = false;
+      budgetChangelogFeature?.classList.remove('locked');
+      if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
       if (apiConfigPanel) apiConfigPanel.style.display = 'none';
       customFieldFilterFeature?.classList.add('locked');
       if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
+      budgetChangelogFeature?.classList.add('locked');
+      if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -350,6 +379,8 @@ async function checkLicenseStatus() {
     if (apiConfigPanel) apiConfigPanel.style.display = 'none';
     customFieldFilterFeature?.classList.add('locked');
     if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
+    budgetChangelogFeature?.classList.add('locked');
+    if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
@@ -432,6 +463,7 @@ async function loadSettings() {
 
     // POWER USER features - require Power User tier (API-powered)
     document.getElementById('customFieldFilter').checked = settings.customFieldFilter !== undefined ? settings.customFieldFilter : false;
+    document.getElementById('budgetChangelog').checked = settings.budgetChangelog !== undefined ? settings.budgetChangelog : false;
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -584,6 +616,7 @@ async function getCurrentSettings() {
     kanbanTypeFilter: document.getElementById('kanbanTypeFilter').checked,
     autoCollapseGroups: document.getElementById('autoCollapseGroups').checked,
     customFieldFilter: document.getElementById('customFieldFilter').checked,
+    budgetChangelog: document.getElementById('budgetChangelog').checked,
     pdfMarkupTools: document.getElementById('pdfMarkupTools').checked,
     themeColors: currentColors,
     savedThemes: savedThemes
