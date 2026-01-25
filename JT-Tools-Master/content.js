@@ -110,6 +110,11 @@ const featureModules = {
     name: 'Custom Field Filter',
     feature: () => window.CustomFieldFilterFeature,
     instance: null
+  },
+  budgetChangelog: {
+    name: 'Budget Changelog',
+    feature: () => window.BudgetChangelogFeature,
+    instance: null
   }
 };
 
