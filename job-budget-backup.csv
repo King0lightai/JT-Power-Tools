@@ -1,0 +1,158 @@
+﻿Cost Group,Cost Item Name,Description,Quantity,Quantity Formula,Unit,Unit Cost,Unit Cost Formula,Extended Cost,Unit Price,Unit Price Formula,Extended Price,Taxable,Cost Type,Cost Code,Selected,Minimum Selections,Maximum Selections,Custom: Internal Notes,Custom: Construction Specs,Custom: Room,Custom: SKU or Model #,Custom: Finish,Custom: Product Specs,Custom: Supplier,Custom: Product Link,Custom: Change Order Days,Custom: PM Estimated Amount,Custom: Titus Supplied,Custom: Tracking Status,Custom: Bidding Vendors,Custom: Approved Vendor,Custom: Invite to Vendor Walk,Custom: Vendor Invite Order,Custom: Estimating Status,Custom: Change Order Reason,Custom: Revision Notes
+SCOPE OF WORK,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; DEMOLITION,,,,,,,,$0.00,,,$0.00,,,,,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; DEMOLITION,INTERIOR DEMO SCOPE,"### Basement Bath:
+- Demo existing floor, baseboard, pedestal sink, faucet, toilet, mirror, and light
+- Demo door (inside casing only)
+- Haul and dispose of debris
+
+### Door Slabs:
+- Demo (2) main level doors and (4) lower level doors
+- Remove hinges and handles for re-installation on new doors
+
+|Bath door - inside casing only|",,,,,,,,,,false,Scope & Specs,04.10 DEMO LABOR,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; DEMOLITION,DEMO LABOR,,10,,Hours,$65.00,,$650.00,$81.25,,$812.50,true,Labor,04.10 DEMO LABOR,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; Electrical,,,,,,,,$0.00,,,$0.00,,,,,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; Electrical,ELECTRICAL SCOPE,"### Basement Bath: 
+Furnish and install light",,,,,,,,,,false,Scope & Specs,06.20 ELECTRICAL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; Electrical,Light Fixture Specification,"> Tube light
+> *Location:* Basement bath
+> *Allowance:* $120",,,,$120.00,,$120.00,$0.00,,$0.00,false,Scope & Specs,06.21 ELECTRICAL DECORATIVE FIXTURES,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; Electrical,Electrical Install,,1,,Lump Sum,,,,,,,false,Subcontractor,06.20 ELECTRICAL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,,,,,,,,$0.00,,,$0.00,,,,,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,Plumbing Scope,"### Basement Bath:
+- Furnish and install toilet",,,,,,,,,,false,Scope & Specs,06.10 PLUMBING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,Toilet Specification,"> Kohler #31678 with lever
+> *Location:* Basement bath
+> *Style:* Comfort height, round front (not elongated due to space)
+> *Allowance:* $300",1,,,$300.00,,$300.00,$0.00,,$0.00,false,Scope & Specs,06.12 PLUMBING FIXTURES,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,Faucet Specification,"> Kohler Numista
+> *Location:* Basement bath vanity
+> *Allowance:* $110",,,,,,,,,,false,Scope & Specs,06.12 PLUMBING FIXTURES,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,PLUMBING FIXTURES,,1,,Lump Sum,,,,,,,true,Materials,06.12 PLUMBING FIXTURES,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,PLUMBING,,,,,,,,,,,false,Subcontractor,06.10 PLUMBING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,Vanity Scope,- Furnish and install vanity with sink and faucet,,,,,,,,,,false,Scope & Specs,08.50 CABINETRY,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,Vanity Specification,"> Miseno Palos 18"" Free Standing Single Basin Vanity Set
+> *Model:* #MV-NM-PALO18-WHT-FN (bci4818922)
+> *Size:* 18""x18""x34.5""
+> *Includes:* Cabinet and ceramic vanity top
+> *Allowance:* $342.80",1,,,$345.00,,$345.00,$0.00,,$0.00,false,Scope & Specs,08.50 CABINETRY,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,CABINETRY,,1,,,$500.00,,$500.00,$625.00,,$625.00,false,Materials,08.50 CABINETRY,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; MEP SYSTEMS; PLUMBING & VANITY SCOPE,CABINETRY INSTALLATION,,,,,,,,,,,false,Labor,04.50 CABINETRY INSTALLATION,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES,,,,,,,,$0.00,,,$0.00,,,,,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Drywall,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Drywall,DRYWALL SCOPE,"### Master Suite:
+- Sheetrock repair in 24""x36"" space (see photos)
+- Paint one wall, approximately 12'x8'",,,,,,,,,,false,Scope & Specs,08.10 DRYWALL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Drywall,DRYWALL,,1,,Lump Sum,,,,,,,true,Subcontractor,08.10 DRYWALL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Flooring,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Flooring,FLOORING SCOPE,"### Basement Bath:
+- Furnish and install vinyl floor (glue-down LVP/LVT)
+- *Material Allowance:* $4.00/SF",,,,,,,,,,false,Scope & Specs,08.30 FLOORING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Flooring,Floor Specification,"> Glue-down LVP/LVT
+> *Location:* Basement bath
+> *Allowance:* $4.00/SF material",,,,,,,,,,false,Scope & Specs,08.30 FLOORING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Flooring,FLOORING,,1,,Lump Sum,,,,,,,true,Subcontractor,08.30 FLOORING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Interior Doors,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Interior Doors,INTERIOR DOOR SCOPE,"### Door Slabs:
+- Furnish and install red oak slab solid core doors
+- Site custom mortise, strike-plate, hinges, etc.
+- Cut doors to fit openings
+- Stain doors to closely match existing
+
+_LOWER LEVEL:_
+- Bath door: 28""x72""
+- (2) Bedroom doors: 28""x72""
+- Linen closet: 24""x72""
+
+_MAIN LEVEL:_
+- Bath door: 30""x80""
+- Bedroom door: 30""x80""
+
+|(6) Door slabs total|
+
+### Door Hardware:
+- Remove existing hinges and handles
+- Reset hardware on new door slabs",,,,,,,,,,false,Scope & Specs,05.12 INTERIOR DOORS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Interior Doors,Door Slab Specification,"> Red oak, solid core slab doors
+> *Quantity:* (6)
+> *Finish:* Stained to closely match existing",,,,,,,,,,false,Scope & Specs,05.12 INTERIOR DOORS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Interior Doors,INTERIOR DOORS,,,,,,,,,,,false,Materials,05.12 INTERIOR DOORS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Interior Doors,Door Install Labor,,,,,,,,,,,false,Labor,04.20 FRAMING CARPENTRY LABOR,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,TRIM CARPENTRY SCOPE,"### Basement Bath:
+- Furnish and install 3.25"" red oak ranch base
+- Furnish and install 2.25"" red oak ranch casing
+- Stain to closely match existing
+
+|Casing for lower bath door and base in lower bath included with door slab staining|",,,,,,,,,,false,Scope & Specs,08.40 INTERIOR MILLWORK,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,Base Specification,"> 3.25"" red oak ranch profile
+> *Location:* Basement bath
+> *Finish:* Stained to match existing",,,,,,,,,,false,Scope & Specs,08.40 INTERIOR MILLWORK,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,Casing Specification,"> 2.25"" red oak ranch profile
+> *Location:* Basement bath
+> *Finish:* Stained to match existing",,,,,,,,,,false,Scope & Specs,08.40 INTERIOR MILLWORK,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,INTERIOR MILLWORK,,1,,Lump Sum,,,,,,,true,Materials,08.40 INTERIOR MILLWORK,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; Trim Carpentry,FINISH CARPENTRY LABOR,,1,,Lump Sum,,,,,,,true,Labor,04.60 FINISH CARPENTRY LABOR,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; GLASS & MIRRORS,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; GLASS & MIRRORS,GLASS SCOPE,"### Basement Bath:
+- Furnish and install mirror",,,,,,,,,,false,Scope & Specs,09.30 GLASS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; GLASS & MIRRORS,Mirror Specification,"> 42""x28"" metal frame mirror
+> *Brand:* Evermore
+> *Location:* Basement bath, above vanity
+> *Allowance:* $220",,,,,,,,,,false,Other,09.30 GLASS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; GLASS & MIRRORS,GLASS,,1,,Lump Sum,,,,,,,false,Subcontractor,09.30 GLASS,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; PAINTING / FINISHES,,,,,,,,$0.00,,,$0.00,,,,false,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; PAINTING / FINISHES,PAINT SCOPE,"### Basement Bath:
+- Furnish and install Sherwin-Williams Duration wall paint
+- Furnish and install Sherwin-Williams Duration ceiling paint
+- One color throughout (walls and ceiling same color)
+
+### Door Slabs:
+- Stain (6) door slabs to closely match existing
+- Stain casing in lower bath
+- Stain base in lower bath",,,,,,,,,,false,Scope & Specs,08.70 INTERIOR PAINTING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; PAINTING / FINISHES,Wall & Ceiling Paint Specification,"> Sherwin-Williams Duration
+> *Location:* Basement bath walls and ceiling
+> *Finish:* TBD
+> *Color:* One color, same for walls and ceiling",,,,,,,,,,false,Other,08.70 INTERIOR PAINTING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; PAINTING / FINISHES,Door Stain Specification,"> Stain to closely match existing
+> *Items:* (6) door slabs, lower bath casing, lower bath base",,,,,,,,,,false,Other,08.70 INTERIOR PAINTING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; INTERIOR FINISHES; PAINTING / FINISHES,INTERIOR PAINTING,,1,,Lump Sum,,,,,,,true,Subcontractor,08.70 INTERIOR PAINTING,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; EXTERIOR FINISHES,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; EXTERIOR FINISHES; Soffit/Fascia,,,,,,,,$0.00,,,$0.00,,,,,0,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; EXTERIOR FINISHES; Soffit/Fascia,SOFFIT & FACIA SCOPE ONLY,"### Misc:
+- Fix aluminum soffit at back of home (keeps falling down with window)
+- Furnish and install soffit to closely match existing
+- Approximately 5' length",,,,,,,,,,false,Scope & Specs,07.32 EXTERIOR MILLWORK SOFFIT & FASCIA MATERIAL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; EXTERIOR FINISHES; Soffit/Fascia,EXTERIOR MILLWORK SOFFIT & FASCIA MATERIAL,,1,,Lump Sum,,,,,,,true,Materials,07.32 EXTERIOR MILLWORK SOFFIT & FASCIA MATERIAL,false,,,,,,,,,,,,,,,,,,,,,
+SCOPE OF WORK; EXTERIOR FINISHES; Soffit/Fascia,EXTERIOR SIDING & MILLWORK LABOR,,,,,,,,,,,false,Labor,07.30 EXTERIOR SIDING & MILLWORK INSTALL,false,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; ADMINISTRATIVE,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; ADMINISTRATIVE,INTERIOR DESIGN,,1,,Lump Sum,,"{COGS} * 0.03 *
+IF({COGS}<=35000,1.18,
+IF({COGS}<=55000,1.10,
+IF({COGS}<=70000,1.05,
+IF({COGS}<=200000,1.00,
+IF({COGS}<=350000,0.95,0.90)))))",,,,,false,Labor,14.60 INTERIOR DESIGN,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; ADMINISTRATIVE,SITE SUPERVISION,,1,,Lump Sum,,"{COGS} * 0.046 *
+IF({COGS}<=35000,1.18,
+IF({COGS}<=55000,1.10,
+IF({COGS}<=70000,1.05,
+IF({COGS}<=200000,1.00,
+IF({COGS}<=350000,0.95,0.90)))))",,,,,false,Labor,04.80 SITE SUPERVISION,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; ADMINISTRATIVE,PM,,1,,Lump Sum,,"{COGS} * 0.055 *
+IF({COGS}<=35000,1.18,
+IF({COGS}<=55000,1.10,
+IF({COGS}<=70000,1.05,
+IF({COGS}<=200000,1.00,
+IF({COGS}<=350000,0.95,0.90)))))",,,,,false,Other,15.50 PM,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; ADMINISTRATIVE,GENERAL OFFICE ADMIN,,1,,Lump Sum,,"{COGS} * 0.047 *
+IF({COGS}<=35000,1.18,
+IF({COGS}<=55000,1.10,
+IF({COGS}<=70000,1.05,
+IF({COGS}<=200000,1.00,
+IF({COGS}<=350000,0.95,0.90)))))",,,,,false,Other,15.10 GENERAL OFFICE ADMIN,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; CONTINGENCY,,,,,,,,$0.00,,,$0.00,,,,,,,,,,,,,,,,,,,,,,,,,
+OVERHEAD COSTS; CONTINGENCY,CONTINGENCY,,1,,Lump Sum,,{COGS} * 0.05,,,,,false,Other,13.10 CONTINGENCY,,,,,,,,,,,,,,,,,,,,,,
