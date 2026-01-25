@@ -79,6 +79,10 @@
         "features/auto-collapse-groups.js",
         "features/pdf-markup-tools.js",
         "features/custom-field-filter.js",
+        "features/budget-changelog-modules/csv-parser.js",
+        "features/budget-changelog-modules/diff-engine.js",
+        "features/budget-changelog-modules/ui.js",
+        "features/budget-changelog.js",
         "content.js"
       ],
       "run_at": "document_end"
