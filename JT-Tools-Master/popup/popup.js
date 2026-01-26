@@ -1,3 +1,27 @@
+// Tab navigation management
+function initTabNavigation() {
+  const tabItems = document.querySelectorAll('.tab-item');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabItems.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.dataset.tab;
+
+      // Update tab buttons
+      tabItems.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update tab content
+      tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === `tab-${targetTab}`) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+}
+
 // Popup theme management
 const POPUP_THEME_KEY = 'jtPopupTheme';
 
@@ -886,6 +910,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup theme toggle button
   document.getElementById('popupThemeToggle').addEventListener('click', togglePopupTheme);
+
+  // Setup tab navigation
+  initTabNavigation();
 
   // Check license status first (just UI, don't modify settings)
   const licenseStatus = await checkLicenseStatus();
