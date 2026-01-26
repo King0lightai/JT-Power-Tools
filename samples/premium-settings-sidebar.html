@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT Power Tools - Premium Settings Sidebar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* ============================================
+       CSS VARIABLES - DESIGN TOKENS
+       ============================================ */
+    :root {
+      /* Core Colors */
+      --jt-orange: #ea580c;
+      --jt-orange-light: #fed7aa;
+      --jt-cyan: #0891b2;
+      --jt-cyan-bright: #06b6d4;
+      --jt-blue: #3b82f6;
+      --jt-blue-dark: #2563eb;
+
+      /* Tier Colors */
+      --tier-essential: #00796b;
+      --tier-essential-bg: linear-gradient(135deg, #e0f2f1, #b2dfdb);
+      --tier-pro: #5e35b1;
+      --tier-pro-bg: linear-gradient(135deg, #ede7f6, #d1c4e9);
+      --tier-power: #e65100;
+      --tier-power-bg: linear-gradient(135deg, #fff3e0, #ffe0b2);
+
+      /* Light Theme */
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8fafc;
+      --bg-tertiary: #f1f5f9;
+      --bg-elevated: #ffffff;
+      --bg-hover: #f1f5f9;
+      --bg-active: #e2e8f0;
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --text-inverse: #ffffff;
+
+      --border-subtle: #e2e8f0;
+      --border-default: #cbd5e1;
+      --border-strong: #94a3b8;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+
+      /* Sidebar specific */
+      --sidebar-width: 220px;
+      --content-width: 420px;
+      --panel-width: calc(var(--sidebar-width) + var(--content-width));
+
+      /* Transitions */
+      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Dark Theme Variables */
+    .dark-theme {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-elevated: #1e293b;
+      --bg-hover: #334155;
+      --bg-active: #475569;
+
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #64748b;
+      --text-inverse: #0f172a;
+
+      --border-subtle: #334155;
+      --border-default: #475569;
+      --border-strong: #64748b;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.25);
+    }
+
+    /* ============================================
+       BASE STYLES
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============================================
+       MAIN SETTINGS PANEL
+       ============================================ */
+    .settings-panel {
+      width: var(--panel-width);
+      max-width: 100%;
+      height: 600px;
+      max-height: 90vh;
+      background: var(--bg-primary);
+      border-radius: 16px;
+      box-shadow: var(--shadow-xl), var(--shadow-glow);
+      display: flex;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Subtle gradient overlay for premium feel */
+    .settings-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================
+       SIDEBAR NAVIGATION
+       ============================================ */
+    .settings-sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .sidebar-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--jt-orange), #f97316);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: white;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+    }
+
+    .sidebar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-left: 42px;
+      margin-top: -2px;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: var(--tier-power-bg);
+      color: var(--tier-power);
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 42px;
+      margin-top: 8px;
+    }
+
+    /* Navigation */
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 8px;
+      overflow-y: auto;
+    }
+
+    .nav-section {
+      margin-bottom: 16px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 8px 12px 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-primary);
+      color: var(--jt-blue);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 20px;
+      background: var(--jt-blue);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .nav-item i {
+      width: 18px;
+      text-align: center;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .nav-item.active i {
+      opacity: 1;
+    }
+
+    .nav-item-badge {
+      margin-left: auto;
+      padding: 2px 6px;
+      background: var(--jt-blue);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .nav-item-badge.pro {
+      background: var(--tier-pro-bg);
+      color: var(--tier-pro);
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .theme-toggle-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .theme-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .theme-toggle-label i {
+      color: var(--jt-orange);
+    }
+
+    /* ============================================
+       MAIN CONTENT AREA
+       ============================================ */
+    .settings-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+      background: var(--bg-primary);
+    }
+
+    /* Content Header */
+    .content-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-primary);
+    }
+
+    .content-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .content-title i {
+      color: var(--jt-blue);
+      font-size: 16px;
+    }
+
+    .content-description {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Search Bar */
+    .content-search {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+    }
+
+    .search-input-wrapper i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      font-size: 13px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--jt-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* Content Body - Scrollable */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px 24px;
+    }
+
+    /* Custom Scrollbar */
+    .content-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content-body::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 3px;
+    }
+
+    .content-body::-webkit-scrollbar-thumb:hover {
+      background: var(--border-strong);
+    }
+
+    /* ============================================
+       FEATURE CARDS
+       ============================================ */
+    .feature-group {
+      margin-bottom: 20px;
+    }
+
+    .feature-group-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+      padding-left: 2px;
+    }
+
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      transition: all var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-card.active {
+      border-color: var(--jt-blue);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.01) 100%);
+    }
+
+    .feature-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+
+    .feature-card.active .feature-icon {
+      background: linear-gradient(135deg, var(--jt-blue), var(--jt-blue-dark));
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .feature-card.active .feature-icon span {
+      filter: grayscale(1) brightness(10);
+    }
+
+    .feature-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feature-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .feature-badge {
+      padding: 2px 8px;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .feature-badge.essential {
+      background: var(--tier-essential-bg);
+      color: var(--tier-essential);
+    }
+
+    .feature-badge.pro {
+      background: var(--tier-pro-bg);
+      color: var(--tier-pro);
+    }
+
+    .feature-badge.power {
+      background: var(--tier-power-bg);
+      color: var(--tier-power);
+    }
+
+    .feature-badge.new {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      color: #2e7d32;
+    }
+
+    .feature-description {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .feature-toggle {
+      margin-left: 12px;
+    }
+
+    /* ============================================
+       PREMIUM TOGGLE SWITCH
+       ============================================ */
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      transition: all var(--transition-fast);
+      border-radius: 24px;
+    }
+
+    .toggle-slider::before {
+      position: absolute;
+      content: '';
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      transition: all var(--transition-fast);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--jt-blue);
+      border-color: var(--jt-blue);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+
+    .toggle-switch input:focus + .toggle-slider {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Toggle with icons */
+    .toggle-slider .toggle-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      transition: opacity var(--transition-fast);
+    }
+
+    .toggle-slider .toggle-icon.off {
+      right: 6px;
+      color: var(--text-tertiary);
+      opacity: 1;
+    }
+
+    .toggle-slider .toggle-icon.on {
+      left: 6px;
+      color: white;
+      opacity: 0;
+    }
+
+    .toggle-switch input:checked + .toggle-slider .toggle-icon.off {
+      opacity: 0;
+    }
+
+    .toggle-switch input:checked + .toggle-slider .toggle-icon.on {
+      opacity: 1;
+    }
+
+    /* ============================================
+       EXPANDABLE FEATURE OPTIONS
+       ============================================ */
+    .feature-options {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    .feature-card.expanded .feature-options {
+      display: block;
+      animation: slideDown 0.2s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .option-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .option-select {
+      padding: 6px 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .option-input {
+      padding: 6px 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-size: 12px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      width: 120px;
+    }
+
+    /* ============================================
+       SETTINGS SECTIONS (API, License, etc.)
+       ============================================ */
+    .settings-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .settings-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .settings-section-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--jt-cyan), var(--jt-cyan-bright));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .settings-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .settings-section-description {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      font-size: 13px;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--jt-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--jt-blue), var(--jt-blue-dark));
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-default);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ============================================
+       THEME CUSTOMIZATION PREVIEW
+       ============================================ */
+    .theme-preview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .theme-color-picker {
+      text-align: center;
+    }
+
+    .color-picker-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .color-picker-wrapper {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      margin: 0 auto;
+    }
+
+    .color-picker-input {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--bg-primary);
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      -webkit-appearance: none;
+      padding: 0;
+    }
+
+    .color-picker-input::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-picker-input::-webkit-color-swatch {
+      border: none;
+      border-radius: 9px;
+    }
+
+    /* Saved Themes */
+    .saved-themes {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .saved-theme-slot {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border: 2px dashed var(--border-default);
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .saved-theme-slot:hover {
+      border-color: var(--jt-blue);
+      border-style: solid;
+    }
+
+    .saved-theme-slot.filled {
+      border-style: solid;
+      border-color: var(--border-subtle);
+    }
+
+    .theme-colors-preview {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .theme-color-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-slot-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* ============================================
+       STATUS MESSAGES
+       ============================================ */
+    .status-message {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .status-message.success {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .status-message.error {
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .status-message.info {
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .status-message i {
+      font-size: 16px;
+    }
+
+    /* ============================================
+       CLOSE BUTTON
+       ============================================ */
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      background: var(--bg-tertiary);
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      z-index: 10;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* ============================================
+       LICENSE SECTION SPECIAL STYLING
+       ============================================ */
+    .license-card {
+      background: linear-gradient(135deg, rgba(234, 88, 12, 0.05) 0%, rgba(249, 115, 22, 0.02) 100%);
+      border-color: rgba(234, 88, 12, 0.2);
+    }
+
+    .license-card .settings-section-icon {
+      background: linear-gradient(135deg, var(--jt-orange), #f97316);
+    }
+
+    .license-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .license-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .license-status-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .license-status-tier {
+      margin-left: auto;
+      padding: 4px 10px;
+      background: var(--tier-power-bg);
+      color: var(--tier-power);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 10px;
+      text-transform: uppercase;
+    }
+
+    /* ============================================
+       RESPONSIVE ADJUSTMENTS
+       ============================================ */
+    @media (max-width: 700px) {
+      body {
+        padding: 16px;
+      }
+
+      .settings-panel {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+      }
+
+      .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .sidebar-nav {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 8px;
+        gap: 4px;
+      }
+
+      .nav-section {
+        display: flex;
+        margin-bottom: 0;
+      }
+
+      .nav-section-title {
+        display: none;
+      }
+
+      .nav-item {
+        padding: 8px 12px;
+        white-space: nowrap;
+      }
+
+      .nav-item span:not(.nav-item-badge) {
+        display: none;
+      }
+
+      .settings-content {
+        min-height: 500px;
+      }
+    }
+
+    /* ============================================
+       DARK MODE DEMO BUTTON
+       ============================================ */
+    .demo-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .demo-btn {
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all var(--transition-fast);
+    }
+
+    .demo-btn:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <!-- Main Settings Panel -->
+  <div class="settings-panel" id="settingsPanel">
+    <!-- Close Button -->
+    <button class="close-btn" title="Close Settings">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <aside class="settings-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">JT</div>
+          <span class="sidebar-title">Power Tools</span>
+        </div>
+        <div class="sidebar-subtitle">Extension Settings</div>
+        <span class="version-badge">
+          <i class="fas fa-star"></i> v3.5.1 Beta
+        </span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Features</div>
+          <div class="nav-item active" data-section="schedule">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Schedule</span>
+            <span class="nav-item-badge">3</span>
+          </div>
+          <div class="nav-item" data-section="productivity">
+            <i class="fas fa-bolt"></i>
+            <span>Productivity</span>
+            <span class="nav-item-badge">7</span>
+          </div>
+          <div class="nav-item" data-section="appearance">
+            <i class="fas fa-palette"></i>
+            <span>Appearance</span>
+            <span class="nav-item-badge">4</span>
+          </div>
+          <div class="nav-item" data-section="api">
+            <i class="fas fa-code"></i>
+            <span>API & Power</span>
+            <span class="nav-item-badge pro">PRO</span>
+          </div>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Account</div>
+          <div class="nav-item" data-section="license">
+            <i class="fas fa-key"></i>
+            <span>License</span>
+          </div>
+          <div class="nav-item" data-section="about">
+            <i class="fas fa-info-circle"></i>
+            <span>About</span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-toggle-wrapper">
+          <span class="theme-toggle-label">
+            <i class="fas fa-moon"></i>
+            Dark Mode
+          </span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="toggle-slider">
+              <i class="fas fa-sun toggle-icon on"></i>
+              <i class="fas fa-moon toggle-icon off"></i>
+            </span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="settings-content">
+      <!-- Content Header -->
+      <header class="content-header">
+        <h2 class="content-title">
+          <i class="fas fa-calendar-alt"></i>
+          Schedule & Calendar
+        </h2>
+        <p class="content-description">
+          Enhance your scheduling workflow with powerful calendar features and visual improvements.
+        </p>
+      </header>
+
+      <!-- Search Bar -->
+      <div class="content-search">
+        <div class="search-input-wrapper">
+          <i class="fas fa-search"></i>
+          <input type="text" class="search-input" placeholder="Search features...">
+        </div>
+      </div>
+
+      <!-- Content Body -->
+      <div class="content-body">
+        <!-- Feature Group -->
+        <div class="feature-group">
+          <div class="feature-group-title">Calendar Enhancements</div>
+
+          <!-- Feature Card 1 -->
+          <div class="feature-card active">
+            <div class="feature-card-header">
+              <div class="feature-icon">
+                <span>🗓️</span>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title-row">
+                  <span class="feature-title">Enhanced Schedule View</span>
+                  <span class="feature-badge essential">Essential</span>
+                </div>
+                <p class="feature-description">
+                  Improved calendar layout with better visual hierarchy and quick actions.
+                </p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Card 2 -->
+          <div class="feature-card expanded">
+            <div class="feature-card-header">
+              <div class="feature-icon">
+                <span>📅</span>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title-row">
+                  <span class="feature-title">Quick Date Navigation</span>
+                  <span class="feature-badge pro">Pro</span>
+                  <span class="feature-badge new">New</span>
+                </div>
+                <p class="feature-description">
+                  Jump to any date instantly with keyboard shortcuts and date picker.
+                </p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="feature-options">
+              <div class="option-row">
+                <span class="option-label">Default view</span>
+                <select class="option-select">
+                  <option>Week</option>
+                  <option>Month</option>
+                  <option>Day</option>
+                </select>
+              </div>
+              <div class="option-row">
+                <span class="option-label">Week starts on</span>
+                <select class="option-select">
+                  <option>Sunday</option>
+                  <option>Monday</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature Card 3 -->
+          <div class="feature-card">
+            <div class="feature-card-header">
+              <div class="feature-icon">
+                <span>🔔</span>
+              </div>
+              <div class="feature-info">
+                <div class="feature-title-row">
+                  <span class="feature-title">Smart Notifications</span>
+                  <span class="feature-badge power">Power User</span>
+                </div>
+                <p class="feature-description">
+                  Get intelligent reminders based on your schedule patterns.
+                </p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle-switch">
+                  <input type="checkbox">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Section - Theme Customization -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <div class="settings-section-icon">
+              <i class="fas fa-palette"></i>
+            </div>
+            <div>
+              <div class="settings-section-title">Theme Customization</div>
+              <div class="settings-section-description">Personalize your JobTread experience</div>
+            </div>
+          </div>
+
+          <div class="theme-preview">
+            <div class="theme-color-picker">
+              <span class="color-picker-label">Primary</span>
+              <div class="color-picker-wrapper">
+                <input type="color" class="color-picker-input" value="#3B82F6">
+              </div>
+            </div>
+            <div class="theme-color-picker">
+              <span class="color-picker-label">Background</span>
+              <div class="color-picker-wrapper">
+                <input type="color" class="color-picker-input" value="#F3E8FF">
+              </div>
+            </div>
+            <div class="theme-color-picker">
+              <span class="color-picker-label">Text</span>
+              <div class="color-picker-wrapper">
+                <input type="color" class="color-picker-input" value="#1F1B29">
+              </div>
+            </div>
+          </div>
+
+          <div class="saved-themes">
+            <div class="saved-theme-slot filled">
+              <div class="theme-colors-preview">
+                <span class="theme-color-dot" style="background: #3B82F6"></span>
+                <span class="theme-color-dot" style="background: #F3E8FF"></span>
+                <span class="theme-color-dot" style="background: #1F1B29"></span>
+              </div>
+              <span class="theme-slot-label">Lavender</span>
+            </div>
+            <div class="saved-theme-slot filled">
+              <div class="theme-colors-preview">
+                <span class="theme-color-dot" style="background: #059669"></span>
+                <span class="theme-color-dot" style="background: #ECFDF5"></span>
+                <span class="theme-color-dot" style="background: #064E3B"></span>
+              </div>
+              <span class="theme-slot-label">Forest</span>
+            </div>
+            <div class="saved-theme-slot">
+              <div class="theme-colors-preview">
+                <span class="theme-color-dot" style="background: #e5e5e5"></span>
+                <span class="theme-color-dot" style="background: #e5e5e5"></span>
+                <span class="theme-color-dot" style="background: #e5e5e5"></span>
+              </div>
+              <span class="theme-slot-label">Empty Slot</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary">
+              <i class="fas fa-save"></i>
+              Save Theme
+            </button>
+            <button class="btn btn-secondary">
+              <i class="fas fa-undo"></i>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Settings Section - API Configuration -->
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <div class="settings-section-icon">
+              <i class="fas fa-plug"></i>
+            </div>
+            <div>
+              <div class="settings-section-title">API Configuration</div>
+              <div class="settings-section-description">Connect to JobTread API for advanced features</div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Grant Key</label>
+            <input type="password" class="input-field" placeholder="Enter your API grant key">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Organization ID</label>
+            <input type="text" class="input-field" placeholder="e.g., org_123456789">
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary">
+              <i class="fas fa-link"></i>
+              Connect
+            </button>
+            <button class="btn btn-secondary">
+              <i class="fas fa-vial"></i>
+              Test Connection
+            </button>
+          </div>
+
+          <div class="status-message success">
+            <i class="fas fa-check-circle"></i>
+            <span>API connected successfully! All power features are now available.</span>
+          </div>
+        </div>
+
+        <!-- Settings Section - License -->
+        <div class="settings-section license-card">
+          <div class="settings-section-header">
+            <div class="settings-section-icon">
+              <i class="fas fa-crown"></i>
+            </div>
+            <div>
+              <div class="settings-section-title">License & Subscription</div>
+              <div class="settings-section-description">Manage your Power Tools license</div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">License Key</label>
+            <input type="text" class="input-field" placeholder="XXXX-XXXX-XXXX-XXXX" value="PT3X-K9M2-Q7W5-R8Y1">
+          </div>
+
+          <div class="license-status">
+            <span class="license-status-dot"></span>
+            <span class="license-status-text">License active until Dec 31, 2026</span>
+            <span class="license-status-tier">Power User</span>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-success">
+              <i class="fas fa-sync-alt"></i>
+              Refresh License
+            </button>
+            <button class="btn btn-secondary">
+              <i class="fas fa-arrow-up"></i>
+              Upgrade Plan
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="toggleDarkMode()">
+      <i class="fas fa-moon"></i> Toggle Dark Mode
+    </button>
+  </div>
+
+  <script>
+    // Dark mode toggle functionality
+    function toggleDarkMode() {
+      const panel = document.getElementById('settingsPanel');
+      const toggle = document.getElementById('darkModeToggle');
+      panel.classList.toggle('dark-theme');
+      toggle.checked = panel.classList.contains('dark-theme');
+    }
+
+    // Sync toggle with dark mode
+    document.getElementById('darkModeToggle').addEventListener('change', function() {
+      document.getElementById('settingsPanel').classList.toggle('dark-theme', this.checked);
+    });
+
+    // Navigation functionality
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update content header based on selection
+        const section = this.dataset.section;
+        const icons = {
+          schedule: { icon: 'fa-calendar-alt', title: 'Schedule & Calendar', desc: 'Enhance your scheduling workflow with powerful calendar features.' },
+          productivity: { icon: 'fa-bolt', title: 'Productivity Tools', desc: 'Boost your efficiency with Quick Notes, formatters, and more.' },
+          appearance: { icon: 'fa-palette', title: 'Appearance & Themes', desc: 'Customize the look and feel of your JobTread experience.' },
+          api: { icon: 'fa-code', title: 'API & Power Features', desc: 'Advanced integrations for power users.' },
+          license: { icon: 'fa-key', title: 'License & Account', desc: 'Manage your subscription and license details.' },
+          about: { icon: 'fa-info-circle', title: 'About Power Tools', desc: 'Version info, credits, and support links.' }
+        };
+
+        if (icons[section]) {
+          document.querySelector('.content-title').innerHTML = `<i class="fas ${icons[section].icon}"></i> ${icons[section].title}`;
+          document.querySelector('.content-description').textContent = icons[section].desc;
+        }
+      });
+    });
+
+    // Feature card expand toggle
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('click', function(e) {
+        if (!e.target.closest('.toggle-switch')) {
+          this.classList.toggle('expanded');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
