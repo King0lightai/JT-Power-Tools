@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT Power Tools - Narrow Settings (Industrial)</title>
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/bold/style.css">
+  <style>
+    /* ============================================
+       INDUSTRIAL DESIGN SYSTEM
+       Inspired by: Gear logo, mechanical precision
+       ============================================ */
+    :root {
+      /* Brand Colors */
+      --brand-orange: #e85a1c;
+      --brand-orange-light: #ff6b2c;
+      --brand-orange-dark: #c94a12;
+      --brand-orange-glow: rgba(232, 90, 28, 0.25);
+
+      /* Industrial Neutrals - Cooler, more metallic */
+      --steel-50: #f8f9fa;
+      --steel-100: #f1f3f5;
+      --steel-200: #e9ecef;
+      --steel-300: #dee2e6;
+      --steel-400: #ced4da;
+      --steel-500: #adb5bd;
+      --steel-600: #868e96;
+      --steel-700: #495057;
+      --steel-800: #343a40;
+      --steel-900: #212529;
+      --steel-950: #1a1d21;
+
+      /* Light Theme */
+      --bg-primary: #ffffff;
+      --bg-secondary: var(--steel-50);
+      --bg-tertiary: var(--steel-100);
+      --bg-elevated: #ffffff;
+      --bg-inset: var(--steel-100);
+
+      --text-primary: var(--steel-900);
+      --text-secondary: var(--steel-700);
+      --text-tertiary: var(--steel-500);
+      --text-muted: var(--steel-400);
+
+      --border-subtle: var(--steel-200);
+      --border-default: var(--steel-300);
+      --border-strong: var(--steel-400);
+
+      /* Shadows - Sharper, more defined */
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+      --shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+
+      /* Layout */
+      --popup-width: 380px;
+      --header-height: 56px;
+
+      /* Radii - Sharper, industrial */
+      --radius-xs: 3px;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+
+      /* Timing */
+      --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --duration: 180ms;
+    }
+
+    /* Dark Theme - Matches logo background */
+    .dark-theme {
+      --bg-primary: var(--steel-900);
+      --bg-secondary: var(--steel-950);
+      --bg-tertiary: var(--steel-800);
+      --bg-elevated: var(--steel-800);
+      --bg-inset: var(--steel-950);
+
+      --text-primary: var(--steel-100);
+      --text-secondary: var(--steel-300);
+      --text-tertiary: var(--steel-500);
+      --text-muted: var(--steel-600);
+
+      --border-subtle: var(--steel-800);
+      --border-default: var(--steel-700);
+      --border-strong: var(--steel-600);
+
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ============================================
+       BASE
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #2d3238;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================
+       POPUP CONTAINER
+       ============================================ */
+    .popup {
+      width: var(--popup-width);
+      max-width: 100%;
+      height: 580px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============================================
+       HEADER - Compact, branded
+       ============================================ */
+    .header {
+      height: var(--header-height);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Gear SVG Logo */
+    .logo-gear {
+      width: 36px;
+      height: 36px;
+    }
+
+    .logo-gear .gear-path {
+      fill: var(--steel-400);
+      transition: fill var(--duration) var(--ease);
+    }
+
+    .dark-theme .logo-gear .gear-path {
+      fill: var(--steel-500);
+    }
+
+    .logo-gear .j-path {
+      fill: var(--brand-orange);
+    }
+
+    .logo-gear .t-path {
+      fill: var(--text-primary);
+    }
+
+    .header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      background: var(--brand-orange);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: var(--radius-xs);
+      letter-spacing: 0.04em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .icon-btn i {
+      font-size: 18px;
+    }
+
+    /* ============================================
+       TAB NAVIGATION - Segmented, industrial
+       ============================================ */
+    .tab-nav {
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .tab-list {
+      display: flex;
+      background: var(--bg-inset);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 2px;
+      box-shadow: var(--shadow-inset);
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-xs);
+      color: var(--text-tertiary);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+      position: relative;
+    }
+
+    .tab-item i {
+      font-size: 18px;
+    }
+
+    .tab-item:hover {
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+    }
+
+    .tab-item.active {
+      background: var(--bg-elevated);
+      color: var(--brand-orange);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 4px;
+      right: calc(50% - 16px);
+      min-width: 14px;
+      height: 14px;
+      padding: 0 4px;
+      background: var(--brand-orange);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================
+       CONTENT AREA
+       ============================================ */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--steel-300);
+      border-radius: 3px;
+    }
+
+    .dark-theme .content::-webkit-scrollbar-thumb {
+      background: var(--steel-700);
+    }
+
+    /* ============================================
+       SECTION HEADERS
+       ============================================ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ============================================
+       FEATURE ROWS - Compact, list-style
+       ============================================ */
+    .feature-list {
+      margin-bottom: 20px;
+    }
+
+    .feature-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .feature-row:hover {
+      border-color: var(--border-default);
+      background: var(--bg-tertiary);
+    }
+
+    .feature-row.active {
+      border-color: var(--brand-orange);
+      background: linear-gradient(135deg, rgba(232, 90, 28, 0.08) 0%, rgba(232, 90, 28, 0.02) 100%);
+    }
+
+    .feature-icon-wrap {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 18px;
+      flex-shrink: 0;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .feature-row.active .feature-icon-wrap {
+      background: var(--brand-orange);
+      color: white;
+      box-shadow: 0 2px 8px var(--brand-orange-glow);
+    }
+
+    .feature-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feature-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .feature-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .tier-tag {
+      padding: 2px 6px;
+      font-size: 9px;
+      font-weight: 700;
+      border-radius: var(--radius-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .tier-tag.essential {
+      background: #e3f9f2;
+      color: #0d9488;
+    }
+
+    .tier-tag.pro {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+
+    .tier-tag.power {
+      background: #fef3e2;
+      color: var(--brand-orange-dark);
+    }
+
+    .tier-tag.new {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .dark-theme .tier-tag.essential {
+      background: rgba(13, 148, 136, 0.2);
+    }
+
+    .dark-theme .tier-tag.pro {
+      background: rgba(124, 58, 237, 0.2);
+    }
+
+    .dark-theme .tier-tag.power {
+      background: rgba(232, 90, 28, 0.2);
+    }
+
+    .dark-theme .tier-tag.new {
+      background: rgba(22, 163, 74, 0.2);
+    }
+
+    /* Toggle */
+    .toggle-mini {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-mini input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-mini-track {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--steel-300);
+      border-radius: 22px;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .dark-theme .toggle-mini-track {
+      background: var(--steel-700);
+    }
+
+    .toggle-mini-track::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform var(--duration) var(--ease);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-mini input:checked + .toggle-mini-track {
+      background: var(--brand-orange);
+    }
+
+    .toggle-mini input:checked + .toggle-mini-track::before {
+      transform: translateX(16px);
+    }
+
+    /* ============================================
+       EXPANDABLE OPTIONS
+       ============================================ */
+    .feature-options {
+      display: none;
+      padding: 12px 0 0 48px;
+      animation: slideIn 0.15s var(--ease);
+    }
+
+    .feature-row.expanded .feature-options {
+      display: block;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .option-item:last-child {
+      border-bottom: none;
+    }
+
+    .option-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .option-select {
+      padding: 6px 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .option-select:focus {
+      outline: none;
+      border-color: var(--brand-orange);
+    }
+
+    /* ============================================
+       CONFIG PANELS
+       ============================================ */
+    .config-panel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .config-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .config-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 16px;
+    }
+
+    .config-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .config-desc {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* Form */
+    .form-field {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: all var(--duration) var(--ease);
+    }
+
+    .form-input:hover {
+      border-color: var(--border-default);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--brand-orange);
+      box-shadow: 0 0 0 2px var(--brand-orange-glow);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
+      color: white;
+      box-shadow: 0 2px 6px var(--brand-orange-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--brand-orange-glow);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    /* Status */
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-sm);
+      margin-top: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+    }
+
+    .status-text {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .status-tier {
+      padding: 4px 10px;
+      background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* ============================================
+       THEME PICKER - Compact
+       ============================================ */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .theme-color-item {
+      text-align: center;
+    }
+
+    .theme-color-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .theme-swatch {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--bg-primary);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      -webkit-appearance: none;
+      padding: 0;
+    }
+
+    .theme-swatch::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .theme-swatch::-webkit-color-swatch {
+      border: none;
+      border-radius: var(--radius-xs);
+    }
+
+    /* Preset themes */
+    .theme-presets {
+      display: flex;
+      gap: 8px;
+    }
+
+    .preset-slot {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--duration) var(--ease);
+    }
+
+    .preset-slot:hover {
+      border-color: var(--brand-orange);
+    }
+
+    .preset-colors {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+
+    .preset-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .preset-name {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    .footer {
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .footer-link {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color var(--duration) var(--ease);
+    }
+
+    .footer-link:hover {
+      color: var(--brand-orange);
+    }
+
+    .footer-link i {
+      font-size: 14px;
+    }
+
+    /* ============================================
+       DEMO CONTROLS
+       ============================================ */
+    .demo-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .demo-btn {
+      padding: 10px 16px;
+      background: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: all var(--duration) var(--ease);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+  </style>
+</head>
+<body>
+  <div class="popup" id="popup">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <!-- Simplified gear logo -->
+        <svg class="logo-gear" viewBox="0 0 36 36" fill="none">
+          <path class="gear-path" d="M18 4.5l2.1.3.9 2.4 2.4-.3 1.5 1.5-.3 2.4 2.4.9.3 2.1-2.1 1.2.3 2.4-1.8 1.5-2.1-1.2-1.8 1.8 1.2 2.1-1.5 1.8-2.4-.3-1.2 2.1-2.1-.3-.9-2.4-2.4.3-1.5-1.5.3-2.4-2.4-.9-.3-2.1 2.1-1.2-.3-2.4 1.8-1.5 2.1 1.2 1.8-1.8-1.2-2.1 1.5-1.8 2.4.3z"/>
+          <text class="j-path" x="11" y="23" font-family="Arial Black" font-size="13" font-weight="900">J</text>
+          <text class="t-path" x="19" y="23" font-family="Arial Black" font-size="13" font-weight="900">T</text>
+        </svg>
+      </div>
+      <div class="header-info">
+        <div class="header-title">Power Tools</div>
+        <div class="header-subtitle">
+          Settings
+          <span class="version-tag">v3.5.1</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme">
+          <i class="ph ph-moon"></i>
+        </button>
+        <button class="icon-btn" title="Close">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <div class="tab-list">
+        <button class="tab-item active" data-tab="features">
+          <i class="ph ph-lightning"></i>
+          Features
+          <span class="tab-badge">14</span>
+        </button>
+        <button class="tab-item" data-tab="appearance">
+          <i class="ph ph-palette"></i>
+          Theme
+        </button>
+        <button class="tab-item" data-tab="api">
+          <i class="ph ph-plugs-connected"></i>
+          API
+        </button>
+        <button class="tab-item" data-tab="license">
+          <i class="ph ph-key"></i>
+          License
+        </button>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Features Tab -->
+      <div class="tab-content" id="tab-features">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="ph ph-calendar-check"></i>
+          </div>
+          <span class="section-title">Schedule & Calendar</span>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-row active">
+            <div class="feature-icon-wrap">
+              <i class="ph ph-calendar-blank"></i>
+            </div>
+            <div class="feature-info">
+              <div class="feature-name">
+                Enhanced Schedule View
+                <span class="tier-tag essential">Essential</span>
+              </div>
+              <div class="feature-desc">Improved calendar layout with quick actions</div>
+            </div>
+            <label class="toggle-mini">
+              <input type="checkbox" checked>
+              <span class="toggle-mini-track"></span>
+            </label>
+          </div>
+
+          <div class="feature-row expanded">
+            <div class="feature-icon-wrap">
+              <i class="ph ph-calendar-dots"></i>
+            </div>
+            <div class="feature-info">
+              <div class="feature-name">
+                Quick Date Navigation
+                <span class="tier-tag pro">Pro</span>
+                <span class="tier-tag new">New</span>
+              </div>
+              <div class="feature-desc">Jump to any date with keyboard shortcuts</div>
+              <div class="feature-options">
+                <div class="option-item">
+                  <span class="option-label">Default view</span>
+                  <select class="option-select">
+                    <option>Week</option>
+                    <option>Month</option>
+                  </select>
+                </div>
+                <div class="option-item">
+                  <span class="option-label">Week starts</span>
+                  <select class="option-select">
+                    <option>Sunday</option>
+                    <option>Monday</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <label class="toggle-mini">
+              <input type="checkbox" checked>
+              <span class="toggle-mini-track"></span>
+            </label>
+          </div>
+
+          <div class="feature-row">
+            <div class="feature-icon-wrap">
+              <i class="ph ph-bell-ringing"></i>
+            </div>
+            <div class="feature-info">
+              <div class="feature-name">
+                Smart Notifications
+                <span class="tier-tag power">Power</span>
+              </div>
+              <div class="feature-desc">Intelligent reminders based on patterns</div>
+            </div>
+            <label class="toggle-mini">
+              <input type="checkbox">
+              <span class="toggle-mini-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="ph ph-note-pencil"></i>
+          </div>
+          <span class="section-title">Productivity</span>
+        </div>
+
+        <div class="feature-list">
+          <div class="feature-row active">
+            <div class="feature-icon-wrap">
+              <i class="ph ph-note"></i>
+            </div>
+            <div class="feature-info">
+              <div class="feature-name">
+                Quick Notes
+                <span class="tier-tag essential">Essential</span>
+              </div>
+              <div class="feature-desc">Sidebar note-taking with markdown</div>
+            </div>
+            <label class="toggle-mini">
+              <input type="checkbox" checked>
+              <span class="toggle-mini-track"></span>
+            </label>
+          </div>
+
+          <div class="feature-row">
+            <div class="feature-icon-wrap">
+              <i class="ph ph-text-aa"></i>
+            </div>
+            <div class="feature-info">
+              <div class="feature-name">
+                Rich Text Formatter
+                <span class="tier-tag pro">Pro</span>
+              </div>
+              <div class="feature-desc">Format text in any input field</div>
+            </div>
+            <label class="toggle-mini">
+              <input type="checkbox">
+              <span class="toggle-mini-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Tab -->
+      <div class="tab-content" id="tab-appearance" style="display: none;">
+        <div class="config-panel">
+          <div class="config-header">
+            <div class="config-icon">
+              <i class="ph ph-palette"></i>
+            </div>
+            <div>
+              <div class="config-title">Theme Customization</div>
+              <div class="config-desc">Personalize your JobTread</div>
+            </div>
+          </div>
+
+          <div class="theme-grid">
+            <div class="theme-color-item">
+              <span class="theme-color-label">Primary</span>
+              <input type="color" class="theme-swatch" value="#e85a1c">
+            </div>
+            <div class="theme-color-item">
+              <span class="theme-color-label">Background</span>
+              <input type="color" class="theme-swatch" value="#fef7ed">
+            </div>
+            <div class="theme-color-item">
+              <span class="theme-color-label">Text</span>
+              <input type="color" class="theme-swatch" value="#1a1d21">
+            </div>
+          </div>
+
+          <div class="theme-presets">
+            <div class="preset-slot">
+              <div class="preset-colors">
+                <span class="preset-dot" style="background: #e85a1c"></span>
+                <span class="preset-dot" style="background: #fef7ed"></span>
+                <span class="preset-dot" style="background: #1a1d21"></span>
+              </div>
+              <span class="preset-name">Forge</span>
+            </div>
+            <div class="preset-slot">
+              <div class="preset-colors">
+                <span class="preset-dot" style="background: #0891b2"></span>
+                <span class="preset-dot" style="background: #ecfeff"></span>
+                <span class="preset-dot" style="background: #164e63"></span>
+              </div>
+              <span class="preset-name">Ocean</span>
+            </div>
+            <div class="preset-slot">
+              <div class="preset-colors">
+                <span class="preset-dot" style="background: #7c3aed"></span>
+                <span class="preset-dot" style="background: #f5f3ff"></span>
+                <span class="preset-dot" style="background: #3b0764"></span>
+              </div>
+              <span class="preset-name">Violet</span>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary">
+              <i class="ph ph-floppy-disk"></i>
+              Save
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-arrow-counter-clockwise"></i>
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Tab -->
+      <div class="tab-content" id="tab-api" style="display: none;">
+        <div class="config-panel">
+          <div class="config-header">
+            <div class="config-icon">
+              <i class="ph ph-plugs-connected"></i>
+            </div>
+            <div>
+              <div class="config-title">API Configuration</div>
+              <div class="config-desc">Connect for power features</div>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Grant Key</label>
+            <input type="password" class="form-input" placeholder="Enter API grant key">
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Organization ID</label>
+            <input type="text" class="form-input" placeholder="org_123456789">
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary">
+              <i class="ph ph-link"></i>
+              Connect
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-flask"></i>
+              Test
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- License Tab -->
+      <div class="tab-content" id="tab-license" style="display: none;">
+        <div class="config-panel">
+          <div class="config-header">
+            <div class="config-icon">
+              <i class="ph ph-crown"></i>
+            </div>
+            <div>
+              <div class="config-title">License</div>
+              <div class="config-desc">Manage subscription</div>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">License Key</label>
+            <input type="text" class="form-input" value="PT3X-K9M2-Q7W5-R8Y1" style="font-family: monospace; letter-spacing: 1px;">
+          </div>
+
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span class="status-text">Active until Dec 31, 2026</span>
+            <span class="status-tier">Power User</span>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn btn-primary">
+              <i class="ph ph-arrows-clockwise"></i>
+              Refresh
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-rocket-launch"></i>
+              Upgrade
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="#" class="footer-link">
+          <i class="ph ph-question"></i>
+          Help
+        </a>
+        <a href="#" class="footer-link">
+          <i class="ph ph-chat-circle"></i>
+          Feedback
+        </a>
+      </div>
+      <a href="#" class="footer-link">
+        <i class="ph ph-github-logo"></i>
+        GitHub
+      </a>
+    </footer>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="toggleTheme()">
+      <i class="ph ph-moon"></i>
+      Dark Mode
+    </button>
+  </div>
+
+  <script>
+    // Theme toggle
+    function toggleTheme() {
+      document.getElementById('popup').classList.toggle('dark-theme');
+      const icon = document.querySelector('#themeToggle i');
+      icon.classList.toggle('ph-moon');
+      icon.classList.toggle('ph-sun');
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+    // Tab switching
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        const tabId = this.dataset.tab;
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('tab-' + tabId).style.display = 'block';
+      });
+    });
+
+    // Feature expand
+    document.querySelectorAll('.feature-row').forEach(row => {
+      row.addEventListener('click', function(e) {
+        if (!e.target.closest('.toggle-mini')) {
+          this.classList.toggle('expanded');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
