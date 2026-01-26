@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JT Power Tools - Premium Settings (Asana-Inspired)</title>
+  <!-- Phosphor Icons - Clean, modern icon set similar to Asana -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/bold/style.css">
+  <style>
+    /* ============================================
+       CSS VARIABLES - ASANA-INSPIRED WARM PALETTE
+       ============================================ */
+    :root {
+      /* Primary Orange/Coral Gradient (Asana-inspired) */
+      --primary-50: #fff7ed;
+      --primary-100: #ffedd5;
+      --primary-200: #fed7aa;
+      --primary-300: #fdba74;
+      --primary-400: #fb923c;
+      --primary-500: #f97316;
+      --primary-600: #ea580c;
+      --primary-700: #c2410c;
+      --primary-800: #9a3412;
+      --primary-900: #7c2d12;
+
+      /* Warm Neutrals */
+      --neutral-0: #ffffff;
+      --neutral-50: #fafaf9;
+      --neutral-100: #f5f5f4;
+      --neutral-150: #eeeeec;
+      --neutral-200: #e7e5e4;
+      --neutral-300: #d6d3d1;
+      --neutral-400: #a8a29e;
+      --neutral-500: #78716c;
+      --neutral-600: #57534e;
+      --neutral-700: #44403c;
+      --neutral-800: #292524;
+      --neutral-900: #1c1917;
+
+      /* Accent Colors for Tiers */
+      --teal-500: #14b8a6;
+      --teal-600: #0d9488;
+      --teal-50: #f0fdfa;
+
+      --violet-500: #8b5cf6;
+      --violet-600: #7c3aed;
+      --violet-50: #f5f3ff;
+
+      --amber-500: #f59e0b;
+      --amber-600: #d97706;
+      --amber-50: #fffbeb;
+
+      /* Semantic */
+      --success: #22c55e;
+      --success-light: #f0fdf4;
+      --error: #ef4444;
+      --error-light: #fef2f2;
+
+      /* Light Theme */
+      --bg-base: var(--neutral-0);
+      --bg-subtle: var(--neutral-50);
+      --bg-muted: var(--neutral-100);
+      --bg-emphasized: var(--neutral-150);
+
+      --text-primary: var(--neutral-900);
+      --text-secondary: var(--neutral-600);
+      --text-tertiary: var(--neutral-500);
+      --text-quaternary: var(--neutral-400);
+
+      --border-subtle: var(--neutral-200);
+      --border-default: var(--neutral-300);
+
+      /* Shadows - Softer, warmer */
+      --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.04);
+      --shadow-sm: 0 1px 3px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(28, 25, 23, 0.06), 0 2px 4px -2px rgba(28, 25, 23, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(28, 25, 23, 0.08), 0 4px 6px -4px rgba(28, 25, 23, 0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(28, 25, 23, 0.08), 0 8px 10px -6px rgba(28, 25, 23, 0.03);
+      --shadow-glow: 0 0 40px rgba(249, 115, 22, 0.12);
+
+      /* Layout */
+      --sidebar-width: 240px;
+      --content-width: 440px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+
+      /* Transitions */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-fast: 150ms;
+      --duration-normal: 250ms;
+    }
+
+    /* Dark Theme */
+    .dark-theme {
+      --bg-base: var(--neutral-900);
+      --bg-subtle: var(--neutral-800);
+      --bg-muted: var(--neutral-700);
+      --bg-emphasized: var(--neutral-600);
+
+      --text-primary: var(--neutral-50);
+      --text-secondary: var(--neutral-300);
+      --text-tertiary: var(--neutral-400);
+      --text-quaternary: var(--neutral-500);
+
+      --border-subtle: var(--neutral-700);
+      --border-default: var(--neutral-600);
+
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 60px rgba(249, 115, 22, 0.2);
+    }
+
+    /* ============================================
+       BASE STYLES
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #fef3e2 0%, #fce7d2 50%, #fddcc6 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ============================================
+       MAIN PANEL
+       ============================================ */
+    .settings-panel {
+      width: calc(var(--sidebar-width) + var(--content-width));
+      max-width: 100%;
+      height: 640px;
+      max-height: 90vh;
+      background: var(--bg-base);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl), var(--shadow-glow);
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ============================================
+       SIDEBAR
+       ============================================ */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg-subtle);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 24px 20px 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.35);
+    }
+
+    .brand-info {
+      flex: 1;
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .brand-tagline {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .version-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+      color: var(--primary-700);
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 20px;
+      margin-top: 12px;
+      border: 1px solid var(--primary-200);
+    }
+
+    .version-pill i {
+      font-size: 12px;
+    }
+
+    /* Navigation */
+    .sidebar-nav {
+      flex: 1;
+      padding: 8px 12px;
+      overflow-y: auto;
+    }
+
+    .nav-group {
+      margin-bottom: 20px;
+    }
+
+    .nav-group-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-quaternary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 8px 12px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      position: relative;
+      margin-bottom: 2px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-muted);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--bg-base);
+      color: var(--primary-600);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-item i {
+      font-size: 20px;
+      width: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item.active i {
+      color: var(--primary-500);
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: var(--bg-muted);
+      color: var(--text-tertiary);
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item.active .nav-badge {
+      background: var(--primary-100);
+      color: var(--primary-600);
+    }
+
+    .nav-badge.pro {
+      background: linear-gradient(135deg, var(--violet-50) 0%, #ede9fe 100%);
+      color: var(--violet-600);
+      font-size: 9px;
+      letter-spacing: 0.02em;
+    }
+
+    /* Sidebar Footer */
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .theme-switch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: var(--bg-muted);
+      border-radius: var(--radius-md);
+    }
+
+    .theme-switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .theme-switch-label i {
+      font-size: 18px;
+      color: var(--primary-500);
+    }
+
+    /* ============================================
+       CONTENT AREA
+       ============================================ */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-base);
+      position: relative;
+    }
+
+    /* Close Button */
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      background: var(--bg-muted);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all var(--duration-fast) var(--ease-out);
+      z-index: 10;
+    }
+
+    .close-btn:hover {
+      background: var(--bg-emphasized);
+      color: var(--text-primary);
+    }
+
+    /* Content Header */
+    .content-header {
+      padding: 28px 28px 20px;
+    }
+
+    .content-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .content-title i {
+      font-size: 24px;
+      color: var(--primary-500);
+    }
+
+    .content-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* Search */
+    .content-search {
+      padding: 0 28px 16px;
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-quaternary);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 14px 12px 44px;
+      background: var(--bg-subtle);
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .search-input:hover {
+      background: var(--bg-muted);
+    }
+
+    .search-input:focus {
+      outline: none;
+      background: var(--bg-base);
+      border-color: var(--primary-300);
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-quaternary);
+    }
+
+    /* Content Body */
+    .content-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 28px 28px;
+    }
+
+    .content-body::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .content-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content-body::-webkit-scrollbar-thumb {
+      background: var(--neutral-300);
+      border-radius: 3px;
+    }
+
+    .content-body::-webkit-scrollbar-thumb:hover {
+      background: var(--neutral-400);
+    }
+
+    /* ============================================
+       FEATURE CARDS - ASANA STYLE
+       ============================================ */
+    .feature-section {
+      margin-bottom: 24px;
+    }
+
+    .feature-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .feature-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 10px;
+      transition: all var(--duration-fast) var(--ease-out);
+      cursor: pointer;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-card.active {
+      border-color: var(--primary-300);
+      background: linear-gradient(135deg, var(--primary-50) 0%, var(--bg-base) 100%);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-card-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    /* Icon color variants */
+    .feature-icon.orange {
+      background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+      color: var(--primary-600);
+    }
+
+    .feature-icon.teal {
+      background: linear-gradient(135deg, #ccfbf1 0%, var(--teal-50) 100%);
+      color: var(--teal-600);
+    }
+
+    .feature-icon.violet {
+      background: linear-gradient(135deg, #ede9fe 0%, var(--violet-50) 100%);
+      color: var(--violet-600);
+    }
+
+    .feature-icon.amber {
+      background: linear-gradient(135deg, #fef3c7 0%, var(--amber-50) 100%);
+      color: var(--amber-600);
+    }
+
+    .feature-card.active .feature-icon {
+      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+    }
+
+    .feature-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+
+    .feature-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .feature-tag {
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .feature-tag.essential {
+      background: linear-gradient(135deg, #ccfbf1 0%, var(--teal-50) 100%);
+      color: var(--teal-600);
+    }
+
+    .feature-tag.pro {
+      background: linear-gradient(135deg, #ede9fe 0%, var(--violet-50) 100%);
+      color: var(--violet-600);
+    }
+
+    .feature-tag.power {
+      background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+      color: var(--primary-700);
+    }
+
+    .feature-tag.new {
+      background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%);
+      color: #16a34a;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .feature-toggle {
+      flex-shrink: 0;
+      margin-left: 8px;
+    }
+
+    /* ============================================
+       TOGGLE SWITCH - ASANA STYLE
+       ============================================ */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 26px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-track {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--neutral-300);
+      border-radius: 26px;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .toggle-track::before {
+      position: absolute;
+      content: '';
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: all var(--duration-fast) var(--ease-out);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle input:checked + .toggle-track {
+      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+    }
+
+    .toggle input:checked + .toggle-track::before {
+      transform: translateX(18px);
+    }
+
+    .toggle input:focus + .toggle-track {
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    /* ============================================
+       EXPANDABLE OPTIONS
+       ============================================ */
+    .feature-options {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: none;
+      animation: fadeSlideIn 0.2s var(--ease-out);
+    }
+
+    .feature-card.expanded .feature-options {
+      display: block;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .option-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .option-select {
+      padding: 8px 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .option-select:hover {
+      border-color: var(--border-default);
+    }
+
+    .option-select:focus {
+      outline: none;
+      border-color: var(--primary-400);
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    /* ============================================
+       SETTINGS SECTIONS
+       ============================================ */
+    .settings-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .settings-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .settings-card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+    }
+
+    .settings-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .settings-card-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .form-input:hover {
+      border-color: var(--border-default);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary-400);
+      box-shadow: 0 0 0 3px var(--primary-100);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-quaternary);
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 18px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-base);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-muted);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+    }
+
+    /* Status Messages */
+    .status-msg {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .status-msg.success {
+      background: var(--success-light);
+      color: #166534;
+    }
+
+    .status-msg i {
+      font-size: 18px;
+    }
+
+    /* ============================================
+       THEME CUSTOMIZATION
+       ============================================ */
+    .color-pickers {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    .color-picker-item {
+      text-align: center;
+    }
+
+    .color-picker-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .color-swatch {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-md);
+      border: 3px solid var(--bg-base);
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      -webkit-appearance: none;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .color-swatch::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-swatch::-webkit-color-swatch {
+      border: none;
+    }
+
+    /* Saved Theme Slots */
+    .theme-slots {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .theme-slot {
+      flex: 1;
+      padding: 14px;
+      background: var(--bg-base);
+      border: 2px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .theme-slot:hover {
+      border-color: var(--primary-400);
+      border-style: solid;
+    }
+
+    .theme-slot.filled {
+      border-style: solid;
+      border-color: var(--border-subtle);
+    }
+
+    .theme-slot-colors {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .theme-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--bg-subtle);
+    }
+
+    .theme-slot-name {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    /* ============================================
+       LICENSE SECTION
+       ============================================ */
+    .license-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg-base);
+      border-radius: var(--radius-md);
+      margin-top: 14px;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.95); }
+    }
+
+    .status-text {
+      flex: 1;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .tier-badge {
+      padding: 5px 12px;
+      background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+      color: var(--primary-700);
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    /* ============================================
+       MOBILE RESPONSIVE
+       ============================================ */
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+        background: var(--bg-subtle);
+      }
+
+      .settings-panel {
+        flex-direction: column;
+        height: auto;
+        max-height: none;
+        border-radius: var(--radius-lg);
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .sidebar-header {
+        padding: 16px;
+      }
+
+      .version-pill {
+        display: none;
+      }
+
+      .sidebar-nav {
+        display: flex;
+        padding: 0 12px 12px;
+        overflow-x: auto;
+        gap: 4px;
+      }
+
+      .nav-group {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 0;
+      }
+
+      .nav-group-label {
+        display: none;
+      }
+
+      .nav-item {
+        padding: 10px 14px;
+        white-space: nowrap;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+      }
+
+      .nav-item i {
+        font-size: 22px;
+      }
+
+      .nav-item span:not(.nav-badge) {
+        display: none;
+      }
+
+      .nav-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        min-width: 16px;
+        height: 16px;
+        font-size: 9px;
+      }
+
+      .sidebar-footer {
+        display: none;
+      }
+
+      .content {
+        min-height: auto;
+      }
+
+      .content-header,
+      .content-search,
+      .content-body {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+
+    /* ============================================
+       DEMO CONTROLS
+       ============================================ */
+    .demo-controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .demo-btn {
+      padding: 12px 18px;
+      background: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: all var(--duration-fast) var(--ease-out);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--neutral-700);
+    }
+
+    .demo-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .demo-btn i {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-panel" id="settingsPanel">
+    <!-- Close Button -->
+    <button class="close-btn">
+      <i class="ph ph-x"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-logo">JT</div>
+          <div class="brand-info">
+            <div class="brand-name">Power Tools</div>
+            <div class="brand-tagline">Extension Settings</div>
+          </div>
+        </div>
+        <div class="version-pill">
+          <i class="ph-fill ph-star"></i>
+          v3.5.1 Beta
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-label">Features</div>
+          <div class="nav-item active" data-section="schedule">
+            <i class="ph ph-calendar-blank"></i>
+            <span>Schedule</span>
+            <span class="nav-badge">3</span>
+          </div>
+          <div class="nav-item" data-section="productivity">
+            <i class="ph ph-lightning"></i>
+            <span>Productivity</span>
+            <span class="nav-badge">7</span>
+          </div>
+          <div class="nav-item" data-section="appearance">
+            <i class="ph ph-palette"></i>
+            <span>Appearance</span>
+            <span class="nav-badge">4</span>
+          </div>
+          <div class="nav-item" data-section="api">
+            <i class="ph ph-code"></i>
+            <span>API & Power</span>
+            <span class="nav-badge pro">PRO</span>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Account</div>
+          <div class="nav-item" data-section="license">
+            <i class="ph ph-key"></i>
+            <span>License</span>
+          </div>
+          <div class="nav-item" data-section="about">
+            <i class="ph ph-info"></i>
+            <span>About</span>
+          </div>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-switch">
+          <span class="theme-switch-label">
+            <i class="ph-fill ph-moon-stars"></i>
+            Dark Mode
+          </span>
+          <label class="toggle">
+            <input type="checkbox" id="darkToggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="content">
+      <header class="content-header">
+        <h2 class="content-title">
+          <i class="ph ph-calendar-blank"></i>
+          Schedule & Calendar
+        </h2>
+        <p class="content-description">
+          Enhance your scheduling workflow with powerful calendar features and visual improvements.
+        </p>
+      </header>
+
+      <div class="content-search">
+        <div class="search-wrapper">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" class="search-input" placeholder="Search features...">
+        </div>
+      </div>
+
+      <div class="content-body">
+        <!-- Feature Section -->
+        <div class="feature-section">
+          <div class="feature-section-title">Calendar Enhancements</div>
+
+          <!-- Feature 1 -->
+          <div class="feature-card active">
+            <div class="feature-card-inner">
+              <div class="feature-icon orange">
+                <i class="ph ph-calendar-check"></i>
+              </div>
+              <div class="feature-content">
+                <div class="feature-header">
+                  <span class="feature-name">Enhanced Schedule View</span>
+                  <span class="feature-tag essential">Essential</span>
+                </div>
+                <p class="feature-desc">Improved calendar layout with better visual hierarchy and quick actions.</p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="feature-card expanded">
+            <div class="feature-card-inner">
+              <div class="feature-icon teal">
+                <i class="ph ph-calendar-dots"></i>
+              </div>
+              <div class="feature-content">
+                <div class="feature-header">
+                  <span class="feature-name">Quick Date Navigation</span>
+                  <span class="feature-tag pro">Pro</span>
+                  <span class="feature-tag new">New</span>
+                </div>
+                <p class="feature-desc">Jump to any date instantly with keyboard shortcuts and date picker.</p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle">
+                  <input type="checkbox" checked>
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+            <div class="feature-options">
+              <div class="option-row">
+                <span class="option-label">Default view</span>
+                <select class="option-select">
+                  <option>Week</option>
+                  <option>Month</option>
+                  <option>Day</option>
+                </select>
+              </div>
+              <div class="option-row">
+                <span class="option-label">Week starts on</span>
+                <select class="option-select">
+                  <option>Sunday</option>
+                  <option>Monday</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="feature-card">
+            <div class="feature-card-inner">
+              <div class="feature-icon violet">
+                <i class="ph ph-bell-ringing"></i>
+              </div>
+              <div class="feature-content">
+                <div class="feature-header">
+                  <span class="feature-name">Smart Notifications</span>
+                  <span class="feature-tag power">Power User</span>
+                </div>
+                <p class="feature-desc">Get intelligent reminders based on your schedule patterns.</p>
+              </div>
+              <div class="feature-toggle">
+                <label class="toggle">
+                  <input type="checkbox">
+                  <span class="toggle-track"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Customization -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <i class="ph ph-palette"></i>
+            </div>
+            <div>
+              <div class="settings-card-title">Theme Customization</div>
+              <div class="settings-card-desc">Personalize your JobTread experience</div>
+            </div>
+          </div>
+
+          <div class="color-pickers">
+            <div class="color-picker-item">
+              <span class="color-picker-label">Primary</span>
+              <input type="color" class="color-swatch" value="#f97316">
+            </div>
+            <div class="color-picker-item">
+              <span class="color-picker-label">Background</span>
+              <input type="color" class="color-swatch" value="#fef7ed">
+            </div>
+            <div class="color-picker-item">
+              <span class="color-picker-label">Text</span>
+              <input type="color" class="color-swatch" value="#1c1917">
+            </div>
+          </div>
+
+          <div class="theme-slots">
+            <div class="theme-slot filled">
+              <div class="theme-slot-colors">
+                <span class="theme-dot" style="background: #f97316"></span>
+                <span class="theme-dot" style="background: #fef7ed"></span>
+                <span class="theme-dot" style="background: #1c1917"></span>
+              </div>
+              <span class="theme-slot-name">Warm Orange</span>
+            </div>
+            <div class="theme-slot filled">
+              <div class="theme-slot-colors">
+                <span class="theme-dot" style="background: #0891b2"></span>
+                <span class="theme-dot" style="background: #ecfeff"></span>
+                <span class="theme-dot" style="background: #164e63"></span>
+              </div>
+              <span class="theme-slot-name">Ocean</span>
+            </div>
+            <div class="theme-slot">
+              <div class="theme-slot-colors">
+                <span class="theme-dot" style="background: #d6d3d1"></span>
+                <span class="theme-dot" style="background: #d6d3d1"></span>
+                <span class="theme-dot" style="background: #d6d3d1"></span>
+              </div>
+              <span class="theme-slot-name">Empty Slot</span>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary">
+              <i class="ph ph-floppy-disk"></i>
+              Save Theme
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-arrow-counter-clockwise"></i>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- API Configuration -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <i class="ph ph-plugs-connected"></i>
+            </div>
+            <div>
+              <div class="settings-card-title">API Configuration</div>
+              <div class="settings-card-desc">Connect to JobTread API for power features</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Grant Key</label>
+            <input type="password" class="form-input" placeholder="Enter your API grant key">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Organization ID</label>
+            <input type="text" class="form-input" placeholder="e.g., org_123456789">
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary">
+              <i class="ph ph-link"></i>
+              Connect
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-flask"></i>
+              Test
+            </button>
+          </div>
+
+          <div class="status-msg success">
+            <i class="ph-fill ph-check-circle"></i>
+            <span>Connected successfully! All power features enabled.</span>
+          </div>
+        </div>
+
+        <!-- License -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon">
+              <i class="ph ph-crown"></i>
+            </div>
+            <div>
+              <div class="settings-card-title">License & Subscription</div>
+              <div class="settings-card-desc">Manage your Power Tools license</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">License Key</label>
+            <input type="text" class="form-input" value="PT3X-K9M2-Q7W5-R8Y1" style="font-family: monospace;">
+          </div>
+
+          <div class="license-status">
+            <span class="status-indicator"></span>
+            <span class="status-text">Active until December 31, 2026</span>
+            <span class="tier-badge">Power User</span>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-primary">
+              <i class="ph ph-arrows-clockwise"></i>
+              Refresh
+            </button>
+            <button class="btn btn-secondary">
+              <i class="ph ph-rocket-launch"></i>
+              Upgrade
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="toggleDark()">
+      <i class="ph ph-moon"></i>
+      Dark Mode
+    </button>
+  </div>
+
+  <script>
+    // Dark mode
+    function toggleDark() {
+      const panel = document.getElementById('settingsPanel');
+      const toggle = document.getElementById('darkToggle');
+      panel.classList.toggle('dark-theme');
+      toggle.checked = panel.classList.contains('dark-theme');
+    }
+
+    document.getElementById('darkToggle').addEventListener('change', function() {
+      document.getElementById('settingsPanel').classList.toggle('dark-theme', this.checked);
+    });
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+
+        const section = this.dataset.section;
+        const sections = {
+          schedule: { icon: 'ph-calendar-blank', title: 'Schedule & Calendar', desc: 'Enhance your scheduling workflow with powerful calendar features.' },
+          productivity: { icon: 'ph-lightning', title: 'Productivity Tools', desc: 'Boost efficiency with Quick Notes, formatters, and more.' },
+          appearance: { icon: 'ph-palette', title: 'Appearance & Themes', desc: 'Customize the look and feel of JobTread.' },
+          api: { icon: 'ph-code', title: 'API & Power Features', desc: 'Advanced integrations for power users.' },
+          license: { icon: 'ph-key', title: 'License & Account', desc: 'Manage your subscription and license.' },
+          about: { icon: 'ph-info', title: 'About Power Tools', desc: 'Version info, credits, and support.' }
+        };
+
+        if (sections[section]) {
+          document.querySelector('.content-title').innerHTML = `<i class="ph ${sections[section].icon}"></i> ${sections[section].title}`;
+          document.querySelector('.content-description').textContent = sections[section].desc;
+        }
+      });
+    });
+
+    // Feature card expand
+    document.querySelectorAll('.feature-card').forEach(card => {
+      card.addEventListener('click', function(e) {
+        if (!e.target.closest('.toggle')) {
+          this.classList.toggle('expanded');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
