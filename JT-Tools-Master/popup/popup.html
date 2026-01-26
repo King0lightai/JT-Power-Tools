@@ -7,6 +7,9 @@
   <!-- Theme-aware favicons -->
   <link rel="icon" href="../icons/icon16-light.png" media="(prefers-color-scheme: light)">
   <link rel="icon" href="../icons/icon16-dark.png" media="(prefers-color-scheme: dark)">
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -18,8 +21,8 @@
         <h1>Power Tools</h1>
         <span class="version">v3.5.1</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
-          <span class="theme-icon light-icon">☀️</span>
-          <span class="theme-icon dark-icon">🌙</span>
+          <i class="ph ph-sun theme-icon light-icon"></i>
+          <i class="ph ph-moon theme-icon dark-icon"></i>
         </button>
       </div>
     </header>
@@ -28,20 +31,20 @@
     <nav class="tab-nav">
       <div class="tab-list">
         <button class="tab-item active" data-tab="features">
-          <span class="tab-icon">⚡</span>
+          <i class="ph ph-lightning tab-icon"></i>
           <span class="tab-label">Features</span>
           <span class="tab-badge" id="featureCount">14</span>
         </button>
         <button class="tab-item" data-tab="appearance">
-          <span class="tab-icon">🎨</span>
+          <i class="ph ph-palette tab-icon"></i>
           <span class="tab-label">Theme</span>
         </button>
         <button class="tab-item" data-tab="api">
-          <span class="tab-icon">🔌</span>
+          <i class="ph ph-plugs-connected tab-icon"></i>
           <span class="tab-label">API</span>
         </button>
         <button class="tab-item" data-tab="license">
-          <span class="tab-icon">🔑</span>
+          <i class="ph ph-key tab-icon"></i>
           <span class="tab-label">License</span>
         </button>
       </div>
@@ -57,7 +60,7 @@
           <!-- Schedule & Calendar Category -->
           <div class="feature-category">
             <div class="category-header" data-category="schedule">
-              <span class="category-icon">🗓️</span>
+              <i class="ph ph-calendar-blank category-icon"></i>
               <span class="category-title">Schedule & Calendar</span>
               <span class="category-count">3</span>
               <span class="category-toggle">▼</span>
@@ -101,7 +104,7 @@
           <!-- Productivity Tools Category -->
           <div class="feature-category">
             <div class="category-header" data-category="productivity">
-              <span class="category-icon">⚡</span>
+              <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
               <span class="category-count">7</span>
               <span class="category-toggle">▼</span>
@@ -189,7 +192,7 @@
           <!-- Appearance Category (just toggles, no customization) -->
           <div class="feature-category">
             <div class="category-header" data-category="appearance-features">
-              <span class="category-icon">🎨</span>
+              <i class="ph ph-palette category-icon"></i>
               <span class="category-title">Appearance</span>
               <span class="category-count">4</span>
               <span class="category-toggle">▼</span>
@@ -254,7 +257,7 @@
       <div class="tab-content" id="tab-appearance">
         <div class="tab-panel-content">
           <div class="panel-header">
-            <div class="panel-icon">🎨</div>
+            <div class="panel-icon"><i class="ph ph-palette"></i></div>
             <div class="panel-info">
               <h2 class="panel-title">Theme Customization</h2>
               <p class="panel-desc">Personalize your JobTread experience</p>
@@ -339,7 +342,7 @@
 
           <!-- Theme toggle requirement notice -->
           <div class="theme-notice" id="themeNotice">
-            <p>💡 Enable <strong>Custom Theme</strong> in the Features tab to use theme customization.</p>
+            <p><i class="ph ph-lightbulb"></i> Enable <strong>Custom Theme</strong> in the Features tab to use theme customization.</p>
           </div>
         </div>
       </div>
@@ -348,7 +351,7 @@
       <div class="tab-content" id="tab-api">
         <div class="tab-panel-content">
           <div class="panel-header">
-            <div class="panel-icon">🔌</div>
+            <div class="panel-icon"><i class="ph ph-plugs-connected"></i></div>
             <div class="panel-info">
               <h2 class="panel-title">API Configuration</h2>
               <p class="panel-desc">Connect for power user features</p>
@@ -395,8 +398,8 @@
             </div>
 
             <p class="api-hint">
-              📍 Get your Grant Key: JobTread Settings → Integrations → API<br>
-              💡 One team member sets this up, others use the same Grant Key to join
+              <i class="ph ph-map-pin"></i> Get your Grant Key: JobTread Settings → Integrations → API<br>
+              <i class="ph ph-lightbulb"></i> One team member sets this up, others use the same Grant Key to join
             </p>
           </div>
         </div>
@@ -406,7 +409,7 @@
       <div class="tab-content" id="tab-license">
         <div class="tab-panel-content">
           <div class="panel-header">
-            <div class="panel-icon">🔑</div>
+            <div class="panel-icon"><i class="ph ph-crown"></i></div>
             <div class="panel-info">
               <h2 class="panel-title">Premium License</h2>
               <p class="panel-desc">Manage your subscription</p>
@@ -450,11 +453,11 @@
 
     <!-- Footer Links -->
     <div class="footer-section">
-      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version">📋 What's New</a>
+      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version"><i class="ph ph-clipboard-text"></i> What's New</a>
       <span class="footer-separator">•</span>
-      <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank">💬 Feedback</a>
+      <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank"><i class="ph ph-chat-circle"></i> Feedback</a>
       <span class="footer-separator">•</span>
-      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank">👥 Facebook</a>
+      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
     </div>
   </div>
 

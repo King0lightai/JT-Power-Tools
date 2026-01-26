@@ -193,8 +193,12 @@ header h1 {
 }
 
 .tab-icon {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
+}
+
+i.tab-icon {
+  display: block;
 }
 
 .tab-label {
@@ -281,7 +285,13 @@ header h1 {
   background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
   border-radius: var(--radius-md);
   font-size: 20px;
+  color: white;
   box-shadow: 0 2px 8px var(--brand-orange-glow);
+  flex-shrink: 0;
+}
+
+.panel-icon i {
+  font-size: 20px;
 }
 
 .panel-info {
@@ -429,6 +439,11 @@ header h1 {
   justify-content: center;
   background: var(--bg-tertiary);
   border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+i.category-icon {
+  flex-shrink: 0;
 }
 
 .category-title {
@@ -1151,6 +1166,13 @@ input:checked + .slider:before {
   font-weight: 500;
   transition: color var(--duration) var(--ease);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.footer-link i {
+  font-size: 14px;
 }
 
 .footer-link:hover {
