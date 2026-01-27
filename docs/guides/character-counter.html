@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Character Counter - JT Power Tools</title>
+    <title>Message Counter & Templates - JT Power Tools</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,6 +15,7 @@
         <div class="nav-container">
             <div class="nav-brand">
                 <h1><img src="../850icon.png" alt="JT Power Tools"> JT <span>POWER TOOLS</span></h1>
+                <p>Documentation & Guides</p>
             </div>
             <div class="nav-links">
                 <a href="../index.html">Home</a>
@@ -28,68 +29,131 @@
 
     <div class="guide-container">
         <div class="guide-header">
-            <h1><span class="icon">🔢</span> Character Counter</h1>
-            <p class="guide-meta">Free Feature - Never Hit Character Limits</p>
+            <h1><span class="icon">💬</span> Message Counter & Templates</h1>
+            <p class="guide-meta">Free Feature - Track Characters & Save Time with Templates</p>
         </div>
 
         <div class="guide-content">
             <h2>Overview</h2>
-            <p>Character Counter displays real-time character counts on message and text fields in JobTread. See exactly how many characters you've typed and how many remain before hitting field limits. Color-coded warnings help you stay within bounds.</p>
+            <p>Message Counter & Templates is a powerful productivity feature that combines real-time character counting with reusable message templates. Track your character count as you type messages, and save frequently used text as templates for quick insertion.</p>
 
             <h3>Key Features</h3>
             <ul>
-                <li><strong>Real-Time Count</strong> - Updates as you type</li>
-                <li><strong>Color-Coded Warnings</strong> - Visual alerts as you approach limits</li>
-                <li><strong>Smart Field Detection</strong> - Automatically detects field type and limit</li>
-                <li><strong>Multiple Field Support</strong> - Works on messages, notes, names, and more</li>
-                <li><strong>Over-Limit Alerts</strong> - Clear indication when you've exceeded the limit</li>
-                <li><strong>Inline Display</strong> - Counter appears in the toolbar, not obstructing your view</li>
+                <li><strong>Real-Time Character Count</strong> - See your character count update as you type in message fields</li>
+                <li><strong>Message Templates</strong> - Create, save, and paste signatures and common messages</li>
+                <li><strong>Color-Coded Warnings</strong> - Visual alerts as you approach character limits</li>
+                <li><strong>One-Click Insert</strong> - Paste saved templates instantly into any message</li>
+                <li><strong>Unlimited Templates</strong> - Save as many templates as you need</li>
+                <li><strong>Synced Storage</strong> - Templates sync across your devices via Chrome</li>
             </ul>
 
-            <h2>Character Limits by Field Type</h2>
+            <h2>Message Templates</h2>
+            <p>Templates let you save frequently used text snippets like signatures, common responses, and standard messages. Insert them with a single click instead of typing the same content repeatedly.</p>
 
+            <h3>Creating a Template</h3>
+            <ol class="steps">
+                <li>
+                    <strong>Open the Templates Panel</strong><br>
+                    Click the templates icon in the message toolbar (appears when you focus on a message field)
+                </li>
+                <li>
+                    <strong>Click "Add New Template"</strong><br>
+                    A dialog will appear for creating your template
+                </li>
+                <li>
+                    <strong>Enter a Name</strong><br>
+                    Give your template a descriptive name (e.g., "Email Signature", "Thank You Response")
+                </li>
+                <li>
+                    <strong>Enter the Template Content</strong><br>
+                    Type or paste the text you want to save
+                </li>
+                <li>
+                    <strong>Save the Template</strong><br>
+                    Click Save - your template is now ready to use
+                </li>
+            </ol>
+
+            <h3>Using a Template</h3>
+            <ol class="steps">
+                <li>
+                    <strong>Focus on a Message Field</strong><br>
+                    Click in any message or text field in JobTread
+                </li>
+                <li>
+                    <strong>Open the Templates Panel</strong><br>
+                    Click the templates icon in the toolbar
+                </li>
+                <li>
+                    <strong>Select Your Template</strong><br>
+                    Click on the template you want to insert
+                </li>
+                <li>
+                    <strong>Template is Inserted</strong><br>
+                    The template text is pasted at your cursor position
+                </li>
+            </ol>
+
+            <div class="info-box tip">
+                <strong>Pro Tip</strong>
+                <p>Create templates for your email signature, common project updates, standard customer responses, and frequently used instructions. This can save hours of typing each week!</p>
+            </div>
+
+            <h3>Managing Templates</h3>
+            <ul>
+                <li><strong>Edit</strong> - Click the edit icon next to a template to modify it</li>
+                <li><strong>Delete</strong> - Click the delete icon to remove a template</li>
+                <li><strong>Reorder</strong> - Templates appear in the order they were created</li>
+            </ul>
+
+            <h3>Template Ideas</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Field Type</th>
-                        <th>Character Limit</th>
+                        <th>Template Type</th>
+                        <th>Example Use</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Messages & Comments</td>
-                        <td>4,096 characters</td>
+                        <td>Email Signature</td>
+                        <td>Your name, title, phone number, and company info</td>
                     </tr>
                     <tr>
-                        <td>Notes & Descriptions</td>
-                        <td>5,000 characters</td>
+                        <td>Project Update</td>
+                        <td>"Work completed today: [details]. Next steps: [details]."</td>
                     </tr>
                     <tr>
-                        <td>Name, Title, Subject</td>
-                        <td>255 characters</td>
+                        <td>Customer Thank You</td>
+                        <td>Standard thank you message after project completion</td>
                     </tr>
                     <tr>
-                        <td>Email</td>
-                        <td>255 characters</td>
+                        <td>Meeting Follow-up</td>
+                        <td>Template for summarizing meeting discussions</td>
                     </tr>
                     <tr>
-                        <td>Phone</td>
-                        <td>50 characters</td>
+                        <td>Change Order Notice</td>
+                        <td>Standard language for change order communications</td>
                     </tr>
                     <tr>
-                        <td>Address</td>
-                        <td>500 characters</td>
-                    </tr>
-                    <tr>
-                        <td>Default (Unknown)</td>
-                        <td>4,096 characters</td>
+                        <td>Payment Reminder</td>
+                        <td>Polite reminder about outstanding invoices</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h2>Visual Feedback</h2>
+            <h2>Character Counter</h2>
+            <p>The character counter displays a real-time count of characters in message fields, helping you stay within JobTread's limits.</p>
 
-            <h3>Color Coding</h3>
+            <h3>Where It Appears</h3>
+            <p>The character counter is visible in message fields throughout JobTread, including:</p>
+            <ul>
+                <li>Customer messages</li>
+                <li>Internal messages</li>
+                <li>Comments</li>
+            </ul>
+
+            <h3>Visual Feedback</h3>
             <p>The counter changes color based on how close you are to the limit:</p>
 
             <table>
@@ -97,29 +161,29 @@
                     <tr>
                         <th>Status</th>
                         <th>Color</th>
-                        <th>Remaining</th>
+                        <th>Meaning</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Safe</td>
                         <td style="color: #888;">Gray</td>
-                        <td>More than 15% remaining</td>
+                        <td>Plenty of space remaining</td>
                     </tr>
                     <tr>
                         <td>Warning</td>
-                        <td style="color: #f59e0b; font-weight: bold;">Orange (Bold)</td>
-                        <td>5-15% remaining</td>
+                        <td style="color: #f59e0b; font-weight: bold;">Orange</td>
+                        <td>Approaching the limit</td>
                     </tr>
                     <tr>
                         <td>Danger</td>
-                        <td style="color: #ef4444; font-weight: bold;">Red (Bold)</td>
-                        <td>0-5% remaining</td>
+                        <td style="color: #ef4444; font-weight: bold;">Red</td>
+                        <td>Very close to limit</td>
                     </tr>
                     <tr>
                         <td>Over Limit</td>
-                        <td style="color: #991b1b; font-weight: bold;">Dark Red (Bold)</td>
-                        <td>Exceeded limit</td>
+                        <td style="color: #991b1b; font-weight: bold;">Dark Red</td>
+                        <td>Exceeded limit - trim your message</td>
                     </tr>
                 </tbody>
             </table>
@@ -131,94 +195,71 @@
                 <li><strong>Over Limit:</strong> <code>50 over limit</code> - Shows how many characters to remove</li>
             </ul>
 
-            <h2>How It Works</h2>
-
-            <h3>Automatic Detection</h3>
-            <p>The counter automatically appears when you focus on a text field. It detects the field type using:</p>
-            <ul>
-                <li>HTML maxlength attribute</li>
-                <li>Field name or ID patterns</li>
-                <li>Placeholder text</li>
-                <li>Aria-label attributes</li>
-                <li>Parent element context</li>
-            </ul>
-
-            <h3>Counter Location</h3>
-            <p>The counter appears inline in the message toolbar, typically next to action buttons like "Send" or the writing assistant icon. This keeps it visible without obstructing your typing area.</p>
-
             <h2>Getting Started</h2>
 
             <ol class="steps">
                 <li>
                     <strong>Enable the Feature</strong><br>
-                    Open JT Power Tools popup and enable "Character Counter"
+                    Open JT Power Tools popup and enable "Message Counter & Templates"
                 </li>
                 <li>
                     <strong>Navigate to Messages</strong><br>
-                    Go to any page with a message or text field
+                    Go to any page with a message field in JobTread
                 </li>
                 <li>
-                    <strong>Start Typing</strong><br>
-                    Click in a text field and the counter appears automatically
-                </li>
-                <li>
-                    <strong>Monitor Your Count</strong><br>
-                    Watch the counter update in real-time as you type
+                    <strong>Start Using</strong><br>
+                    The counter appears automatically, and the templates icon shows in the toolbar
                 </li>
             </ol>
 
             <h2>Common Use Cases</h2>
 
-            <h3>Customer Messages</h3>
-            <p>When writing messages to customers, the counter ensures your entire message will be delivered without truncation.</p>
+            <h3>Customer Communications</h3>
+            <p>Use templates for standard customer messages like project updates, payment reminders, and thank you notes. The character counter ensures your messages won't get cut off.</p>
 
-            <h3>Daily Log Entries</h3>
-            <p>Keep track of character usage when entering detailed daily log notes to ensure nothing gets cut off.</p>
+            <h3>Team Signatures</h3>
+            <p>Create a professional signature template that includes your name, title, and contact information. Insert it at the end of every customer-facing message.</p>
 
-            <h3>Budget Descriptions</h3>
-            <p>Monitor description length when adding detailed budget line item descriptions.</p>
-
-            <h3>Job Notes</h3>
-            <p>Ensure your job notes stay within the allowed limit for complete storage.</p>
+            <h3>Standard Responses</h3>
+            <p>Save time by creating templates for frequently asked questions or common scenarios. Customize as needed after inserting.</p>
 
             <h2>Tips & Best Practices</h2>
 
-            <h3>Staying Within Limits</h3>
+            <h3>Template Tips</h3>
+            <ul>
+                <li>Use descriptive names so you can quickly find the right template</li>
+                <li>Include placeholders like [CLIENT NAME] for content you'll customize</li>
+                <li>Review and update templates periodically to keep them current</li>
+                <li>Create templates for both internal and external communications</li>
+            </ul>
+
+            <h3>Character Counter Tips</h3>
             <ul>
                 <li>Watch for the orange warning - it's your cue to start wrapping up</li>
                 <li>If you go over, the "X over limit" message tells you exactly how much to cut</li>
                 <li>Consider splitting long messages into multiple messages</li>
-                <li>Use bullet points or abbreviations to save space when needed</li>
-            </ul>
-
-            <h3>Performance</h3>
-            <ul>
-                <li>Counter updates are optimized to not slow down typing</li>
-                <li>Works efficiently even on pages with many text fields</li>
-                <li>No impact on JobTread's normal functionality</li>
-            </ul>
-
-            <h2>Compatibility</h2>
-            <ul>
-                <li><strong>Dark Mode</strong> - Counter colors adjust for dark background</li>
-                <li><strong>Text Formatter</strong> - Works alongside the formatting toolbar</li>
-                <li><strong>All JobTread Pages</strong> - Automatically detects text fields across the app</li>
             </ul>
 
             <h2>Troubleshooting</h2>
 
+            <h3>Templates Not Saving?</h3>
+            <ul>
+                <li>Make sure the feature is enabled in the extension popup</li>
+                <li>Check that you have storage permissions enabled for the extension</li>
+                <li>Try refreshing the page and creating the template again</li>
+            </ul>
+
             <h3>Counter Not Appearing?</h3>
             <ul>
                 <li>Make sure the feature is enabled in the extension popup</li>
-                <li>Try clicking directly in the text field</li>
-                <li>Some custom fields may not be detected automatically</li>
+                <li>The counter only appears in message fields, not all text fields</li>
+                <li>Try clicking directly in the message field</li>
             </ul>
 
-            <h3>Wrong Character Limit?</h3>
+            <h3>Template Not Inserting?</h3>
             <ul>
-                <li>The counter uses best-guess detection for field types</li>
-                <li>If a field is misdetected, it defaults to 4,096 characters</li>
-                <li>JobTread will enforce the actual limit when you submit</li>
+                <li>Make sure your cursor is in the text field before selecting a template</li>
+                <li>Try clicking in the field first, then opening the templates panel</li>
             </ul>
 
             <h2>Related Guides</h2>
@@ -233,7 +274,7 @@
 
     <footer>
         <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p>JT Power Tools - Made with love for JobTread users</p>
             <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
             <div class="footer-links">
                 <a href="../privacy.html">Privacy Policy</a>

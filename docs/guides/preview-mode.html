@@ -30,28 +30,32 @@
     <div class="guide-container">
         <div class="guide-header">
             <h1><span class="icon">👁️</span> Preview Mode</h1>
-            <p class="guide-meta">Premium Feature - Live Preview of Formatted Text</p>
+            <p class="guide-meta">Pro Feature - Live Preview of Formatted Text</p>
         </div>
 
         <div class="guide-content">
-            <h2>Overview</h2>
-            <p>Preview Mode is a premium feature that brings live, real-time previews of your formatted text with a floating preview panel. See exactly how your markdown formatting will look before saving, with beautifully styled HTML rendering that updates as you type.</p>
-
             <div class="info-box premium">
-                <strong>Premium Feature</strong>
-                <p>Preview Mode requires a premium license. <a href="premium.html">Learn more about premium features</a> or <a href="https://premium.jtpowertools.com" target="_blank">purchase a license</a>.</p>
+                <strong>Pro Feature</strong>
+                <p>Preview Mode requires a Pro license. <a href="premium.html">Learn more about premium features</a>.</p>
+            </div>
+
+            <h2>Overview</h2>
+            <p>Preview Mode lets you see your formatted text rendered instantly as you type. The preview button is added to the Text Formatter toolbar, giving you a seamless way to check how your markdown formatting will look before saving.</p>
+
+            <div class="info-box tip">
+                <strong>Important: Requires Text Formatter</strong>
+                <p>Preview Mode requires the <strong>Text Formatter</strong> feature to be enabled. The preview button appears in the Text Formatter toolbar - both features must be turned on for Preview Mode to work.</p>
             </div>
 
             <h3>Key Features</h3>
             <ul>
+                <li><strong>Integrated with Text Formatter</strong> - Preview button appears in the formatting toolbar</li>
                 <li><strong>Live Preview Panel</strong> - Floating panel shows rendered formatting in real-time</li>
-                <li><strong>Intelligent Positioning</strong> - Automatically positions to avoid viewport edges</li>
                 <li><strong>Real-Time Updates</strong> - Preview updates instantly as you type</li>
+                <li><strong>Intelligent Positioning</strong> - Panel automatically positions to stay visible</li>
                 <li><strong>Rich Markdown Support</strong> - Renders bold, italic, underline, strikethrough, headings, lists, tables, links, alerts, and colored text</li>
                 <li><strong>Theme Integration</strong> - Adapts to Dark Mode and Custom Theme settings</li>
-                <li><strong>Eye Icon Button</strong> - Accessible via formatter toolbar or standalone button</li>
                 <li><strong>Click to Toggle</strong> - Click preview button again to close the preview</li>
-                <li><strong>Works Where You Need It</strong> - Budget descriptions and daily log fields</li>
             </ul>
 
             <h2>Getting Started</h2>
@@ -59,33 +63,47 @@
             <h3>Prerequisites</h3>
             <ul>
                 <li>JT Power Tools extension installed from Chrome Web Store</li>
-                <li>Active premium license (see <a href="premium.html">Premium Features</a>)</li>
-                <li>Text Formatter enabled (recommended for best experience)</li>
+                <li>Active Pro license (see <a href="premium.html">Premium Features</a>)</li>
+                <li><strong>Text Formatter enabled</strong> (required - Preview Mode won't work without it)</li>
                 <li>Access to JobTread budget or daily log pages</li>
             </ul>
 
             <h3>Enabling Preview Mode</h3>
             <ol class="steps">
-                <li>Install JT Power Tools from the <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank">Chrome Web Store</a></li>
-                <li>Activate your premium license in the extension popup</li>
-                <li>Click the JT Power Tools extension icon in your Chrome toolbar</li>
-                <li>Locate the "Preview Mode" toggle (under Premium Features)</li>
-                <li>Toggle it ON - the switch will turn blue</li>
-                <li>Navigate to any JobTread budget or daily log page</li>
-                <li>Look for the eye icon button on textareas</li>
+                <li>
+                    <strong>Enable Text Formatter First</strong><br>
+                    Open the JT Power Tools popup and enable "Text Formatter" - this is required
+                </li>
+                <li>
+                    <strong>Enable Preview Mode</strong><br>
+                    Locate "Preview Mode" (marked with Pro badge) and toggle it ON
+                </li>
+                <li>
+                    <strong>Navigate to a Compatible Page</strong><br>
+                    Go to any JobTread budget or daily log page
+                </li>
+                <li>
+                    <strong>Click in a Text Field</strong><br>
+                    The Text Formatter toolbar appears with the preview button (eye icon) on the right
+                </li>
             </ol>
 
             <h2>Using Preview Mode</h2>
 
             <h3>Opening the Preview Panel</h3>
             <ol class="steps">
-                <li>Navigate to a JobTread budget page or daily log page</li>
                 <li>Click inside a budget description field or daily log field</li>
-                <li>Look for the eye icon button (appears when you focus on the field)</li>
+                <li>The Text Formatter toolbar appears above the field</li>
+                <li>Look for the eye icon (👁️) button on the right side of the toolbar</li>
                 <li>Click the eye icon to open the preview panel</li>
                 <li>The preview panel opens next to the textarea</li>
                 <li>Start typing to see live updates in the preview</li>
             </ol>
+
+            <div class="info-box tip">
+                <strong>Where's the Preview Button?</strong>
+                <p>The preview button is part of the Text Formatter toolbar. If you don't see it, make sure both Text Formatter AND Preview Mode are enabled in the extension popup.</p>
+            </div>
 
             <h3>Closing the Preview Panel</h3>
             <p>There are several ways to close the preview panel:</p>
@@ -210,7 +228,6 @@
             <p>Create visually distinct alert boxes:</p>
             <pre><code>> [!color:blue] ### [!icon: info] Information
 > This is an informational alert
-> It can contain multiple lines
 
 > [!color:yellow] ### [!icon: exclamationTriangle] Warning
 > This is a warning alert
@@ -267,106 +284,44 @@
                 <li><strong>Dark Mode</strong> - Dark preview panel with light text</li>
                 <li><strong>Custom Theme</strong> - Matches your custom color palette</li>
                 <li><strong>Default Theme</strong> - Clean white background with dark text</li>
-                <li><strong>Consistent Styling</strong> - Preview matches your JobTread theme</li>
             </ul>
 
             <h2>Where It Works</h2>
 
             <h3>Compatible Fields</h3>
-            <p>Preview Mode works on specific JobTread text fields:</p>
+            <p>Preview Mode works on text fields where the Text Formatter toolbar appears:</p>
             <ul>
                 <li><strong>Budget Pages</strong> - Description fields for line items and groups</li>
                 <li><strong>Daily Log Fields</strong> - All daily log text entry fields</li>
-                <li><strong>Formatted Textareas</strong> - Any textarea with formatting support</li>
             </ul>
 
             <h3>Not Compatible With</h3>
             <ul>
-                <li>Time entry notes fields</li>
-                <li>Time Clock notes field in sidebar</li>
+                <li>Message fields (use Message Counter & Templates instead)</li>
                 <li>Single-line input fields</li>
                 <li>Read-only or disabled fields</li>
-                <li>Files, vendors, or customers pages (excluded by design)</li>
-            </ul>
-
-            <h2>Common Use Cases</h2>
-
-            <h3>Budget Descriptions</h3>
-            <p>Preview complex budget descriptions before saving:</p>
-            <ul>
-                <li>Check that tables render correctly</li>
-                <li>Verify heading hierarchy makes sense</li>
-                <li>Ensure colors provide good contrast</li>
-                <li>Test alert boxes for important notes</li>
-                <li>Preview links to make sure they're formatted correctly</li>
-            </ul>
-
-            <h3>Daily Logs</h3>
-            <p>Format professional daily log entries:</p>
-            <ul>
-                <li>Use headings to organize the day's activities</li>
-                <li>Create bullet lists for completed tasks</li>
-                <li>Add alerts for important events or issues</li>
-                <li>Color-code different types of activities</li>
-                <li>Preview before submitting to ensure clarity</li>
-            </ul>
-
-            <h3>Client Communications</h3>
-            <p>Craft well-formatted client-facing content:</p>
-            <ul>
-                <li>Preview how clients will see your formatted text</li>
-                <li>Check readability of complex information</li>
-                <li>Verify that tables are easy to understand</li>
-                <li>Ensure professional appearance before saving</li>
-            </ul>
-
-            <h2>Best Practices</h2>
-
-            <h3>Formatting Tips</h3>
-            <ol>
-                <li><strong>Preview Before Saving</strong> - Always check the preview before saving complex formatting</li>
-                <li><strong>Use Headings Wisely</strong> - Preview helps you see if heading levels are appropriate</li>
-                <li><strong>Check Table Formatting</strong> - Tables can be tricky; preview ensures they render correctly</li>
-                <li><strong>Test Alert Colors</strong> - Preview shows which alert colors work best for your message</li>
-                <li><strong>Verify Nested Formatting</strong> - Check that bold inside lists, colors in tables, etc. look good</li>
-            </ol>
-
-            <h3>Workflow Integration</h3>
-            <ol>
-                <li>Write your content with markdown formatting</li>
-                <li>Open the preview panel to see the rendered result</li>
-                <li>Adjust formatting based on what you see in the preview</li>
-                <li>Close preview and save when satisfied</li>
-            </ol>
-
-            <h3>Performance Tips</h3>
-            <ul>
-                <li>Close preview when not needed to reduce browser resource usage</li>
-                <li>Preview panel automatically closes when you navigate away</li>
-                <li>Only one preview can be open at a time for better performance</li>
             </ul>
 
             <h2>Troubleshooting</h2>
 
             <h3>Preview Button Doesn't Appear</h3>
+            <p><strong>Most Common Cause:</strong> Text Formatter is not enabled.</p>
             <p><strong>Solution:</strong></p>
             <ul>
-                <li>Verify Preview Mode is enabled in extension popup</li>
-                <li>Ensure you have an active premium license</li>
+                <li><strong>Enable Text Formatter</strong> - This is required for Preview Mode to work</li>
+                <li>Verify Preview Mode is also enabled in extension popup</li>
+                <li>Ensure you have an active Pro license</li>
                 <li>Refresh the JobTread page</li>
                 <li>Make sure you're on a budget or daily log page</li>
-                <li>Check that you're clicking in a compatible textarea</li>
-                <li>Verify the field is not excluded (time entry notes, etc.)</li>
             </ul>
 
             <h3>Preview Panel Not Opening</h3>
             <p><strong>Solution:</strong></p>
             <ul>
                 <li>Try clicking the preview button again</li>
-                <li>Check browser console (F12) for JavaScript errors</li>
-                <li>Disable other extensions temporarily to check for conflicts</li>
-                <li>Reload the extension from chrome://extensions</li>
                 <li>Make sure the textarea has content (empty fields show "No content to preview")</li>
+                <li>Check browser console (F12) for JavaScript errors</li>
+                <li>Reload the extension from chrome://extensions</li>
             </ul>
 
             <h3>Preview Not Updating</h3>
@@ -378,129 +333,65 @@
                 <li>Refresh the page if updates seem stuck</li>
             </ul>
 
-            <h3>Preview Panel Positioned Incorrectly</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>The panel auto-positions based on available space</li>
-                <li>Try resizing your browser window</li>
-                <li>Scroll to give the panel more space</li>
-                <li>Close and reopen to recalculate position</li>
-            </ul>
-
             <h3>Formatting Not Rendering in Preview</h3>
             <p><strong>Solution:</strong></p>
             <ul>
                 <li>Check that you're using the correct markdown syntax (see supported formatting above)</li>
-                <li>Some markdown features may require specific syntax (e.g., tables need proper pipe alignment)</li>
+                <li>Tables need proper pipe alignment to render correctly</li>
                 <li>Try simpler formatting first to isolate the issue</li>
                 <li>Refer to the <a href="text-formatter.html">Text Formatter guide</a> for proper syntax</li>
-            </ul>
-
-            <h3>Preview Stays Open After Clicking Away</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Click the preview button again to toggle it off</li>
-                <li>Click outside the textarea to trigger the blur event</li>
-                <li>Press Escape to close the preview</li>
-                <li>If stuck, refresh the page</li>
-            </ul>
-
-            <h3>Premium License Not Recognized</h3>
-            <p><strong>Solution:</strong></p>
-            <ul>
-                <li>Ensure you installed from the Chrome Web Store (not GitHub)</li>
-                <li>Verify your license is activated in the extension popup</li>
-                <li>Try reactivating your license</li>
-                <li>Check that your license hasn't expired</li>
-                <li>See <a href="premium.html">Premium Features</a> for license troubleshooting</li>
-            </ul>
-
-            <h2>Technical Details</h2>
-
-            <h3>How It Works</h3>
-            <p>Preview Mode uses advanced markdown parsing to render your formatted text:</p>
-            <ul>
-                <li><strong>Markdown Parser</strong> - Custom parser converts markdown to HTML</li>
-                <li><strong>Real-Time Rendering</strong> - Updates on every keystroke via input event listener</li>
-                <li><strong>Floating Panel</strong> - Absolutely positioned div with intelligent placement algorithm</li>
-                <li><strong>Theme Detection</strong> - Reads extension settings to apply correct theme</li>
-                <li><strong>CSS Styling</strong> - Applies theme-specific styles from preview-mode.css</li>
-            </ul>
-
-            <h3>Supported Markdown Extensions</h3>
-            <p>Preview Mode supports custom markdown extensions for JobTread:</p>
-            <ul>
-                <li>Custom color syntax: <code>[!color:name]</code></li>
-                <li>Icon syntax: <code>[!icon:name]</code></li>
-                <li>Alert blocks with color and icon combinations</li>
-                <li>Text alignment with <code>--:</code> and <code>---:</code></li>
-                <li>Modified italic syntax using <code>^</code> instead of traditional <code>*</code> or <code>_</code></li>
-            </ul>
-
-            <h3>Performance Optimizations</h3>
-            <ul>
-                <li>Only one preview panel active at a time</li>
-                <li>Event listeners cleaned up when preview closes</li>
-                <li>Mutation observer watches for new textareas efficiently</li>
-                <li>Theme detection cached to reduce Chrome storage API calls</li>
-                <li>Lightweight markdown parser optimized for speed</li>
             </ul>
 
             <h2>Keyboard Shortcuts</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Shortcut</th>
                         <th>Action</th>
+                        <th>How To</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="kbd">Click Eye Icon</span></td>
-                        <td>Toggle preview panel</td>
+                        <td>Open/Close Preview</td>
+                        <td>Click the eye icon in the Text Formatter toolbar</td>
                     </tr>
                     <tr>
-                        <td><span class="kbd">Escape</span></td>
-                        <td>Close preview panel</td>
+                        <td>Close Preview</td>
+                        <td>Press <span class="kbd">Escape</span></td>
                     </tr>
                     <tr>
-                        <td><span class="kbd">Click Outside</span></td>
-                        <td>Close preview panel</td>
+                        <td>Close Preview</td>
+                        <td>Click outside the text field</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h2>Combining with Other Features</h2>
+            <h2>Best Practices</h2>
 
-            <h3>Text Formatter + Preview Mode</h3>
-            <p>The perfect combination for formatted text:</p>
-            <ul>
-                <li>Use Text Formatter toolbar to insert markdown formatting</li>
-                <li>Click preview button to see rendered result</li>
-                <li>Preview updates automatically as you format</li>
-                <li>No need to memorize markdown syntax</li>
-            </ul>
+            <h3>Workflow</h3>
+            <ol>
+                <li>Enable both Text Formatter and Preview Mode in the extension popup</li>
+                <li>Click in a text field - the toolbar appears with formatting buttons and the preview icon</li>
+                <li>Use the toolbar buttons to add formatting (or type markdown manually)</li>
+                <li>Click the eye icon to see how your formatted text will look</li>
+                <li>Make adjustments based on the preview</li>
+                <li>Close preview and save when satisfied</li>
+            </ol>
 
-            <h3>Dark Mode + Preview Mode</h3>
+            <h3>Tips</h3>
             <ul>
-                <li>Preview panel uses dark theme automatically</li>
-                <li>Easy to read in low-light conditions</li>
-                <li>Matches your overall JobTread appearance</li>
-            </ul>
-
-            <h3>Custom Theme + Preview Mode</h3>
-            <ul>
-                <li>Preview panel matches your custom color palette</li>
-                <li>Consistent branding throughout JobTread</li>
-                <li>Preview shows exactly how colors will look</li>
+                <li><strong>Preview Before Saving</strong> - Always check complex formatting before saving</li>
+                <li><strong>Check Tables</strong> - Tables can be tricky; preview ensures they render correctly</li>
+                <li><strong>Test Alert Colors</strong> - Preview shows which alert colors work best for your message</li>
+                <li><strong>Close When Done</strong> - Close preview when not needed to keep your workspace clean</li>
             </ul>
 
             <h2>Related Guides</h2>
             <ul>
-                <li><a href="text-formatter.html">Text Formatter</a> - Learn markdown syntax and formatting</li>
-                <li><a href="premium.html">Premium Features</a> - Activate your premium license</li>
-                <li><a href="dark-mode.html">Dark Mode</a> - Enable dark theme for preview panel</li>
-                <li><a href="custom-theme.html">Custom Theme</a> - Customize preview panel colors</li>
+                <li><a href="text-formatter.html">Text Formatter</a> - Required for Preview Mode - learn markdown syntax</li>
+                <li><a href="premium.html">Premium Features</a> - Activate your Pro license</li>
+                <li><a href="dark-mode.html">Dark Mode</a> - Preview panel adapts to dark theme</li>
+                <li><a href="custom-theme.html">Custom Theme</a> - Preview panel matches your custom colors</li>
                 <li><a href="installation.html">Installation & Setup</a> - Get started with JT Power Tools</li>
             </ul>
         </div>
@@ -508,7 +399,7 @@
 
     <footer>
         <div class="footer-container">
-            <p>⚡ JT Power Tools — Made with ❤️ for JobTread users</p>
+            <p>JT Power Tools - Made with love for JobTread users</p>
             <p class="disclaimer">JT Power Tools is an independent extension and is not officially affiliated with JobTread.</p>
             <div class="footer-links">
                 <a href="../privacy.html">Privacy Policy</a>
