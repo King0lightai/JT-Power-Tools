@@ -7,6 +7,9 @@
   <!-- Theme-aware favicons -->
   <link rel="icon" href="../icons/icon16-light.png" media="(prefers-color-scheme: light)">
   <link rel="icon" href="../icons/icon16-dark.png" media="(prefers-color-scheme: dark)">
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -15,211 +18,260 @@
     <header>
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
-        <h1>JT Power Tools</h1>
-        <span class="version">v3.5.1 BETA</span>
+        <h1>Power Tools</h1>
+        <span class="version">v3.5.2</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
-          <span class="theme-icon light-icon">☀️</span>
-          <span class="theme-icon dark-icon">🌙</span>
+          <i class="ph ph-sun theme-icon light-icon"></i>
+          <i class="ph ph-moon theme-icon dark-icon"></i>
         </button>
       </div>
     </header>
 
-    <!-- Features List -->
-    <div class="features-section">
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <div class="tab-list">
+        <button class="tab-item active" data-tab="features">
+          <i class="ph ph-lightning tab-icon"></i>
+          <span class="tab-label">Features</span>
+          <span class="tab-badge" id="featureCount">14</span>
+        </button>
+        <button class="tab-item" data-tab="appearance">
+          <i class="ph ph-palette tab-icon"></i>
+          <span class="tab-label">Theme</span>
+        </button>
+        <button class="tab-item" data-tab="api">
+          <i class="ph ph-plugs-connected tab-icon"></i>
+          <span class="tab-label">API</span>
+        </button>
+        <button class="tab-item" data-tab="license">
+          <i class="ph ph-key tab-icon"></i>
+          <span class="tab-label">License</span>
+        </button>
+      </div>
+    </nav>
 
-      <!-- Schedule & Calendar Category -->
-      <div class="feature-category">
-        <div class="category-header collapsed" data-category="schedule">
-          <span class="category-icon">🗓️</span>
-          <span class="category-title">Schedule & Calendar</span>
-          <span class="category-count">3</span>
-          <span class="category-toggle">▼</span>
+    <!-- Tab Content -->
+    <div class="tab-content-wrapper">
+
+      <!-- ==================== FEATURES TAB ==================== -->
+      <div class="tab-content active" id="tab-features">
+        <div class="features-section">
+
+          <!-- Schedule & Calendar Category -->
+          <div class="feature-category">
+            <div class="category-header" data-category="schedule">
+              <i class="ph ph-calendar-blank category-icon"></i>
+              <span class="category-title">Schedule & Calendar</span>
+              <span class="category-count">3</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features" data-category-content="schedule">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Kanban Type Filter <i class="ph ph-question feature-help" data-guide="kanban-filter" title="Learn more"></i></h3>
+                  <p>Hide empty type columns in Kanban view when filtering</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="kanbanTypeFilter" data-feature="kanbanTypeFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Auto Collapse Completed Groups <i class="ph ph-question feature-help" data-guide="auto-collapse" title="Learn more"></i></h3>
+                  <p>Collapse 100% complete groups on page load</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="dragDropFeature">
+                <div class="feature-info">
+                  <h3>Schedule Task Checkboxes <i class="ph ph-question feature-help" data-guide="drag-drop" title="Learn more"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Mark task cards complete</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="dragDrop" data-feature="dragDrop">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Productivity Tools Category -->
+          <div class="feature-category">
+            <div class="category-header" data-category="productivity">
+              <i class="ph ph-lightning category-icon"></i>
+              <span class="category-title">Productivity Tools</span>
+              <span class="category-count">7</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features" data-category-content="productivity">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Text Formatter <i class="ph ph-question feature-help" data-guide="text-formatter" title="Learn more"></i></h3>
+                  <p>Rich text toolbar for budgets, logs & tasks</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="formatter" data-feature="formatter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Message Counter & Templates <i class="ph ph-question feature-help" data-guide="character-counter" title="Learn more"></i></h3>
+                  <p>Create, save and paste signatures and messages</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="characterCounter" data-feature="characterCounter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Essential -->
+              <div class="feature-item" id="smartJobSwitcherFeature">
+                <div class="feature-info">
+                  <h3>Quick Job Switcher <i class="ph ph-question feature-help" data-guide="job-switcher" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Keyboard driven and resizable</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="smartJobSwitcher" data-feature="smartJobSwitcher">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="quickNotesFeature">
+                <div class="feature-info">
+                  <h3>Quick Notes <i class="ph ph-question feature-help" data-guide="quick-notes" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Persistent notepad accessible from any page (Q+N)</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="quickNotes" data-feature="quickNotes">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="freezeHeaderFeature">
+                <div class="feature-info">
+                  <h3>Freeze Header <i class="ph ph-question feature-help" data-guide="freeze-header" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Keep job tabs visible while scrolling</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="freezeHeader" data-feature="freezeHeader">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item" id="pdfMarkupToolsFeature">
+                <div class="feature-info">
+                  <h3>PDF Markup Tools <i class="ph ph-question feature-help" data-guide="pdf-markup-tools" title="Learn more"></i> <span class="badge essential">Essential</span></h3>
+                  <p>Stamps and eraser tools for PDFs</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="pdfMarkupTools" data-feature="pdfMarkupTools">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="previewModeFeature">
+                <div class="feature-info">
+                  <h3>Preview Mode <i class="ph ph-question feature-help" data-guide="preview-mode" title="Learn more"></i> <span class="badge pro">Pro</span></h3>
+                  <p>See your formatted text rendered instantly</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="previewMode" data-feature="previewMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance Category (just toggles, no customization) -->
+          <div class="feature-category">
+            <div class="category-header" data-category="appearance-features">
+              <i class="ph ph-palette category-icon"></i>
+              <span class="category-title">Appearance</span>
+              <span class="category-count">4</span>
+              <span class="category-toggle">▼</span>
+            </div>
+            <div class="category-features" data-category-content="appearance-features">
+              <!-- No Badge (Free) -->
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Contrast Fix <i class="ph ph-question feature-help" data-guide="contrast-fix" title="Learn more"></i></h3>
+                  <p>Better text readability in schedule view</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="contrastFix" data-feature="contrastFix">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Budget Hierarchy Shading <i class="ph ph-question feature-help" data-guide="budget-hierarchy" title="Learn more"></i></h3>
+                  <p>Visual shading for nested budget groups</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Dark Mode <i class="ph ph-question feature-help" data-guide="dark-mode" title="Learn more"></i></h3>
+                  <p>Dark theme for JobTread interface</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="darkMode" data-feature="darkMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Pro -->
+              <div class="feature-item premium" id="rgbThemeFeature">
+                <div class="feature-info">
+                  <h3>Custom Theme <i class="ph ph-question feature-help" data-guide="custom-theme" title="Learn more"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Create your own custom color theme</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
         </div>
-        <div class="category-features collapsed" data-category-content="schedule">
-          <div class="feature-item premium" id="dragDropFeature">
-            <div class="feature-info">
-              <h3>Schedule Task Checkboxes <span class="badge pro">Pro</span></h3>
-              <p>Mark schedule complete in month view</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="dragDrop" data-feature="dragDrop">
-              <span class="slider"></span>
-            </label>
-          </div>
 
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Kanban Type Filter</h3>
-              <p>Hide empty type columns in Kanban view when filtering</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="kanbanTypeFilter" data-feature="kanbanTypeFilter">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Auto Collapse Completed Groups</h3>
-              <p>Collapse 100% complete groups on page load</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
-              <span class="slider"></span>
-            </label>
-          </div>
+        <!-- Actions -->
+        <div class="actions-section">
+          <button id="refreshBtn" class="btn-secondary">Refresh Current Tab</button>
+          <div class="status-message" id="statusMessage"></div>
         </div>
       </div>
 
-      <!-- Productivity Tools Category -->
-      <div class="feature-category">
-        <div class="category-header collapsed" data-category="productivity">
-          <span class="category-icon">⚡</span>
-          <span class="category-title">Productivity Tools</span>
-          <span class="category-count">7</span>
-          <span class="category-toggle">▼</span>
-        </div>
-        <div class="category-features collapsed" data-category-content="productivity">
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Text Formatter</h3>
-              <p>Rich text toolbar for budgets, logs & tasks</p>
+      <!-- ==================== THEME TAB ==================== -->
+      <div class="tab-content" id="tab-appearance">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-palette"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">Theme Customization</h2>
+              <p class="panel-desc">Personalize your JobTread experience</p>
             </div>
-            <label class="toggle">
-              <input type="checkbox" id="formatter" data-feature="formatter">
-              <span class="slider"></span>
-            </label>
           </div>
 
-          <div class="feature-item" id="smartJobSwitcherFeature">
-            <div class="feature-info">
-              <h3>Smart Job Switcher <span class="badge essential">Essential</span></h3>
-              <p>Keyboard driven, resizable sidebar (J+S or Alt+J)</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="smartJobSwitcher" data-feature="smartJobSwitcher">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item" id="quickNotesFeature">
-            <div class="feature-info">
-              <h3>Quick Notes <span class="badge essential">Essential</span></h3>
-              <p>Persistent notepad accessible from any page (Q+N)</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="quickNotes" data-feature="quickNotes">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item premium" id="previewModeFeature">
-            <div class="feature-info">
-              <h3>Preview Mode <span class="badge pro">Pro</span></h3>
-              <p>Click the preview button to see your formatted text rendered beautifully!</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="previewMode" data-feature="previewMode">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item" id="freezeHeaderFeature">
-            <div class="feature-info">
-              <h3>Freeze Header <span class="badge essential">Essential</span></h3>
-              <p>Keep job info and tabs visible while scrolling</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="freezeHeader" data-feature="freezeHeader">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Message Character Counter</h3>
-              <p>See character count in messages as you type</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="characterCounter" data-feature="characterCounter">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item" id="pdfMarkupToolsFeature">
-            <div class="feature-info">
-              <h3>PDF Markup Tools <span class="badge essential">Essential</span></h3>
-              <p>Stamps and eraser tools for PDFs</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="pdfMarkupTools" data-feature="pdfMarkupTools">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- Appearance & Themes Category -->
-      <div class="feature-category">
-        <div class="category-header collapsed" data-category="appearance">
-          <span class="category-icon">🎨</span>
-          <span class="category-title">Appearance & Themes</span>
-          <span class="category-count">4</span>
-          <span class="category-toggle">▼</span>
-        </div>
-        <div class="category-features collapsed" data-category-content="appearance">
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Contrast Fix</h3>
-              <p>Better text readability in schedule view</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="contrastFix" data-feature="contrastFix">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Budget Hierarchy Shading</h3>
-              <p>Visual shading for nested budget groups</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="budgetHierarchy" data-feature="budgetHierarchy">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item">
-            <div class="feature-info">
-              <h3>Dark Mode</h3>
-              <p>Dark theme for JobTread interface</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="darkMode" data-feature="darkMode">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="feature-item premium" id="rgbThemeFeature">
-            <div class="feature-info">
-              <h3>Custom Theme <span class="badge pro">Pro</span></h3>
-              <p>Create your own custom color theme</p>
-              <button class="customize-btn" id="customizeThemeBtn" style="display: none;">
-                <span>Customize</span>
-                <span class="arrow">▼</span>
-              </button>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" id="rgbTheme" data-feature="rgbTheme">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <!-- Custom Theme Panel - Inside Appearance category -->
-          <div class="theme-customization" id="themeCustomization" style="display: none;">
-            <div class="section-label">Theme Customization</div>
-
+          <div class="theme-customization-panel">
             <div class="color-pickers">
               <div class="color-group">
                 <label>Primary Color</label>
@@ -294,164 +346,127 @@
               </div>
             </div>
           </div>
+
+          <!-- Theme toggle requirement notice -->
+          <div class="theme-notice" id="themeNotice">
+            <p><i class="ph ph-lightbulb"></i> Enable <strong>Custom Theme</strong> in the Features tab to use theme customization.</p>
+          </div>
         </div>
       </div>
 
-      <!-- API & Power User Category -->
-      <div class="feature-category" id="apiCategory">
-        <div class="category-header collapsed" data-category="api">
-          <span class="category-icon">🔌</span>
-          <span class="category-title">API & Power Features</span>
-          <span class="category-count">2</span>
-          <span class="category-toggle">▼</span>
-        </div>
-        <div class="category-features collapsed" data-category-content="api">
-          <div class="feature-item" id="customFieldFilterFeature">
-            <div class="feature-info">
-              <h3>Custom Field Filter <span class="badge power-user">Power User</span></h3>
-              <p>Filter jobs by custom fields in Quick Job Switcher</p>
+      <!-- ==================== API TAB ==================== -->
+      <div class="tab-content" id="tab-api">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-plugs-connected"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">API Configuration</h2>
+              <p class="panel-desc">Connect for power user features</p>
             </div>
-            <label class="toggle">
-              <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
-              <span class="slider"></span>
-            </label>
           </div>
 
-          <div class="feature-item" id="budgetChangelogFeature">
-            <div class="feature-info">
-              <h3>Budget Changelog <span class="badge power-user">Power User</span></h3>
-              <p>Compare budget backups and see what changed</p>
+          <!-- API Features -->
+          <div class="api-features">
+            <div class="feature-item" id="customFieldFilterFeature">
+              <div class="feature-info">
+                <h3>Custom Field Filter <i class="ph ph-question feature-help" data-guide="custom-field-filter" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
+                <p>Filter jobs by custom fields in Quick Job Switcher</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
+                <span class="slider"></span>
+              </label>
             </div>
-            <label class="toggle">
-              <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
-              <span class="slider"></span>
-            </label>
+
+            <div class="feature-item" id="budgetChangelogFeature">
+              <div class="feature-info">
+                <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide="budget-changelog" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
+                <p>Compare budget backups and see what changed</p>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
+                <span class="slider"></span>
+              </label>
+            </div>
           </div>
 
-          <!-- API Configuration - Only visible for Power User tier -->
-          <div class="api-config-panel" id="apiConfigPanel">
+          <!-- API Configuration Panel -->
+          <div class="api-config-section" id="apiConfigPanel">
+            <div class="section-divider"></div>
+
             <div id="apiStatus" class="api-status">
               <p class="status-text"></p>
             </div>
 
             <div class="api-input">
               <input type="password" id="apiKey" placeholder="Grant Key">
-              <input type="text" id="orgId" placeholder="Org ID (auto)">
-              <button id="testApiBtn" class="btn-verify">Test</button>
+              <input type="hidden" id="orgId">
+              <button id="testApiBtn" class="btn-verify">Test Connection</button>
             </div>
 
             <p class="api-hint">
-              📍 Get your Grant Key: JobTread Settings → Integrations → API<br>
-              💡 One team member sets this up, others use the same Grant Key to join
+              <i class="ph ph-map-pin"></i> Get your Grant Key: JobTread Settings → Integrations → API<br>
+              <i class="ph ph-lightbulb"></i> One team member sets this up, others use the same Grant Key to join
             </p>
           </div>
         </div>
       </div>
 
-    </div>
-
-    <!-- AI Integration Section - Power User Only - TEMPORARILY DISABLED FOR RELEASE -->
-    <!-- TODO: Re-enable when MCP setup is simplified for all platforms
-    <div class="ai-integration-section" id="aiIntegrationSection" style="display: none;">
-      <div class="section-label">
-        <span class="ai-icon">🤖</span>
-        AI Integration
-        <span class="badge power-user">Power User</span>
-      </div>
-
-      <div class="ai-status" id="aiConnectionStatus">
-        <div class="ai-status-indicator disconnected" id="aiStatusIndicator">
-          <span class="status-dot"></span>
-          <span class="status-text">Not configured</span>
-        </div>
-        <button class="btn-test-connection" id="testAiConnectionBtn">Test Connection</button>
-      </div>
-
-      <div class="ai-platform-selector">
-        <label>Select your AI platform:</label>
-        <div class="platform-tabs" id="platformTabs">
-          <button class="platform-tab active" data-platform="claude">
-            <span class="platform-icon">🟣</span>
-            Desktop
-          </button>
-          <button class="platform-tab" data-platform="claudeCode">
-            <span class="platform-icon">🟣</span>
-            Code
-          </button>
-          <button class="platform-tab" data-platform="chatgpt">
-            <span class="platform-icon">🟢</span>
-            ChatGPT
-          </button>
-          <button class="platform-tab" data-platform="cursor">
-            <span class="platform-icon">🔵</span>
-            Cursor
-          </button>
-          <button class="platform-tab" data-platform="other">
-            <span class="platform-icon">⚪</span>
-            Other
-          </button>
-        </div>
-      </div>
-
-      <div class="ai-config-panel">
-        <div class="config-instructions" id="configInstructions"></div>
-
-        <div class="config-code-wrapper">
-          <div class="config-header">
-            <span class="config-label">Configuration JSON</span>
-            <button class="btn-copy" id="copyConfigBtn" title="Copy to clipboard">
-              <span class="copy-icon">📋</span>
-              <span class="copy-text">Copy</span>
-            </button>
+      <!-- ==================== LICENSE TAB ==================== -->
+      <div class="tab-content" id="tab-license">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-crown"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">Premium License</h2>
+              <p class="panel-desc">Manage your subscription</p>
+            </div>
           </div>
-          <pre class="config-code" id="configCode"></pre>
+
+          <div class="license-panel">
+            <div id="licenseStatus" class="license-status">
+              <p class="status-text"></p>
+            </div>
+
+            <div class="license-input">
+              <input type="text" id="licenseKey" placeholder="Enter license key">
+              <button id="verifyBtn" class="btn-verify">Verify</button>
+            </div>
+
+            <p class="license-link">
+              <a href="https://premium.jtpowertools.com" target="_blank">Purchase a license to share with your team!</a>
+            </p>
+          </div>
+
+          <!-- Tier info -->
+          <div class="tier-info">
+            <div class="tier-card">
+              <span class="badge essential">Essential</span>
+              <p>Core productivity tools</p>
+            </div>
+            <div class="tier-card">
+              <span class="badge pro">Pro</span>
+              <p>Premium formatting & preview tools</p>
+            </div>
+            <div class="tier-card">
+              <span class="badge power-user">Power User</span>
+              <p>API access & advanced features</p>
+            </div>
+          </div>
         </div>
-
-        <div class="config-file-path" id="configFilePath"></div>
       </div>
 
-      <div class="ai-quick-links">
-        <a href="https://jobtread-tools.pro/docs/mcp" target="_blank" class="ai-link">
-          📚 Full Documentation
-        </a>
-        <a href="https://jobtread-mcp-server.king0light-ai.workers.dev/health" target="_blank" class="ai-link">
-          🔗 Server Status
-        </a>
-      </div>
-    </div>
-    -->
-
-    <!-- Actions -->
-    <div class="actions-section">
-      <button id="refreshBtn" class="btn-secondary">Refresh Current Tab</button>
-      <div class="status-message" id="statusMessage"></div>
-    </div>
-
-    <!-- License Section -->
-    <div class="license-section">
-      <div class="section-label">Premium License</div>
-
-      <div id="licenseStatus" class="license-status">
-        <p class="status-text"></p>
-      </div>
-
-      <div class="license-input">
-        <input type="text" id="licenseKey" placeholder="Enter license key">
-        <button id="verifyBtn" class="btn-verify">Verify</button>
-      </div>
-
-      <p class="license-link">
-        <a href="https://premium.jtpowertools.com" target="_blank">Purchase a license to share with your team!</a>
-      </p>
     </div>
 
     <!-- Footer Links -->
     <div class="footer-section">
-      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version">📋 What's New</a>
+      <a href="https://jtpowertools.com/changelog.html" class="footer-link" target="_blank" title="See what's new in this version"><i class="ph ph-clipboard-text"></i> What's New</a>
       <span class="footer-separator">•</span>
-      <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank">💬 Send Feedback</a>
+      <a href="mailto:support@jtpowertools.com?subject=JT%20Power%20Tools%20Feedback" class="footer-link" target="_blank"><i class="ph ph-chat-circle"></i> Feedback</a>
       <span class="footer-separator">•</span>
-      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank">👥 Join us on FB</a>
+      <a href="https://www.facebook.com/share/g/1YfFePwdtx/" class="footer-link" target="_blank"><i class="ph ph-facebook-logo"></i> Facebook</a>
+      <span class="footer-separator">•</span>
+      <a href="https://discord.gg/u57GzaT6bp" class="footer-link" target="_blank"><i class="ph ph-discord-logo"></i> Discord</a>
     </div>
   </div>
 

@@ -1,3 +1,27 @@
+// Tab navigation management
+function initTabNavigation() {
+  const tabItems = document.querySelectorAll('.tab-item');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabItems.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const targetTab = tab.dataset.tab;
+
+      // Update tab buttons
+      tabItems.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update tab content
+      tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === `tab-${targetTab}`) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+}
+
 // Popup theme management
 const POPUP_THEME_KEY = 'jtPopupTheme';
 
@@ -441,29 +465,35 @@ async function loadSettings() {
     const hasProFeatures = tier && LicenseService.tierHasFeature(tier, 'dragDrop');
     const hasEssentialFeatures = tier && LicenseService.tierHasFeature(tier, 'quickNotes');
 
+    // Helper to safely set checkbox value
+    const setCheckbox = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = value;
+    };
+
     // FREE features - work for everyone (no license required)
-    document.getElementById('formatter').checked = settings.formatter;
-    document.getElementById('darkMode').checked = settings.darkMode;
-    document.getElementById('contrastFix').checked = settings.contrastFix;
-    document.getElementById('characterCounter').checked = settings.characterCounter !== undefined ? settings.characterCounter : false;
-    document.getElementById('budgetHierarchy').checked = settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false;
-    document.getElementById('kanbanTypeFilter').checked = settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false;
-    document.getElementById('autoCollapseGroups').checked = settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false;
+    setCheckbox('formatter', settings.formatter);
+    setCheckbox('darkMode', settings.darkMode);
+    setCheckbox('contrastFix', settings.contrastFix);
+    setCheckbox('characterCounter', settings.characterCounter !== undefined ? settings.characterCounter : false);
+    setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
+    setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
+    setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
 
     // ESSENTIAL features - require any license (Essential, Pro, Power User)
-    document.getElementById('quickNotes').checked = hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true);
-    document.getElementById('smartJobSwitcher').checked = hasEssentialFeatures && (settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true);
-    document.getElementById('freezeHeader').checked = hasEssentialFeatures && (settings.freezeHeader !== undefined ? settings.freezeHeader : false);
-    document.getElementById('pdfMarkupTools').checked = hasEssentialFeatures && (settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true);
+    setCheckbox('quickNotes', hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true));
+    setCheckbox('smartJobSwitcher', hasEssentialFeatures && (settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true));
+    setCheckbox('freezeHeader', hasEssentialFeatures && (settings.freezeHeader !== undefined ? settings.freezeHeader : false));
+    setCheckbox('pdfMarkupTools', hasEssentialFeatures && (settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true));
 
     // PRO features - require Pro or Power User tier
-    document.getElementById('dragDrop').checked = hasProFeatures && settings.dragDrop;
-    document.getElementById('previewMode').checked = hasProFeatures && settings.previewMode;
-    document.getElementById('rgbTheme').checked = hasProFeatures && settings.rgbTheme;
+    setCheckbox('dragDrop', hasProFeatures && settings.dragDrop);
+    setCheckbox('previewMode', hasProFeatures && settings.previewMode);
+    setCheckbox('rgbTheme', hasProFeatures && settings.rgbTheme);
 
     // POWER USER features - require Power User tier (API-powered)
-    document.getElementById('customFieldFilter').checked = settings.customFieldFilter !== undefined ? settings.customFieldFilter : false;
-    document.getElementById('budgetChangelog').checked = settings.budgetChangelog !== undefined ? settings.budgetChangelog : false;
+    setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
+    setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -473,14 +503,18 @@ async function loadSettings() {
     const savedThemes = settings.savedThemes || defaultSettings.savedThemes;
     loadSavedThemes(savedThemes);
 
-    // Show/hide customize button based on rgbTheme state
+    // Show/hide customize button based on rgbTheme state (if it exists in the HTML)
     const customizeBtn = document.getElementById('customizeThemeBtn');
-    customizeBtn.style.display = (hasProFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
+    if (customizeBtn) {
+      customizeBtn.style.display = (hasProFeatures && settings.rgbTheme) ? 'inline-flex' : 'none';
+    }
 
-    // Always hide the customization panel initially
+    // Hide the customization panel initially (if it exists in the HTML)
     const themeCustomization = document.getElementById('themeCustomization');
-    themeCustomization.style.display = 'none';
-    customizeBtn.classList.remove('expanded');
+    if (themeCustomization) {
+      themeCustomization.style.display = 'none';
+      if (customizeBtn) customizeBtn.classList.remove('expanded');
+    }
 
     console.log('Settings loaded:', settings, 'tier:', tier, 'hasLicense:', hasLicense);
   } catch (error) {
@@ -564,16 +598,19 @@ async function saveSettings(settings) {
       return;
     }
 
-    // Show/hide customize button based on rgbTheme toggle
+    // Show/hide customize button based on rgbTheme toggle (if elements exist)
     const customizeBtn = document.getElementById('customizeThemeBtn');
     const themeCustomization = document.getElementById('themeCustomization');
     const shouldShowButton = hasProFeatures && settings.rgbTheme;
-    customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
+
+    if (customizeBtn) {
+      customizeBtn.style.display = shouldShowButton ? 'inline-flex' : 'none';
+    }
 
     // Hide panel when toggle is turned off
-    if (!shouldShowButton) {
+    if (!shouldShowButton && themeCustomization) {
       themeCustomization.style.display = 'none';
-      customizeBtn.classList.remove('expanded');
+      if (customizeBtn) customizeBtn.classList.remove('expanded');
     }
 
     console.log('saveSettings: Customize button visibility:', shouldShowButton ? 'visible' : 'hidden', 'tier:', tier);
@@ -594,6 +631,12 @@ async function saveSettings(settings) {
   }
 }
 
+// Helper to safely get checkbox value with fallback
+function getCheckboxValue(id, fallback = false) {
+  const el = document.getElementById(id);
+  return el ? el.checked : fallback;
+}
+
 // Get current settings from checkboxes
 async function getCurrentSettings() {
   const result = await chrome.storage.sync.get(['jtToolsSettings']);
@@ -601,23 +644,23 @@ async function getCurrentSettings() {
   const savedThemes = (result.jtToolsSettings && result.jtToolsSettings.savedThemes) || defaultSettings.savedThemes;
 
   return {
-    dragDrop: document.getElementById('dragDrop').checked,
-    contrastFix: document.getElementById('contrastFix').checked,
-    formatter: document.getElementById('formatter').checked,
-    previewMode: document.getElementById('previewMode').checked,
-    darkMode: document.getElementById('darkMode').checked,
-    rgbTheme: document.getElementById('rgbTheme').checked,
-    smartJobSwitcher: document.getElementById('smartJobSwitcher').checked,
-    budgetHierarchy: document.getElementById('budgetHierarchy').checked,
-    quickNotes: document.getElementById('quickNotes').checked,
+    dragDrop: getCheckboxValue('dragDrop', defaultSettings.dragDrop),
+    contrastFix: getCheckboxValue('contrastFix', defaultSettings.contrastFix),
+    formatter: getCheckboxValue('formatter', defaultSettings.formatter),
+    previewMode: getCheckboxValue('previewMode', defaultSettings.previewMode),
+    darkMode: getCheckboxValue('darkMode', defaultSettings.darkMode),
+    rgbTheme: getCheckboxValue('rgbTheme', defaultSettings.rgbTheme),
+    smartJobSwitcher: getCheckboxValue('smartJobSwitcher', defaultSettings.smartJobSwitcher),
+    budgetHierarchy: getCheckboxValue('budgetHierarchy', defaultSettings.budgetHierarchy),
+    quickNotes: getCheckboxValue('quickNotes', defaultSettings.quickNotes),
     helpSidebarSupport: true, // Always enabled, not user-toggleable
-    freezeHeader: document.getElementById('freezeHeader').checked,
-    characterCounter: document.getElementById('characterCounter').checked,
-    kanbanTypeFilter: document.getElementById('kanbanTypeFilter').checked,
-    autoCollapseGroups: document.getElementById('autoCollapseGroups').checked,
-    customFieldFilter: document.getElementById('customFieldFilter').checked,
-    budgetChangelog: document.getElementById('budgetChangelog').checked,
-    pdfMarkupTools: document.getElementById('pdfMarkupTools').checked,
+    freezeHeader: getCheckboxValue('freezeHeader', defaultSettings.freezeHeader),
+    characterCounter: getCheckboxValue('characterCounter', defaultSettings.characterCounter),
+    kanbanTypeFilter: getCheckboxValue('kanbanTypeFilter', defaultSettings.kanbanTypeFilter),
+    autoCollapseGroups: getCheckboxValue('autoCollapseGroups', defaultSettings.autoCollapseGroups),
+    customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
+    budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
+    pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     themeColors: currentColors,
     savedThemes: savedThemes
   };
@@ -626,6 +669,10 @@ async function getCurrentSettings() {
 // Show status message
 function showStatus(message, type = 'success') {
   const statusEl = document.getElementById('statusMessage');
+  if (!statusEl) {
+    console.log('Status:', message, type);
+    return;
+  }
   statusEl.textContent = message;
   statusEl.className = `status-message ${type}`;
 
@@ -704,23 +751,35 @@ function rgbToHsl(r, g, b) {
 
 // Load theme colors into pickers
 function loadThemeColors(colors) {
-  document.getElementById('primaryColorPicker').value = colors.primary;
-  document.getElementById('backgroundColorPicker').value = colors.background;
-  document.getElementById('textColorPicker').value = colors.text;
+  const primaryPicker = document.getElementById('primaryColorPicker');
+  const backgroundPicker = document.getElementById('backgroundColorPicker');
+  const textPicker = document.getElementById('textColorPicker');
+  const primaryValue = document.getElementById('primaryColorValue');
+  const backgroundValue = document.getElementById('backgroundColorValue');
+  const textValue = document.getElementById('textColorValue');
 
-  document.getElementById('primaryColorValue').textContent = colors.primary.toUpperCase();
-  document.getElementById('backgroundColorValue').textContent = colors.background.toUpperCase();
-  document.getElementById('textColorValue').textContent = colors.text.toUpperCase();
+  // Only update if elements exist
+  if (primaryPicker) primaryPicker.value = colors.primary;
+  if (backgroundPicker) backgroundPicker.value = colors.background;
+  if (textPicker) textPicker.value = colors.text;
+
+  if (primaryValue) primaryValue.textContent = colors.primary.toUpperCase();
+  if (backgroundValue) backgroundValue.textContent = colors.background.toUpperCase();
+  if (textValue) textValue.textContent = colors.text.toUpperCase();
 
   updateThemePreview();
 }
 
 // Get current theme colors from pickers
 function getCurrentThemeColors() {
+  const primaryPicker = document.getElementById('primaryColorPicker');
+  const backgroundPicker = document.getElementById('backgroundColorPicker');
+  const textPicker = document.getElementById('textColorPicker');
+
   return {
-    primary: document.getElementById('primaryColorPicker').value,
-    background: document.getElementById('backgroundColorPicker').value,
-    text: document.getElementById('textColorPicker').value
+    primary: primaryPicker ? primaryPicker.value : defaultSettings.themeColors.primary,
+    background: backgroundPicker ? backgroundPicker.value : defaultSettings.themeColors.background,
+    text: textPicker ? textPicker.value : defaultSettings.themeColors.text
   };
 }
 
@@ -729,19 +788,28 @@ function updateThemePreview() {
   const colors = getCurrentThemeColors();
 
   // Primary
-  document.getElementById('previewPrimary').style.backgroundColor = colors.primary;
-  document.getElementById('previewPrimary').style.borderColor = colors.primary;
-  document.getElementById('previewPrimary').style.color = 'white';
+  const previewPrimary = document.getElementById('previewPrimary');
+  if (previewPrimary) {
+    previewPrimary.style.backgroundColor = colors.primary;
+    previewPrimary.style.borderColor = colors.primary;
+    previewPrimary.style.color = 'white';
+  }
 
   // Background
-  document.getElementById('previewBackground').style.backgroundColor = colors.background;
-  document.getElementById('previewBackground').style.color = colors.text;
-  document.getElementById('previewBackground').style.borderColor = colors.background;
+  const previewBackground = document.getElementById('previewBackground');
+  if (previewBackground) {
+    previewBackground.style.backgroundColor = colors.background;
+    previewBackground.style.color = colors.text;
+    previewBackground.style.borderColor = colors.background;
+  }
 
   // Text
-  document.getElementById('previewText').style.backgroundColor = 'white';
-  document.getElementById('previewText').style.color = colors.text;
-  document.getElementById('previewText').style.borderColor = '#e5e7eb';
+  const previewText = document.getElementById('previewText');
+  if (previewText) {
+    previewText.style.backgroundColor = 'white';
+    previewText.style.color = colors.text;
+    previewText.style.borderColor = '#e5e7eb';
+  }
 }
 
 // Apply current theme
@@ -772,23 +840,34 @@ async function applyTheme() {
 // Load saved themes into slots
 function loadSavedThemes(savedThemes) {
   savedThemes.forEach((theme, index) => {
+    const themeName = document.getElementById(`themeName${index}`);
+    const slotPrimary = document.getElementById(`slot${index}Primary`);
+    const slotBackground = document.getElementById(`slot${index}Background`);
+    const slotText = document.getElementById(`slot${index}Text`);
+    const loadBtn = document.querySelector(`[data-slot="${index}"].load-theme-btn`);
+
+    // Skip if elements don't exist (theme tab may have different structure)
+    if (!themeName || !slotPrimary || !slotBackground || !slotText) {
+      return;
+    }
+
     if (theme) {
       // Theme exists - show load button
-      document.getElementById(`themeName${index}`).value = theme.name || `Theme ${index + 1}`;
-      document.getElementById(`slot${index}Primary`).style.backgroundColor = theme.colors.primary;
-      document.getElementById(`slot${index}Background`).style.backgroundColor = theme.colors.background;
-      document.getElementById(`slot${index}Text`).style.backgroundColor = theme.colors.text;
+      themeName.value = theme.name || `Theme ${index + 1}`;
+      slotPrimary.style.backgroundColor = theme.colors.primary;
+      slotBackground.style.backgroundColor = theme.colors.background;
+      slotText.style.backgroundColor = theme.colors.text;
 
-      document.querySelector(`[data-slot="${index}"].load-theme-btn`).style.display = 'inline-block';
+      if (loadBtn) loadBtn.style.display = 'inline-block';
     } else {
       // No theme saved
-      document.getElementById(`themeName${index}`).value = '';
-      document.getElementById(`themeName${index}`).placeholder = `Theme ${index + 1}`;
-      document.getElementById(`slot${index}Primary`).style.backgroundColor = '#f3f4f6';
-      document.getElementById(`slot${index}Background`).style.backgroundColor = '#f3f4f6';
-      document.getElementById(`slot${index}Text`).style.backgroundColor = '#f3f4f6';
+      themeName.value = '';
+      themeName.placeholder = `Theme ${index + 1}`;
+      slotPrimary.style.backgroundColor = '#f3f4f6';
+      slotBackground.style.backgroundColor = '#f3f4f6';
+      slotText.style.backgroundColor = '#f3f4f6';
 
-      document.querySelector(`[data-slot="${index}"].load-theme-btn`).style.display = 'none';
+      if (loadBtn) loadBtn.style.display = 'none';
     }
   });
 }
@@ -878,6 +957,26 @@ function initializeCategories() {
   });
 }
 
+/**
+ * Initialize feature help icon click handlers
+ * Opens the relevant guide page when clicked
+ */
+function initFeatureHelpLinks() {
+  const baseUrl = 'https://king0lightai.github.io/JT-Power-Tools/guides/';
+
+  document.querySelectorAll('.feature-help[data-guide]').forEach(helpIcon => {
+    helpIcon.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // Prevent toggle from being triggered
+
+      const guideName = helpIcon.dataset.guide;
+      if (guideName) {
+        chrome.tabs.create({ url: `${baseUrl}${guideName}.html` });
+      }
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
 
@@ -886,6 +985,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Setup theme toggle button
   document.getElementById('popupThemeToggle').addEventListener('click', togglePopupTheme);
+
+  // Setup tab navigation
+  initTabNavigation();
 
   // Check license status first (just UI, don't modify settings)
   const licenseStatus = await checkLicenseStatus();
@@ -899,6 +1001,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize collapsible categories
   initializeCategories();
+
+  // Initialize feature help icons - open guide on click
+  initFeatureHelpLinks();
 
   // Determine if user has access to different tiers
   const hasProFeatures = hasLicense && tier && LicenseService.tierHasFeature(tier, 'dragDrop');
@@ -972,18 +1077,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Handle mutual exclusivity for appearance modes
       if (checkbox.checked) {
+        const darkModeEl = document.getElementById('darkMode');
+        const rgbThemeEl = document.getElementById('rgbTheme');
+        const contrastFixEl = document.getElementById('contrastFix');
+
         if (checkbox.id === 'contrastFix') {
           // Contrast Fix enabled - disable Dark Mode and RGB Theme
-          document.getElementById('darkMode').checked = false;
-          document.getElementById('rgbTheme').checked = false;
+          if (darkModeEl) darkModeEl.checked = false;
+          if (rgbThemeEl) rgbThemeEl.checked = false;
         } else if (checkbox.id === 'darkMode') {
           // Dark Mode enabled - disable Contrast Fix and RGB Theme
-          document.getElementById('contrastFix').checked = false;
-          document.getElementById('rgbTheme').checked = false;
+          if (contrastFixEl) contrastFixEl.checked = false;
+          if (rgbThemeEl) rgbThemeEl.checked = false;
         } else if (checkbox.id === 'rgbTheme') {
           // RGB Theme enabled - disable Contrast Fix and Dark Mode
-          document.getElementById('contrastFix').checked = false;
-          document.getElementById('darkMode').checked = false;
+          if (contrastFixEl) contrastFixEl.checked = false;
+          if (darkModeEl) darkModeEl.checked = false;
         }
       }
 
@@ -1003,29 +1112,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   ];
 
   colorPickers.forEach(({ picker, value }) => {
-    document.getElementById(picker).addEventListener('input', (e) => {
-      document.getElementById(value).textContent = e.target.value.toUpperCase();
-      updateThemePreview();
-    });
+    const pickerEl = document.getElementById(picker);
+    const valueEl = document.getElementById(value);
+    if (pickerEl) {
+      pickerEl.addEventListener('input', (e) => {
+        if (valueEl) valueEl.textContent = e.target.value.toUpperCase();
+        updateThemePreview();
+      });
+    }
   });
 
   // Listen for apply theme button
-  document.getElementById('applyThemeBtn').addEventListener('click', applyTheme);
+  const applyThemeBtn = document.getElementById('applyThemeBtn');
+  if (applyThemeBtn) {
+    applyThemeBtn.addEventListener('click', applyTheme);
+  }
 
-  // Listen for customize button to toggle theme customization panel
-  document.getElementById('customizeThemeBtn').addEventListener('click', () => {
-    const themeCustomization = document.getElementById('themeCustomization');
-    const customizeBtn = document.getElementById('customizeThemeBtn');
-    const isVisible = themeCustomization.style.display === 'block';
+  // Listen for customize button to toggle theme customization panel (if it exists)
+  const customizeThemeBtn = document.getElementById('customizeThemeBtn');
+  if (customizeThemeBtn) {
+    customizeThemeBtn.addEventListener('click', () => {
+      const themeCustomization = document.getElementById('themeCustomization');
+      const isVisible = themeCustomization && themeCustomization.style.display === 'block';
 
-    if (isVisible) {
-      themeCustomization.style.display = 'none';
-      customizeBtn.classList.remove('expanded');
-    } else {
-      themeCustomization.style.display = 'block';
-      customizeBtn.classList.add('expanded');
-    }
-  });
+      if (themeCustomization) {
+        if (isVisible) {
+          themeCustomization.style.display = 'none';
+          customizeThemeBtn.classList.remove('expanded');
+        } else {
+          themeCustomization.style.display = 'block';
+          customizeThemeBtn.classList.add('expanded');
+        }
+      }
+    });
+  }
 
   // Listen for save theme buttons
   document.querySelectorAll('.save-theme-btn').forEach(btn => {
@@ -1044,7 +1164,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Listen for refresh button
-  document.getElementById('refreshBtn').addEventListener('click', refreshCurrentTab);
+  const refreshBtn = document.getElementById('refreshBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshCurrentTab);
+  }
 
   // Initialize AI Integration section
   await initAiIntegration();

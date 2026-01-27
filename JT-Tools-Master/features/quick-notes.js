@@ -971,19 +971,15 @@ const QuickNotesFeature = (() => {
     }
 
     notesButton = document.createElement('div');
-    // Match header icon button styling (no text, just icon)
+    // Match header icon button styling exactly like JobTread's Time Clock button
     notesButton.className = 'relative cursor-pointer flex items-center hover:bg-gray-100 focus:bg-gray-100 px-1 h-10 rounded-sm group active:bg-gray-200 jt-quick-notes-btn';
     notesButton.setAttribute('role', 'button');
     notesButton.setAttribute('tabindex', '0');
     notesButton.setAttribute('title', 'Quick Notes');
 
-    // Icon-only version (matches header icons)
-    notesButton.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] text-2xl" viewBox="0 0 24 24">
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-      </svg>
-    `;
+    // Icon-only version (matches header icons exactly - using same classes as Time Clock)
+    // Note: SVG must be on single line without whitespace to match JT's native icons
+    notesButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em] text-3xl" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
 
     // Add click handler
     notesButton.addEventListener('click', (e) => {
