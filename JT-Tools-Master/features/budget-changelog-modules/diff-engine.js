@@ -223,6 +223,9 @@ const BudgetDiffEngine = (() => {
       }
     }
 
+    // Calculate unchanged count: items in both old and new that weren't modified
+    const unchangedCount = newItems.length - added.length - modified.length;
+
     return {
       oldTotalCost,
       oldTotalPrice,
@@ -233,6 +236,7 @@ const BudgetDiffEngine = (() => {
       addedCount: added.length,
       removedCount: removed.length,
       modifiedCount: modified.length,
+      unchangedCount: Math.max(0, unchangedCount),
       addedCost,
       addedPrice,
       removedCost,

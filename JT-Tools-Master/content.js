@@ -127,7 +127,7 @@ let currentSettings = window.JTDefaults
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
-      pdfMarkupTools: true,
+      pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
