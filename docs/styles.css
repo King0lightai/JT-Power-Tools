@@ -628,6 +628,23 @@ footer {
     color: var(--yellow);
 }
 
+.footer-links a i {
+    margin-right: 6px;
+    font-size: 1.1em;
+    vertical-align: -0.1em;
+}
+
+.footer-links.secondary {
+    margin-top: 16px;
+    gap: 24px;
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+.footer-links.secondary a:hover {
+    opacity: 1;
+}
+
 /* Back to Top */
 .back-to-top {
     position: fixed;
@@ -1221,6 +1238,11 @@ a.feature-card h3 {
 .home-features .feature-icon {
     font-size: 36px;
     margin-bottom: 20px;
+    color: var(--yellow);
+}
+
+.home-features .feature-icon i {
+    font-size: 40px;
 }
 
 .home-features .feature-card h3 {
@@ -1405,6 +1427,8 @@ a.feature-card h3 {
     text-align: center;
     position: relative;
     transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
 }
 
 .pricing-card:hover {
@@ -1417,7 +1441,7 @@ a.feature-card h3 {
 }
 
 .pricing-card.featured::before {
-    content: 'BEST VALUE';
+    content: 'MOST POPULAR';
     position: absolute;
     top: -14px;
     left: 50%;
@@ -1460,6 +1484,7 @@ a.feature-card h3 {
     list-style: none;
     margin-bottom: 40px;
     text-align: left;
+    flex-grow: 1;
 }
 
 .pricing-features li {
