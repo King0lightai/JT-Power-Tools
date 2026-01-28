@@ -39,11 +39,65 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.5.2 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.5.2</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">January 27, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog (Power User)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Compare budget backups and see exactly what changed between versions</li>
+                            <li class="sub-item">Track additions, deletions, and modifications with a detailed report</li>
+                            <li class="sub-item">Perfect for change order documentation and audit trails</li>
+                            <li class="sub-item">Print Report and Copy Summary buttons for easy sharing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Extension Popup Overhaul</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added help icons next to feature titles linking to feature guides</li>
+                            <li class="sub-item">Updated feature descriptions for accuracy and clarity</li>
+                            <li class="sub-item">Renamed "Smart Job Switcher" to "Quick Job Switcher"</li>
+                            <li class="sub-item">Renamed "Message Character Counter" to "Message Counter & Templates"</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documentation Updates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added tier-specific badges (Essential, Pro, Power User) to feature cards</li>
+                            <li class="sub-item">Created new guides for PDF Markup Tools, Custom Field Filter, and Budget Changelog</li>
+                            <li class="sub-item">Updated guides with correct tier labels and requirements</li>
+                            <li class="sub-item">Updated pricing cards with aligned buttons and "Most Popular" badge</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes Header Button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed button styling to match JobTread's native header icons</li>
+                            <li class="sub-item">Proper size and vertical alignment with other header icons</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.5.1 -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.5.1</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">January 24, 2026</span>
             </div>
 
@@ -72,6 +126,26 @@
                         <ul class="sub-list">
                             <li class="sub-item">Fixed Custom Theme customization panel appearing below API Integration section</li>
                             <li class="sub-item">Theme customization options now appear directly below the Custom Theme toggle in the Appearance category</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog Sidebar Detection Fix</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Budget Changelog compare controls not appearing in Budget Backups sidebar</li>
+                            <li class="sub-item">Added missing default setting that prevented the feature from initializing</li>
+                            <li class="sub-item">Updated sidebar selector for more reliable detection</li>
+                            <li class="sub-item">Compare controls now appear with proper styling inside the sidebar content area</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Budget Changelog API & Report Fixes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Pave API query returning only 10 backups from the same day</li>
+                            <li class="sub-item">Added proper pagination parameters to fetch up to 100 backups sorted by date</li>
+                            <li class="sub-item">Fixed changelog report opening with broken styling (raw text, no CSS)</li>
+                            <li class="sub-item">Replaced Tailwind CDN with comprehensive inline CSS for reliable rendering</li>
+                            <li class="sub-item">Fixed "Items Modified: undefined" by adding missing calculation to diff engine</li>
+                            <li class="sub-item">Print Report and Copy Summary buttons now work correctly</li>
                         </ul>
                     </li>
                 </ul>

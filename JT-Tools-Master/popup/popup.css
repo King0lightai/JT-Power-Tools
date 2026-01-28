@@ -69,9 +69,16 @@
   display: none !important;
 }
 
+html, body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   width: 380px;
+  height: 600px;
   background: var(--bg-primary);
   color: var(--text-primary);
   font-size: 13px;
@@ -82,6 +89,9 @@ body {
 .container {
   background: var(--bg-primary);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* ============================================
@@ -237,8 +247,9 @@ i.tab-icon {
 
 /* Tab Content */
 .tab-content-wrapper {
-  max-height: 420px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .tab-content-wrapper::-webkit-scrollbar {
@@ -839,10 +850,17 @@ input:checked + .slider:before {
   background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.theme-slot .save-theme-btn,
+.theme-slot .load-theme-btn {
+  flex-shrink: 0;
 }
 
 .theme-name {
   flex: 1;
+  min-width: 0;
   padding: 6px 10px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xs);
@@ -1187,6 +1205,7 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .footer-link {
