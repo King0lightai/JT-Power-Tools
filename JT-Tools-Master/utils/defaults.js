@@ -37,6 +37,9 @@ const JTDefaults = (() => {
     // API (Experimental) Features
     customFieldFilter: false,
 
+    // Power User Features (require API connection)
+    budgetChangelog: false,
+
     // Theme Configuration
     themeColors: {
       primary: '#3B82F6',     // Default blue
@@ -55,7 +58,8 @@ const JTDefaults = (() => {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups'],
     productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
-    apiExperimental: ['customFieldFilter']
+    apiExperimental: ['customFieldFilter'],
+    powerUser: ['budgetChangelog']
   };
 
   /**

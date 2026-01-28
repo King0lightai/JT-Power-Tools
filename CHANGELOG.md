@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Budget Changelog API Pagination
+- Fixed Pave API query returning only 10 most recent backups (all from same day)
+- Added `size: 100` and `sortBy` parameters based on Pave API documentation for connection fields
+- Dropdown now shows backup dates from across multiple days as expected (e.g., Jan 22, Jan 6, Dec 17, etc.)
+
+#### Budget Changelog Report Styling
+- Fixed changelog report opening with broken styling (raw text, no CSS)
+- Replaced Tailwind CDN with comprehensive inline CSS for reliable rendering in new tabs
+- Fixed "Items Modified: undefined" by adding missing `unchangedCount` calculation to diff engine
+- Report now displays with proper card layouts, color-coded sections, and visual hierarchy
+- Print Report and Copy Summary buttons now work correctly in the new tab view
+
+#### Popup Toggle Settings
+- Fixed null reference errors when loading settings after popup HTML overhaul
+- Added `setCheckbox` and `getCheckboxValue` helper functions for safe checkbox operations
+- Added null checks for theme customization elements that may not exist in all popup states
+
+### Added
+
+#### Discord Community Link
+- Added Discord invite link to popup footer for community support
+
 #### Freeze Header - Documents Page Panel Fix
 - Fixed ADD/EDIT ITEMS panel and COST ITEM DETAILS sidebar appearing behind frozen headers on Documents page
 - Panel now correctly adjusts its sticky position to stay below frozen headers when scrolling
@@ -23,6 +45,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Popup Layout Fix
 - Fixed Custom Theme customization panel appearing below API Integration section
 - Theme customization options now appear directly below the Custom Theme toggle in the Appearance category
+
+#### Budget Changelog Sidebar Detection Fix
+- Fixed Budget Changelog compare controls not appearing in Budget Backups sidebar
+- Added `budgetChangelog` to default settings (was missing, preventing feature from initializing)
+- Updated sidebar selector to use `data-is-drag-scroll-boundary` attribute for reliable detection
+- Improved `isBudgetBackupsSidebar` detection to look for orange "BUDGET BACKUPS" header
+- Enhanced UI injection to find correct insertion point after instruction text
+- Compare controls now appear with proper styling inside the sidebar content area
+- Fixed API configuration detection to use Grant Key from Pro Service storage when available
+- Added direct Pave API request functionality for fetching budget backups without relying on JobTreadAPI service
+
+#### Budget Changelog UI Improvements
+- Redesigned compare controls layout with vertical stacking to fit narrow sidebar better
+- Backup dropdowns now show only the latest backup per day (reduces clutter for frequently saved budgets)
+- Comparison results now open in a new browser tab with a full detailed report
+- New tab report includes: job name header, printable layout, expanded statistics, and better visual organization
+- Added Print Report button to export comparison as PDF
+- Copy Summary button works in new tab view
+- Fallback modal display if popup is blocked
 
 ### Improved
 
