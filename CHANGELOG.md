@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Quick Notes Header Icon Now Persistent
+- Removed URL restrictions that prevented Quick Notes icon from appearing on certain JobTread pages
+- Quick Notes header icon now visible on all JobTread pages (settings, home, account pages, etc.)
+- Previously only showed on specific pages like /jobs, /schedule, /messages, etc.
+
 #### Budget Changelog API Pagination
 - Fixed Pave API query returning only 10 most recent backups (all from same day)
 - Added `size: 100` and `sortBy` parameters based on Pave API documentation for connection fields
