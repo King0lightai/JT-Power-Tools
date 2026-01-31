@@ -1048,28 +1048,10 @@ const QuickNotesFeature = (() => {
   }
 
   // Check if current page should have the quick notes button
+  // Note: Since the icon is now persistent in the header, we show it on all JobTread pages
   function shouldShowButton() {
-    const path = window.location.pathname;
-
-    // Never show on settings page
-    if (path.includes('/settings')) {
-      return false;
-    }
-
-    // Show on these pages with action bars
-    const allowedPages = [
-      '/daily-logs',
-      '/time',
-      '/messages',
-      '/todos',
-      '/to-dos',
-      '/schedule',
-      '/jobs',
-      '/documents',
-      '/vendors',
-      '/customers'
-    ];
-    return allowedPages.some(page => path.includes(page));
+    // Always show the Quick Notes button in the header
+    return true;
   }
 
   // Find and inject button into action buttons container
@@ -1443,27 +1425,8 @@ const QuickNotesFeature = (() => {
   async function init() {
     if (isActive) return;
 
-    // Only initialize on allowed pages (pages with action bars)
-    // Note: The button injection logic also checks this, but we check here
-    // to avoid loading resources unnecessarily on other pages
-    const path = window.location.pathname;
-    const allowedPages = [
-      '/daily-logs',
-      '/time',
-      '/messages',
-      '/todos',
-      '/to-dos',
-      '/schedule',
-      '/jobs',
-      '/documents',
-      '/vendors',
-      '/customers'
-    ];
-    const isAllowedPage = allowedPages.some(page => path.includes(page));
-
-    if (!isAllowedPage) {
-      return;
-    }
+    // Quick Notes is now available on all JobTread pages
+    // The header icon is persistent across all pages
 
     // Load CSS
     const link = document.createElement('link');
