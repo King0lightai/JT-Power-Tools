@@ -1918,31 +1918,16 @@ const CharacterCounterFeature = (() => {
               // Fallback: insert at beginning of footer
               toolbar.insertBefore(container, toolbar.firstChild);
             }
-          } else if (isSidebar) {
-            // In sidebar (UPDATE TASK panel, etc.): add container as a new row below the toolbar
-            // This prevents the Send button from being pushed out of the narrow viewport
-            const containerRow = document.createElement('div');
-            containerRow.className = 'jt-signature-container-row';
-            containerRow.appendChild(container);
-            toolbar.parentElement.insertBefore(containerRow, toolbar.nextSibling);
           } else {
-            // For dashboard and dialogs: insert inline next to Send button
-            const rightSide = toolbar.querySelector('div.shrink-0');
-            if (rightSide) {
-              // Find the space-x-1 wrapper that contains the Send button
-              const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
-              // Insert our container before the Send button
-              buttonWrapper.insertBefore(container, buttonWrapper.firstChild);
+            // Insert on the LEFT side of the toolbar, after the upload/copy buttons
+            // This keeps the Send button undisturbed on the right
+            const leftSide = toolbar.querySelector('div.flex.gap-1');
+            if (leftSide) {
+              // Insert after the left side buttons (upload, copy, etc.)
+              leftSide.appendChild(container);
             } else {
-              // Fallback: look for left side to append after
-              const leftSide = toolbar.querySelector('div.flex.gap-1');
-              if (leftSide) {
-                // Insert signature container after the left side buttons
-                leftSide.appendChild(container);
-              } else {
-                // Last resort: append to toolbar
-                toolbar.appendChild(container);
-              }
+              // Fallback: insert at the beginning of toolbar
+              toolbar.insertBefore(container, toolbar.firstChild);
             }
           }
         } else {
