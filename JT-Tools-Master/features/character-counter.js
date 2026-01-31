@@ -1918,24 +1918,23 @@ const CharacterCounterFeature = (() => {
               // Fallback: insert at beginning of footer
               toolbar.insertBefore(container, toolbar.firstChild);
             }
-          } else if (isSidebar) {
-            // In sidebar: add container as a new row below the toolbar
-            const containerRow = document.createElement('div');
-            containerRow.className = 'jt-signature-container-row';
-            containerRow.appendChild(container);
-            toolbar.parentElement.insertBefore(containerRow, toolbar.nextSibling);
           } else {
-            // In dialog/modal: add inline with the toolbar buttons
-            const leftSide = toolbar.querySelector('div.flex.gap-1');
-            if (leftSide) {
-              // Insert signature container after the left side buttons
-              leftSide.appendChild(container);
+            // For all other toolbar layouts (dialog/modal, dashboard, sidebar)
+            // Try to insert next to the Send button on the right side
+            const rightSide = toolbar.querySelector('div.shrink-0');
+            if (rightSide) {
+              // Find the space-x-1 wrapper that contains the Send button
+              const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
+              // Insert our container before the Send button wrapper
+              buttonWrapper.insertBefore(container, buttonWrapper.firstChild);
             } else {
-              // Fallback: insert as second child of toolbar (between left and right)
-              const rightSide = toolbar.querySelector('div.shrink-0');
-              if (rightSide) {
-                toolbar.insertBefore(container, rightSide);
+              // Fallback: look for left side to append after
+              const leftSide = toolbar.querySelector('div.flex.gap-1');
+              if (leftSide) {
+                // Insert signature container after the left side buttons
+                leftSide.appendChild(container);
               } else {
+                // Last resort: append to toolbar
                 toolbar.appendChild(container);
               }
             }
