@@ -1866,9 +1866,15 @@ const CharacterCounterFeature = (() => {
         const dialog = field.closest('.shadow-lg, [role="dialog"], .modal, form');
         let toolbar = null;
 
-        // Detect if we're in a sidebar (narrower container)
-        const isSidebar = field.closest('.space-y-2, .space-y-3') !== null &&
-                          !field.closest('[role="dialog"]');
+        // Detect if we're in a narrow sidebar panel (UPDATE TASK, etc.)
+        // The UPDATE TASK panel and similar slide-out panels have:
+        // 1. A header with "UPDATE TASK" or similar text in orange (text-jtOrange)
+        // 2. A "× Close" button
+        // Dashboard message forms do NOT have these characteristics
+        const formContainer = field.closest('form')?.parentElement?.parentElement?.parentElement;
+        const hasSidebarHeader = formContainer?.previousElementSibling?.querySelector('.text-jtOrange')?.textContent?.match(/UPDATE|EDIT|TASK|DETAILS/i);
+        const hasCloseButton = formContainer?.parentElement?.querySelector('button, [role="button"]')?.textContent?.includes('Close');
+        const isSidebar = (hasSidebarHeader || hasCloseButton) && !field.closest('[role="dialog"]');
 
         if (dialog) {
           // FIRST: Check for document-sending modals (Send Estimate, Send Change Order, etc.)
