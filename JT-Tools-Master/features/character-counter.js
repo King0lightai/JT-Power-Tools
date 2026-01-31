@@ -1918,14 +1918,20 @@ const CharacterCounterFeature = (() => {
               // Fallback: insert at beginning of footer
               toolbar.insertBefore(container, toolbar.firstChild);
             }
+          } else if (isSidebar) {
+            // In sidebar (UPDATE TASK panel, etc.): add container as a new row below the toolbar
+            // This prevents the Send button from being pushed out of the narrow viewport
+            const containerRow = document.createElement('div');
+            containerRow.className = 'jt-signature-container-row';
+            containerRow.appendChild(container);
+            toolbar.parentElement.insertBefore(containerRow, toolbar.nextSibling);
           } else {
-            // For all other toolbar layouts (dialog/modal, dashboard, sidebar)
-            // Try to insert next to the Send button on the right side
+            // For dashboard and dialogs: insert inline next to Send button
             const rightSide = toolbar.querySelector('div.shrink-0');
             if (rightSide) {
               // Find the space-x-1 wrapper that contains the Send button
               const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
-              // Insert our container before the Send button wrapper
+              // Insert our container before the Send button
               buttonWrapper.insertBefore(container, buttonWrapper.firstChild);
             } else {
               // Fallback: look for left side to append after
