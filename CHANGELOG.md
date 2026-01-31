@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Notes header icon now visible on all JobTread pages (settings, home, account pages, etc.)
 - Previously only showed on specific pages like /jobs, /schedule, /messages, etc.
 
+#### Message Templates Position on Dashboard
+- Fixed Templates dropdown and character counter appearing in a separate row below the Send button
+- Templates and counter now appear inline to the left of the Send button on dashboard message form
+- Improved toolbar detection to properly position elements in various message form layouts
+
 #### Budget Changelog API Pagination
 - Fixed Pave API query returning only 10 most recent backups (all from same day)
 - Added `size: 100` and `sortBy` parameters based on Pave API documentation for connection fields
