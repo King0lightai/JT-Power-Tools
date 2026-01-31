@@ -1769,11 +1769,11 @@ const CharacterCounterFeature = (() => {
       counter.style.margin = '0'; // Keep margin reset
     }
 
-    // Create Templates dropdown button
+    // Create Templates dropdown button (compact "T ▼" to save space)
     const dropdownBtn = document.createElement('button');
     dropdownBtn.className = 'jt-signature-btn jt-template-dropdown-btn';
     dropdownBtn.type = 'button';
-    dropdownBtn.innerHTML = 'Templates <span class="jt-dropdown-arrow">▼</span>';
+    dropdownBtn.innerHTML = 'T <span class="jt-dropdown-arrow">▼</span>';
     dropdownBtn.title = 'Insert a template';
 
     // Create dropdown component
@@ -1866,15 +1866,9 @@ const CharacterCounterFeature = (() => {
         const dialog = field.closest('.shadow-lg, [role="dialog"], .modal, form');
         let toolbar = null;
 
-        // Detect if we're in a narrow sidebar panel (UPDATE TASK, etc.)
-        // The UPDATE TASK panel and similar slide-out panels have:
-        // 1. A header with "UPDATE TASK" or similar text in orange (text-jtOrange)
-        // 2. A "× Close" button
-        // Dashboard message forms do NOT have these characteristics
-        const formContainer = field.closest('form')?.parentElement?.parentElement?.parentElement;
-        const hasSidebarHeader = formContainer?.previousElementSibling?.querySelector('.text-jtOrange')?.textContent?.match(/UPDATE|EDIT|TASK|DETAILS/i);
-        const hasCloseButton = formContainer?.parentElement?.querySelector('button, [role="button"]')?.textContent?.includes('Close');
-        const isSidebar = (hasSidebarHeader || hasCloseButton) && !field.closest('[role="dialog"]');
+        // With the compact "T ▼" button, we can always use inline positioning
+        // No need for sidebar-specific row layout anymore
+        const isSidebar = false;
 
         if (dialog) {
           // FIRST: Check for document-sending modals (Send Estimate, Send Change Order, etc.)
