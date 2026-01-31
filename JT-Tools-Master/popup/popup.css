@@ -11,7 +11,7 @@
   --brand-orange-dark: #c94a12;
   --brand-orange-glow: rgba(232, 90, 28, 0.25);
 
-  /* Industrial Neutrals - Cooler, more metallic */
+  /* Industrial Neutrals - Neutral dark grays */
   --steel-50: #f8f9fa;
   --steel-100: #f1f3f5;
   --steel-200: #e9ecef;
@@ -19,10 +19,10 @@
   --steel-400: #ced4da;
   --steel-500: #adb5bd;
   --steel-600: #868e96;
-  --steel-700: #495057;
-  --steel-800: #343a40;
-  --steel-900: #212529;
-  --steel-950: #1a1d21;
+  --steel-700: #404040;
+  --steel-800: #363636;
+  --steel-900: #2c2c2c;
+  --steel-950: #1f1f1f;
 
   /* Light Theme */
   --bg-primary: #ffffff;

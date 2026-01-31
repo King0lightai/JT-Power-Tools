@@ -14,10 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quick Notes header icon now visible on all JobTread pages (settings, home, account pages, etc.)
 - Previously only showed on specific pages like /jobs, /schedule, /messages, etc.
 
-#### Message Templates Position on Dashboard
-- Fixed Templates dropdown and character counter appearing in a separate row below the Send button
-- Templates and counter now appear inline to the left of the Send button on dashboard message form
-- Improved toolbar detection to properly position elements in various message form layouts
+#### Message Templates & Character Counter Positioning
+- Templates dropdown now appears inline to the left of the Send button on dashboard and sidebar message forms
+- Character counter now appears below the toolbar (under upload buttons) to avoid crowding the Send button
+- Split positioning: Templates stay by Send button, counter goes below on its own row
+
+### Improved
+
+#### Message Templates Button Styling
+- Redesigned Templates and Settings buttons to match JobTread's native button styling (upload/copy/gif buttons)
+- Added Phosphor-style SVG icons: document icon for Templates, gear icon for Settings
+- Removed text labels and dropdown arrows for a cleaner icon-only appearance
+- Removed gray background wrapper from buttons and character counter for cleaner appearance
+- Full compatibility with Dark Mode and Custom Theme (RGB Theme)
+- Buttons now appear as a connected button group matching JobTread's design language
 
 #### Budget Changelog API Pagination
 - Fixed Pave API query returning only 10 most recent backups (all from same day)

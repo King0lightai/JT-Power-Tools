@@ -131,6 +131,15 @@ const CharacterCounterFeature = (() => {
       position: relative;
     }
 
+    /* Remove background/border from split containers (templates-only and counter-only) */
+    .jt-signature-container.jt-templates-only,
+    .jt-signature-container.jt-counter-only {
+      padding: 0;
+      border: none;
+      background: none;
+      gap: 0;
+    }
+
     /* When in sidebar (narrower container), stack vertically */
     .jt-signature-container-row {
       display: flex;
@@ -148,6 +157,15 @@ const CharacterCounterFeature = (() => {
     #jt-dark-mode-styles ~ * .jt-signature-container {
       border-color: rgba(255, 255, 255, 0.15);
       background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Remove background/border from split containers in dark mode too */
+    .jt-dark-mode .jt-signature-container.jt-templates-only,
+    .jt-dark-mode .jt-signature-container.jt-counter-only,
+    #jt-dark-mode-styles ~ * .jt-signature-container.jt-templates-only,
+    #jt-dark-mode-styles ~ * .jt-signature-container.jt-counter-only {
+      border: none;
+      background: none;
     }
 
     /* Signature buttons */
@@ -189,6 +207,90 @@ const CharacterCounterFeature = (() => {
 
     .jt-signature-btn-icon {
       font-size: 12px;
+    }
+
+    /* Native JobTread-style buttons (matching upload/copy/gif buttons) */
+    .jt-native-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      padding: 4px 8px;
+      min-width: 28px;
+      min-height: 26px;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      color: #4b5563;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1;
+      transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .jt-native-btn:hover {
+      background: #f9fafb;
+    }
+
+    .jt-native-btn:active {
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .jt-native-btn svg {
+      display: inline-block;
+      overflow: visible;
+      height: 1em;
+      width: 1em;
+      vertical-align: -0.125em;
+      font-size: 16px;
+    }
+
+    /* Dark mode for native buttons - neutral dark gray background */
+    .jt-dark-mode .jt-native-btn,
+    #jt-dark-mode-styles ~ * .jt-native-btn {
+      background: #2c2c2c;
+      border-color: #404040;
+      color: #d4d4d4;
+    }
+
+    .jt-dark-mode .jt-native-btn:hover,
+    #jt-dark-mode-styles ~ * .jt-native-btn:hover {
+      background: #3c3c3c;
+      color: #e5e5e5;
+    }
+
+    /* RGB Theme for native buttons */
+    .jt-custom-theme .jt-native-btn {
+      background: var(--jt-theme-background, white);
+      border-color: var(--jt-theme-border, #e5e7eb);
+      color: var(--jt-theme-text-muted, #4b5563);
+    }
+
+    .jt-custom-theme .jt-native-btn:hover {
+      background: var(--jt-theme-background-muted, #f9fafb);
+      color: var(--jt-theme-text, #374151);
+    }
+
+    /* Button group styling for templates container */
+    .jt-templates-only {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .jt-templates-only .jt-native-btn:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: none;
+    }
+
+    .jt-templates-only .jt-settings-btn {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
 
     /* Separator between buttons and counter */
@@ -415,18 +517,6 @@ const CharacterCounterFeature = (() => {
     .jt-signature-modal-btn-save:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-    }
-
-    /* Dropdown button */
-    .jt-template-dropdown-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .jt-dropdown-arrow {
-      font-size: 8px;
-      opacity: 0.7;
     }
 
     /* Dropdown menu */
@@ -1769,22 +1859,27 @@ const CharacterCounterFeature = (() => {
       counter.style.margin = '0'; // Keep margin reset
     }
 
-    // Create Templates dropdown button (compact "T ▼" to save space)
-    const dropdownBtn = document.createElement('button');
-    dropdownBtn.className = 'jt-signature-btn jt-template-dropdown-btn';
-    dropdownBtn.type = 'button';
-    dropdownBtn.innerHTML = 'T <span class="jt-dropdown-arrow">▼</span>';
+    // Create Templates dropdown button (native JobTread button styling)
+    // Using div[role="button"] to match JobTread's native buttons
+    const dropdownBtn = document.createElement('div');
+    dropdownBtn.setAttribute('role', 'button');
+    dropdownBtn.setAttribute('tabindex', '0');
+    dropdownBtn.className = 'jt-native-btn jt-template-dropdown-btn';
     dropdownBtn.title = 'Insert a template';
+    // Phosphor-style "article" / document template icon (simplified)
+    dropdownBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
 
     // Create dropdown component
     const dropdown = createTemplateDropdown(container, field, updateCounter);
 
-    // Create Settings button (gear icon)
-    const settingsBtn = document.createElement('button');
-    settingsBtn.className = 'jt-signature-btn';
-    settingsBtn.type = 'button';
-    settingsBtn.innerHTML = '⚙';
+    // Create Settings button (native JobTread button styling with gear icon)
+    const settingsBtn = document.createElement('div');
+    settingsBtn.setAttribute('role', 'button');
+    settingsBtn.setAttribute('tabindex', '0');
+    settingsBtn.className = 'jt-native-btn jt-settings-btn';
     settingsBtn.title = 'Manage templates';
+    // Phosphor-style gear icon
+    settingsBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
 
     // Create TWO separate containers:
     // 1. Counter container (goes on LEFT side, after upload buttons)
@@ -1810,19 +1905,31 @@ const CharacterCounterFeature = (() => {
     // Store reference to container for this field
     fieldToContainerMap.set(field, container);
 
-    // Handle dropdown button click
-    dropdownBtn.addEventListener('click', (e) => {
+    // Handle dropdown button click and keyboard
+    const handleDropdownActivate = (e) => {
       e.preventDefault();
       e.stopPropagation();
       dropdown.toggle();
+    };
+    dropdownBtn.addEventListener('click', handleDropdownActivate);
+    dropdownBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleDropdownActivate(e);
+      }
     });
 
-    // Handle settings button click
-    settingsBtn.addEventListener('click', async (e) => {
+    // Handle settings button click and keyboard
+    const handleSettingsActivate = async (e) => {
       e.preventDefault();
       e.stopPropagation();
       dropdown.hide();
       await openTemplateManagerModal();
+    };
+    settingsBtn.addEventListener('click', handleSettingsActivate);
+    settingsBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleSettingsActivate(e);
+      }
     });
 
     // Store dropdown cleanup reference
@@ -1924,17 +2031,9 @@ const CharacterCounterFeature = (() => {
             }
           } else {
             // SPLIT positioning:
-            // 1. Counter goes on LEFT side, after upload buttons
-            // 2. Templates go on RIGHT side, before Send button
-            const leftSide = toolbar.querySelector('div.flex.gap-1');
+            // 1. Templates go on RIGHT side, before Send button (inline)
+            // 2. Counter goes BELOW the toolbar as a new row
             const rightSide = toolbar.querySelector('div.shrink-0');
-
-            // Place counter on the left
-            if (leftSide) {
-              leftSide.appendChild(counterContainer);
-            } else {
-              toolbar.insertBefore(counterContainer, toolbar.firstChild);
-            }
 
             // Place templates on the right, before Send button
             if (rightSide) {
@@ -1943,6 +2042,11 @@ const CharacterCounterFeature = (() => {
             } else {
               toolbar.appendChild(templatesContainer);
             }
+
+            // Place counter BELOW the toolbar as a new row
+            counterContainer.style.marginTop = '4px';
+            counterContainer.style.marginLeft = '0';
+            toolbar.parentElement.insertBefore(counterContainer, toolbar.nextSibling);
           }
         } else {
           // Fallback: add both in a row after the textarea's container
@@ -1982,7 +2086,9 @@ const CharacterCounterFeature = (() => {
       // Focus/blur listeners are anonymous so they'll be garbage collected
       // Cleanup dropdown
       dropdownCleanup();
-      // Remove the entire container (which includes buttons, separator, and counter)
+      // Remove containers - they may be placed separately for message fields
+      counterContainer.remove();
+      templatesContainer.remove();
       container.remove();
     };
 

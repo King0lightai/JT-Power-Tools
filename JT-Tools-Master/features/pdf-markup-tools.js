@@ -249,27 +249,27 @@ const PDFMarkupToolsFeature = (() => {
       /* ========== DARK MODE STYLES ========== */
       /* Vertical toolbar buttons need dark styling in dark mode */
       body.jt-dark-mode .jt-pdf-tool-btn {
-        background-color: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
+        background-color: #2c2c2c;
+        color: #d4d4d4;
+        border-color: #404040;
       }
 
       body.jt-dark-mode .jt-pdf-tool-btn:hover {
-        background-color: #4b5563;
+        background-color: #3c3c3c;
       }
 
       body.jt-dark-mode .jt-pdf-tool-btn.active {
-        background-color: #6b7280;
+        background-color: #4a4a4a;
         color: #fff;
-        border-color: #6b7280;
+        border-color: #4a4a4a;
       }
 
       body.jt-dark-mode .jt-pdf-tool-btn.active:hover {
-        background-color: #9ca3af;
+        background-color: #5a5a5a;
       }
 
       body.jt-dark-mode .jt-pdf-notification {
-        background-color: #374151 !important;
+        background-color: #2c2c2c !important;
       }
 
       body.jt-dark-mode .jt-pdf-notification.error {
@@ -279,29 +279,29 @@ const PDFMarkupToolsFeature = (() => {
       /* Dark mode stamp quick-select - dark gray backgrounds */
       body.jt-dark-mode .jt-stamp-quick-select {
         background-color: #2c2c2c !important;
-        border-color: #464646 !important;
+        border-color: #404040 !important;
       }
 
       body.jt-dark-mode .jt-stamp-btn {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
+        background-color: #2c2c2c !important;
+        color: #d4d4d4 !important;
+        border-color: #404040 !important;
       }
 
       body.jt-dark-mode .jt-stamp-btn:hover {
-        background-color: #4b5563 !important;
+        background-color: #3c3c3c !important;
       }
 
       body.jt-dark-mode .jt-stamp-tab {
-        background-color: #374151 !important;
-        color: #e5e7eb !important;
-        border-color: #4b5563 !important;
+        background-color: #2c2c2c !important;
+        color: #d4d4d4 !important;
+        border-color: #404040 !important;
       }
 
       body.jt-dark-mode .jt-stamp-tab.active {
-        background-color: #6b7280 !important;
+        background-color: #4a4a4a !important;
         color: #fff !important;
-        border-color: #6b7280 !important;
+        border-color: #4a4a4a !important;
       }
 
       /* ========== RGB/CUSTOM THEME STYLES ========== */
