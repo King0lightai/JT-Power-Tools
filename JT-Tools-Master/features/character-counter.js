@@ -1786,16 +1786,26 @@ const CharacterCounterFeature = (() => {
     settingsBtn.innerHTML = '⚙';
     settingsBtn.title = 'Manage templates';
 
-    // Create separator
-    const separator = document.createElement('div');
-    separator.className = 'jt-signature-separator';
+    // Create TWO separate containers:
+    // 1. Counter container (goes on LEFT side, after upload buttons)
+    // 2. Templates container (goes on RIGHT side, next to Send button)
 
-    // Assemble container: [Templates ▼] [dropdown] [⚙] | [counter]
-    container.appendChild(dropdownBtn);
-    container.appendChild(dropdown.element);
-    container.appendChild(settingsBtn);
-    container.appendChild(separator);
-    container.appendChild(counter);
+    // Counter container (just the counter)
+    const counterContainer = document.createElement('div');
+    counterContainer.className = 'jt-signature-container jt-counter-only';
+    counterContainer.appendChild(counter);
+
+    // Templates container (dropdown + settings button)
+    const templatesContainer = document.createElement('div');
+    templatesContainer.className = 'jt-signature-container jt-templates-only';
+    templatesContainer.appendChild(dropdownBtn);
+    templatesContainer.appendChild(dropdown.element);
+    templatesContainer.appendChild(settingsBtn);
+
+    // The main container reference (for cleanup tracking)
+    container.appendChild(counterContainer);
+    container.appendChild(templatesContainer);
+    container.style.display = 'contents'; // Makes container invisible, children flow naturally
 
     // Store reference to container for this field
     fieldToContainerMap.set(field, container);
@@ -1902,45 +1912,50 @@ const CharacterCounterFeature = (() => {
 
         if (toolbar) {
           if (toolbar.classList.contains('sticky')) {
-            // Document-sending modal (sticky footer) - insert inside the footer, left of Cancel
-            // This check comes FIRST to override isSidebar detection for these modals
-            // The footer has: [Cancel] [Send] with justify-end
-            // We want: [signature/counter] [Cancel] [Send]
-
-            // Find the Cancel button (first button/role=button in the footer)
+            // Document-sending modal (sticky footer) - both go together before Cancel
             const cancelBtn = toolbar.querySelector('[role="button"]');
             if (cancelBtn) {
-              // Insert our container before the Cancel button
-              // Add some margin to separate from buttons
-              container.style.marginRight = 'auto'; // Push buttons to the right
-              toolbar.insertBefore(container, cancelBtn);
+              counterContainer.style.marginRight = '8px';
+              toolbar.insertBefore(templatesContainer, cancelBtn);
+              toolbar.insertBefore(counterContainer, templatesContainer);
             } else {
-              // Fallback: insert at beginning of footer
-              toolbar.insertBefore(container, toolbar.firstChild);
+              toolbar.insertBefore(counterContainer, toolbar.firstChild);
+              toolbar.insertBefore(templatesContainer, counterContainer.nextSibling);
             }
           } else {
-            // Insert on the LEFT side of the toolbar, after the upload/copy buttons
-            // This keeps the Send button undisturbed on the right
+            // SPLIT positioning:
+            // 1. Counter goes on LEFT side, after upload buttons
+            // 2. Templates go on RIGHT side, before Send button
             const leftSide = toolbar.querySelector('div.flex.gap-1');
+            const rightSide = toolbar.querySelector('div.shrink-0');
+
+            // Place counter on the left
             if (leftSide) {
-              // Insert after the left side buttons (upload, copy, etc.)
-              leftSide.appendChild(container);
+              leftSide.appendChild(counterContainer);
             } else {
-              // Fallback: insert at the beginning of toolbar
-              toolbar.insertBefore(container, toolbar.firstChild);
+              toolbar.insertBefore(counterContainer, toolbar.firstChild);
+            }
+
+            // Place templates on the right, before Send button
+            if (rightSide) {
+              const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
+              buttonWrapper.insertBefore(templatesContainer, buttonWrapper.firstChild);
+            } else {
+              toolbar.appendChild(templatesContainer);
             }
           }
         } else {
-          // Fallback: add after the textarea's container
+          // Fallback: add both in a row after the textarea's container
           const textareaContainer = field.closest('.border.rounded-b-sm, .rounded-sm.border') || parent;
           if (textareaContainer.parentElement) {
             const wrapper = document.createElement('div');
             wrapper.className = 'jt-signature-container-row';
             wrapper.style.marginTop = '8px';
-            wrapper.appendChild(container);
+            wrapper.style.display = 'flex';
+            wrapper.style.justifyContent = 'space-between';
+            wrapper.appendChild(counterContainer);
+            wrapper.appendChild(templatesContainer);
             textareaContainer.parentElement.insertBefore(wrapper, textareaContainer.nextSibling);
-          } else {
-            textareaContainer.parentElement?.appendChild(container);
           }
         }
       } else {
