@@ -38,40 +38,50 @@ This is the foundation for everything else. Team Notes needs to know who you are
 
 ---
 
-## Team Notes
+## Company Knowledge Base
 **Tier:** Power User
 **Status:** In Planning
 **Requires:** User Accounts
 
 ### Summary
 
-Team Notes transforms Quick Notes from a personal scratchpad into a shared workspace for your entire company. Every note syncs across all devices and browsers, and notes can be linked to specific jobs so they appear automatically when you need them.
+The Company Knowledge Base is your team's single source of truth for SOPs, procedures, vendor notes, and tips — the stuff that doesn't belong on any single job. Unlike JobTread's job notes, the Knowledge Base stores company-wide knowledge that applies everywhere.
 
 ### The Problem
 
-Important job information gets trapped in individual notepads, texts, and emails. When someone else takes over a job, that knowledge disappears. Teams waste time asking "did anyone write this down?"
+Experienced employees know "how we do things" but that knowledge lives in their heads, scattered emails, or random Google Docs. New hires ask the same questions. Procedures are inconsistent. Nobody knows where to find the answer.
 
 ### The Solution
 
-A shared notes system that:
-- **Syncs everywhere** — Same notes on desktop Chrome, mobile Edge, Firefox, any browser
-- **Links to jobs** — Attach notes to specific jobs; they surface automatically when viewing that job
-- **Shows attribution** — See who wrote what: "Gate code is 4421 — Mike, Jan 15"
-- **Stays organized** — Group notes by topic: Job Handoffs, Site Info, Templates
+A searchable knowledge base that:
+- **Lives inside JobTread** — No separate app, no extra login
+- **Works on mobile** — Field workers can look up procedures on site
+- **AI-powered search** — Ask questions in plain English
+- **Always current** — Update once, everyone sees it
+- **Offline capable** — Cache articles for jobsites with no signal
 
-### Use Cases
+### What Goes Here (vs. JobTread)
 
-- **Job handoffs** — "Client prefers morning deliveries, gate code 4421"
-- **Shared templates** — Standard scope language everyone can grab
-- **Site info** — Access codes, contact numbers, parking notes
-- **Vendor notes** — "Mike's Plumbing always runs 30 min late but does great work"
-- **Team knowledge** — Tips and tricks that help everyone
+| JobTread | Knowledge Base |
+|----------|----------------|
+| "Gate code is 4421" (job-specific) | "Always get signed change orders first" (company-wide) |
+| Client phone number | "Mike's Plumbing runs late but does great work" |
+| Job address | "Standard scope language for bathroom remodels" |
+
+### Categories
+
+- **Safety** — Lockout/tagout, fall protection, PPE requirements
+- **Procedures** — Change orders, punch lists, warranty process
+- **Vendor Notes** — Tips about subs, suppliers, inspectors
+- **Templates** — Standard scope language, email templates
+- **Tips & Tricks** — Best practices from experienced team members
+- **Onboarding** — New employee resources
 
 ### Why It Matters
 
-One Power User license already covers your whole company. Team Notes makes that mean something — real collaboration without extra logins, apps, or switching tools.
+Stop losing institutional knowledge. Stop answering the same questions. Give your team — especially field workers — instant access to "how we do things" from any device.
 
-With User Accounts as the foundation, your personal notes also sync everywhere, while Team Notes give you shared spaces for collaboration.
+With AI search, they can just ask: "How do I handle a change order?" and get the answer.
 
 ---
 
@@ -130,7 +140,7 @@ Project managers spend hours juggling schedules across multiple screens. Schedul
 **User Accounts** — Sign in once, access from anywhere. Your keys, notes, and settings sync across every browser.
 
 ### Power User Features
-**Team Notes** — Your team's shared brain, right inside JobTread. Notes linked to jobs, visible when you need them.
+**Company Knowledge Base** — Your team's SOPs, procedures, and tips — searchable with AI, accessible from any device.
 
 **Schedule Assistant** — The full picture: tasks + availability in one view. See what needs coverage and assign in seconds.
 
@@ -144,12 +154,13 @@ These features work together:
 User Accounts (Foundation)
     ↓
 ├── Personal sync: your notes & templates everywhere
-├── Identity: your name on Team Notes
+├── Identity: attribution on Knowledge Base articles
 └── Simplicity: sign in once, done
     ↓
-Team Notes + Schedule Assistant (Power User)
+Knowledge Base + Schedule Assistant (Power User)
     ↓
-├── Team collaboration without extra apps
+├── Company knowledge accessible everywhere
+├── AI-powered search: "How do I...?"
 ├── Scheduling without screen-switching
 └── Real value for the whole company
 ```
