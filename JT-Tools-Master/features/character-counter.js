@@ -521,18 +521,16 @@ const CharacterCounterFeature = (() => {
 
     /* Dropdown menu */
     .jt-template-dropdown {
-      position: absolute;
-      bottom: 100%;
-      left: 0;
-      margin-bottom: 4px;
+      position: fixed;
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: 6px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       min-width: 220px;
+      max-width: 300px;
       max-height: 300px;
       overflow-y: auto;
-      z-index: 1000;
+      z-index: 10000;
     }
 
     .jt-template-dropdown-item {
@@ -1579,6 +1577,12 @@ const CharacterCounterFeature = (() => {
 
     // Store the outside click handler so we can remove it
     let outsideClickHandler = null;
+    // Store reference to the trigger button for positioning
+    let triggerButton = null;
+
+    function setTriggerButton(btn) {
+      triggerButton = btn;
+    }
 
     /**
      * Populate the dropdown with templates
@@ -1652,9 +1656,49 @@ const CharacterCounterFeature = (() => {
       populate();
       dropdown.style.display = 'block';
 
+      // Position the dropdown using fixed positioning
+      // Use the stored trigger button reference, or fall back to container
+      const buttonRef = triggerButton || container;
+      const rect = buttonRef.getBoundingClientRect();
+      const dropdownHeight = dropdown.offsetHeight || 300; // Use actual height or estimate
+      const dropdownWidth = dropdown.offsetWidth || 220;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      const margin = 8; // Margin from viewport edges
+
+      // Determine if dropdown should open above or below
+      const spaceAbove = rect.top;
+      const spaceBelow = viewportHeight - rect.bottom;
+
+      let top, left;
+
+      // Prefer opening above (original behavior), but flip to below if not enough space
+      if (spaceAbove >= dropdownHeight + margin || spaceAbove > spaceBelow) {
+        // Open above the button
+        top = Math.max(margin, rect.top - dropdownHeight - 4);
+      } else {
+        // Open below the button
+        top = Math.min(viewportHeight - dropdownHeight - margin, rect.bottom + 4);
+      }
+
+      // Horizontal positioning - align left edge with button, but keep within viewport
+      left = rect.left;
+      if (left + dropdownWidth > viewportWidth - margin) {
+        // Would overflow right edge, align to right edge of button instead
+        left = Math.max(margin, rect.right - dropdownWidth);
+      }
+      if (left < margin) {
+        left = margin;
+      }
+
+      dropdown.style.top = `${top}px`;
+      dropdown.style.left = `${left}px`;
+
       // Add outside click handler
       outsideClickHandler = (e) => {
-        if (!container.contains(e.target)) {
+        // Close if clicking outside both the dropdown and the trigger button
+        if (!dropdown.contains(e.target) && !container.contains(e.target) &&
+            (!triggerButton || !triggerButton.contains(e.target))) {
           hide();
         }
       };
@@ -1685,7 +1729,7 @@ const CharacterCounterFeature = (() => {
       dropdown.remove();
     }
 
-    return { element: dropdown, show, hide, toggle, cleanup };
+    return { element: dropdown, show, hide, toggle, cleanup, setTriggerButton };
   }
 
   /**
@@ -1894,8 +1938,12 @@ const CharacterCounterFeature = (() => {
     const templatesContainer = document.createElement('div');
     templatesContainer.className = 'jt-signature-container jt-templates-only';
     templatesContainer.appendChild(dropdownBtn);
-    templatesContainer.appendChild(dropdown.element);
     templatesContainer.appendChild(settingsBtn);
+
+    // Append dropdown to body for proper z-index stacking (fixed positioning)
+    document.body.appendChild(dropdown.element);
+    // Store reference to trigger button for positioning
+    dropdown.setTriggerButton(dropdownBtn);
 
     // The main container reference (for cleanup tracking)
     container.appendChild(counterContainer);
