@@ -175,38 +175,36 @@ With User Accounts, personal Quick Notes can also sync:
 - Only visible to that user (scoped by `user_id`)
 - Syncs across all browsers where user is logged in
 
-### Encryption & Privacy
+### Privacy & Access Control
 
-**Personal Notes:** End-to-end encrypted (see `user-accounts-spec.md`)
-- Server stores encrypted blobs it cannot read
-- Only the user can decrypt with their password-derived key
-- Admin cannot see personal note content
+**Personal Notes:**
+- Stored in `user_notes` table
+- Access controlled by `user_id` — only that user can read/write
+- Protected by authentication, not E2E encryption
+- Password reset preserves data (no data loss)
 
-**Team Notes:** NOT end-to-end encrypted
-- Team Notes are shared across the org, so all org members need to read them
-- Server stores plaintext content
-- Scoped by `org_id` — only org members can access via API
-- Admin *could* read Team Notes content (but shouldn't need to)
+**Team Notes:**
+- Stored in `team_notes` table
+- Access controlled by `org_id` — only org members can read/write
+- Shared across the organization by design
 
-**Why Team Notes aren't E2E encrypted:**
-- E2E encryption requires a shared key
-- Key would need to be distributed to all org members
-- Key rotation when someone leaves is complex
-- Tradeoff: Team Notes are access-controlled but not encrypted at rest
+**Data access:**
+
+| Data Type | Who Can Read? |
+|-----------|---------------|
+| Personal Notes | Only the user |
+| Personal Templates | Only the user |
+| Team Notes | All org members via API |
+| Job/Contact links | All org members via API |
+| Display names | Anyone with access |
+
+**Important:** Notes and templates are for work-related information only. Users should not store sensitive personal data (passwords, financial info, etc.). See Terms of Service disclaimer in `user-accounts-spec.md`.
 
 **Data minimization:**
 - We only store what's necessary
 - No analytics on note content
-- No indexing of personal note content (it's encrypted anyway)
-- Team Note content is only indexed for search functionality
-
-| Data Type | Encrypted at Rest? | Who Can Read? |
-|-----------|-------------------|---------------|
-| Personal Notes | ✅ E2E encrypted | Only the user |
-| Personal Templates | ✅ E2E encrypted | Only the user |
-| Team Notes | ❌ Plaintext | Org members via API |
-| Job/Contact links | ❌ Plaintext | Org members via API |
-| Display names | ❌ Plaintext | Anyone with access |
+- No selling or sharing of user data
+- Team Note content indexed only for search functionality
 
 ### Data Scoping
 

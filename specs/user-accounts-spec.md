@@ -319,134 +319,94 @@ POST   /admin/revoke-user       — Revoke a user's access
 | HTTPS | All endpoints over TLS (Cloudflare provides) |
 | Rate limiting | 5 login attempts per minute per IP |
 
-### End-to-End Encryption (E2E) — User Content
+### Data Storage & Privacy
 
-**Principle:** The server stores encrypted blobs it cannot decrypt. Only the user's client can read their content.
+**Principle:** Standard security practices. Data is protected in transit and at rest, but we're not a vault for sensitive information.
 
-**What's E2E Encrypted (server cannot read):**
-- Personal notes content
-- Personal templates content
-- Any personal settings that contain user data
+**What we store:**
 
-**What's NOT encrypted (server can read):**
-- License key (you need this for business)
-- Username/email (needed for login)
-- Display name (needed for Team Notes attribution)
-- License tier and status
-- Timestamps (created_at, updated_at)
+| Data | Storage | Notes |
+|------|---------|-------|
+| License keys | Plain text | Needed for business |
+| User emails | Plain text | Needed for login/support |
+| Display names | Plain text | Needed for Team Notes |
+| Passwords | Argon2 hash | Industry standard, not reversible |
+| Grant keys | AES-256 encrypted | Server-side encryption |
+| Notes content | Plain text | Protected by access control |
+| Templates | Plain text | Protected by access control |
 
-**How it works:**
+**Protection layers:**
+
+1. **In transit:** All data over HTTPS/TLS
+2. **At rest:** Cloudflare D1 encrypted storage
+3. **Access control:** Users can only access their own data + their org's Team Notes
+4. **Authentication:** JWT tokens, password hashing, rate limiting
+
+**What this means:**
+
+- Password reset **works** — no data loss when users forget passwords
+- Support can help users if needed
+- Standard security, not military-grade encryption
+- We *could* technically read user content, but have no reason to
+
+**Data minimization:**
+
+We only store what's necessary for the feature to work:
+- No analytics on note content
+- No selling or sharing of user data
+- No indexing beyond what's needed for search
+- Regular backups for data recovery
+
+### Terms of Service — Data Disclaimer
+
+**Important:** Include in your Terms of Service:
 
 ```
-User's password
+DATA STORAGE DISCLAIMER
+
+Power Tools notes and templates are provided as a convenience
+feature for work-related information only.
+
+DO NOT STORE:
+- Passwords or credentials
+- Financial information (credit cards, bank accounts)
+- Personal identification numbers (SSN, etc.)
+- Medical or health information
+- Any legally protected sensitive data
+
+We are not responsible for:
+- Data loss due to account issues or service interruptions
+- Unauthorized access if you share your credentials
+- Any damages from storing sensitive information
+
+Users are encouraged to maintain their own backups of
+important information. This is a productivity tool,
+not a secure vault.
+```
+
+**Why this matters:**
+- Sets clear expectations
+- Limits your liability
+- Users understand this isn't 1Password
+- You're not responsible for their bad decisions
+
+### Password Reset
+
+Unlike E2E encryption, password reset preserves all user data:
+
+```
+User forgets password
        ↓
-   PBKDF2 / Argon2 derivation
+Clicks "Forgot Password"
        ↓
-┌──────────────────────────────────────┐
-│  Two keys derived:                   │
-│  1. auth_key → sent to server for    │
-│     password verification            │
-│  2. encryption_key → NEVER leaves    │
-│     client, used to encrypt content  │
-└──────────────────────────────────────┘
-```
-
-**Encryption flow (saving notes):**
-
-```
-Client                              Server
-──────                              ──────
-User writes note
+Receives reset link via email
        ↓
-Encrypt with encryption_key
-(AES-256-GCM)
+Sets new password
        ↓
-Send encrypted blob ──────────────► Store encrypted blob
-                                    (cannot decrypt)
+All notes, templates, settings are still there ✓
 ```
 
-**Decryption flow (loading notes):**
-
-```
-Client                              Server
-──────                              ──────
-Request notes ─────────────────────► Return encrypted blobs
-       ↓
-Receive encrypted blobs ◄───────────
-       ↓
-Decrypt with encryption_key
-(derived from password)
-       ↓
-Display to user
-```
-
-**Key derivation (technical):**
-
-```javascript
-// On login, derive two keys from password
-const masterKey = await argon2.hash(password, salt);
-
-// Split into auth key (for server) and encryption key (for content)
-const authKey = await hkdf(masterKey, 'auth');        // → sent to server
-const encryptionKey = await hkdf(masterKey, 'encrypt'); // → stays on client
-
-// Encrypt content before sending
-const encryptedNote = await encrypt(noteContent, encryptionKey);
-// Server stores encryptedNote, cannot read it
-```
-
-**Database stores encrypted blobs:**
-
-```sql
-CREATE TABLE user_notes (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  content_encrypted BLOB NOT NULL,  -- E2E encrypted, server cannot read
-  iv BLOB NOT NULL,                  -- Initialization vector for AES-GCM
-  updated_at INTEGER,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE user_templates (
-  id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  name_encrypted BLOB NOT NULL,     -- E2E encrypted
-  content_encrypted BLOB NOT NULL,  -- E2E encrypted
-  iv BLOB NOT NULL,
-  sort_order INTEGER,               -- Not encrypted (not sensitive)
-  created_at INTEGER,
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
-```
-
-**What you (the admin) can see:**
-
-| Data | Visible to Admin? |
-|------|-------------------|
-| License keys | ✅ Yes (needed for business) |
-| User emails | ✅ Yes (needed for support) |
-| Display names | ✅ Yes (needed for Team Notes) |
-| License tier/status | ✅ Yes |
-| Note content | ❌ No (encrypted blob) |
-| Template content | ❌ No (encrypted blob) |
-| Template names | ❌ No (encrypted blob) |
-| Grant keys | ⚠️ Encrypted with server key (you could decrypt if needed, but shouldn't) |
-
-**Password change:**
-
-When user changes password:
-1. Client decrypts all content with old encryption_key
-2. Client re-encrypts all content with new encryption_key
-3. Client uploads re-encrypted content
-4. Server replaces old blobs with new blobs
-
-**Forgot password = data loss:**
-
-Since encryption_key is derived from password:
-- If user forgets password, their encrypted data is **unrecoverable**
-- This is the tradeoff for true E2E encryption
-- Warn users clearly during setup
-- Consider optional "recovery key" download (like Bitwarden)
+No data loss. No recovery keys. Standard password reset flow.
 
 ### Token Structure
 
