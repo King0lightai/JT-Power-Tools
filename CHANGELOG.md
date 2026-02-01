@@ -17,11 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Panel layout switches from side-by-side to stacked (vertical) on mobile
 - Fixed notes appearing out of view when opened on mobile devices
 
-##### Freeze Header Mobile Support
-- Added support for mobile dropdown navigation bar (sticky positioning below main header)
-- Mobile nav bar now freezes in place while scrolling, consistent with desktop tab behavior
-- Added dark mode and custom theme styling support for mobile navigation bar
-- Action toolbar and content headers properly position below mobile nav on small screens
+##### Freeze Header Mobile Handling
+- Disabled Freeze Header feature on mobile viewports (max-width: 768px)
+- Mobile devices now use JobTread's native layout without sticky header modifications
+- Prevents visual glitches and inconsistent positioning on mobile devices
+- Feature remains fully functional on desktop and tablet viewports
 
 ### Changed
 
