@@ -319,6 +319,135 @@ POST   /admin/revoke-user       — Revoke a user's access
 | HTTPS | All endpoints over TLS (Cloudflare provides) |
 | Rate limiting | 5 login attempts per minute per IP |
 
+### End-to-End Encryption (E2E) — User Content
+
+**Principle:** The server stores encrypted blobs it cannot decrypt. Only the user's client can read their content.
+
+**What's E2E Encrypted (server cannot read):**
+- Personal notes content
+- Personal templates content
+- Any personal settings that contain user data
+
+**What's NOT encrypted (server can read):**
+- License key (you need this for business)
+- Username/email (needed for login)
+- Display name (needed for Team Notes attribution)
+- License tier and status
+- Timestamps (created_at, updated_at)
+
+**How it works:**
+
+```
+User's password
+       ↓
+   PBKDF2 / Argon2 derivation
+       ↓
+┌──────────────────────────────────────┐
+│  Two keys derived:                   │
+│  1. auth_key → sent to server for    │
+│     password verification            │
+│  2. encryption_key → NEVER leaves    │
+│     client, used to encrypt content  │
+└──────────────────────────────────────┘
+```
+
+**Encryption flow (saving notes):**
+
+```
+Client                              Server
+──────                              ──────
+User writes note
+       ↓
+Encrypt with encryption_key
+(AES-256-GCM)
+       ↓
+Send encrypted blob ──────────────► Store encrypted blob
+                                    (cannot decrypt)
+```
+
+**Decryption flow (loading notes):**
+
+```
+Client                              Server
+──────                              ──────
+Request notes ─────────────────────► Return encrypted blobs
+       ↓
+Receive encrypted blobs ◄───────────
+       ↓
+Decrypt with encryption_key
+(derived from password)
+       ↓
+Display to user
+```
+
+**Key derivation (technical):**
+
+```javascript
+// On login, derive two keys from password
+const masterKey = await argon2.hash(password, salt);
+
+// Split into auth key (for server) and encryption key (for content)
+const authKey = await hkdf(masterKey, 'auth');        // → sent to server
+const encryptionKey = await hkdf(masterKey, 'encrypt'); // → stays on client
+
+// Encrypt content before sending
+const encryptedNote = await encrypt(noteContent, encryptionKey);
+// Server stores encryptedNote, cannot read it
+```
+
+**Database stores encrypted blobs:**
+
+```sql
+CREATE TABLE user_notes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  content_encrypted BLOB NOT NULL,  -- E2E encrypted, server cannot read
+  iv BLOB NOT NULL,                  -- Initialization vector for AES-GCM
+  updated_at INTEGER,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE user_templates (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name_encrypted BLOB NOT NULL,     -- E2E encrypted
+  content_encrypted BLOB NOT NULL,  -- E2E encrypted
+  iv BLOB NOT NULL,
+  sort_order INTEGER,               -- Not encrypted (not sensitive)
+  created_at INTEGER,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+**What you (the admin) can see:**
+
+| Data | Visible to Admin? |
+|------|-------------------|
+| License keys | ✅ Yes (needed for business) |
+| User emails | ✅ Yes (needed for support) |
+| Display names | ✅ Yes (needed for Team Notes) |
+| License tier/status | ✅ Yes |
+| Note content | ❌ No (encrypted blob) |
+| Template content | ❌ No (encrypted blob) |
+| Template names | ❌ No (encrypted blob) |
+| Grant keys | ⚠️ Encrypted with server key (you could decrypt if needed, but shouldn't) |
+
+**Password change:**
+
+When user changes password:
+1. Client decrypts all content with old encryption_key
+2. Client re-encrypts all content with new encryption_key
+3. Client uploads re-encrypted content
+4. Server replaces old blobs with new blobs
+
+**Forgot password = data loss:**
+
+Since encryption_key is derived from password:
+- If user forgets password, their encrypted data is **unrecoverable**
+- This is the tradeoff for true E2E encryption
+- Warn users clearly during setup
+- Consider optional "recovery key" download (like Bitwarden)
+
 ### Token Structure
 
 ```javascript
