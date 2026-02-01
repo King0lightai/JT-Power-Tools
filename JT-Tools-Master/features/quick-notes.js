@@ -228,6 +228,11 @@ const QuickNotesFeature = (() => {
     if (!currentNote) {
       editorContainer.innerHTML = `
         <div class="jt-notes-editor-header">
+          <button class="jt-notes-back-button" title="Back to notes list">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+              <path d="M19 12H5M12 19l-7-7 7-7"></path>
+            </svg>
+          </button>
           <div class="jt-notes-sidebar-title">Quick Notes</div>
           <button class="jt-notes-close-button" title="Close (Esc)"></button>
         </div>
@@ -244,6 +249,15 @@ const QuickNotesFeature = (() => {
         e.stopPropagation();
         closeEditor();
       });
+
+      const backButton = editorContainer.querySelector('.jt-notes-back-button');
+      if (backButton) {
+        backButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          closeEditor();
+        });
+      }
       return;
     }
 
@@ -253,6 +267,11 @@ const QuickNotesFeature = (() => {
 
     editorContainer.innerHTML = `
       <div class="jt-notes-editor-header">
+        <button class="jt-notes-back-button" title="Back to notes list">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="16" height="16">
+            <path d="M19 12H5M12 19l-7-7 7-7"></path>
+          </svg>
+        </button>
         <input
           type="text"
           class="jt-notes-title-input"
@@ -416,6 +435,16 @@ const QuickNotesFeature = (() => {
       e.stopPropagation();
       closeEditor();
     });
+
+    // Add back button handler for mobile
+    const backButton = editorContainer.querySelector('.jt-notes-back-button');
+    if (backButton) {
+      backButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeEditor();
+      });
+    }
 
     // Add formatting button handlers (using editor module)
     const formatButtons = editorContainer.querySelectorAll('.jt-notes-format-btn');
