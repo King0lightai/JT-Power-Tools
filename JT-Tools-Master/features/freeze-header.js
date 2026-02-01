@@ -330,6 +330,41 @@ const FreezeHeaderFeature = (() => {
       filter: brightness(0.95);
     }
 
+    /* ========== MOBILE NAVIGATION BAR ========== */
+    /* On mobile, JobTread uses a dropdown navigation bar instead of horizontal tabs */
+    /* This bar has: div.shrink-0 > div[role="button"].border-t-jtOrange with hamburger menu */
+    .jt-freeze-header-active .jt-mobile-nav-bar {
+      position: sticky !important;
+      top: var(--jt-header-height, 50px) !important;
+      z-index: 40 !important;
+      background-color: white !important;
+    }
+
+    body.jt-dark-mode.jt-freeze-header-active .jt-mobile-nav-bar,
+    body.jt-dark-mode.jt-freeze-header-active .jt-mobile-nav-bar > div {
+      background-color: #2c2c2c !important;
+      border-color: #464646 !important;
+      color: #e5e7eb !important;
+    }
+
+    body.jt-custom-theme.jt-freeze-header-active .jt-mobile-nav-bar,
+    body.jt-custom-theme.jt-freeze-header-active .jt-mobile-nav-bar > div {
+      background-color: var(--jt-theme-background, white) !important;
+    }
+
+    /* Mobile: Adjust action toolbar position below mobile nav bar */
+    @media (max-width: 768px) {
+      .jt-freeze-header-active .jt-action-toolbar {
+        top: var(--jt-mobile-nav-bottom, 100px) !important;
+      }
+
+      /* On mobile, budget/schedule headers should be below mobile nav + action toolbar */
+      .jt-freeze-header-active .jt-budget-header-container,
+      .jt-freeze-header-active .jt-schedule-header-container {
+        top: var(--jt-mobile-toolbar-bottom, 148px) !important;
+      }
+    }
+
     /* ========== POPUP EXCLUSIONS (HIGH SPECIFICITY) ========== */
     /* These rules MUST come last to override earlier freeze header rules */
     /* File picker popup and similar popups should NOT have freeze header applied */
@@ -472,6 +507,50 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark the mobile navigation bar
+   * On mobile, JobTread uses a dropdown instead of horizontal tabs
+   * Looking for: div.shrink-0 > div[role="button"].border-t-jtOrange with hamburger menu
+   */
+  function findAndMarkMobileNavBar() {
+    if (!isJobPage()) {
+      return false;
+    }
+
+    // Already marked?
+    if (document.querySelector('.jt-mobile-nav-bar')) {
+      return true;
+    }
+
+    // Find the mobile nav bar: div.shrink-0 containing div[role="button"].border-t-jtOrange
+    const shrinkDivs = document.querySelectorAll('div.shrink-0');
+
+    for (const div of shrinkDivs) {
+      // Skip if already marked as something else
+      if (div.classList.contains('jt-top-header')) continue;
+      if (div.classList.contains('jt-job-tabs-container')) continue;
+      if (div.classList.contains('jt-action-toolbar')) continue;
+
+      // Look for the mobile nav dropdown button with orange top border
+      const mobileNavButton = div.querySelector('div[role="button"].border-t-jtOrange, div[role="button"].border-t-2.border-t-jtOrange');
+      if (mobileNavButton) {
+        // Verify it has the hamburger menu icon and a page name (Dashboard, Budget, etc.)
+        const hasHamburgerIcon = mobileNavButton.querySelector('svg');
+        const textContent = mobileNavButton.textContent.trim().toLowerCase();
+        const hasPageName = ['dashboard', 'budget', 'schedule', 'messages', 'documents', 'to-dos', 'daily logs', 'files', 'time'].some(
+          name => textContent.includes(name)
+        );
+
+        if (hasHamburgerIcon && hasPageName) {
+          div.classList.add('jt-mobile-nav-bar');
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Find and mark the job tabs container
    * Looking for: div.shrink-0 > div.flex.overflow-auto.border-b containing links to /jobs/
    */
@@ -493,6 +572,7 @@ const FreezeHeaderFeature = (() => {
       if (div.classList.contains('jt-top-header')) continue;
       if (div.classList.contains('jt-action-toolbar')) continue;
       if (div.classList.contains('jt-budget-header-container')) continue;
+      if (div.classList.contains('jt-mobile-nav-bar')) continue;
 
       const tabContainer = div.querySelector('div.flex.overflow-auto.border-b');
       if (tabContainer) {
@@ -1093,6 +1173,7 @@ const FreezeHeaderFeature = (() => {
   function updatePositions() {
     const topHeader = document.querySelector('.jt-top-header');
     const tabsContainer = document.querySelector('.jt-job-tabs-container');
+    const mobileNavBar = document.querySelector('.jt-mobile-nav-bar');
     const actionToolbar = document.querySelector('.jt-action-toolbar');
     const filesFolderBar = document.querySelector('.jt-files-folder-bar');
 
@@ -1100,7 +1181,9 @@ const FreezeHeaderFeature = (() => {
 
     const headerHeight = topHeader.offsetHeight;
     let tabsBottom = headerHeight;
+    let mobileNavBottom = headerHeight;
     let toolbarBottom = tabsBottom;
+    let mobileToolbarBottom = mobileNavBottom;
     let filesFolderBottom = toolbarBottom;
 
     if (tabsContainer) {
@@ -1108,8 +1191,15 @@ const FreezeHeaderFeature = (() => {
       toolbarBottom = tabsBottom;
     }
 
+    // Mobile nav bar (used instead of tabs on mobile)
+    if (mobileNavBar) {
+      mobileNavBottom = headerHeight + mobileNavBar.offsetHeight;
+      mobileToolbarBottom = mobileNavBottom;
+    }
+
     if (actionToolbar) {
       toolbarBottom = tabsBottom + actionToolbar.offsetHeight;
+      mobileToolbarBottom = mobileNavBottom + actionToolbar.offsetHeight;
       filesFolderBottom = toolbarBottom;
     }
 
@@ -1122,6 +1212,9 @@ const FreezeHeaderFeature = (() => {
     document.documentElement.style.setProperty('--jt-tabs-bottom', `${tabsBottom}px`);
     document.documentElement.style.setProperty('--jt-toolbar-bottom', `${toolbarBottom}px`);
     document.documentElement.style.setProperty('--jt-files-folder-bottom', `${filesFolderBottom}px`);
+    // Mobile-specific positioning
+    document.documentElement.style.setProperty('--jt-mobile-nav-bottom', `${mobileNavBottom}px`);
+    document.documentElement.style.setProperty('--jt-mobile-toolbar-bottom', `${mobileToolbarBottom}px`);
   }
 
   /**
@@ -1271,6 +1364,7 @@ const FreezeHeaderFeature = (() => {
   function applyFreezeHeader() {
     document.body.classList.add('jt-freeze-header-active');
     findAndMarkTopHeader();
+    findAndMarkMobileNavBar();
     findAndMarkTabs();
     findAndMarkActionToolbar();
     findAndMarkBudgetTableHeader();
@@ -1294,6 +1388,9 @@ const FreezeHeaderFeature = (() => {
     // Remove marker classes
     document.querySelectorAll('.jt-top-header').forEach(el => {
       el.classList.remove('jt-top-header');
+    });
+    document.querySelectorAll('.jt-mobile-nav-bar').forEach(el => {
+      el.classList.remove('jt-mobile-nav-bar');
     });
     document.querySelectorAll('.jt-job-tabs-container').forEach(el => {
       el.classList.remove('jt-job-tabs-container');
@@ -1332,6 +1429,8 @@ const FreezeHeaderFeature = (() => {
     document.documentElement.style.removeProperty('--jt-tabs-bottom');
     document.documentElement.style.removeProperty('--jt-toolbar-bottom');
     document.documentElement.style.removeProperty('--jt-files-folder-bottom');
+    document.documentElement.style.removeProperty('--jt-mobile-nav-bottom');
+    document.documentElement.style.removeProperty('--jt-mobile-toolbar-bottom');
   }
 
   /**
@@ -1393,6 +1492,7 @@ const FreezeHeaderFeature = (() => {
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           findAndMarkTopHeader();
+          findAndMarkMobileNavBar();
           findAndMarkTabs();
           findAndMarkActionToolbar();
           findAndMarkBudgetTableHeader();
@@ -1423,8 +1523,8 @@ const FreezeHeaderFeature = (() => {
         const nowOnJobPage = isJobPage();
 
         // Remove old markings
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
+        document.querySelectorAll('.jt-top-header, .jt-mobile-nav-bar, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-mobile-nav-bar', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
         });
 
         if (nowOnJobPage) {
@@ -1434,6 +1534,7 @@ const FreezeHeaderFeature = (() => {
           }
           setTimeout(() => {
             findAndMarkTopHeader();
+            findAndMarkMobileNavBar();
             findAndMarkTabs();
             findAndMarkActionToolbar();
             findAndMarkBudgetTableHeader();
