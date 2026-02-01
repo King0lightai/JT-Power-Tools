@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prevents visual glitches and inconsistent positioning on mobile devices
 - Feature remains fully functional on desktop and tablet viewports
 
+### Fixed
+
+#### Message Templates Dropdown Positioning
+- Fixed templates dropdown appearing off-screen in sidebar message forms
+- Dropdown now uses fixed positioning and calculates optimal placement
+- Opens above or below the button depending on available viewport space
+- Horizontal position adjusts to stay within viewport bounds
+
 ### Changed
 
 #### Documentation
