@@ -3,7 +3,7 @@
 **Version:** 1.0 Draft
 **Tier:** Power User
 **Status:** Planning
-**Dependencies:** Quick Notes (Essential), Cloudflare D1, Pave API
+**Dependencies:** User Accounts (Foundation), Quick Notes (Essential), Cloudflare D1, Pave API
 
 ---
 
@@ -96,17 +96,20 @@ A shared, API-powered notes system that:
 
 ```sql
 -- Cloudflare D1 Tables
+-- Note: users and licenses tables defined in user-accounts-spec.md
 
 CREATE TABLE team_notes (
   id TEXT PRIMARY KEY,
   org_id TEXT NOT NULL,
   group_id TEXT,
   content TEXT NOT NULL,
-  author_nickname TEXT,
-  job_id TEXT,              -- Optional: linked JobTread job
-  contact_id TEXT,          -- Optional: linked JobTread contact
+  author_user_id TEXT NOT NULL,   -- FK to users table
+  author_display_name TEXT,       -- Cached for display (denormalized)
+  job_id TEXT,                    -- Optional: linked JobTread job
+  contact_id TEXT,                -- Optional: linked JobTread contact
   created_at INTEGER,
-  updated_at INTEGER
+  updated_at INTEGER,
+  FOREIGN KEY (author_user_id) REFERENCES users(id)
 );
 
 CREATE TABLE team_note_groups (
@@ -120,35 +123,71 @@ CREATE TABLE team_note_groups (
 CREATE INDEX idx_notes_org ON team_notes(org_id);
 CREATE INDEX idx_notes_job ON team_notes(job_id);
 CREATE INDEX idx_notes_contact ON team_notes(contact_id);
+CREATE INDEX idx_notes_author ON team_notes(author_user_id);
 ```
+
+**Note:** Personal notes use the `user_notes` table defined in `user-accounts-spec.md`.
 
 ### API Endpoints (Cloudflare Worker)
 
+All endpoints require `Authorization: Bearer <access_token>` header.
+
 ```
-POST   /team-notes/list          — Get all notes for org
-POST   /team-notes/create        — Create new note
-POST   /team-notes/update        — Update existing note
-POST   /team-notes/delete        — Delete note
+Team Notes (org-wide):
+POST   /team-notes/list          — Get all Team Notes for org
+POST   /team-notes/create        — Create new Team Note
+POST   /team-notes/update        — Update existing Team Note
+POST   /team-notes/delete        — Delete Team Note
 POST   /team-notes/groups/list   — Get all groups for org
 POST   /team-notes/groups/create — Create new group
-POST   /team-notes/by-job        — Get notes for specific job
-POST   /team-notes/by-contact    — Get notes for specific contact
-POST   /team-notes/search        — Search notes (P2)
+POST   /team-notes/by-job        — Get Team Notes for specific job
+POST   /team-notes/by-contact    — Get Team Notes for specific contact
+POST   /team-notes/search        — Search Team Notes (P2)
+
+Personal Notes (user-specific, via User Accounts):
+GET    /sync/notes               — Get personal notes
+POST   /sync/notes               — Save personal notes
 ```
 
 ### Authentication
 
-- Request includes: `license_key` + `grant_key`
-- Worker validates license is active and Power User tier
-- Worker extracts `org_id` from license validation
-- All operations scoped to that org
+**Prerequisite:** User Accounts system (see `user-accounts-spec.md`)
 
-### Identity (Nickname System)
+- User must be logged in with a User Account
+- Request includes: `Authorization: Bearer <access_token>`
+- Worker validates:
+  - Token is valid and not expired
+  - User's license is active and Power User tier
+- `org_id` extracted from user's license relationship
+- All Team Notes operations scoped to that org
 
-- On first use, prompt: "What name should appear on your notes?"
-- Store nickname in local browser storage
-- Send nickname with each create/update request
-- No server-side user identity required
+### Identity
+
+- User identity comes from the User Account system
+- `user.display_name` is used for note attribution
+- No separate nickname needed — set during account creation
+- Display name can be updated in account settings
+
+### Personal Notes Sync
+
+With User Accounts, personal Quick Notes can also sync:
+- Personal notes stored in `user_notes` table (see `user-accounts-spec.md`)
+- Only visible to that user (scoped by `user_id`)
+- Syncs across all browsers where user is logged in
+
+### Data Scoping
+
+```
+User Account (mike@titus.com)
+├── user_id: "user_abc123"
+├── license_id → licenses.id → org_id: "titus_org"
+│
+├── Personal Notes (only Mike sees)
+│   └── user_notes WHERE user_id = "user_abc123"
+│
+└── Team Notes (whole org sees)
+    └── team_notes WHERE org_id = "titus_org"
+```
 
 ---
 

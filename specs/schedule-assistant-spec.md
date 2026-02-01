@@ -3,7 +3,7 @@
 **Version:** 1.0 Draft
 **Tier:** Power User
 **Status:** Planning
-**Dependencies:** Pave API (task queries), DOM injection on Schedule/Availability view
+**Dependencies:** User Accounts (Foundation), Pave API (task queries), DOM injection on Schedule/Availability view
 
 ---
 
@@ -100,6 +100,8 @@ An injected row above the team list that displays:
 ┌─────────────────────┐
 │ Cloudflare Worker   │
 │ (proxy & cache)     │
+│ - Auth via token    │
+│ - Grant key from DB │
 └──────────┬──────────┘
            │
            ▼
@@ -111,6 +113,16 @@ An injected row above the team list that displays:
 │ - Assignment calls  │
 └─────────────────────┘
 ```
+
+### Authentication
+
+**Prerequisite:** User Accounts system (see `user-accounts-spec.md`)
+
+- User must be logged in with a User Account
+- Extension sends `Authorization: Bearer <access_token>` with API requests
+- Worker validates token, retrieves user's stored `grant_key` from DB
+- Worker uses decrypted `grant_key` to make Pave API calls
+- No grant key stored locally — pulled from server on each session
 
 ### API Requirements
 
