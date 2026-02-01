@@ -36,12 +36,18 @@ A user account system where:
 
 ## User Stories
 
-### First-Time Setup
-- As a new user, I want to set up the extension with my license key and grant key
+### New User (First Time Setup)
+- As a new user, I want to set up the extension with my license key
+- As a new Power User, I want to add my grant key for API features
 - As a new user, I want to create an account so I don't have to enter keys again
 - As a new user, I want to choose a display name for Team Notes attribution
 
-### Returning User
+### Existing User (Already Has Keys in Browser)
+- As an existing user, I want to create an account using my already-saved license key
+- As an existing user, I don't want to re-enter keys I've already configured
+- As an existing user, I want my current notes/templates migrated to my account
+
+### Returning User (Has Account, New Browser)
 - As a returning user, I want to sign in with just my username and password
 - As a returning user, I want my settings and notes to be there automatically
 - As a returning user, I want to use any browser without re-entering license keys
@@ -112,12 +118,15 @@ CREATE TABLE users (
   license_id TEXT NOT NULL,          -- FK to licenses
   username TEXT UNIQUE NOT NULL,     -- email address
   password_hash TEXT NOT NULL,       -- bcrypt/argon2
-  grant_key_encrypted TEXT NOT NULL, -- AES-256 encrypted
+  grant_key_encrypted TEXT,          -- AES-256 encrypted (NULL for non-Power Users)
   display_name TEXT,                 -- for Team Notes attribution
   created_at INTEGER,
   last_login_at INTEGER,
   FOREIGN KEY (license_id) REFERENCES licenses(id)
 );
+
+-- Note: grant_key_encrypted is only required for Power User tier.
+-- Essential and Pro users don't need a grant key since they don't use API features.
 
 -- User sessions (for JWT refresh tokens)
 CREATE TABLE sessions (
@@ -190,7 +199,7 @@ POST   /admin/revoke-user       — Revoke a user's access
 
 ### Authentication Flow
 
-**First-Time Setup:**
+**New User Setup (Power User with grant key):**
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
@@ -199,12 +208,13 @@ POST   /admin/revoke-user       — Revoke a user's access
        │                   │                   │
        │ POST /auth/setup  │                   │
        │ {license_key,     │                   │
-       │  grant_key}       │                   │
+       │  grant_key}       │  ← grant_key optional (Power User only)
        │──────────────────►│                   │
        │                   │                   │
        │                   │ Validate license  │
        │                   │ (Gumroad)         │
        │                   │                   │
+       │                   │ If Power User:    │
        │                   │ Test grant_key    │
        │                   │──────────────────►│
        │                   │◄──────────────────│
@@ -232,6 +242,39 @@ POST   /admin/revoke-user       — Revoke a user's access
        │  refresh_token,   │                   │
        │  user}            │                   │
        │                   │                   │
+```
+
+**Existing User Setup (Keys already in browser storage):**
+
+```
+┌─────────────┐     ┌─────────────┐
+│  Extension  │     │   Worker    │
+└──────┬──────┘     └──────┬──────┘
+       │                   │
+       │ Read from chrome.storage:
+       │ - license_key ✓
+       │ - grant_key ✓ (if Power User)
+       │                   │
+       │ POST /auth/setup  │
+       │ {license_key,     │  ← pulled from existing storage
+       │  grant_key}       │
+       │──────────────────►│
+       │                   │
+       │                   │ Validate (same as above)
+       │                   │
+       │◄──────────────────│
+       │ {valid: true,     │
+       │  setup_token}     │
+       │                   │
+       │ POST /auth/register
+       │ (user only enters email, password, display_name)
+       │──────────────────►│
+       │                   │
+       │◄──────────────────│
+       │ {success}         │
+       │                   │
+       │ Optionally migrate existing notes/templates
+       │                   │
 ```
 
 **Returning User Login:**
@@ -330,9 +373,11 @@ POST   /admin/revoke-user       — Revoke a user's access
 
 ### Setup Flow — Step 1: License
 
+**New users** enter their license key. **Existing users** who already have a license key saved in browser storage skip this step — we use their existing key.
+
 ```
 ┌─────────────────────────────────────────────────────┐
-│ STEP 1 OF 3 — License Key                           │
+│ STEP 1 — License Key                                │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  Enter your license key:                            │
@@ -346,14 +391,38 @@ POST   /admin/revoke-user       — Revoke a user's access
 └─────────────────────────────────────────────────────┘
 ```
 
-### Setup Flow — Step 2: Grant Key
+**For existing users with saved license key:**
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ STEP 2 OF 3 — JobTread Connection                   │
+│ CREATE YOUR ACCOUNT                                 │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│  ✓ License verified: Pro Tier                       │
+│  ✓ License found: Power User Tier                   │
+│  ✓ Organization: Titus Contracting Inc              │
+│                                                     │
+│  We found your existing license. Let's create       │
+│  your account to sync across devices.               │
+│                                                     │
+│                              [Continue]             │
+└─────────────────────────────────────────────────────┘
+```
+
+### Setup Flow — Step 2: Grant Key (Power User Only)
+
+**This step only appears for Power User tier.** Essential and Pro tiers skip directly to account creation since they don't use API features.
+
+**Existing Power Users** who already have a grant key saved skip this step — we use their existing key.
+
+```
+┌─────────────────────────────────────────────────────┐
+│ STEP 2 — JobTread Connection (Power User)           │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ✓ License verified: Power User Tier                │
+│                                                     │
+│  Power User features require a JobTread Grant Key   │
+│  for API access.                                    │
 │                                                     │
 │  Enter your JobTread Grant Key:                     │
 │  ┌─────────────────────────────────────────────┐   │
@@ -366,14 +435,31 @@ POST   /admin/revoke-user       — Revoke a user's access
 └─────────────────────────────────────────────────────┘
 ```
 
+**For existing Power Users with saved grant key:**
+
+```
+┌─────────────────────────────────────────────────────┐
+│ JOBTHREAD CONNECTION                                │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ✓ License verified: Power User Tier                │
+│  ✓ Grant key found and valid                        │
+│                                                     │
+│  Your existing JobTread connection will be          │
+│  saved to your account.                             │
+│                                                     │
+│                              [Continue]             │
+└─────────────────────────────────────────────────────┘
+```
+
 ### Setup Flow — Step 3: Create Account
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ STEP 3 OF 3 — Create Your Account                   │
+│ CREATE YOUR ACCOUNT                                 │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
-│  ✓ License verified: Pro Tier                       │
+│  ✓ License verified: Power User Tier                │
 │  ✓ Connected to: Titus Contracting Inc              │
 │                                                     │
 │  Email:                                             │
@@ -459,20 +545,42 @@ POST   /admin/revoke-user       — Revoke a user's access
 
 ## Migration Path
 
-### For Existing Users
+### For Existing Users (Already Have Keys Saved)
 
 1. User opens extension after update
-2. Sees: "We've added accounts! Create one to sync across devices."
-3. Options:
-   - "Set up account" → Creates account with their existing keys
-   - "Not now" → Continue with local storage (legacy mode)
-4. Legacy mode continues working but shows gentle reminder
+2. Extension detects existing `license_key` (and `grant_key` if Power User) in browser storage
+3. Prompt: "We've added accounts! Create one to sync your notes across devices."
+4. User clicks "Create Account"
+5. **Keys are NOT re-entered** — extension uses existing saved keys
+6. User only needs to enter: email, password, display name
+7. Account is created with their existing credentials
+
+**Flow:**
+```
+Existing keys in browser storage
+         ↓
+"Create Account" prompt
+         ↓
+User enters: email, password, display name (NOT keys)
+         ↓
+Account created with existing keys
+         ↓
+Migrate notes/templates to account
+```
+
+### Options for Existing Users
+
+- **"Create Account"** → Uses existing keys, creates account, migrates data
+- **"Not Now"** → Continue with local storage (legacy mode), remind later
+- Legacy mode continues working indefinitely but shows gentle periodic reminder
 
 ### Data Migration
 
-- Existing Quick Notes → Prompt to upload to account
-- Existing Templates → Prompt to upload to account
+When account is created:
+- Existing Quick Notes → Prompt: "Upload your notes to sync everywhere?"
+- Existing Templates → Prompt: "Upload your templates to sync everywhere?"
 - Existing settings → Auto-migrate on account creation
+- User can choose to keep local-only or sync to account
 
 ---
 
