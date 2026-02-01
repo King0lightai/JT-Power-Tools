@@ -5,6 +5,34 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Improved
+
+#### Mobile Responsiveness
+
+##### Quick Notes Panel
+- Quick Notes side panel now takes full screen width on mobile devices (max-width: 768px)
+- Added back button to navigate from note editor back to notes list on mobile
+- Panel layout switches from side-by-side to stacked (vertical) on mobile
+- Fixed notes appearing out of view when opened on mobile devices
+
+##### Freeze Header Mobile Support
+- Added support for mobile dropdown navigation bar (sticky positioning below main header)
+- Mobile nav bar now freezes in place while scrolling, consistent with desktop tab behavior
+- Added dark mode and custom theme styling support for mobile navigation bar
+- Action toolbar and content headers properly position below mobile nav on small screens
+
+### Changed
+
+#### Documentation
+- Updated pricing section on website to clarify monthly subscription model
+- Changed price labels from "/company" to "/mo" format ($10/mo, $20/mo, $30/mo)
+- Emphasized "ONE SUBSCRIPTION, UNLIMITED USERS" messaging
+- Added "Cancel anytime" and "no hidden costs" clarifications
+
+---
+
 ## [3.5.1] - 2026-01-24 (Beta)
 
 ### Fixed
