@@ -618,6 +618,157 @@ const FormatterToolbar = (() => {
   }
 
   /**
+   * Embed toolbar in the Description column header of the budget table
+   * The toolbar appears between "Description" text and the expand button
+   * @param {HTMLTextAreaElement} field - A budget table description field
+   * @returns {HTMLElement|null} The embedded toolbar, or null if couldn't embed
+   */
+  function embedToolbarInDescriptionHeader(field) {
+    // Check if there's already a header toolbar
+    const existingToolbar = document.querySelector('.jt-formatter-toolbar-header');
+    if (existingToolbar) {
+      return existingToolbar;
+    }
+
+    // Find the header row
+    const headerRow = findBudgetHeaderRow(field);
+    if (!headerRow) return null;
+
+    // Find the Description header cell
+    const descCell = findDescriptionHeaderCell(headerRow);
+    if (!descCell) return null;
+
+    // Find the expand button (role="button" with SVG inside)
+    const expandBtn = descCell.querySelector('[role="button"]');
+    if (!expandBtn) return null;
+
+    // Check if PreviewModeFeature is available and active
+    const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
+
+    // Create compact toolbar for header
+    const toolbar = document.createElement('div');
+    toolbar.className = 'jt-formatter-toolbar jt-formatter-toolbar-embedded jt-formatter-toolbar-header jt-responsive-toolbar';
+
+    // SVG icons (same as embedded toolbar)
+    const icons = {
+      bullet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1" fill="currentColor"></circle><circle cx="3" cy="12" r="1" fill="currentColor"></circle><circle cx="3" cy="18" r="1" fill="currentColor"></circle></svg>',
+      numbered: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><text x="3" y="7" font-size="6" fill="currentColor" stroke="none" font-weight="600">1</text><text x="3" y="13" font-size="6" fill="currentColor" stroke="none" font-weight="600">2</text><text x="3" y="19" font-size="6" fill="currentColor" stroke="none" font-weight="600">3</text></svg>',
+      link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+      quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg>',
+      table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>',
+      alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+      alignLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="15" y2="12"></line><line x1="3" y1="18" x2="18" y2="18"></line></svg>',
+      alignCenter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="6" y1="12" x2="18" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>',
+      alignRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="9" y1="12" x2="21" y2="12"></line><line x1="6" y1="18" x2="21" y2="18"></line></svg>',
+      hr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg>'
+    };
+
+    const moreIcon = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>';
+
+    // Build toolbar HTML
+    let toolbarHTML = '';
+
+    if (hasPreviewMode) {
+      toolbarHTML += `<button class="jt-preview-toggle jt-toolbar-item" data-action="preview" data-priority="0" title="Preview"><span>Preview</span></button>`;
+    }
+
+    toolbarHTML += `
+      <button class="jt-toolbar-item" data-format="bold" data-priority="1" title="Bold (*text*) - Ctrl/Cmd+B"><strong>B</strong></button>
+      <button class="jt-toolbar-item" data-format="italic" data-priority="2" title="Italic (^text^) - Ctrl/Cmd+I"><em>I</em></button>
+      <button class="jt-toolbar-item" data-format="underline" data-priority="3" title="Underline (_text_) - Ctrl/Cmd+U"><u>U</u></button>
+      <button class="jt-toolbar-item" data-format="strikethrough" data-priority="4" title="Strikethrough (~text~)"><s>S</s></button>
+      <button class="jt-toolbar-item" data-format="h1" data-priority="5" title="Heading 1">H<sub>1</sub></button>
+      <button class="jt-toolbar-item" data-format="h2" data-priority="6" title="Heading 2">H<sub>2</sub></button>
+      <button class="jt-toolbar-item" data-format="h3" data-priority="7" title="Heading 3">H<sub>3</sub></button>
+      <button class="jt-toolbar-item" data-format="justify-left" data-priority="8" title="Align Left (:--)">${icons.alignLeft}</button>
+      <button class="jt-toolbar-item" data-format="justify-center" data-priority="9" title="Align Center (-:-)">${icons.alignCenter}</button>
+      <button class="jt-toolbar-item" data-format="justify-right" data-priority="10" title="Align Right (--:)">${icons.alignRight}</button>
+      <button class="jt-toolbar-item" data-format="bullet" data-priority="11" title="Bullet List">${icons.bullet}</button>
+      <button class="jt-toolbar-item" data-format="numbered" data-priority="12" title="Numbered List">${icons.numbered}</button>
+      <button class="jt-toolbar-item" data-format="link" data-priority="13" title="Insert Link">${icons.link}</button>
+      <button class="jt-toolbar-item" data-format="quote" data-priority="14" title="Quote">${icons.quote}</button>
+      <button class="jt-toolbar-item" data-format="table" data-priority="15" title="Insert Table">${icons.table}</button>
+      <button class="jt-toolbar-item" data-format="hr" data-priority="16" title="Horizontal Rule (---)">${icons.hr}</button>
+      <button class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" data-priority="17" title="Green">A</button>
+      <button class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" data-priority="18" title="Yellow">A</button>
+      <button class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" data-priority="19" title="Blue">A</button>
+      <button class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" data-priority="20" title="Red">A</button>
+      <button class="jt-toolbar-item jt-alert-btn" data-format="alert" data-priority="21" title="Insert Alert">${icons.alert}</button>
+    `;
+
+    toolbarHTML += `
+      <div class="jt-overflow-menu">
+        <button class="jt-overflow-btn" title="More options">${moreIcon}</button>
+        <div class="jt-overflow-dropdown"></div>
+      </div>
+    `;
+
+    toolbar.innerHTML = toolbarHTML;
+
+    // Setup handlers - pass the current active field dynamically
+    setupResponsiveToolbar(toolbar);
+    setupHeaderToolbarButtons(toolbar);
+    setupCustomTooltips(toolbar);
+
+    if (hasPreviewMode) {
+      setupPreviewButton(toolbar, field);
+    }
+
+    // Insert toolbar before the expand button
+    expandBtn.parentElement.insertBefore(toolbar, expandBtn);
+
+    // Run overflow check after insertion
+    requestAnimationFrame(() => updateToolbarOverflow(toolbar));
+
+    return toolbar;
+  }
+
+  /**
+   * Setup format button handlers for header toolbar
+   * These buttons apply formatting to the currently active budget description field
+   * @param {HTMLElement} toolbar
+   */
+  function setupHeaderToolbarButtons(toolbar) {
+    const buttons = toolbar.querySelectorAll('.jt-toolbar-item[data-format]');
+    buttons.forEach(button => {
+      button.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // Prevent focus change
+      });
+
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Get the currently active field
+        const field = activeField;
+        if (!field) return;
+
+        const format = button.dataset.format;
+        const color = button.dataset.color;
+
+        if (format === 'color' && color) {
+          window.FormatterFormats && window.FormatterFormats.applyFormat(format, field, color);
+        } else if (format === 'alert') {
+          window.FormatterFormats && window.FormatterFormats.showAlertModal(field);
+        } else {
+          window.FormatterFormats && window.FormatterFormats.applyFormat(format, field);
+        }
+
+        // Update toolbar state after applying format
+        updateToolbarState(field, toolbar);
+      });
+    });
+  }
+
+  /**
+   * Get the header toolbar if it exists
+   * @returns {HTMLElement|null}
+   */
+  function getHeaderToolbar() {
+    return document.querySelector('.jt-formatter-toolbar-header');
+  }
+
+  /**
    * Find the column index of the field's cell in the budget table
    * @param {HTMLTextAreaElement} field
    * @returns {number} Column index, or -1 if not found
@@ -1925,8 +2076,29 @@ const FormatterToolbar = (() => {
       }
     }
 
-    // For Budget Description fields ONLY - use floating EXPANDED toolbar
-    // Hide all embedded toolbars when budget field is focused
+    // For Budget Description fields ONLY - use header-embedded toolbar
+    // Budget custom fields still use floating expanded toolbar
+    const isBudgetTable = isBudgetTableField(field);
+
+    if (isBudgetTable) {
+      // Budget table description fields use the header toolbar
+      const headerToolbar = embedToolbarInDescriptionHeader(field);
+      if (headerToolbar) {
+        // Hide all other embedded toolbars
+        hideAllEmbeddedToolbars(headerToolbar, true);
+        // Remove any floating toolbar
+        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+          activeToolbar.remove();
+        }
+        activeToolbar = headerToolbar;
+        activeField = field;
+        updateToolbarState(field, headerToolbar);
+        return;
+      }
+    }
+
+    // Fallback: For budget custom fields OR if header toolbar couldn't be created
+    // Use floating EXPANDED toolbar
     hideAllEmbeddedToolbars(null, true);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
       activeToolbar = null;

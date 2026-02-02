@@ -1307,6 +1307,43 @@
   border-top: 1px solid #e5e7eb;
 }
 
+/* Header toolbar - embedded in budget table Description header */
+.jt-formatter-toolbar.jt-formatter-toolbar-header {
+  position: relative;
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 0.5rem;
+  padding: 0 0.25rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.jt-formatter-toolbar.jt-formatter-toolbar-header .jt-toolbar-item {
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  min-width: 1.5rem;
+  height: 1.5rem;
+}
+
+.jt-formatter-toolbar.jt-formatter-toolbar-header .jt-toolbar-item svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.jt-formatter-toolbar.jt-formatter-toolbar-header .jt-overflow-btn {
+  padding: 0.125rem 0.25rem;
+  height: 1.5rem;
+}
+
+.jt-formatter-toolbar.jt-formatter-toolbar-header .jt-overflow-dropdown {
+  top: 100%;
+  margin-top: 0.25rem;
+}
+
 /* Responsive toolbar - flat button layout like JobTread */
 .jt-formatter-toolbar.jt-responsive-toolbar {
   display: flex;
