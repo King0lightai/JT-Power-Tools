@@ -346,6 +346,15 @@ const FormatterFeature = (() => {
         Toolbar().embedToolbarForField(field);
       }
     });
+
+    // On budget page, embed toolbar in the Description header on load
+    if (path.endsWith('/budget')) {
+      // Find a description field to use as reference for finding the header
+      const descField = document.querySelector('textarea[placeholder="Description"]');
+      if (descField) {
+        Toolbar().embedToolbarInDescriptionHeader(descField);
+      }
+    }
   }
 
   // Event handlers (using modules)

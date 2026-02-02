@@ -2184,7 +2184,8 @@ const FormatterToolbar = (() => {
     showToolbar,
     hideToolbar,
     scheduleHide,
-    embedToolbarForField
+    embedToolbarForField,
+    embedToolbarInDescriptionHeader
   };
 })();
 
