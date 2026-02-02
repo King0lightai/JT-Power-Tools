@@ -2119,7 +2119,8 @@ const FormatterToolbar = (() => {
     const isBudgetTable = isBudgetTableField(field);
 
     if (isBudgetTable) {
-      // Budget table description fields use the header toolbar
+      // Budget table description fields use the header toolbar ONLY
+      // Never fall back to floating toolbar for budget table fields
       const headerToolbar = embedToolbarInDescriptionHeader(field);
       if (headerToolbar) {
         // Hide all other embedded toolbars
@@ -2127,15 +2128,24 @@ const FormatterToolbar = (() => {
         // Remove any floating toolbar
         if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
           activeToolbar.remove();
+          activeToolbar = null;
         }
         activeToolbar = headerToolbar;
         activeField = field;
         updateToolbarState(field, headerToolbar);
-        return;
+      } else {
+        // Header toolbar not available yet - just set active field for keyboard shortcuts
+        // Remove any existing floating toolbar
+        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+          activeToolbar.remove();
+          activeToolbar = null;
+        }
+        activeField = field;
       }
+      return; // Never fall through to floating toolbar for budget table fields
     }
 
-    // Fallback: For budget custom fields OR if header toolbar couldn't be created
+    // Fallback: For budget custom fields ONLY
     // Use floating EXPANDED toolbar
     hideAllEmbeddedToolbars(null, true);
     if (activeToolbar && !document.body.contains(activeToolbar)) {
