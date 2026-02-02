@@ -620,27 +620,65 @@ const FormatterToolbar = (() => {
   /**
    * Embed toolbar in the Description column header of the budget table
    * The toolbar appears between "Description" text and the expand button
-   * @param {HTMLTextAreaElement} field - A budget table description field
+   * @param {HTMLTextAreaElement} field - A budget table description field (optional, used as fallback)
    * @returns {HTMLElement|null} The embedded toolbar, or null if couldn't embed
    */
   function embedToolbarInDescriptionHeader(field) {
+    // Only work on budget page
+    if (!window.location.pathname.endsWith('/budget')) {
+      return null;
+    }
+
     // Check if there's already a header toolbar
     const existingToolbar = document.querySelector('.jt-formatter-toolbar-header');
     if (existingToolbar) {
       return existingToolbar;
     }
 
-    // Find the header row
-    const headerRow = findBudgetHeaderRow(field);
-    if (!headerRow) return null;
+    // Direct search: Find the Description header cell
+    // Look for elements that contain "Description" text and have an expand button
+    let descCell = null;
 
-    // Find the Description header cell
-    const descCell = findDescriptionHeaderCell(headerRow);
+    // Strategy 1: Look for header cells with bg-gray-100 styling
+    const headerCells = document.querySelectorAll('.bg-gray-100');
+    for (const cell of headerCells) {
+      // Check if this cell contains "Description" text (but not in a textarea)
+      if (cell.querySelector('textarea')) continue;
+
+      const textContent = cell.textContent;
+      if (textContent.includes('Description')) {
+        // Verify it has an expand button (role="button" with SVG)
+        const expandBtn = cell.querySelector('[role="button"] svg');
+        if (expandBtn) {
+          descCell = cell;
+          break;
+        }
+      }
+    }
+
+    // Strategy 2: Look for sticky elements containing "Description" in header context
+    if (!descCell) {
+      const stickyElements = document.querySelectorAll('.sticky');
+      for (const sticky of stickyElements) {
+        if (sticky.textContent.trim() === 'Description') {
+          // Go up to find the header cell container
+          let parent = sticky.parentElement;
+          while (parent && !parent.querySelector('[role="button"]')) {
+            parent = parent.parentElement;
+            if (!parent || parent.tagName === 'BODY') break;
+          }
+          if (parent && parent.querySelector('[role="button"] svg')) {
+            descCell = parent;
+            break;
+          }
+        }
+      }
+    }
+
     if (!descCell) return null;
 
-    // Find the expand button (role="button" with SVG inside)
+    // Find the expand button
     const expandBtn = descCell.querySelector('[role="button"]');
-    if (!expandBtn) return null;
 
     // Check if PreviewModeFeature is available and active
     const hasPreviewMode = window.PreviewModeFeature && window.PreviewModeFeature.isActive();
