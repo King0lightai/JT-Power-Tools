@@ -2064,6 +2064,10 @@ const FormatterToolbar = (() => {
     const embeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
     embeddedToolbars.forEach(toolbar => {
       if (toolbar !== exceptToolbar) {
+        // Never hide the header toolbar - it should always stay visible
+        if (toolbar.classList.contains('jt-formatter-toolbar-header')) {
+          return;
+        }
         // Close any open overflow dropdowns
         const overflowDropdown = toolbar.querySelector('.jt-overflow-dropdown');
         if (overflowDropdown) {
@@ -2120,27 +2124,20 @@ const FormatterToolbar = (() => {
 
     if (isBudgetTable) {
       // Budget table description fields use the header toolbar ONLY
-      // Never fall back to floating toolbar for budget table fields
-      const headerToolbar = embedToolbarInDescriptionHeader(field);
+      // Header toolbar is created on load - just find it and update state
+      const headerToolbar = document.querySelector('.jt-formatter-toolbar-header');
+
+      // Remove any floating toolbar
+      if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+        activeToolbar.remove();
+        activeToolbar = null;
+      }
+
+      // Update active field and toolbar state
+      activeField = field;
       if (headerToolbar) {
-        // Hide all other embedded toolbars
-        hideAllEmbeddedToolbars(headerToolbar, true);
-        // Remove any floating toolbar
-        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.remove();
-          activeToolbar = null;
-        }
         activeToolbar = headerToolbar;
-        activeField = field;
         updateToolbarState(field, headerToolbar);
-      } else {
-        // Header toolbar not available yet - just set active field for keyboard shortcuts
-        // Remove any existing floating toolbar
-        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.remove();
-          activeToolbar = null;
-        }
-        activeField = field;
       }
       return; // Never fall through to floating toolbar for budget table fields
     }
