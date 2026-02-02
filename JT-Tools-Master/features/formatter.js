@@ -127,7 +127,7 @@ const FormatterFeature = (() => {
 
     // Skip if on excluded paths (but NOT documents - sidebar fields are allowed there)
     const path = window.location.pathname;
-    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
+    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog') || path.includes('/marketplace')) {
       return;
     }
 
