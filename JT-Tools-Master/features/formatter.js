@@ -340,6 +340,10 @@ const FormatterFeature = (() => {
         field.addEventListener('keyup', () => handleFieldKeyup(field), { signal });
         // Use select event for more reliable cursor/selection change detection
         field.addEventListener('select', () => handleFieldSelectionChange(field), { signal });
+
+        // Embed toolbar immediately on load (for non-budget fields)
+        // This makes the toolbar part of the UI rather than appearing on focus
+        Toolbar().embedToolbarForField(field);
       }
     });
   }

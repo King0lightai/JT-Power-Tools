@@ -1974,11 +1974,8 @@ const FormatterToolbar = (() => {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
 
-      // Hide embedded toolbars, remove floating toolbars from DOM
-      if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-        // For embedded toolbars, hide with class (will be shown again on focus)
-        activeToolbar.classList.add('jt-toolbar-hidden');
-      } else {
+      // Embedded toolbars stay visible, only floating toolbars are removed
+      if (!activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
         // For floating toolbars, remove from DOM
         activeToolbar.remove();
       }
@@ -2014,7 +2011,8 @@ const FormatterToolbar = (() => {
     createToolbar,
     showToolbar,
     hideToolbar,
-    scheduleHide
+    scheduleHide,
+    embedToolbarForField
   };
 })();
 
