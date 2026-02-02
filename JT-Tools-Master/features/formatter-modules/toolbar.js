@@ -2083,6 +2083,10 @@ const FormatterToolbar = (() => {
 
   /**
    * Show the toolbar for a field
+   * Three toolbar types:
+   * 1. Budget table description fields → Header toolbar (created on load, always visible)
+   * 2. Budget custom fields → Floating expanded toolbar
+   * 3. All other fields → Embedded compact toolbar
    * @param {HTMLTextAreaElement} field
    */
   function showToolbar(field) {
@@ -2090,88 +2094,61 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
-    // Budget table fields AND budget custom fields get the EXPANDED FLOATING toolbar
-    // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
-    const isBudgetField = isBudgetTableField(field) || isBudgetCustomField(field);
-
-    if (!isBudgetField) {
-      // For ALL non-budget fields, use embedded toolbar for consistent compact styling
-      // This includes: sidebar fields, modal fields, Message fields, etc.
-      const embeddedToolbar = embedToolbarForField(field);
-      if (embeddedToolbar) {
-        // Hide any active floating toolbar
-        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.remove();
-          activeToolbar = null;
-        }
-        // Close overflow dropdowns on other embedded toolbars
-        hideAllEmbeddedToolbars(embeddedToolbar);
-        // Ensure this toolbar is visible (may have been hidden when budget field was focused)
-        embeddedToolbar.classList.remove('jt-toolbar-hidden');
-        // Set activeToolbar to embedded toolbar so state updates work
-        activeToolbar = embeddedToolbar;
-        activeField = field;
-        // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
-        positionToolbar(embeddedToolbar, field);
-        updateToolbarState(field, embeddedToolbar);
-        return;
-      }
-    }
-
-    // For Budget Description fields ONLY - use header-embedded toolbar
-    // Budget custom fields still use floating expanded toolbar
-    const isBudgetTable = isBudgetTableField(field);
-
-    if (isBudgetTable) {
-      // Budget table description fields use the header toolbar ONLY
-      // Header toolbar is created on load - just find it and update state
-      const headerToolbar = document.querySelector('.jt-formatter-toolbar-header');
-
-      // Remove any floating toolbar
+    // PATH 1: Budget table description fields - use header toolbar ONLY
+    if (isBudgetTableField(field)) {
+      // Remove any floating toolbar that might exist
       if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
         activeToolbar.remove();
-        activeToolbar = null;
       }
 
-      // Update active field and toolbar state
+      // Find the header toolbar (created on load)
+      const headerToolbar = document.querySelector('.jt-formatter-toolbar-header');
       activeField = field;
       if (headerToolbar) {
         activeToolbar = headerToolbar;
         updateToolbarState(field, headerToolbar);
+      } else {
+        activeToolbar = null;
       }
-      return; // Never fall through to floating toolbar for budget table fields
+      return;
     }
 
-    // Fallback: For budget custom fields ONLY
-    // Use floating EXPANDED toolbar
-    hideAllEmbeddedToolbars(null, true);
-    if (activeToolbar && !document.body.contains(activeToolbar)) {
-      activeToolbar = null;
+    // PATH 2: Budget custom fields - use floating expanded toolbar
+    if (isBudgetCustomField(field)) {
+      // Hide all embedded toolbars
+      hideAllEmbeddedToolbars(null, true);
+
+      // Remove non-expanded toolbar if exists
+      if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-expanded')) {
+        activeToolbar.remove();
+        activeToolbar = null;
+      }
+
+      // Create or reuse expanded toolbar
+      if (!activeToolbar) {
+        activeToolbar = createToolbar(field, { expanded: true });
+      }
+      activeField = field;
+      positionToolbar(activeToolbar, field);
+      updateToolbarState(field, activeToolbar);
+      return;
     }
 
-    // Budget fields always need expanded toolbar
-    const hasExpanded = activeToolbar && activeToolbar.classList.contains('jt-formatter-expanded');
-
-    // If we have a non-expanded toolbar, recreate it as expanded
-    if (activeToolbar && !hasExpanded) {
+    // PATH 3: All other fields - use embedded compact toolbar
+    // Remove any floating toolbar
+    if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
       activeToolbar.remove();
       activeToolbar = null;
     }
 
-    if (activeToolbar) {
+    const embeddedToolbar = embedToolbarForField(field);
+    if (embeddedToolbar) {
+      hideAllEmbeddedToolbars(embeddedToolbar);
+      embeddedToolbar.classList.remove('jt-toolbar-hidden');
+      activeToolbar = embeddedToolbar;
       activeField = field;
-      activeToolbar.style.display = 'flex';
-      activeToolbar.style.visibility = 'visible';
-      activeToolbar.style.opacity = '1';
-      positionToolbar(activeToolbar, field);
-      updateToolbarState(field, activeToolbar);
-    } else {
-      // Always create expanded toolbar for budget fields
-      const toolbar = createToolbar(field, { expanded: true });
-      positionToolbar(toolbar, field);
-      updateToolbarState(field, toolbar);
-      activeToolbar = toolbar;
-      activeField = field;
+      positionToolbar(embeddedToolbar, field);
+      updateToolbarState(field, embeddedToolbar);
     }
   }
 
