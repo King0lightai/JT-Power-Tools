@@ -114,6 +114,7 @@ const FreezeHeaderFeature = (() => {
     /* EXCLUDE global sidebars via: class .jt-global-sidebar OR inline style top: 48px */
     .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 48"]) {
       top: var(--jt-toolbar-bottom, 138px) !important;
+      max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
       z-index: 41 !important;
     }
 
@@ -124,11 +125,11 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
-    /* OVERRIDE: Sidebar scroll containers INSIDE data-is-drag-scroll-boundary should NOT be treated as global */
-    /* These are job-specific sidebars (COST ITEM DETAILS, Task Details) that should keep their native top position */
-    /* The top: 48px is relative to their container, not the viewport */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] div.sticky.overflow-y-auto.overscroll-contain {
-      top: 48px !important;
+    /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary - just fix z-index stacking */
+    /* These are job-specific sidebars (Update Task, Task Details, COST ITEM DETAILS) */
+    /* Do NOT modify top or max-height - let JobTread handle positioning */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky,
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain {
       z-index: 1 !important;
     }
 
@@ -328,42 +329,6 @@ const FreezeHeaderFeature = (() => {
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
       background-color: var(--jt-theme-background, white) !important;
       filter: brightness(0.95);
-    }
-
-    /* ========== MOBILE: DISABLE FREEZE HEADER ========== */
-    /* On mobile (max-width: 768px), JobTread uses a completely different layout:
-       - Bottom navigation bar instead of horizontal tabs
-       - Different toolbar structures
-       - Optimized for touch interaction
-       The freeze header feature was designed for desktop and causes visual issues on mobile,
-       so we disable all freeze header styling on mobile viewports */
-    @media (max-width: 768px) {
-      /* Reset all freeze header positioning on mobile */
-      .jt-freeze-header-active .jt-job-tabs-container,
-      .jt-freeze-header-active .jt-action-toolbar,
-      .jt-freeze-header-active .jt-budget-header-container,
-      .jt-freeze-header-active .jt-schedule-header-container,
-      .jt-freeze-header-active .jt-files-folder-bar,
-      .jt-freeze-header-active .jt-files-list-header,
-      .jt-freeze-header-active .jt-files-sidebar {
-        position: static !important;
-        top: unset !important;
-        z-index: unset !important;
-        box-shadow: none !important;
-      }
-
-      /* Also reset any sticky elements that may have been affected */
-      .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar) {
-        top: unset !important;
-        z-index: unset !important;
-        max-height: unset !important;
-      }
-
-      /* Let JobTread's native mobile layout work as intended */
-      .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky {
-        top: unset !important;
-        max-height: unset !important;
-      }
     }
 
     /* ========== POPUP EXCLUSIONS (HIGH SPECIFICITY) ========== */

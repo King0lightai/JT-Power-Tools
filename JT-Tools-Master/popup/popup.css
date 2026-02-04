@@ -570,6 +570,32 @@ i.category-icon {
   background: var(--brand-orange-glow);
 }
 
+/* Mobile Responsive Icon */
+.feature-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 11px;
+  color: #10b981; /* Green color for mobile-ready */
+  cursor: help;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.feature-mobile:hover {
+  color: #059669;
+}
+
+body.dark-theme .feature-mobile {
+  color: #34d399;
+}
+
+body.dark-theme .feature-mobile:hover {
+  color: #6ee7b7;
+}
+
 /* ============================================
    CUSTOMIZE THEME BUTTON
    ============================================ */
