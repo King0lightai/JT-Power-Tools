@@ -303,19 +303,23 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude fields in Documents page main area (but NOT the sidebar)
-      if (path.includes('/documents')) {
-        // Exclude "Prepared by" / "Prepared for" document header fields
-        const gridContainer = field.closest('div.grid.grid-cols-2');
-        if (gridContainer && gridContainer.classList.contains('border-b-2')) {
-          const preparedHeader = gridContainer.querySelector('div.font-bold.uppercase');
-          if (preparedHeader) {
-            const headerText = preparedHeader.textContent.trim().toLowerCase();
-            if (headerText.includes('prepared by') || headerText.includes('prepared for')) {
-              return false;
-            }
-          }
+      // CRITICAL: On document-type pages (documents, invoices, estimates, etc.),
+      // exclude ALL fields in the main document area - only allow sidebar fields
+      // This covers "Prepared by", "Prepared for", "Invoice details", etc.
+      const isDocumentTypePage = path.includes('/documents') ||
+                                  path.includes('/invoices') ||
+                                  path.includes('/estimates') ||
+                                  path.includes('/proposals') ||
+                                  path.includes('/contracts') ||
+                                  path.includes('/purchase-orders');
+
+      if (isDocumentTypePage) {
+        // Use Detection module's isFormatterField for comprehensive sidebar check
+        if (Detection().isFormatterField) {
+          return Detection().isFormatterField(field);
         }
+        // Fallback: exclude all fields on document-type pages if detection module unavailable
+        return false;
       }
 
       // Extra guard: ensure no native formatter exists (using Detection module)

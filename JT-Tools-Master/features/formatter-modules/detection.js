@@ -66,6 +66,23 @@ const FormatterDetection = (() => {
   }
 
   /**
+   * Check if the current page is a document-type page (documents, invoices, estimates, etc.)
+   * These pages have JobTread's native formatter in the main area, so we only show our
+   * formatter in sidebars on these pages.
+   * @returns {boolean} True if on a document-type page
+   */
+  function isDocumentTypePage() {
+    const path = window.location.pathname;
+    // Document-type pages include: documents, invoices, estimates, proposals, contracts, purchase-orders
+    return path.includes('/documents/') ||
+           path.includes('/invoices/') ||
+           path.includes('/estimates/') ||
+           path.includes('/proposals/') ||
+           path.includes('/contracts/') ||
+           path.includes('/purchase-orders/');
+  }
+
+  /**
    * Check if a textarea is inside a sidebar/panel
    * Used to allow formatter in sidebars on pages where main area has native formatter
    * @param {HTMLTextAreaElement} textarea - The textarea element to check
@@ -80,13 +97,14 @@ const FormatterDetection = (() => {
       return false;
     }
 
-    // On documents pages, ONLY the COST ITEM DETAILS sidebar should have formatter
+    // On document-type pages (documents, invoices, estimates, etc.),
+    // ONLY the COST ITEM DETAILS sidebar should have formatter
     // This is the most reliable way to exclude all table/grid textareas
-    if (window.location.pathname.includes('/documents/')) {
+    if (isDocumentTypePage()) {
       return isInCostItemDetailsSidebar(textarea);
     }
 
-    // For non-documents pages, use the general sidebar detection
+    // For non-document-type pages, use the general sidebar detection
     // Check for common sidebar/panel patterns
     const sidebar = textarea.closest('[class*="sidebar"], [class*="panel"], [class*="drawer"]');
     if (sidebar) return true;
@@ -201,11 +219,11 @@ const FormatterDetection = (() => {
       return false;
     }
 
-    // On documents pages, only allow formatter in the COST ITEM DETAILS sidebar
+    // On document-type pages (documents, invoices, estimates, etc.),
+    // only allow formatter in the COST ITEM DETAILS sidebar
     // JobTread has native formatter in the main document area
-    // URL pattern: /jobs/[id]/documents/[id]
-    if (window.location.pathname.includes('/documents/')) {
-      // Allow sidebar fields on Documents pages - they get the compact embedded toolbar
+    if (isDocumentTypePage()) {
+      // Allow sidebar fields on document-type pages - they get the compact embedded toolbar
       if (!isInSidebar(textarea)) {
         return false;
       }
