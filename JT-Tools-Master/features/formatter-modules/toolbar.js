@@ -48,20 +48,22 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Check if a field is inside the budget table
-   * Budget table fields use the floating expanded toolbar, not embedded
-   * CRITICAL: BOTH conditions must be met:
-   *   1. placeholder="Description"
-   *   2. URL ends with '/budget'
+   * Check if a field is inside the budget table (any field, not just Description)
+   * Used to exclude ALL budget table fields from getting embedded toolbar
    * @param {HTMLTextAreaElement} field
    * @returns {boolean}
    */
-  function isBudgetTableField(field) {
+  function isAnyBudgetTableField(field) {
     if (!field) return false;
 
-    // CRITICAL CHECK 1: Must be on the budget page
+    // Must be on the budget page
     const onBudgetPage = window.location.pathname.endsWith('/budget');
     if (!onBudgetPage) {
+      return false;
+    }
+
+    // Exclude sidebar fields (Cost Item Details, etc.)
+    if (isSidebarField(field)) {
       return false;
     }
 
@@ -72,27 +74,36 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    // Exclude custom fields - they have .font-bold sibling with field name
-    const parent = field.parentElement;
-    if (parent) {
-      const boldSibling = parent.querySelector('.font-bold');
-      if (boldSibling) {
-        return false;
-      }
-    }
-
-    // CRITICAL CHECK 2: Must have placeholder="Description"
-    const placeholder = field.getAttribute('placeholder');
-    if (placeholder !== 'Description') {
+    // Exclude custom fields - they have .font-bold sibling with field name (inside labels)
+    if (field.closest('label')) {
       return false;
     }
 
-    // Verify DOM structure - budget page uses .flex.min-w-max rows inside .overflow-auto
+    // Check if in budget table structure: .flex.min-w-max rows inside .overflow-auto
     const row = field.closest('.flex.min-w-max');
     if (!row) return false;
 
     const scrollContainer = row.closest('.overflow-auto');
     return scrollContainer !== null;
+  }
+
+  /**
+   * Check if a field is a budget table DESCRIPTION field specifically
+   * Only Description fields get the floating expanded toolbar
+   * @param {HTMLTextAreaElement} field
+   * @returns {boolean}
+   */
+  function isBudgetTableField(field) {
+    if (!field) return false;
+
+    // Must be a budget table field first
+    if (!isAnyBudgetTableField(field)) {
+      return false;
+    }
+
+    // Must have placeholder="Description" for floating toolbar
+    const placeholder = field.getAttribute('placeholder');
+    return placeholder === 'Description';
   }
 
   /**
@@ -109,42 +120,15 @@ const FormatterToolbar = (() => {
 
   /**
    * Check if a field is a budget custom field (custom fields on the budget page)
-   * Budget custom fields should use floating expanded toolbar, not embedded compact toolbar
-   * This does NOT include fields in sidebars (like Cost Item Details) - those get embedded toolbars
+   * DEPRECATED: Budget custom fields now use embedded toolbar like all other non-budget-table fields
+   * Only budget table Description fields get the floating expanded toolbar
    * @param {HTMLTextAreaElement} field
-   * @returns {boolean}
+   * @returns {boolean} Always returns false - only isBudgetTableField determines floating toolbar
    */
   function isBudgetCustomField(field) {
-    if (!field) return false;
-
-    // Must be on the budget page
-    const onBudgetPage = window.location.pathname.endsWith('/budget');
-    if (!onBudgetPage) {
-      return false;
-    }
-
-    // If it's a budget table description field, it's not a "custom" field
-    // (budget table fields are handled separately by isBudgetTableField)
-    if (isBudgetTableField(field)) {
-      return false;
-    }
-
-    // If the field is inside a sidebar panel (like Cost Item Details),
-    // it should get the embedded toolbar like regular sidebars
-    if (isSidebarField(field)) {
-      return false;
-    }
-
-    // Check for sidebar-like containers: sticky panels with overflow-y-auto
-    // This catches the Cost Item Details sidebar and similar panels
-    const stickyPanel = field.closest('.overflow-y-auto.sticky, .overflow-y-auto.overscroll-contain');
-    if (stickyPanel) {
-      return false;
-    }
-
-    // Any other field on the budget page is considered a budget custom field
-    // These should all use the floating expanded toolbar, not embedded compact
-    return true;
+    // Always return false - only budget table Description fields get floating toolbar
+    // All other fields (including custom fields on budget page) get embedded toolbar
+    return false;
   }
 
   /**
@@ -367,14 +351,9 @@ const FormatterToolbar = (() => {
    */
   function embedToolbarForField(field) {
     // CRITICAL: Never create embedded toolbar for ANY budget table field
-    // Budget table uses the floating expanded toolbar exclusively
-    if (isBudgetTableField(field)) {
-      return null;
-    }
-
-    // CRITICAL: Never create embedded toolbar for budget custom fields
-    // Budget custom fields use the floating expanded toolbar, like budget table fields
-    if (isBudgetCustomField(field)) {
+    // - Description fields get the floating expanded toolbar
+    // - Internal Notes and other budget table fields get NO toolbar
+    if (isAnyBudgetTableField(field)) {
       return null;
     }
 
@@ -532,15 +511,51 @@ const FormatterToolbar = (() => {
     const scrollContainer = field.closest('.overflow-auto');
     if (!scrollContainer) return null;
 
-    // Look for flex.min-w-max rows containing + Item / + Group buttons
+    // Strategy 1: Look for normal footer with "+ Item / + Group" buttons
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max');
+
+    // Return the LAST matching row (bottommost)
+    let lastMatchingRow = null;
+
     for (const row of allRows) {
-      const hasAddButtons = row.querySelector('button, [role="button"]');
-      const hasItemText = row.textContent.includes('Item') && row.textContent.includes('Group');
-      if (hasAddButtons && hasItemText) {
-        return row;
+      const hasButtons = row.querySelector('button, [role="button"]');
+      if (!hasButtons) continue;
+
+      const rowText = row.textContent;
+
+      // Normal footer: has "+ Item" and "+ Group" buttons
+      const hasItemGroupButtons = rowText.includes('Item') && rowText.includes('Group') &&
+                                   row.querySelector('[role="button"].bg-gray-700');
+
+      if (hasItemGroupButtons) {
+        lastMatchingRow = row;
       }
     }
+    return lastMatchingRow;
+  }
+
+  /**
+   * Find the Reset Grouping & Filters button (when budget is filtered)
+   * @param {HTMLTextAreaElement} field
+   * @returns {HTMLElement|null}
+   */
+  function findResetFiltersButton(field) {
+    // Only check on budget page
+    if (!window.location.pathname.endsWith('/budget')) {
+      return null;
+    }
+
+    // Search the entire document for the Reset Grouping & Filters button
+    // This button only appears when budget items are filtered
+    const allButtons = document.querySelectorAll('[role="button"]');
+    for (const btn of allButtons) {
+      const text = btn.textContent || '';
+      // Check for "Reset" and either "Filter" or "Grouping"
+      if (text.includes('Reset') && (text.includes('Filter') || text.includes('Grouping'))) {
+        return btn;
+      }
+    }
+
     return null;
   }
 
@@ -1068,8 +1083,17 @@ const FormatterToolbar = (() => {
       // The footer bar with + Item / + Group is always visible at the bottom
       const scrollContainer = field.closest('.overflow-auto');
       if (scrollContainer) {
-        // Find the footer bar (+ Item / + Group row) - it's OUTSIDE the scroll container
-        // The footer bar is a sibling of the scroll container's parent
+        // Check for Reset Grouping & Filters button (filtered state)
+        // When filtering is active, hide the floating toolbar - users can use the sidebar instead
+        const resetButton = findResetFiltersButton(field);
+        if (resetButton) {
+          // Hide toolbar when budget is filtered
+          toolbar.style.visibility = 'hidden';
+          toolbar.style.opacity = '0';
+          return;
+        }
+
+        // SECOND: Find the normal footer bar (+ Item / + Group row)
         let footerBar = findBudgetFooterBar(field);
 
         // If not found inside, look for it as the last visible row with the buttons
@@ -1124,28 +1148,71 @@ const FormatterToolbar = (() => {
           toolbar.classList.remove('jt-toolbar-sticky');
           toolbar.classList.remove('jt-toolbar-budget-bottom');
           return;
-        } else {
-          // Fallback: position at bottom of viewport above scroll area
-          const containerRect = scrollContainer.getBoundingClientRect();
-          const top = containerRect.bottom - toolbarHeight - 8;
-          let left = rect.left;
-
-          // Ensure toolbar doesn't go off-screen
-          const toolbarWidth = toolbar.offsetWidth || 500;
-          const viewportWidth = window.innerWidth;
-          if (left + toolbarWidth > viewportWidth - padding) {
-            left = Math.max(padding, viewportWidth - toolbarWidth - padding);
-          }
-
-          toolbar.style.position = 'fixed';
-          toolbar.style.top = `${top}px`;
-          toolbar.style.left = `${left}px`;
-          toolbar.style.visibility = 'visible';
-          toolbar.style.opacity = '1';
-          toolbar.classList.add('jt-toolbar-budget-bottom');
-          toolbar.classList.remove('jt-toolbar-sticky');
-          return;
         }
+
+        // Fallback: footer bar not visible (filtered or scrolled away)
+        // Try to dock to the header row instead
+        const headerRow = findBudgetHeaderRow(field);
+        if (headerRow) {
+          const headerRect = headerRow.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+
+          // Check if header is visible
+          if (headerRect.bottom > containerRect.top && headerRect.top < containerRect.bottom) {
+            // Position toolbar BELOW the header row
+            const top = headerRect.bottom + 4;
+
+            // Find the Description column for horizontal alignment
+            const descCell = findDescriptionHeaderCell(headerRow);
+            let left;
+            if (descCell) {
+              const descRect = descCell.getBoundingClientRect();
+              left = descRect.left + 8;
+            } else {
+              // Fallback: align with scroll container
+              left = containerRect.left + 320; // After Name column
+            }
+
+            // Ensure toolbar doesn't go off-screen
+            const toolbarWidth = toolbar.offsetWidth || 500;
+            const viewportWidth = window.innerWidth;
+            if (left + toolbarWidth > viewportWidth - padding) {
+              left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+            }
+
+            toolbar.style.position = 'fixed';
+            toolbar.style.top = `${top}px`;
+            toolbar.style.left = `${left}px`;
+            toolbar.style.visibility = 'visible';
+            toolbar.style.opacity = '1';
+            toolbar.classList.add('jt-toolbar-header-docked');
+            toolbar.classList.remove('jt-toolbar-docked');
+            toolbar.classList.remove('jt-toolbar-sticky');
+            toolbar.classList.remove('jt-toolbar-budget-bottom');
+            return;
+          }
+        }
+
+        // Final fallback: position at bottom of scroll container
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const top = containerRect.bottom - toolbarHeight - 8;
+        let left = rect.left;
+
+        // Ensure toolbar doesn't go off-screen
+        const toolbarWidth = toolbar.offsetWidth || 500;
+        const viewportWidth = window.innerWidth;
+        if (left + toolbarWidth > viewportWidth - padding) {
+          left = Math.max(padding, viewportWidth - toolbarWidth - padding);
+        }
+
+        toolbar.style.position = 'fixed';
+        toolbar.style.top = `${top}px`;
+        toolbar.style.left = `${left}px`;
+        toolbar.style.visibility = 'visible';
+        toolbar.style.opacity = '1';
+        toolbar.classList.add('jt-toolbar-budget-bottom');
+        toolbar.classList.remove('jt-toolbar-sticky');
+        return;
       }
     }
 
@@ -1897,9 +1964,10 @@ const FormatterToolbar = (() => {
 
     clearHideTimeout();
 
-    // Budget table fields AND budget custom fields get the EXPANDED FLOATING toolbar
+    // ONLY budget table Description fields get the EXPANDED FLOATING toolbar
     // ALL OTHER fields get the EMBEDDED toolbar (compact with overflow menu)
-    const isBudgetField = isBudgetTableField(field) || isBudgetCustomField(field);
+    // This includes: sidebar fields, modal fields, Message fields, custom fields on budget page, etc.
+    const isBudgetField = isBudgetTableField(field);
 
     if (!isBudgetField) {
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
@@ -2011,7 +2079,8 @@ const FormatterToolbar = (() => {
     createToolbar,
     showToolbar,
     hideToolbar,
-    scheduleHide
+    scheduleHide,
+    embedToolbarForField
   };
 })();
 

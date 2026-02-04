@@ -422,10 +422,24 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
+   * Check if the current viewport is mobile-sized
+   * Quick Job Switcher is keyboard-driven and doesn't work well on mobile
+   */
+  function isMobileViewport() {
+    return window.innerWidth <= 768;
+  }
+
+  /**
    * Initialize the feature
    */
   function init() {
     if (isActive) {
+      return;
+    }
+
+    // Disable on mobile viewports - keyboard-driven feature doesn't work well on mobile
+    if (isMobileViewport()) {
+      console.log('SmartJobSwitcher: Disabled on mobile viewport');
       return;
     }
 

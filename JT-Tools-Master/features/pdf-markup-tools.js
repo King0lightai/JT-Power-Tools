@@ -1439,7 +1439,7 @@ const PDFMarkupToolsFeature = (() => {
       }
     });
 
-    // Structure 2: Horizontal file viewer toolbar
+    // Structure 2: Horizontal file viewer toolbar (desktop)
     // <div class="w-full bg-gray-800"> containing <div class="absolute inset-0 flex">
     const horizontalContainers = document.querySelectorAll('.w-full.bg-gray-800 .relative .absolute.inset-0.flex');
 
@@ -1452,7 +1452,6 @@ const PDFMarkupToolsFeature = (() => {
         reattachNativeButtonListeners(toolbar);
       }
     });
-
   }
 
   /**

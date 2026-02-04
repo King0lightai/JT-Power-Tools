@@ -10,10 +10,18 @@ const AutoCollapseGroupsFeature = (() => {
 
   // Detect if we're in Gantt/Schedule view or List view
   function detectViewType() {
-    // Gantt view has sticky z-10 elements with specific structure
-    const ganttHeader = document.querySelector('div.shrink-0.sticky.z-10.flex.items-center.border-b input[value*="%"]');
-    if (ganttHeader) {
-      return 'gantt';
+    // Gantt/Schedule view - rows with font-bold groups and percentage inputs
+    // Structure: div.relative.min-w-max.select-none > div.flex.min-w-max containing:
+    // - font-bold group name cell with chevron toggle
+    // - separate cell with input[value*="%"]
+    const ganttRow = document.querySelector('div.relative.min-w-max.select-none div.flex.min-w-max');
+    if (ganttRow) {
+      // Verify it has the schedule structure (% input and font-bold groups)
+      const hasPercentInput = document.querySelector('div.relative.min-w-max.select-none input[value*="%"]');
+      const hasFontBoldGroup = document.querySelector('div.relative.min-w-max.select-none .font-bold');
+      if (hasPercentInput && hasFontBoldGroup) {
+        return 'gantt';
+      }
     }
 
     // List view has group/row elements with different structure
@@ -34,18 +42,22 @@ const AutoCollapseGroupsFeature = (() => {
            path.includes('/todos');
   }
 
-  // Get all group rows in Gantt view
+  // Get all group rows in Gantt/Schedule view
   function getGanttGroupRows() {
-    // Gantt groups have a specific structure with font-bold and expand/collapse buttons
     const rows = [];
 
-    // Find rows that have the progress input field (groups show percentage)
-    const progressInputs = document.querySelectorAll('div.shrink-0.sticky.z-10 input[value*="%"]');
+    // Find all row containers
+    const rowContainers = document.querySelectorAll('div.relative.min-w-max.select-none');
 
-    progressInputs.forEach(input => {
-      // Find the parent row
-      const row = input.closest('div.flex.min-w-max');
-      if (row && !rows.includes(row)) {
+    rowContainers.forEach(container => {
+      const row = container.querySelector('div.flex.min-w-max');
+      if (!row || rows.includes(row)) return;
+
+      // Check if this is a GROUP row (has font-bold and chevron toggle)
+      const hasFontBold = row.querySelector('.font-bold');
+      const hasToggle = row.querySelector('svg path[d="m6 9 6 6 6-6"]');
+
+      if (hasFontBold && hasToggle) {
         rows.push(row);
       }
     });
@@ -73,7 +85,7 @@ const AutoCollapseGroupsFeature = (() => {
 
   // Check if a Gantt group is 100% complete
   function isGanttGroupComplete(row) {
-    // Look for the progress input with "100%" value
+    // Look for the progress input with "100%" value in this row
     const progressInput = row.querySelector('input[value="100%"]');
     return !!progressInput;
   }
@@ -104,7 +116,50 @@ const AutoCollapseGroupsFeature = (() => {
     return false;
   }
 
-  // Check if a group is currently expanded
+  // Check if a Gantt group is currently expanded
+  function isGanttGroupExpanded(row) {
+    // Gantt view uses chevron path d="m6 9 6 6 6-6"
+    // When expanded: chevron points down (no rotation)
+    // When collapsed: chevron rotated (-rotate-90)
+    const chevronPath = row.querySelector('svg path[d="m6 9 6 6 6-6"]');
+    if (chevronPath) {
+      const svg = chevronPath.closest('svg');
+      // If SVG has -rotate-90, the group is collapsed
+      if (svg && svg.classList.contains('-rotate-90')) {
+        return false;
+      }
+      return true; // Expanded (no rotation)
+    }
+    return true; // Assume expanded if we can't determine
+  }
+
+  // Collapse a Gantt group by clicking its toggle button
+  function collapseGanttGroup(row) {
+    // Find the chevron toggle button with path d="m6 9 6 6 6-6"
+    const chevronPath = row.querySelector('svg path[d="m6 9 6 6 6-6"]');
+    if (!chevronPath) {
+      return false;
+    }
+
+    // Find the toggle button (role="button" parent or tabindex="-1" parent)
+    const toggleButton = chevronPath.closest('[role="button"]') ||
+                         chevronPath.closest('[tabindex="-1"]');
+    if (!toggleButton) {
+      return false;
+    }
+
+    // Check if the group is expanded (no -rotate-90 class)
+    const svg = chevronPath.closest('svg');
+    if (svg && svg.classList.contains('-rotate-90')) {
+      return false; // Already collapsed
+    }
+
+    // Click to collapse
+    toggleButton.click();
+    return true;
+  }
+
+  // Check if a List group is currently expanded
   function isGroupExpanded(row) {
     // Look for the expand/collapse chevron button
     // Expanded: has rotate-90 class
@@ -114,32 +169,18 @@ const AutoCollapseGroupsFeature = (() => {
       const svg = chevron.closest('svg');
       return svg && svg.classList.contains('rotate-90');
     }
-
-    // Gantt view uses different chevron path
-    const ganttChevron = row.querySelector('svg path[d="m6 9 6 6 6-6"]');
-    if (ganttChevron) {
-      // In Gantt, check if children are visible
-      return true; // Gantt groups are expanded by default
-    }
-
     return true; // Assume expanded if we can't determine
   }
 
-  // Collapse a group by clicking its toggle button
+  // Collapse a List group by clicking its toggle button
   function collapseGroup(row) {
-    // Find the expand/collapse button
+    // Find the expand/collapse button for list view
     const toggleButton = row.querySelector('div[role="button"] svg path[d="m9 18 6-6-6-6"]')?.closest('[role="button"]') ||
                          row.querySelector('button svg path[d="m9 18 6-6-6-6"]')?.closest('button') ||
                          row.querySelector('[tabindex="-1"][role="button"]:has(svg path[d="m9 18 6-6-6-6"])') ||
                          row.querySelector('div[tabindex="-1"][role="button"] svg.transition')?.closest('[role="button"]');
 
     if (!toggleButton) {
-      // Try Gantt view toggle button
-      const ganttToggle = row.querySelector('div[role="button"] svg path[d="m6 9 6 6 6-6"]')?.closest('[role="button"]');
-      if (ganttToggle) {
-        ganttToggle.click();
-        return true;
-      }
       return false;
     }
 
@@ -168,8 +209,8 @@ const AutoCollapseGroupsFeature = (() => {
     if (viewType === 'gantt') {
       const groups = getGanttGroupRows();
       groups.forEach(row => {
-        if (isGanttGroupComplete(row) && isGroupExpanded(row)) {
-          if (collapseGroup(row)) {
+        if (isGanttGroupComplete(row) && isGanttGroupExpanded(row)) {
+          if (collapseGanttGroup(row)) {
             collapsedCount++;
           }
         }
@@ -229,7 +270,10 @@ const AutoCollapseGroupsFeature = (() => {
               if (node.classList?.contains('group/row') ||
                   node.querySelector?.('.group\\/row') ||
                   node.querySelector?.('[class*="group/row"]') ||
-                  node.querySelector?.('input[value*="%"]')) {
+                  node.querySelector?.('input[value*="%"]') ||
+                  // Gantt view: relative min-w-max containers with font-bold groups
+                  (node.classList?.contains('relative') && node.classList?.contains('min-w-max')) ||
+                  node.querySelector?.('div.relative.min-w-max.select-none')) {
                 significantChange = true;
                 break;
               }

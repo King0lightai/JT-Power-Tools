@@ -7,37 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [3.5.4] - 2026-02-03 (Beta)
+
+### Added
+
+#### Kanban Task Checkboxes
+- Added completion checkboxes to Kanban task cards (To-Dos and Schedule views)
+- Click checkbox to toggle task completion without opening the full task details
+- Works seamlessly with existing calendar view task checkboxes
+- Opens sidebar in background to toggle progress, then automatically closes
+- Visual feedback with loading state and completion notifications
+
 ### Improved
 
-#### Mobile Responsiveness
+#### Text Formatter Consistency
+- **Budget table**: Floating expanded toolbar now ONLY appears for budget table Description fields
+- **All other fields**: Now use embedded compact toolbar (including custom fields on budget page, sidebar fields, messages, etc.)
+- **Budget table custom fields**: Internal Notes, custom text fields, and other non-Description fields in the budget table now correctly get NO toolbar (neither embedded nor floating)
+- **Filtered budget view**: Floating toolbar is now hidden when cost items are filtered (use the Cost Item Details sidebar to edit descriptions when filtering)
+- Embedded toolbars now appear on page load, not just on focus
+- Removed redundant `isBudgetCustomField()` logic that was incorrectly giving floating toolbar to non-table fields
 
-##### Quick Notes Panel
+#### Mobile Support Foundation
+- Increased mobile support functionality for future versions of the extension
 - Quick Notes side panel now takes full screen width on mobile devices (max-width: 768px)
 - Added back button to navigate from note editor back to notes list on mobile
 - Panel layout switches from side-by-side to stacked (vertical) on mobile
-- Fixed notes appearing out of view when opened on mobile devices
-
-##### Freeze Header Mobile Handling
-- Disabled Freeze Header feature on mobile viewports (max-width: 768px)
-- Mobile devices now use JobTread's native layout without sticky header modifications
-- Prevents visual glitches and inconsistent positioning on mobile devices
-- Feature remains fully functional on desktop and tablet viewports
+- Quick Job Switcher now auto-disables on mobile viewports (≤768px) - keyboard-driven feature doesn't work well on mobile
+- Fixed Auto Collapse Completed Groups to work on both desktop and mobile Schedule/Gantt views
+- Freeze Header now works on mobile viewports when navigation bar is visible
 
 ### Fixed
+
+#### Freeze Header Sidebar Cutoff (Known Issue - Not Yet Fixed)
+- **Issue**: When freeze header is active and user is at the top of the page, opening a sidebar (Update Task, Task Details) causes the bottom portion to be cut off
+- **Root cause**: JobTread dynamically sets `max-height` and `top` on sidebar elements via JavaScript as the user scrolls
+- **Workaround**: User can scroll down slightly on the main page to bring the full sidebar into view
 
 #### Message Templates Dropdown Positioning
 - Fixed templates dropdown appearing off-screen in sidebar message forms
 - Dropdown now uses fixed positioning and calculates optimal placement
 - Opens above or below the button depending on available viewport space
-- Horizontal position adjusts to stay within viewport bounds
-
-### Changed
-
-#### Documentation
-- Updated pricing section on website to clarify monthly subscription model
-- Changed price labels from "/company" to "/mo" format ($10/mo, $20/mo, $30/mo)
-- Emphasized "ONE SUBSCRIPTION, UNLIMITED USERS" messaging
-- Added "Cancel anytime" and "no hidden costs" clarifications
 
 ---
 

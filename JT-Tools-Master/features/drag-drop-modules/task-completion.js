@@ -6,7 +6,7 @@ const TaskCompletion = (() => {
   const processedTasks = new WeakSet();
 
   /**
-   * Add completion checkbox to all task cards
+   * Add completion checkbox to all task cards (calendar view)
    */
   function addCompletionCheckboxes() {
     // Get selectors based on current view (normal or availability)
@@ -56,6 +56,196 @@ const TaskCompletion = (() => {
       // Add click handler
       checkbox.addEventListener('click', (e) => handleCheckboxClick(e, item, checkbox));
     });
+
+    // Also add checkboxes to Kanban task cards
+    addKanbanCheckboxes();
+  }
+
+  /**
+   * Add completion checkboxes to Kanban task cards
+   * Kanban cards have a different structure than calendar tasks
+   */
+  function addKanbanCheckboxes() {
+    // Kanban task cards have cursor-[grab] class and contain a role="button" header
+    const kanbanCards = document.querySelectorAll('div.cursor-\\[grab\\]');
+
+    kanbanCards.forEach(card => {
+      // Skip if already processed
+      if (processedTasks.has(card)) {
+        return;
+      }
+
+      // Find the clickable header area (role="button" with task name)
+      const headerButton = card.querySelector('div[role="button"]');
+      if (!headerButton) {
+        return;
+      }
+
+      // Find the task name container (div with grow min-w-0 truncate containing strong)
+      const taskNameDiv = headerButton.querySelector('div.grow.min-w-0.truncate');
+      if (!taskNameDiv) {
+        return;
+      }
+
+      // Check if checkbox already exists
+      if (headerButton.querySelector('.jt-complete-checkbox')) {
+        return;
+      }
+
+      // Detect if task is already complete by looking for checkmark in task name
+      const isComplete = isKanbanTaskComplete(taskNameDiv);
+
+      // Create checkbox button with current completion status
+      const checkbox = createCheckboxButton(isComplete);
+      // Adjust styling for Kanban cards
+      checkbox.style.marginRight = '8px';
+      checkbox.style.flexShrink = '0';
+
+      // Insert checkbox at the beginning of the header button (before task name)
+      headerButton.insertBefore(checkbox, headerButton.firstChild);
+
+      // Mark as processed
+      processedTasks.add(card);
+
+      // Add click handler - use the card element for opening sidebar
+      checkbox.addEventListener('click', (e) => handleKanbanCheckboxClick(e, card, headerButton, checkbox));
+    });
+  }
+
+  /**
+   * Detect if a Kanban task is complete by looking for the checkmark icon
+   * @param {HTMLElement} taskNameDiv - The task name container element
+   * @returns {boolean} True if task is complete
+   */
+  function isKanbanTaskComplete(taskNameDiv) {
+    // Look for the checkmark SVG path in the task name
+    // Completed tasks have: <path d="M20 6 9 17l-5-5"></path>
+    const checkmarkPath = taskNameDiv.querySelector('path[d="M20 6 9 17l-5-5"]');
+    return !!checkmarkPath;
+  }
+
+  /**
+   * Handle Kanban checkbox click
+   * @param {Event} e - The click event
+   * @param {HTMLElement} card - The Kanban card element
+   * @param {HTMLElement} headerButton - The clickable header button
+   * @param {HTMLElement} checkbox - The checkbox button element
+   */
+  function handleKanbanCheckboxClick(e, card, headerButton, checkbox) {
+    // Prevent event propagation to avoid triggering drag or opening sidebar
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Detect current completion state
+    const taskNameDiv = headerButton.querySelector('div.grow.min-w-0.truncate');
+    const wasComplete = isKanbanTaskComplete(taskNameDiv);
+
+    // Show a loading state
+    checkbox.style.opacity = '0.5';
+    checkbox.style.pointerEvents = 'none';
+
+    // Open sidebar to access the progress controls
+    toggleKanbanTaskCompletion(headerButton, checkbox, wasComplete);
+  }
+
+  /**
+   * Toggle Kanban task completion by opening sidebar and clicking the progress checkbox
+   * @param {HTMLElement} headerButton - The clickable header button element
+   * @param {HTMLElement} checkbox - The checkbox button that was clicked
+   * @param {boolean} wasComplete - Whether the task was complete before clicking
+   */
+  function toggleKanbanTaskCompletion(headerButton, checkbox, wasComplete) {
+    // Inject CSS to hide sidebar
+    const hideStyle = window.SidebarManager ? window.SidebarManager.injectHideSidebarCSS() : null;
+
+    // Failsafe: Remove CSS after 5 seconds no matter what
+    const failsafeTimeout = setTimeout(() => {
+      if (window.SidebarManager) {
+        window.SidebarManager.removeSidebarCSS();
+      }
+      // Restore checkbox
+      checkbox.style.opacity = '';
+      checkbox.style.pointerEvents = '';
+    }, 5000);
+
+    // Click the header button to open sidebar (not the whole card, just the button)
+    headerButton.click();
+
+    // Wait for sidebar to open
+    setTimeout(() => {
+      const sidebar = document.querySelector('div.overflow-y-auto.overscroll-contain.sticky');
+
+      if (sidebar) {
+        // Find the Progress section
+        const progressCheckbox = findProgressCheckbox(sidebar);
+
+        if (progressCheckbox) {
+          // Click the checkbox to toggle completion
+          progressCheckbox.click();
+
+          // Wait a bit for the change to register
+          setTimeout(() => {
+            // Close the sidebar
+            if (window.SidebarManager) {
+              window.SidebarManager.closeSidebar(failsafeTimeout, () => {
+                // Update checkbox visual state (toggle from previous state)
+                const newCompletionState = !wasComplete;
+                updateCheckboxState(checkbox, newCompletionState);
+
+                // Restore checkbox
+                checkbox.style.opacity = '';
+                checkbox.style.pointerEvents = '';
+
+                // Show notification
+                if (window.UIUtils) {
+                  const statusText = newCompletionState ? 'completed' : 'marked incomplete';
+                  window.UIUtils.showNotification(`Task ${statusText}`);
+                }
+              });
+            } else {
+              // Manual close if SidebarManager not available
+              clearTimeout(failsafeTimeout);
+              if (hideStyle) hideStyle.remove();
+
+              // Update checkbox visual state
+              const newCompletionState = !wasComplete;
+              updateCheckboxState(checkbox, newCompletionState);
+
+              checkbox.style.opacity = '';
+              checkbox.style.pointerEvents = '';
+            }
+          }, 300);
+        } else {
+          console.error('TaskCompletion: Could not find progress checkbox in sidebar');
+          // Close sidebar and restore
+          if (window.SidebarManager) {
+            window.SidebarManager.closeSidebar(failsafeTimeout, () => {
+              checkbox.style.opacity = '';
+              checkbox.style.pointerEvents = '';
+            });
+          } else {
+            clearTimeout(failsafeTimeout);
+            if (hideStyle) hideStyle.remove();
+            checkbox.style.opacity = '';
+            checkbox.style.pointerEvents = '';
+          }
+
+          if (window.UIUtils) {
+            window.UIUtils.showNotification('Could not find progress checkbox');
+          }
+        }
+      } else {
+        console.error('TaskCompletion: Sidebar did not open');
+        clearTimeout(failsafeTimeout);
+        if (hideStyle) hideStyle.remove();
+        checkbox.style.opacity = '';
+        checkbox.style.pointerEvents = '';
+
+        if (window.UIUtils) {
+          window.UIUtils.showNotification('Sidebar did not open');
+        }
+      }
+    }, 500);
   }
 
   /**

@@ -340,6 +340,14 @@ const FormatterFeature = (() => {
         field.addEventListener('keyup', () => handleFieldKeyup(field), { signal });
         // Use select event for more reliable cursor/selection change detection
         field.addEventListener('select', () => handleFieldSelectionChange(field), { signal });
+
+        // Pre-create embedded toolbar for non-budget-table fields
+        // This makes the toolbar visible on page load, not just on focus
+        if (Toolbar().embedToolbarForField) {
+          // embedToolbarForField returns null for budget table fields
+          // so this only creates toolbars for sidebar, message, daily log fields, etc.
+          Toolbar().embedToolbarForField(field);
+        }
       }
     });
   }
