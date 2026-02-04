@@ -1738,6 +1738,16 @@ const CharacterCounterFeature = (() => {
    * @returns {boolean}
    */
   function isMessageTextarea(field) {
+    // Exclude "Send Us A Message" support form - this is JobTread's internal support form
+    // Look for the orange header text that says "Send Us A Message"
+    const form = field.closest('form');
+    if (form) {
+      const orangeHeader = form.querySelector('.text-jtOrange.font-bold.uppercase');
+      if (orangeHeader && orangeHeader.textContent.toLowerCase().includes('send us a message')) {
+        return false;
+      }
+    }
+
     // Check placeholder
     const placeholder = (field.placeholder || '').toLowerCase();
     if (placeholder === 'message') return true;
