@@ -53,10 +53,12 @@ const FormatterDetection = (() => {
     }
 
     // Now check if inside COST ITEM DETAILS sidebar
+    // Look for the sidebar header - check case-insensitively since text may be "Cost Item Details"
     let container = textarea.parentElement;
     while (container && container !== document.body) {
-      const textContent = container.textContent || '';
-      if (textContent.includes('COST ITEM DETAILS')) {
+      // Look for the orange header specifically to avoid matching text inside textarea
+      const header = container.querySelector('.text-jtOrange.font-bold.uppercase');
+      if (header && header.textContent.toLowerCase().includes('cost item details')) {
         return true;
       }
       container = container.parentElement;
