@@ -247,107 +247,110 @@ POWER ORANGE       #ea580c    ████████  (Power User tier)
 
 ---
 
-### SCENE 4: QUICK JOB SWITCHER (0:14 - 0:22)
+### SCENE 4: TEXT FORMATTER (0:14 - 0:22)
 
 **Visual:**
-- User's hands on keyboard (real footage or 3D render)
-- Keys "J" and "S" glow orange
-- User presses J+S
-- Sleek sidebar WHOOSHES in from left
-- Search field auto-focuses
-- User types "Oak" → instant results filter
-- Click on job → instant navigation
+- Empty text field in JobTread daily log or budget description
+- Rich formatting toolbar SLIDES in above the field
+- Rapid-fire demonstration showing the POWER:
+  - Type some text → Select it → Click Bold (text transforms)
+  - Add a heading with one click
+  - Insert a table (cells animate in row by row)
+  - Add a colored alert/warning box
+  - Create a bulleted list
+  - Insert a hyperlink
 
 **Motion:**
-- Keyboard keys have orange backlight pulse
-- Sidebar slides in with glass blur effect
-- Search results animate in staggered (50ms delay each)
-- Selected job scales up slightly before navigation
+- Toolbar icons light up with orange glow on hover
+- Each formatting action has satisfying micro-animation
+- Text transforms are instant and snappy
+- Final result: blur-to-sharp "reveal" showing beautiful formatted text
 
 **Text Overlays:**
-- "J + S" (keyboard shortcut callout, typewriter style)
-- "QUICK JOB SWITCHER" (feature title)
-- "Instant access to any project"
+- "TEXT FORMATTER" (large, bold)
+- Icon strip showing: Bold, Italic, Tables, Colors, Links, Alerts, Lists
+- "Professional documentation in seconds"
 
-**Audio:** Mechanical key press → Whoosh → Typing sounds → Selection click
+**Audio:** Rapid UI clicks in rhythm with music beat - each click syncs to drums
 
 **Duration:** 8 seconds
 
-**Purpose:** Showcase the POWER USER experience - keyboard shortcuts are impressive
+**Purpose:** This is a WORKHORSE feature - show how much it can do
 
 ---
 
-### SCENE 5: TEXT FORMATTER SPEED RUN (0:22 - 0:30)
+### SCENE 5: SCHEDULE & TO-DO CHECKBOXES (0:22 - 0:30)
 
 **Visual:**
-- Empty text field in JobTread
-- Toolbar appears above
-- Rapid-fire demonstration:
-  - Click Bold → text bolds
-  - Select text → Add heading
-  - Insert table (cells animate in)
-  - Add colored alert box
-  - Insert link
+- Month schedule view with multiple tasks visible
+- Camera zooms slightly to focus on task row
+- User hovers over task → Checkbox appears
+- CLICK - Checkbox ticks with satisfying animation
+- Task visually marks as complete (strikethrough or fade)
+- Quick cut to: Action Items card view
+- Same satisfying checkbox interaction
+- Multiple checkboxes getting ticked in rapid succession
 
 **Motion:**
-- Toolbar icons have hover states
-- Each formatting action has micro-animation
-- Final formatted text has "reveal" moment (blur to sharp)
+- Checkbox tick animation: scale pop (1.0 → 1.2 → 1.0) + checkmark draws in
+- Orange ripple effect emanates from checkbox
+- Completed tasks have subtle fade/strikethrough animation
+- Rapid-fire completion montage at end (3-4 tasks in 2 seconds)
 
 **Text Overlays:**
-- "TEXT FORMATTER"
-- Icons for: Bold, Italic, Tables, Colors, Links, Alerts
-- "Professional formatting in seconds"
+- "SCHEDULE CHECKBOXES" (feature title)
+- "Complete tasks without leaving the calendar"
+- Small callout: "Works on Action Items too!"
 
-**Audio:** Rapid UI clicks in rhythm with music beat
+**Audio:** Satisfying "tick" sound for each completion - builds into rhythmic pattern
 
 **Duration:** 8 seconds
 
-**Purpose:** Show the DEPTH of features - this isn't just one tool
+**Purpose:** Show the SATISFACTION of quick task completion - this is dopamine fuel
 
 ---
 
-### SCENE 6: FEATURE MONTAGE - RAPID FIRE (0:30 - 0:40)
+### SCENE 6: FEATURE MONTAGE - RAPID FIRE (0:30 - 0:38)
 
-**Visual:** Quick cuts between features (1.5 seconds each):
+**Visual:** Quick cuts between features (1.3 seconds each):
 
 1. **Budget Hierarchy Shading**
-   - Nested budget items cascade with progressive orange tints
-   - "See your budget structure at a glance"
+   - Nested budget items cascade with progressive orange/gray tints
+   - 5 levels of depth visually distinct
+   - "See structure at a glance"
 
-2. **Schedule Checkboxes**
-   - Task checkbox ticks with satisfying animation
-   - "Complete tasks without leaving the calendar"
-
-3. **Quick Notes**
-   - Ctrl+Shift+N → Note panel slides in
-   - Markdown preview shows formatted text
+2. **Quick Notes**
+   - Ctrl+Shift+N keystroke shown
+   - Note panel slides in from edge
+   - User types, markdown renders live
    - "Your ideas, always accessible"
 
-4. **Custom Themes**
-   - Color picker interaction
-   - Interface shifts to custom purple/teal theme
+3. **Custom Themes**
+   - Color picker wheel interaction
+   - Interface morphs to custom purple/teal theme
    - "Make it yours"
 
-5. **Kanban Filter**
-   - Empty columns collapse/hide
-   - "Focus on what matters"
-
-6. **Freeze Header**
-   - User scrolls, header stays pinned
+4. **Freeze Header**
+   - User scrolls down a long page
+   - Job header stays pinned at top
    - "Never lose your place"
 
-**Motion:** Each feature has signature micro-animation, cut on beat
+5. **Kanban Filter**
+   - Cluttered Kanban board with empty columns
+   - Toggle flip → Empty columns collapse away
+   - "Focus on what matters"
 
-**Audio:** Music builds through section, each cut syncs to drum hit
+**Motion:** Each feature has signature micro-animation, cuts sync perfectly to beat
 
-**Duration:** 10 seconds
+**Audio:** Music builds through section, each cut lands on drum hit
 
-**Purpose:** Show BREADTH - there's so much value here
+**Duration:** 8 seconds
+
+**Purpose:** Show BREADTH - there's a tool for everything
 
 ---
 
-### SCENE 7: THE FREE REVEAL (0:40 - 0:45)
+### SCENE 7: THE FREE REVEAL (0:38 - 0:42)
 
 **Visual:**
 - 7 feature icons arranged in grid
@@ -365,112 +368,150 @@ POWER ORANGE       #ea580c    ████████  (Power User tier)
 - "FREE"
 - "No license required"
 
-**Audio:** Music drops out → Beat drop → Crowd "oh!" sound (subtle)
+**Audio:** Music drops out → Beat drop → Satisfying bass hit
 
-**Duration:** 5 seconds
+**Duration:** 4 seconds
 
 **Purpose:** The value proposition - FREE is the hook
 
 ---
 
-### SCENE 8: TIER REVEAL (0:45 - 0:52)
+### SCENE 8: THE WOW MOMENT - CUSTOM FIELD FILTER (0:42 - 0:50)
 
 **Visual:**
-- Three tier cards slide in:
-  - ESSENTIAL (Teal) - $10/company
-  - PRO (Purple) - $20/company
-  - POWER USER (Orange) - $30/company
-
-- Each card has feature icons below
-- "$XX/company - not per user" text pulses
+- Text: "But wait..." (subtle, builds anticipation)
+- Job Switcher sidebar is open with long list of jobs
+- User clicks filter icon → Custom Field Filter panel expands
+- Dropdown shows custom fields from their JobTread: "Project Manager", "Region", "Job Type"
+- User selects "Region" → picks "Northwest"
+- INSTANTLY: Job list filters to only Northwest region jobs
+- User switches filter to "Project Manager: Sarah" → List updates again
+- Final shot: Clean, filtered list showing exactly what they need
 
 **Motion:**
-- Cards slide up staggered (100ms delay)
+- Filter panel slides out with glass blur effect
+- Dropdown options cascade in (staggered 30ms)
+- Job list items that don't match SHRINK and fade out (satisfying)
+- Matching items SCALE UP slightly then settle
+- Orange highlight pulses on filtered results
+
+**Text Overlays:**
+- "CUSTOM FIELD FILTER" (feature title with Power User badge)
+- "Filter jobs by ANY custom field"
+- "API-powered intelligence"
+- Small badge: "POWER USER" (orange glow)
+
+**Audio:**
+- Anticipation build ("But wait...")
+- Filter activation: Satisfying "whoosh-click"
+- List filtering: Quick shuffle sound
+- Landing: Confident bass note
+
+**Duration:** 8 seconds
+
+**Purpose:** THIS IS THE WOW - Show the POWER of premium features. This solves a real pain point for companies with many jobs. The instant filtering is visually impressive and immediately understood.
+
+---
+
+### SCENE 9: TIER REVEAL (0:50 - 0:55)
+
+**Visual:**
+- Three tier cards slide in from bottom:
+  - ESSENTIAL (Teal) - $10/company
+  - PRO (Purple) - $20/company
+  - POWER USER (Orange) - $30/company - highlighted/glowing (callback to Custom Field Filter)
+
+- Each card has key feature icons below
+- "$XX/company - not per user" emphasized
+
+**Motion:**
+- Cards slide up staggered (100ms delay each)
 - Tier badges have glossy shine animation
-- Price has subtle glow
+- Power User card has extra glow (just showed that feature!)
+- Price has subtle pulse
 
 **Text:**
 - Tier names and prices
 - "One license. Whole company."
-- Feature counts per tier
+- "Unlock more power →"
 
-**Audio:** Three ascending tones for each tier, cash register subtle sound
+**Audio:** Three ascending tones for each tier
 
-**Duration:** 7 seconds
+**Duration:** 5 seconds
 
-**Purpose:** Clear pricing, emphasize company-wide value
-
----
-
-### SCENE 9: SOCIAL PROOF (0:52 - 0:55)
-
-**Visual:**
-- Chrome Web Store badge
-- Star rating animation (5 stars fill in)
-- User count number ticks up
-- Small review quotes fade in/out
-
-**Motion:**
-- Stars fill with orange glow
-- Numbers count up (odometer style)
-
-**Text:**
-- "Trusted by construction pros"
-- Star rating
-- Install count
-
-**Audio:** Soft approval sounds, gentle chime
-
-**Duration:** 3 seconds
+**Purpose:** Clear pricing, emphasize company-wide value, Power User tier gets extra attention
 
 ---
 
 ### SCENE 10: CALL TO ACTION (0:55 - 1:00)
 
 **Visual:**
-- Dark background
-- Chrome Web Store button (full color, prominent)
+- Dark background with subtle orange particle ambient
+- Chrome Web Store button (full color, prominent, centered)
 - Button pulses with orange glow
-- QR code appears for mobile viewers (optional)
-- Logo and tagline
+- Logo above, tagline below
+- Star rating and user count fade in subtly
 
 **Motion:**
 - Button has magnetic hover effect
-- Cursor moves to button
-- Click animation
-- Final logo pulse
+- Cursor moves to button with orange trail
+- Click animation with ripple
+- Final logo pulse and hold
 
 **Text:**
 - "GET IT FREE"
 - "Chrome Web Store"
 - "JT Power Tools - Supercharge Your JobTread"
-- Website URL
+- Star rating badge
 
-**Audio:** Final confident chord, satisfying click
+**Audio:** Final confident chord, satisfying click, music resolves
 
 **Duration:** 5 seconds
 
-**Purpose:** Clear, unmistakable CTA
+**Purpose:** Clear, unmistakable CTA - make it EASY to take action
 
 ---
 
 ## ALTERNATIVE CUTS
 
 ### 30-Second Version (Social Media)
-- Scene 1: Hook (3s)
+- Scene 1: Hook (2s)
 - Scene 2: Logo (2s)
-- Scene 3: Dark Mode (4s)
-- Scene 4: Quick Job Switcher (5s)
-- Scene 6: Feature montage - 4 features only (6s)
-- Scene 7: FREE reveal (4s)
+- Scene 3: Dark Mode transformation (4s)
+- Scene 5: Schedule Checkboxes - quick version (4s)
+- Scene 4: Text Formatter highlights (4s)
+- Scene 7: FREE reveal (3s)
+- Scene 8: Custom Field Filter teaser (5s)
 - Scene 10: CTA (6s)
 
 ### 15-Second Version (Pre-roll Ad)
-- Hook: Split screen (2s)
-- Dark Mode transformation (4s)
-- Feature icons rapid flash (3s)
-- "7 FREE FEATURES" (3s)
+- Hook: Split screen frustration vs power (2s)
+- Dark Mode transformation (3s)
+- Checkboxes ticking rapidly (2s)
+- "7 FREE FEATURES" slam (3s)
+- Custom Field Filter quick tease (2s)
 - CTA with Chrome button (3s)
+
+### Feature-Specific Cuts (for targeted ads)
+
+**"Dark Mode" Cut (15s)**
+- Pain: Blinding white JobTread (2s)
+- Toggle flip → Beautiful dark transformation (5s)
+- "Easy on your eyes" text (2s)
+- FREE badge + CTA (6s)
+
+**"Checkboxes" Cut (15s)**
+- Pain: Clicking through to complete tasks (2s)
+- Checkbox appears → Satisfying tick (4s)
+- Rapid completion montage (3s)
+- FREE badge + CTA (6s)
+
+**"Power User" Cut (20s) - for retargeting**
+- "Already using JT Power Tools?" (2s)
+- Custom Field Filter demo (8s)
+- "Unlock the full power" (2s)
+- Tier cards with Power User highlighted (4s)
+- CTA (4s)
 
 ---
 
