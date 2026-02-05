@@ -4,7 +4,7 @@
 
 **JT Power Tools** transforms JobTread from good to incredible. Rich text formatting, dark mode, keyboard shortcuts, and workflow automation—all designed by contractors, for contractors.
 
-**All licenses are company-wide. One purchase covers your entire team.**
+**All licenses are company-wide. One monthly subscription covers your entire team.**
 
 - **Platform:** Chrome Extension (Manifest V3)
 - **Target:** JobTread web app (`app.jobtread.com`)
@@ -218,7 +218,7 @@ Keep table headers visible while scrolling through large datasets.
 
 ### Activate Premium Features
 
-1. Purchase a license at [Gumroad](https://lightking7.gumroad.com/l/jtpowertools)
+1. Subscribe to a license at [Gumroad](https://lightking7.gumroad.com/l/jtpowertools)
 2. Open the extension popup
 3. Scroll to the "Premium License" section
 4. Enter your license key and click "Verify"
@@ -234,7 +234,7 @@ Keep table headers visible while scrolling through large datasets.
 | Feature Guides | [Installation Guide](https://king0lightai.github.io/JT-Power-Tools/guides/installation.html) |
 | Report Issues | [GitHub Issues](https://github.com/King0lightai/JT-Power-Tools/issues) |
 | Changelog | [Version History](https://king0lightai.github.io/JT-Power-Tools/changelog.html) |
-| Purchase License | [Gumroad](https://lightking7.gumroad.com/l/jtpowertools) |
+| Subscribe | [Gumroad](https://lightking7.gumroad.com/l/jtpowertools) |
 
 ---
 
@@ -242,7 +242,7 @@ Keep table headers visible while scrolling through large datasets.
 
 All JT Power Tools licenses are **company-wide**:
 
-- One purchase covers your entire JobTread organization
+- One monthly subscription covers your entire JobTread organization
 - Team members verify access with their own JobTread Grant Key
 - "Proof of Org" security ensures only legitimate team members can use the license
 - No per-seat fees or user limits

@@ -79,7 +79,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ---
 
-### 📦 ESSENTIAL TIER ($10/company)
+### 📦 ESSENTIAL TIER ($10/mo per company)
 
 #### ⚡ Smart Job Switcher
 - Keyboard shortcuts (J+S or Alt+J) to instantly open job switcher
@@ -115,7 +115,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ---
 
-### ⭐ PRO TIER ($20/company)
+### ⭐ PRO TIER ($20/mo per company)
 
 #### 📅 Schedule & Task Checkboxes
 - Checkboxes added to task cards in month schedule view for instant task completion
@@ -146,7 +146,7 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 
 ---
 
-### 🚀 POWER USER TIER ($30/company)
+### 🚀 POWER USER TIER ($30/mo per company)
 
 #### 🔍 Custom Field Filter
 - Filter jobs by custom field values in the Job Switcher
@@ -262,7 +262,7 @@ Works immediately after installation - no signup needed:
 - **Kanban Type Filter** - Auto-hide empty columns
 - **Auto Collapse Groups** - Collapse completed groups
 
-### 💼 Essential ($10/company)
+### 💼 Essential ($10/mo per company)
 Perfect for teams wanting productivity tools:
 - Everything in FREE, plus:
 - **Quick Notes** - Persistent notepad with markdown & sync
@@ -270,14 +270,14 @@ Perfect for teams wanting productivity tools:
 - **Freeze Header** - Sticky table headers
 - **PDF Markup Tools** - Stamp selector & eraser
 
-### ⭐ Pro ($20/company)
+### ⭐ Pro ($20/mo per company)
 For power users who want customization:
 - Everything in Essential, plus:
 - **Schedule & Task Checkboxes** - Instant task completion from calendar
 - **Custom Theme** - Personalize with your own color palette
 - **Preview Mode** - Live markdown preview panel
 
-### 🚀 Power User ($30/company)
+### 🚀 Power User ($30/mo per company)
 For teams leveraging AI and advanced features:
 - Everything in Pro, plus:
 - **Custom Field Filter** - API-powered job filtering
@@ -287,10 +287,10 @@ For teams leveraging AI and advanced features:
 
 **⚠️ Important:** Paid features ONLY work with the [Chrome Web Store version](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn).
 
-**💼 Company Licensing:** Purchase **one license per company** and share with all employees!
+**💼 Company Licensing:** One monthly subscription per company — share the license key with all employees!
 
 1. Install from [Chrome Web Store](https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn)
-2. Purchase a license from [Gumroad](https://gumroad.com/l/jtpowertools)
+2. Subscribe to a license from [Gumroad](https://gumroad.com/l/jtpowertools)
 3. Open the extension popup → License section
 4. Enter your license key and click "Activate"
 5. Share the key with your team
