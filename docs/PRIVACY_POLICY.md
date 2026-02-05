@@ -21,7 +21,7 @@ JT Power Tools ("the Extension") is committed to protecting your privacy. This P
 
 **All Extension settings are stored locally in your browser using Chrome's sync storage:**
 - Feature toggle states (on/off)
-- License key (if you purchase premium features)
+- License key (if you subscribe to premium features)
 - Dark mode preference
 - User preferences
 
@@ -33,7 +33,7 @@ JT Power Tools ("the Extension") is committed to protecting your privacy. This P
 
 ## Premium License Verification
 
-**If you purchase premium features:**
+**If you subscribe to premium features:**
 - Your license key is verified with Gumroad's servers (not ours)
 - Only your license key is sent to Gumroad for verification
 - Gumroad may collect information according to their privacy policy: https://gumroad.com/privacy
@@ -70,7 +70,7 @@ The Extension requests the following Chrome permissions:
 - Used for: Premium license verification
 - Data shared: License key only
 - Privacy Policy: https://gumroad.com/privacy
-- Note: Only used if you purchase premium features
+- Note: Only used if you subscribe to premium features
 
 ## How We Use Permissions
 
@@ -110,7 +110,7 @@ We may update this Privacy Policy from time to time. Changes will be reflected i
 You have the right to:
 - View all data stored by the Extension (Chrome DevTools → Application → Storage)
 - Delete all Extension data (uninstall the Extension)
-- Opt out of premium features (simply don't purchase a license)
+- Opt out of premium features (simply don't subscribe)
 - Request information about data practices (contact us)
 
 ## Open Source
