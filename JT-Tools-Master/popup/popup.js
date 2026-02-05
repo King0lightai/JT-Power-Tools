@@ -97,6 +97,7 @@ const defaultSettings = {
   characterCounter: false,
   kanbanTypeFilter: false,
   autoCollapseGroups: false,
+  availabilityFilter: false,
   pdfMarkupTools: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
@@ -294,6 +295,8 @@ async function checkLicenseStatus() {
   const rgbThemeCheckbox = document.getElementById('rgbTheme');
   const previewModeFeature = document.getElementById('previewModeFeature');
   const previewModeCheckbox = document.getElementById('previewMode');
+  const availabilityFilterFeature = document.getElementById('availabilityFilterFeature');
+  const availabilityFilterCheckbox = document.getElementById('availabilityFilter');
 
   // ESSENTIAL tier features (require Essential, Pro, or Power User)
   const quickNotesFeature = document.getElementById('quickNotesFeature');
@@ -332,6 +335,8 @@ async function checkLicenseStatus() {
       if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = false;
       previewModeFeature?.classList.remove('locked');
       if (previewModeCheckbox) previewModeCheckbox.disabled = false;
+      availabilityFilterFeature?.classList.remove('locked');
+      if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = false;
     } else {
       // Essential tier - lock PRO features
       dragDropFeature?.classList.add('locked');
@@ -340,6 +345,8 @@ async function checkLicenseStatus() {
       if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = true;
       previewModeFeature?.classList.add('locked');
       if (previewModeCheckbox) previewModeCheckbox.disabled = true;
+      availabilityFilterFeature?.classList.add('locked');
+      if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = true;
 
       // Add upgrade hint for Essential users
       statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for more features`;
@@ -387,6 +394,8 @@ async function checkLicenseStatus() {
     if (rgbThemeCheckbox) rgbThemeCheckbox.disabled = true;
     previewModeFeature?.classList.add('locked');
     if (previewModeCheckbox) previewModeCheckbox.disabled = true;
+    availabilityFilterFeature?.classList.add('locked');
+    if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = true;
 
     // Lock ESSENTIAL features (require license)
     quickNotesFeature?.classList.add('locked');
@@ -490,6 +499,7 @@ async function loadSettings() {
     setCheckbox('dragDrop', hasProFeatures && settings.dragDrop);
     setCheckbox('previewMode', hasProFeatures && settings.previewMode);
     setCheckbox('rgbTheme', hasProFeatures && settings.rgbTheme);
+    setCheckbox('availabilityFilter', hasProFeatures && (settings.availabilityFilter !== undefined ? settings.availabilityFilter : false));
 
     // POWER USER features - require Power User tier (API-powered)
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
@@ -562,6 +572,15 @@ async function saveSettings(settings) {
       const themeCustomization = document.getElementById('themeCustomization');
       customizeBtn.style.display = 'none';
       themeCustomization.style.display = 'none';
+      return;
+    }
+
+    // Check if user is trying to enable Availability Filter without Pro tier
+    if (settings.availabilityFilter && !hasProFeatures) {
+      const message = tier ? 'Availability Filter requires Pro or Power User tier' : 'Availability Filter requires a license';
+      showStatus(message, 'error');
+      document.getElementById('availabilityFilter').checked = false;
+      settings.availabilityFilter = false;
       return;
     }
 
@@ -658,6 +677,7 @@ async function getCurrentSettings() {
     characterCounter: getCheckboxValue('characterCounter', defaultSettings.characterCounter),
     kanbanTypeFilter: getCheckboxValue('kanbanTypeFilter', defaultSettings.kanbanTypeFilter),
     autoCollapseGroups: getCheckboxValue('autoCollapseGroups', defaultSettings.autoCollapseGroups),
+    availabilityFilter: getCheckboxValue('availabilityFilter', false),
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
@@ -1017,11 +1037,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // PRO features require Pro or Power User tier
     if (!hasProFeatures) {
-      if (updatedSettings.dragDrop || updatedSettings.rgbTheme || updatedSettings.previewMode) {
+      if (updatedSettings.dragDrop || updatedSettings.rgbTheme || updatedSettings.previewMode || updatedSettings.availabilityFilter) {
         console.log('Disabling PRO features - tier:', tier);
         updatedSettings.dragDrop = false;
         updatedSettings.rgbTheme = false;
         updatedSettings.previewMode = false;
+        updatedSettings.availabilityFilter = false;
         needsUpdate = true;
       }
     }

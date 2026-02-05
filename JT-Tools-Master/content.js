@@ -115,6 +115,11 @@ const featureModules = {
     name: 'Budget Changelog',
     feature: () => window.BudgetChangelogFeature,
     instance: null
+  },
+  availabilityFilter: {
+    name: 'Availability Filter',
+    feature: () => window.AvailabilityFilterFeature,
+    instance: null
   }
 };
 
@@ -128,6 +133,7 @@ let currentSettings = window.JTDefaults
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
       pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+      availabilityFilter: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
