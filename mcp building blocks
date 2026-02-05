@@ -1,0 +1,2040 @@
+# JobTread MCP Server — API Building Blocks
+**Verified Read-Only Queries & Field Reference**
+*Last Updated: February 5, 2026*
+
+---
+
+## Authentication & Endpoint
+
+- **Endpoint:** `https://api.jobtread.com/pave`
+- **Method:** POST with JSON body
+- **Auth:** Grant key at root level: `{ "$": { "grantKey": "YOUR_KEY" }, ...query }`
+- **Org ID (Titus Contracting):** `22PGZ29nPpZH`
+
+---
+
+## Query Structure (Pave)
+
+Every query follows this pattern:
+
+```json
+{
+  "entityName": {
+    "$": { "id": "ENTITY_ID" },
+    "field1": {},
+    "field2": {},
+    "nestedObject": {
+      "id": {},
+      "name": {}
+    },
+    "connectionField": {
+      "$": { "size": 25 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+**Key rules:**
+- `$` holds input parameters (id, organizationId, size, where, sortBy, page)
+- `{}` means "return this field"
+- Connections use `nodes` wrapper and support `size`, `where`, `sortBy`, `page`, `nextPage`
+
+---
+
+## 1. ORGANIZATION (Root Entity)
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZ29nPpZH"` |
+| `name` | String | `"Titus Contracting Inc"` |
+| `logoUrl` | String/null | URL to logo |
+| `timeZone` | String | `"America/Chicago"` |
+| `status` | String | `"active"` |
+| `slug` | String | org slug |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist:** zip, phone, email, website, timezone (wrong case), updatedAt, color, taxRate, defaultMarkup
+
+### Connection Fields ✅ Verified
+All of these work as `organization.FIELD_NAME.nodes`:
+
+| Connection | Description |
+|------------|-------------|
+| `accounts` | Customers & vendors |
+| `jobs` | All projects |
+| `locations` | Job sites |
+| `tasks` | All tasks |
+| `documents` | Invoices, POs, bills, etc. |
+| `memberships` | User-org relationships |
+| `customFields` | Custom field definitions |
+| `costCodes` | Cost code catalog |
+| `files` | Uploaded files |
+| `contacts` | People on accounts |
+| `payments` | Financial transactions |
+| `timeEntries` | Time tracking records |
+| `dailyLogs` | Daily work logs |
+| `comments` | All comments |
+| `costItems` | Budget line items |
+| `taskTypes` | Task type definitions |
+| `documentTemplates` | Doc templates |
+| `taskTemplates` | Task templates |
+| `taxGroups` | Tax configurations |
+| `fileTags` | File tag definitions |
+| `activities` | Activity feed |
+| `accesses` | Access/permission records |
+
+### Query: Get Organization Summary
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "id": {},
+    "name": {},
+    "timeZone": {},
+    "status": {},
+    "slug": {},
+    "createdAt": {}
+  }
+}
+```
+
+### Query: List All Customers
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "accounts": {
+      "$": {
+        "size": 50,
+        "where": ["type", "=", "customer"],
+        "sortBy": [{ "field": "name" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "type": {},
+        "isTaxable": {},
+        "createdAt": {},
+        "archivedAt": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List All Vendors
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "accounts": {
+      "$": {
+        "size": 50,
+        "where": ["type", "=", "vendor"],
+        "sortBy": [{ "field": "name" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "type": {},
+        "createdAt": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Open Jobs
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "jobs": {
+      "$": {
+        "size": 50,
+        "where": ["closedOn", "null"],
+        "sortBy": [{ "field": "number", "order": "desc" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "number": {},
+        "description": {},
+        "status": {},
+        "closedOn": {},
+        "createdAt": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List All Custom Fields
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "customFields": {
+      "$": {
+        "sortBy": [
+          { "field": "targetType" },
+          { "field": "position" }
+        ]
+      },
+      "nodes": {
+        "id": {},
+        "name": {},
+        "type": {},
+        "targetType": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Cost Codes
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "costCodes": {
+      "$": { "size": 100 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "number": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Memberships (Team)
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "memberships": {
+      "$": { "size": 50 },
+      "nodes": {
+        "id": {},
+        "role": {},
+        "createdAt": {},
+        "user": {
+          "id": {},
+          "name": {}
+        }
+      }
+    }
+  }
+}
+```
+
+### Query: List Task Types
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "taskTypes": {
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List File Tags
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "fileTags": {
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Tax Groups
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "taxGroups": {
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Document Templates
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "documentTemplates": {
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+### Query: List Task Templates
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "taskTemplates": {
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 2. ACCOUNT (Customer / Vendor)
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZDHNZWHd"` |
+| `name` | String | `"Pepmiller"` |
+| `type` | String | `"customer"` or `"vendor"` |
+| `isTaxable` | Boolean | `false` |
+| `createdAt` | DateTime | ISO 8601 |
+| `archivedAt` | DateTime/null | null if active |
+
+**❌ Fields that DON'T exist on account:** description, email, phone
+
+### Connection Fields ✅ Verified
+| Connection | Description |
+|------------|-------------|
+| `contacts` | People (nodes: id, name, title) |
+| `locations` | Associated locations |
+| `jobs` | Jobs for this account |
+| `customFieldValues` | Custom field data |
+
+### Query: Get Single Account with All Details
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "accounts": {
+      "$": {
+        "size": 1,
+        "where": ["name", "contains", "SEARCH_TERM"]
+      },
+      "nodes": {
+        "id": {},
+        "name": {},
+        "type": {},
+        "isTaxable": {},
+        "createdAt": {},
+        "archivedAt": {},
+        "contacts": {
+          "$": { "size": 10 },
+          "nodes": {
+            "id": {},
+            "name": {},
+            "title": {}
+          }
+        },
+        "locations": {
+          "$": { "size": 10 },
+          "nodes": {
+            "id": {},
+            "name": {}
+          }
+        },
+        "jobs": {
+          "$": { "size": 10 },
+          "nodes": {
+            "id": {},
+            "name": {}
+          }
+        },
+        "customFieldValues": {
+          "nodes": {
+            "id": {},
+            "value": {},
+            "customField": {
+              "id": {},
+              "name": {},
+              "type": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Query: Direct Account Lookup by ID
+```json
+{
+  "account": {
+    "$": { "id": "ACCOUNT_ID" },
+    "id": {},
+    "name": {},
+    "type": {},
+    "isTaxable": {},
+    "createdAt": {},
+    "contacts": {
+      "nodes": {
+        "id": {},
+        "name": {},
+        "title": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 3. JOB (Project)
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZiBGcs6w"` |
+| `name` | String | `"Office & Admin 0001"` |
+| `number` | String | `"0001"` |
+| `description` | String/null | Project description |
+| `status` | String | `"created"` |
+| `closedOn` | DateTime/null | null if open |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on job:** startDate, contractPrice, account (use via org query)
+
+### Connection Fields ✅ Verified
+| Connection | Description |
+|------------|-------------|
+| `tasks` | All tasks for job |
+| `documents` | Invoices, POs, bills |
+| `costItems` | Budget line items |
+| `files` | Attached files |
+| `dailyLogs` | Daily work logs |
+| `timeEntries` | Time tracking |
+| `comments` | Job comments |
+| `customFieldValues` | Custom field data |
+
+**❌ Connections that DON'T exist on job:** payments, accesses, account (direct)
+
+### Query: Get Single Job with Everything
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "id": {},
+    "name": {},
+    "number": {},
+    "description": {},
+    "status": {},
+    "closedOn": {},
+    "createdAt": {},
+    "tasks": {
+      "$": { "size": 50 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "progress": {},
+        "startDate": {},
+        "endDate": {},
+        "isToDo": {},
+        "completed": {}
+      }
+    },
+    "costItems": {
+      "$": { "size": 50 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "quantity": {},
+        "unitCost": {},
+        "unitPrice": {},
+        "cost": {},
+        "price": {}
+      }
+    },
+    "documents": {
+      "$": { "size": 25 },
+      "nodes": {
+        "id": {}
+      }
+    },
+    "files": {
+      "$": { "size": 25 },
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    },
+    "dailyLogs": {
+      "$": { "size": 25 },
+      "nodes": {
+        "id": {},
+        "date": {},
+        "notes": {}
+      }
+    },
+    "timeEntries": {
+      "$": { "size": 25 },
+      "nodes": {
+        "id": {},
+        "startedAt": {},
+        "endedAt": {},
+        "notes": {}
+      }
+    },
+    "comments": {
+      "$": { "size": 25 },
+      "nodes": {
+        "id": {}
+      }
+    },
+    "customFieldValues": {
+      "nodes": {
+        "id": {},
+        "value": {},
+        "customField": {
+          "id": {},
+          "name": {}
+        }
+      }
+    }
+  }
+}
+```
+
+### Query: Find Job by Number
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "jobs": {
+      "$": {
+        "size": 1,
+        "where": ["number", "=", "0001"]
+      },
+      "nodes": {
+        "id": {},
+        "name": {},
+        "number": {},
+        "status": {}
+      }
+    }
+  }
+}
+```
+
+### Query: Find Job by Name (contains)
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "jobs": {
+      "$": {
+        "size": 10,
+        "where": ["name", "contains", "Kitchen"]
+      },
+      "nodes": {
+        "id": {},
+        "name": {},
+        "number": {},
+        "status": {},
+        "createdAt": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 4. TASK
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGbfygJLJb"` |
+| `name` | String | `"Get this"` |
+| `description` | String/null | Task details |
+| `progress` | Number | `1` (0-100 or 0/1) |
+| `startDate` | String | `"2025-09-08"` (date only) |
+| `startTime` | String/null | Time component |
+| `endDate` | String | `"2025-09-08"` (date only) |
+| `endTime` | String/null | Time component |
+| `isToDo` | Boolean | `true` |
+| `completed` | Number | `1` (0 or 1) |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on task:** completedAt (use `completed`), subTasks (lowercase `subtasks` exists but no nodes), customFieldValues
+
+### Connection/Object Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `taskType` | Object | `{ id, name }` |
+| `parentTask` | Object | `{ id, name }` |
+| `assignedMemberships` | Connection | nodes: `{ id, user: { id, name } }` |
+| `comments` | Connection | nodes: `{ id }` |
+| `files` | Connection | nodes: `{ id }` |
+
+### Query: Get Task Details
+```json
+{
+  "task": {
+    "$": { "id": "TASK_ID" },
+    "id": {},
+    "name": {},
+    "description": {},
+    "progress": {},
+    "startDate": {},
+    "startTime": {},
+    "endDate": {},
+    "endTime": {},
+    "isToDo": {},
+    "completed": {},
+    "createdAt": {},
+    "taskType": { "id": {}, "name": {} },
+    "parentTask": { "id": {}, "name": {} },
+    "assignedMemberships": {
+      "nodes": {
+        "id": {},
+        "user": { "id": {}, "name": {} }
+      }
+    },
+    "comments": {
+      "$": { "size": 10 },
+      "nodes": { "id": {} }
+    },
+    "files": {
+      "$": { "size": 10 },
+      "nodes": { "id": {} }
+    }
+  }
+}
+```
+
+### Query: List Incomplete Tasks for a Job
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "tasks": {
+      "$": {
+        "size": 50,
+        "where": {
+          "and": [
+            ["progress", "<", 100],
+            ["isToDo", "=", false]
+          ]
+        }
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "progress": {},
+        "startDate": {},
+        "endDate": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 5. COST ITEM (Budget Line Item)
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PR7YGcFLmH"` |
+| `name` | String | `"Kitchen Circuits"` |
+| `description` | String/null | Line item description |
+| `quantity` | Number | `0` |
+| `unitCost` | Number | `200` |
+| `unitPrice` | Number | `250` |
+| `cost` | Number | `0` (qty × unitCost) |
+| `price` | Number | `0` (qty × unitPrice) |
+| `unit` | Object | Unit of measure |
+| `isTaxable` | Boolean | `true` |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on costItem:** markup, margin, type, parentCostItem, account
+
+### Connection/Object Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `costCode` | Object | `{ id, name, number }` |
+| `job` | Object | `{ id, name }` |
+
+### Query: Get Cost Items for a Job
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "costItems": {
+      "$": { "size": 100 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "description": {},
+        "quantity": {},
+        "unitCost": {},
+        "unitPrice": {},
+        "cost": {},
+        "price": {},
+        "unit": {},
+        "isTaxable": {},
+        "costCode": {
+          "id": {},
+          "name": {},
+          "number": {}
+        },
+        "createdAt": {}
+      }
+    }
+  }
+}
+```
+
+### Query: Direct Cost Item Lookup
+```json
+{
+  "costItem": {
+    "$": { "id": "COST_ITEM_ID" },
+    "id": {},
+    "name": {},
+    "description": {},
+    "quantity": {},
+    "unitCost": {},
+    "unitPrice": {},
+    "cost": {},
+    "price": {},
+    "unit": {},
+    "isTaxable": {},
+    "costCode": { "id": {}, "name": {}, "number": {} },
+    "job": { "id": {}, "name": {} },
+    "createdAt": {}
+  }
+}
+```
+
+---
+
+## 6. LOCATION
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZDHQvVHn"` |
+| `name` | String | `"Pepmiller - Somewhere lane"` |
+| `address` | String | `"11417 Galtier Dr, Burnsville, MN 55337, USA"` |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on location:** city, state, zip (full address is in `address`)
+
+### Connection Fields ✅ Verified
+| Connection | Description |
+|------------|-------------|
+| `jobs` | Jobs at this location |
+| `customFieldValues` | Custom field data |
+
+### Query: Get Location Details
+```json
+{
+  "location": {
+    "$": { "id": "LOCATION_ID" },
+    "id": {},
+    "name": {},
+    "address": {},
+    "createdAt": {},
+    "jobs": {
+      "$": { "size": 10 },
+      "nodes": { "id": {}, "name": {} }
+    },
+    "customFieldValues": {
+      "nodes": {
+        "id": {},
+        "value": {},
+        "customField": { "id": {}, "name": {} }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 7. CONTACT
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PLXafWzCZL"` |
+| `name` | String | `"jack"` |
+| `title` | String/null | Contact title |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on contact:** email, phone, emails, phoneNumbers, contactInfos
+
+### Query: Get Contact
+```json
+{
+  "contact": {
+    "$": { "id": "CONTACT_ID" },
+    "id": {},
+    "name": {},
+    "title": {},
+    "createdAt": {}
+  }
+}
+```
+
+---
+
+## 8. MEMBERSHIP (Team Member)
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZ29nPpZJ"` |
+| `role` | Object | Role info |
+| `createdAt` | DateTime | ISO 8601 |
+
+### Object Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `user` | Object | `{ id, name }` |
+
+**❌ Fields that DON'T exist on user:** email
+
+### Query: Get Membership
+```json
+{
+  "membership": {
+    "$": { "id": "MEMBERSHIP_ID" },
+    "id": {},
+    "role": {},
+    "createdAt": {},
+    "user": { "id": {}, "name": {} }
+  }
+}
+```
+
+---
+
+## 9. FILE
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PHn9Fscr5F"` |
+| `name` | String | `"Drawings.BidSet.Favero.pdf"` |
+| `url` | String | CDN URL |
+| `size` | Number | `4905357` (bytes) |
+| `folder` | String/null | Folder path |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on file:** contentType, tags (use `fileTags`)
+
+### Connection Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `fileTags` | Array | `[{ id, name }]` (NOT nodes pattern) |
+
+### Query: Get File Details
+```json
+{
+  "file": {
+    "$": { "id": "FILE_ID" },
+    "id": {},
+    "name": {},
+    "url": {},
+    "size": {},
+    "folder": {},
+    "createdAt": {},
+    "fileTags": {
+      "nodes": { "id": {}, "name": {} }
+    }
+  }
+}
+```
+
+### Query: List Files for a Job
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "files": {
+      "$": { "size": 50 },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "url": {},
+        "size": {},
+        "folder": {},
+        "createdAt": {},
+        "fileTags": {
+          "nodes": { "id": {}, "name": {} }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 10. DAILY LOG
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PJY9yMu9Cc"` |
+| `date` | String | `"2025-10-08"` |
+| `notes` | String/null | Log notes |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on dailyLog:** assignedMemberships
+
+### Connection/Object Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `job` | Object | `{ id, name }` |
+| `comments` | Connection | nodes: `{ id }` |
+| `files` | Connection | nodes: `{ id }` |
+
+### Query: Get Daily Log
+```json
+{
+  "dailyLog": {
+    "$": { "id": "DAILY_LOG_ID" },
+    "id": {},
+    "date": {},
+    "notes": {},
+    "createdAt": {},
+    "job": { "id": {}, "name": {} },
+    "comments": {
+      "$": { "size": 10 },
+      "nodes": { "id": {} }
+    },
+    "files": {
+      "$": { "size": 10 },
+      "nodes": { "id": {} }
+    }
+  }
+}
+```
+
+### Query: List Daily Logs for a Job
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "dailyLogs": {
+      "$": {
+        "size": 30,
+        "sortBy": [{ "field": "date", "order": "desc" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "date": {},
+        "notes": {},
+        "createdAt": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 11. TIME ENTRY
+
+### Scalar Fields ✅ Verified
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PRTFmKcFFF"` |
+| `startedAt` | DateTime | `"2026-02-03T13:10:00.000Z"` |
+| `endedAt` | DateTime | `"2026-02-03T21:20:11.532Z"` |
+| `notes` | String/null | Entry notes |
+| `createdAt` | DateTime | ISO 8601 |
+
+**❌ Fields that DON'T exist on timeEntry:** date, hours, totalHours, startTime, endTime, start, end, duration, membership, task, costCode
+
+### Object Fields ✅ Verified
+| Field | Type | Description |
+|-------|------|-------------|
+| `user` | Object | `{ id, name }` |
+| `job` | Object | `{ id, name }` |
+
+### Query: Get Time Entry
+```json
+{
+  "timeEntry": {
+    "$": { "id": "TIME_ENTRY_ID" },
+    "id": {},
+    "startedAt": {},
+    "endedAt": {},
+    "notes": {},
+    "createdAt": {},
+    "user": { "id": {}, "name": {} },
+    "job": { "id": {}, "name": {} }
+  }
+}
+```
+
+### Query: List Time Entries for a Job
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "timeEntries": {
+      "$": {
+        "size": 50,
+        "sortBy": [{ "field": "startedAt", "order": "desc" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "startedAt": {},
+        "endedAt": {},
+        "notes": {},
+        "user": { "id": {}, "name": {} }
+      }
+    }
+  }
+}
+```
+
+---
+
+## 12. COST CODE
+
+### Scalar Fields ✅ Verified (via organization connection)
+| Field | Type | Example |
+|-------|------|---------|
+| `id` | String | `"22PGZ2AbfZEs"` |
+| `name` | String | `"Uncategorized"` |
+| `number` | String | `"00.00"` |
+
+### Query: List All Cost Codes
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "costCodes": {
+      "$": {
+        "size": 100,
+        "sortBy": [{ "field": "number" }]
+      },
+      "nextPage": {},
+      "nodes": {
+        "id": {},
+        "name": {},
+        "number": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## 13. CURRENT GRANT (Auth/Session Info)
+
+### Query: Get Current User & Org
+```json
+{
+  "currentGrant": {
+    "user": {
+      "id": {},
+      "name": {},
+      "memberships": {
+        "nodes": {
+          "id": {},
+          "organization": {
+            "id": {},
+            "name": {}
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
+## FILTERING PATTERNS
+
+### Single Condition
+```json
+"where": ["fieldName", "operator", "value"]
+```
+
+### AND Logic
+```json
+"where": {
+  "and": [
+    ["field1", "=", "value1"],
+    ["field2", ">", 0]
+  ]
+}
+```
+
+### OR Logic
+```json
+"where": {
+  "or": [
+    ["type", "=", "customer"],
+    ["type", "=", "vendor"]
+  ]
+}
+```
+
+### Null Check
+```json
+"where": ["closedOn", "null"]
+```
+
+### Not Null Check
+```json
+"where": ["closedOn", "not null"]
+```
+
+### Contains (Text Search)
+```json
+"where": ["name", "contains", "Kitchen"]
+```
+
+### In Array
+```json
+"where": ["type", "in", ["customerInvoice", "vendorBill"]]
+```
+
+### Nested Path Filtering
+```json
+"where": [["account", "name"], "=", "Customer Name"]
+```
+
+### Available Operators
+| Operator | Description |
+|----------|-------------|
+| `=` | Equals |
+| `!=` or `<>` | Not equals |
+| `>` | Greater than |
+| `>=` | Greater than or equal |
+| `<` | Less than |
+| `<=` | Less than or equal |
+| `in` | In array |
+| `not in` | Not in array |
+| `contains` | Contains text |
+| `starts with` | Starts with |
+| `ends with` | Ends with |
+| `null` | Is null |
+| `not null` | Is not null |
+
+---
+
+## PAGINATION & SORTING
+
+### Pagination
+```json
+{
+  "$": {
+    "size": 25,
+    "page": "PAGE_TOKEN_FROM_NEXT_PAGE"
+  },
+  "nextPage": {},
+  "previousPage": {},
+  "nodes": { ... }
+}
+```
+
+### Sorting
+```json
+{
+  "$": {
+    "sortBy": [
+      { "field": "name", "order": "asc" },
+      { "field": "createdAt", "order": "desc" }
+    ]
+  }
+}
+```
+
+---
+
+## AGGREGATIONS
+
+### Group By with Sums
+```json
+{
+  "job": {
+    "$": { "id": "JOB_ID" },
+    "documents": {
+      "$": {
+        "where": ["type", "in", ["customerInvoice", "vendorBill"]],
+        "group": {
+          "by": ["type", "status"],
+          "aggs": {
+            "totalAmount": { "sum": "priceWithTax" },
+            "count": { "count": [] }
+          }
+        }
+      },
+      "withValues": {}
+    }
+  }
+}
+```
+
+---
+
+## CUSTOM FIELD QUERIES
+
+### Search by Custom Field Value
+```json
+{
+  "organization": {
+    "$": { "id": "22PGZ29nPpZH" },
+    "accounts": {
+      "$": {
+        "with": {
+          "cf": {
+            "_": "customFieldValues",
+            "$": {
+              "where": [["customField", "name"], "=", "Field Name"]
+            },
+            "values": {
+              "$": { "field": "value" }
+            }
+          }
+        },
+        "where": [["cf", "values"], "=", "Field Value"]
+      },
+      "nodes": {
+        "id": {},
+        "name": {}
+      }
+    }
+  }
+}
+```
+
+---
+
+## PDF GENERATION
+
+### Get Document PDF URL
+```json
+{
+  "pdfToken": {
+    "_": "signQuery",
+    "$": {
+      "query": {
+        "pdf": {
+          "$": {
+            "id": "document",
+            "options": {
+              "id": "DOCUMENT_ID"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+*Append returned token to `https://api.jobtread.com/t/` for full PDF URL*
+
+---
+
+## ENTITIES STILL NEEDING FIELD DISCOVERY
+
+The following entities have been confirmed to exist as connections but their full scalar fields have not yet been individually tested:
+
+| Entity | Status | Notes |
+|--------|--------|-------|
+| `document` | 🟡 Needs testing | Types: customerInvoice, vendorBill, etc. |
+| `comment` | 🟡 Needs testing | Confirmed exists as connection |
+| `payment` | 🟡 Needs testing | Exists on org, NOT on job |
+| `activity` | 🟡 Needs testing | Exists on org |
+| `access` | 🟡 Needs testing | Exists on org, NOT on job |
+| `taxGroup` | 🟡 Needs testing | Exists on org |
+
+---
+
+## FIELD NAMING GOTCHAS
+
+These naming inconsistencies caught during testing are critical for your MCP server:
+
+| Expected | Actual | Entity |
+|----------|--------|--------|
+| `completedAt` | `completed` (0/1 number) | task |
+| `subTasks` | `subtasks` (no nodes) | task |
+| `tags` | `fileTags` | file |
+| `email` | ❌ doesn't exist | contact, user |
+| `phone` | ❌ doesn't exist | contact |
+| `startDate` | ❌ doesn't exist | job |
+| `contractPrice` | ❌ doesn't exist | job |
+| `account` | ❌ doesn't exist (direct) | job |
+| `date`, `hours` | ❌ doesn't exist | timeEntry |
+| `startTime/endTime` | `startedAt/endedAt` | timeEntry |
+| `membership` | ❌ doesn't exist | timeEntry |
+| `payments` | ❌ doesn't exist | job |
+| `accesses` | ❌ doesn't exist | job |
+| `description` | ❌ doesn't exist | account |
+| `zip/city/state` | ❌ (full address only) | location |
+| `timezone` | `timeZone` (camelCase) | organization |
+| `contentType` | ❌ doesn't exist | file |
+| `markup/margin` | ❌ doesn't exist | costItem |
+| `assignedMemberships` | ❌ doesn't exist | dailyLog |
+
+---
+
+## QUICK REFERENCE: MCP TOOL MAPPING
+
+These are the recommended MCP tools to implement based on verified queries:
+
+### Read Tools
+| Tool Name | Query Pattern |
+|-----------|--------------|
+| `get_organization` | Organization scalar fields |
+| `list_customers` | Org → accounts where type=customer |
+| `list_vendors` | Org → accounts where type=vendor |
+| `get_account` | Direct account by ID |
+| `search_accounts` | Org → accounts where name contains |
+| `list_jobs` | Org → jobs (with optional status filter) |
+| `get_job` | Direct job by ID with connections |
+| `search_jobs` | Org → jobs where name/number |
+| `get_job_budget` | Job → costItems |
+| `get_job_tasks` | Job → tasks |
+| `get_job_files` | Job → files |
+| `get_job_daily_logs` | Job → dailyLogs |
+| `get_job_time_entries` | Job → timeEntries |
+| `get_task` | Direct task by ID |
+| `get_cost_item` | Direct costItem by ID |
+| `get_location` | Direct location by ID |
+| `get_file` | Direct file by ID |
+| `list_custom_fields` | Org → customFields |
+| `list_cost_codes` | Org → costCodes |
+| `list_memberships` | Org → memberships |
+| `list_task_types` | Org → taskTypes |
+| `list_file_tags` | Org → fileTags |
+| `get_current_user` | currentGrant query |
+
+### Write Tools (via existing Zapier actions)
+| Tool Name | Zapier Action |
+|-----------|--------------|
+| `create_customer` | jobtread_create_customer |
+| `create_vendor` | jobtread_create_vendor |
+| `create_job` | jobtread_create_job |
+| `create_task` | jobtread_create_task |
+| `create_location` | jobtread_create_location |
+| `create_daily_log` | jobtread_create_daily_log |
+| `create_comment` | jobtread_create_comment |
+| `update_job` | jobtread_update_job |
+| `update_task` | jobtread_update_task |
+| `update_customer` | jobtread_update_customer |
+| `update_vendor` | jobtread_update_vendor |
+| `update_location` | jobtread_update_location |
+| `upload_files` | jobtread_upload_files |
+| `import_task_template` | jobtread_import_task_template |
+| `assign_access` | jobtread_assign_access |
+
+---
+
+## ZAPIER MCP TOOL CALLS — COMPLETE REFERENCE
+
+This section documents the **correct call signatures** for every available JobTread Zapier MCP tool. These are the actual tools exposed via the Zapier MCP connector — use these instead of raw API calls whenever a matching tool exists.
+
+> **Rule of thumb:** Use the dedicated Zapier tools for **write operations** (create, update, upload) and **simple lookups** (find by name/number). Use `jobtread_query_api` for **complex reads**, **multi-entity joins**, **aggregations**, and **custom field queries** where the simpler tools fall short.
+
+---
+
+## WRITE TOOLS (Create / Update / Upload)
+
+### 1. `jobtread_create_customer`
+**Creates a new customer account with optional contacts, locations, and files.**
+
+```javascript
+jobtread_create_customer({
+  instructions: "Create a new customer named Johnson Family for a kitchen remodel project",
+  organizationId: "22PGZ29nPpZH",
+  customerContactOption: "add",        // "add" to include a contact, omit to skip
+  locationOption: "add",               // "add" to include a location, omit to skip
+  customerFileOption: "add",           // "add" to attach files, omit to skip
+  output_hint: "the new customer id and name"
+})
+```
+
+**Notes:**
+- The `instructions` field drives most of the behavior — include customer name, contact details (name, email, phone, title), location address, and any other details in natural language
+- `organizationId` should always be `"22PGZ29nPpZH"` for Titus Contracting
+- Contact, location, and file details go in `instructions` — the option flags just tell the tool to process those sub-entities
+
+---
+
+### 2. `jobtread_create_vendor`
+**Creates a new vendor account with optional contacts.**
+
+```javascript
+jobtread_create_vendor({
+  instructions: "Create vendor named Twin Cities Plumbing, contact: Mike Smith, mike@tcplumbing.com",
+  organizationId: "22PGZ29nPpZH",
+  vendorContactOption: "add",          // "add" to include a contact, omit to skip
+  output_hint: "the new vendor id and name"
+})
+```
+
+---
+
+### 3. `jobtread_create_customer_contact`
+**Adds a new contact to an existing customer.**
+
+```javascript
+jobtread_create_customer_contact({
+  instructions: "Add a new contact to the Johnson customer",
+  organizationId: "22PGZ29nPpZH",
+  customerContact_accountId: "CUSTOMER_ACCOUNT_ID",
+  customerContact_name: "Sarah Johnson",
+  customerContact_title: "Homeowner",
+  output_hint: "the new contact id and name"
+})
+```
+
+---
+
+### 4. `jobtread_create_vendor_contact`
+**Adds a new contact to an existing vendor.**
+
+```javascript
+jobtread_create_vendor_contact({
+  instructions: "Add a new contact to Twin Cities Plumbing vendor",
+  organizationId: "22PGZ29nPpZH",
+  vendorContact_accountId: "VENDOR_ACCOUNT_ID",
+  vendorContact_name: "Mike Smith",
+  vendorContact_title: "Estimator",
+  output_hint: "the new contact id and name"
+})
+```
+
+---
+
+### 5. `jobtread_create_job`
+**Creates a new job (project) linked to a customer and location.**
+
+```javascript
+jobtread_create_job({
+  instructions: "Create a new kitchen remodel job for Johnson Family at their Edina location",
+  organizationId: "22PGZ29nPpZH",
+  job_accountId: "CUSTOMER_ACCOUNT_ID",
+  job_name: "Johnson Kitchen Remodel",
+  job_description: "Full kitchen renovation including cabinets, countertops, and flooring",
+  job_locationId: "LOCATION_ID",
+  output_hint: "the new job id, name, and number"
+})
+```
+
+**Notes:**
+- `job_accountId` = the customer's account ID (find first with `jobtread_find_a_customer`)
+- `job_locationId` = the location ID (find first with `jobtread_find_a_location`, or create with `jobtread_create_location`)
+
+---
+
+### 6. `jobtread_create_location`
+**Creates a new location (job site).**
+
+```javascript
+jobtread_create_location({
+  instructions: "Create a new location for the Johnson Family at their home address",
+  organizationId: "22PGZ29nPpZH",
+  location_accountId: "CUSTOMER_ACCOUNT_ID",
+  location_name: "Johnson Residence",
+  location_address: "4521 Oak Lane, Edina, MN 55424",
+  output_hint: "the new location id, name, and address"
+})
+```
+
+---
+
+### 7. `jobtread_create_task`
+**Creates a new task on a job (or other target).**
+
+```javascript
+jobtread_create_task({
+  instructions: "Create a task for cabinet installation on the Johnson kitchen job",
+  organizationId: "22PGZ29nPpZH",
+  name: "Cabinet Installation",
+  description: "Install all upper and lower cabinets per approved design drawings",
+  targetId: "JOB_ID",
+  targetType: "job",
+  startDate: "2026-03-15",
+  endDate: "2026-03-20",
+  startTime: "08:00",
+  endTime: "16:00",
+  assigneeEmails: "travis@tituscontracting.com",
+  assignedMembershipIds: "MEMBERSHIP_ID",  // alternative to emails
+  isToDo: "false",                         // "true" for to-do items, "false" for scheduled tasks
+  progress: "0",                           // 0-100
+  taskTypeName: "Construction",            // matches a task type in your org
+  parentTaskId: "PARENT_TASK_ID",          // to nest under a parent task
+  output_hint: "the new task id, name, dates, and assigned user"
+})
+```
+
+**Notes:**
+- Use `assigneeEmails` (comma-separated) OR `assignedMembershipIds` — emails are easier for ad-hoc assignment
+- `targetType` is almost always `"job"` but can be other entity types
+- `isToDo: "true"` creates a checkbox-style to-do; `"false"` creates a scheduled task with dates
+- `taskTypeName` must match an existing task type (query with `jobtread_query_api` → org → taskTypes)
+
+---
+
+### 8. `jobtread_create_daily_log`
+**Creates a daily log entry on a job.**
+
+```javascript
+jobtread_create_daily_log({
+  instructions: "Create a daily log for the Johnson kitchen job noting demo is complete",
+  organizationId: "22PGZ29nPpZH",
+  dailyLog_jobId: "JOB_ID",
+  dailyLog_date: "2026-02-05",
+  dailyLog_notes: "Kitchen demo completed. All cabinets, countertops, and flooring removed. Plumbing capped. Electrical circuits tagged. Ready for rough-in inspection.",
+  dailyLog_notify: "true",
+  assigneeEmails: "travis@tituscontracting.com, brian@tituscontracting.com",
+  output_hint: "the daily log id, date, and notes"
+})
+```
+
+---
+
+### 9. `jobtread_create_comment`
+**Creates a comment on any JobTread entity.**
+
+```javascript
+jobtread_create_comment({
+  instructions: "Add a comment to the Johnson kitchen job about the inspection",
+  organizationId: "22PGZ29nPpZH",
+  message: "Rough-in inspection passed. Inspector noted all work meets code. Clear to proceed with insulation and drywall.",
+  targetId: "JOB_ID",
+  targetType: "job",
+  assigneeEmails: "brian@tituscontracting.com",
+  output_hint: "the comment id and message"
+})
+```
+
+**Notes:**
+- `targetType` can be: `"job"`, `"task"`, `"dailyLog"`, `"document"`, `"account"`, `"location"`, etc.
+- `assigneeEmails` notifies those users
+
+---
+
+### 10. `jobtread_import_task_template`
+**Imports a pre-built task template onto a job.**
+
+```javascript
+jobtread_import_task_template({
+  instructions: "Import the kitchen remodel task template to the Johnson job",
+  organizationId: "22PGZ29nPpZH",
+  targetId: "JOB_ID",
+  targetType: "job",
+  taskTemplateName: "Kitchen Remodel",
+  startDateTime: "2026-03-01T08:00:00",
+  notify: "false",
+  output_hint: "confirmation of template import and number of tasks created"
+})
+```
+
+**Notes:**
+- `taskTemplateName` must match an existing template name exactly (query with `jobtread_query_api` → org → taskTemplates to verify)
+- `startDateTime` sets the anchor date — all template tasks offset from this date
+
+---
+
+### 11. `jobtread_upload_files`
+**Uploads files to a JobTread entity.**
+
+```javascript
+jobtread_upload_files({
+  instructions: "Upload the bid set drawings to the Johnson kitchen job",
+  organizationId: "22PGZ29nPpZH",
+  targetId: "JOB_ID",
+  targetType: "job",
+  fileUrls: "https://example.com/drawings-bidset.pdf, https://example.com/electrical-plan.pdf",
+  folder: "Plans",
+  fileTagNames: "Bid Set, Design",
+  output_hint: "uploaded file ids and names"
+})
+```
+
+**Notes:**
+- `fileUrls` = comma-separated list of publicly accessible URLs
+- `folder` = optional folder name in JT's file system
+- `fileTagNames` = comma-separated tag names (tags-over-folders approach)
+- `targetType` can be: `"job"`, `"account"`, `"location"`, `"task"`, `"dailyLog"`, etc.
+
+---
+
+### 12. `jobtread_assign_access`
+**Gives a user direct access to a JobTread record.**
+
+```javascript
+jobtread_assign_access({
+  instructions: "Give Travis access to the Johnson kitchen job",
+  targetId: "JOB_ID",
+  targetType: "job",
+  assignee: "travis@tituscontracting.com",
+  notify: "true",
+  output_hint: "confirmation of access assignment"
+})
+```
+
+---
+
+### 13. `jobtread_update_customer`
+**Updates an existing customer.**
+
+```javascript
+jobtread_update_customer({
+  instructions: "Update the Johnson customer to be taxable",
+  organizationId: "22PGZ29nPpZH",
+  accountId: "CUSTOMER_ACCOUNT_ID",
+  name: "Johnson Family",                 // updated name (optional)
+  customer_isTaxable: "true",             // "true" or "false"
+  output_hint: "updated customer id, name, and taxable status"
+})
+```
+
+---
+
+### 14. `jobtread_update_vendor`
+**Updates an existing vendor.**
+
+```javascript
+jobtread_update_vendor({
+  instructions: "Update Twin Cities Plumbing vendor name",
+  organizationId: "22PGZ29nPpZH",
+  accountId: "VENDOR_ACCOUNT_ID",
+  name: "TC Plumbing & Heating LLC",
+  output_hint: "updated vendor id and name"
+})
+```
+
+---
+
+### 15. `jobtread_update_job`
+**Updates an existing job.**
+
+```javascript
+jobtread_update_job({
+  instructions: "Update the Johnson kitchen job description and close the job",
+  organizationId: "22PGZ29nPpZH",
+  jobId: "JOB_ID",
+  name: "Johnson Kitchen Remodel",                    // optional
+  description: "Completed full kitchen renovation",    // optional
+  closedOn: "2026-04-15",                             // set to close the job
+  output_hint: "updated job id, name, status, and closedOn"
+})
+```
+
+---
+
+### 16. `jobtread_update_task`
+**Updates an existing task.**
+
+```javascript
+jobtread_update_task({
+  instructions: "Mark the cabinet installation task as 100% complete",
+  organizationId: "22PGZ29nPpZH",
+  taskId: "TASK_ID",
+  name: "Cabinet Installation",                       // optional rename
+  description: "All cabinets installed and leveled",   // optional
+  progress: "100",                                     // 0-100
+  startDate: "2026-03-15",                            // optional reschedule
+  endDate: "2026-03-19",                              // optional
+  startTime: "08:00",                                 // optional
+  endTime: "16:00",                                   // optional
+  assignedMembershipIds: "MEMBERSHIP_ID",             // optional reassign
+  parentTaskId: "PARENT_TASK_ID",                     // optional reparent
+  taskTypeName: "Construction",                       // optional retype
+  output_hint: "updated task id, name, progress, and dates"
+})
+```
+
+---
+
+### 17. `jobtread_update_location`
+**Updates an existing location.**
+
+```javascript
+jobtread_update_location({
+  instructions: "Update the Johnson location address",
+  organizationId: "22PGZ29nPpZH",
+  locationId: "LOCATION_ID",
+  name: "Johnson Residence - Primary",
+  address: "4521 Oak Lane, Edina, MN 55424",
+  output_hint: "updated location id, name, and address"
+})
+```
+
+---
+
+## READ TOOLS (Find / Search / Query)
+
+### 18. `jobtread_find_a_customer`
+**Searches for a customer by name or custom field.**
+
+```javascript
+jobtread_find_a_customer({
+  instructions: "Find the customer named Johnson",
+  organizationId: "22PGZ29nPpZH",
+  customer_name: "Johnson",
+  output_hint: "customer id, name, and type"
+})
+```
+
+**Notes:**
+- Performs a name-based search — partial matches may not work consistently
+- For partial/fuzzy matching, use `jobtread_query_api` with `"where": ["name", "contains", "Johnson"]`
+
+---
+
+### 19. `jobtread_find_a_vendor`
+**Searches for a vendor by name or custom field.**
+
+```javascript
+jobtread_find_a_vendor({
+  instructions: "Find vendor named Twin Cities Plumbing",
+  organizationId: "22PGZ29nPpZH",
+  vendor_name: "Twin Cities Plumbing",
+  output_hint: "vendor id, name, and type"
+})
+```
+
+---
+
+### 20. `jobtread_find_a_job`
+**Searches for a job by number or name.**
+
+```javascript
+jobtread_find_a_job({
+  instructions: "Find the Johnson kitchen remodel job",
+  organizationId: "22PGZ29nPpZH",
+  job_name: "Johnson Kitchen",
+  job_number: "2026-015",             // use number for exact match
+  output_hint: "job id, name, number, status, and description"
+})
+```
+
+**⚠️ Known limitation:** This tool can return empty results for partial name matches. If it fails, fall back to `jobtread_query_api`:
+```javascript
+jobtread_query_api({
+  instructions: "Find the Johnson kitchen job",
+  query: JSON.stringify({
+    "organization": {
+      "$": { "id": "22PGZ29nPpZH" },
+      "jobs": {
+        "$": {
+          "size": 10,
+          "where": ["name", "contains", "Johnson"]
+        },
+        "nodes": { "id": {}, "name": {}, "number": {}, "status": {} }
+      }
+    }
+  }),
+  output_hint: "job id, name, number, and status"
+})
+```
+
+---
+
+### 21. `jobtread_find_a_location`
+**Searches for a location by name.**
+
+```javascript
+jobtread_find_a_location({
+  instructions: "Find the Johnson residence location",
+  organizationId: "22PGZ29nPpZH",
+  location_name: "Johnson",
+  output_hint: "location id, name, and address"
+})
+```
+
+---
+
+### 22. `jobtread_find_a_membership`
+**Searches for a team member by name or email.**
+
+```javascript
+jobtread_find_a_membership({
+  instructions: "Find Travis's membership",
+  organizationId: "22PGZ29nPpZH",
+  name: "Travis",
+  email: "travis@tituscontracting.com",  // use one or both
+  output_hint: "membership id, user name, and role"
+})
+```
+
+---
+
+### 23. `jobtread_query_api` (Advanced)
+**Runs a raw Pave query — the most powerful and flexible tool.**
+
+```javascript
+jobtread_query_api({
+  instructions: "Get all open jobs with their custom fields and budget summary",
+  query: JSON.stringify({
+    "organization": {
+      "$": { "id": "22PGZ29nPpZH" },
+      "jobs": {
+        "$": {
+          "size": 50,
+          "where": ["closedOn", "null"],
+          "sortBy": [{ "field": "number", "order": "desc" }]
+        },
+        "nextPage": {},
+        "nodes": {
+          "id": {},
+          "name": {},
+          "number": {},
+          "status": {},
+          "customFieldValues": {
+            "nodes": {
+              "id": {},
+              "value": {},
+              "customField": { "id": {}, "name": {} }
+            }
+          }
+        }
+      }
+    }
+  }),
+  output_hint: "job id, name, number, status, and all custom field names with values"
+})
+```
+
+**When to use `jobtread_query_api` over the simpler find tools:**
+- Complex filtering (AND/OR logic, nested paths)
+- Custom field queries
+- Aggregations and grouping
+- Multi-entity joins (job + tasks + cost items in one call)
+- Pagination through large result sets
+- Any query pattern from the "Read-Only Queries" section above
+
+---
+
+### 24. `jobtread_code` (Advanced JavaScript)
+**Runs custom JavaScript code with multiple async API calls.**
+
+```javascript
+jobtread_code({
+  instructions: "Get all open jobs and their total budget cost vs price for a profitability summary",
+  code: `
+    // First, get all open jobs
+    const jobsResult = await api.query({
+      organization: {
+        $: { id: "22PGZ29nPpZH" },
+        jobs: {
+          $: { size: 100, where: ["closedOn", "null"] },
+          nodes: { id: {}, name: {}, number: {} }
+        }
+      }
+    });
+
+    const jobs = jobsResult.organization.jobs.nodes;
+    const results = [];
+
+    // Then get budget for each job
+    for (const job of jobs.slice(0, 10)) {
+      const budgetResult = await api.query({
+        job: {
+          $: { id: job.id },
+          costItems: {
+            $: { size: 200 },
+            nodes: { cost: {}, price: {} }
+          }
+        }
+      });
+      const items = budgetResult.job.costItems.nodes;
+      const totalCost = items.reduce((sum, i) => sum + (i.cost || 0), 0);
+      const totalPrice = items.reduce((sum, i) => sum + (i.price || 0), 0);
+      results.push({
+        name: job.name,
+        number: job.number,
+        totalCost,
+        totalPrice,
+        margin: totalPrice > 0 ? ((totalPrice - totalCost) / totalPrice * 100).toFixed(1) + '%' : 'N/A'
+      });
+    }
+
+    return { jobs: results };
+  `,
+  output_hint: "job name, number, total cost, total price, and margin percentage"
+})
+```
+
+**⚠️ Known limitation:** The `api` object reference may fail with `api is not defined`. If this happens, fall back to `jobtread_query_api` for individual queries or restructure as multiple `jobtread_query_api` calls.
+
+---
+
+## TOOL SELECTION DECISION MATRIX
+
+| I need to... | Best tool | Fallback |
+|--------------|-----------|----------|
+| **Create** a customer | `jobtread_create_customer` | — |
+| **Create** a vendor | `jobtread_create_vendor` | — |
+| **Create** a job | `jobtread_create_job` | — |
+| **Create** a task | `jobtread_create_task` | — |
+| **Create** a location | `jobtread_create_location` | — |
+| **Create** a daily log | `jobtread_create_daily_log` | — |
+| **Create** a comment | `jobtread_create_comment` | — |
+| **Create** a customer contact | `jobtread_create_customer_contact` | — |
+| **Create** a vendor contact | `jobtread_create_vendor_contact` | — |
+| **Import** a task template | `jobtread_import_task_template` | — |
+| **Upload** files | `jobtread_upload_files` | — |
+| **Grant** access | `jobtread_assign_access` | — |
+| **Update** a customer | `jobtread_update_customer` | — |
+| **Update** a vendor | `jobtread_update_vendor` | — |
+| **Update** a job | `jobtread_update_job` | — |
+| **Update** a task | `jobtread_update_task` | — |
+| **Update** a location | `jobtread_update_location` | — |
+| **Find** a customer by name | `jobtread_find_a_customer` | `jobtread_query_api` with contains |
+| **Find** a vendor by name | `jobtread_find_a_vendor` | `jobtread_query_api` with contains |
+| **Find** a job by name/number | `jobtread_find_a_job` | `jobtread_query_api` with contains |
+| **Find** a location by name | `jobtread_find_a_location` | `jobtread_query_api` with contains |
+| **Find** a team member | `jobtread_find_a_membership` | `jobtread_query_api` → memberships |
+| **List** all open jobs | `jobtread_query_api` | — |
+| **Get** job budget/cost items | `jobtread_query_api` | — |
+| **Get** job tasks with details | `jobtread_query_api` | — |
+| **Get** custom field values | `jobtread_query_api` | — |
+| **Get** financial summary | `jobtread_query_api` (aggregations) | `jobtread_code` |
+| **Complex** multi-step logic | `jobtread_code` | Sequential `jobtread_query_api` calls |
+| **Search** by custom field | `jobtread_query_api` (with clause) | — |
+| **Get** document PDF | `jobtread_query_api` (signQuery) | — |
+
+---
+
+## COMMON MULTI-STEP WORKFLOWS
+
+### Workflow 1: Create a Complete New Project
+```
+Step 1: jobtread_find_a_customer → get accountId (or jobtread_create_customer if new)
+Step 2: jobtread_find_a_location → get locationId (or jobtread_create_location if new)
+Step 3: jobtread_create_job → get jobId
+Step 4: jobtread_import_task_template → populate tasks
+Step 5: jobtread_assign_access → give PM access
+Step 6: jobtread_create_comment → log the setup
+```
+
+### Workflow 2: Daily Project Check-In
+```
+Step 1: jobtread_find_a_job → get jobId
+Step 2: jobtread_query_api → get tasks where progress < 100 for this job
+Step 3: jobtread_query_api → get recent daily logs for this job
+Step 4: jobtread_query_api → get cost items to check budget health
+Step 5: jobtread_create_daily_log → log today's activity
+```
+
+### Workflow 3: Red Flag Budget Review
+```
+Step 1: jobtread_query_api → list open jobs
+Step 2: jobtread_query_api → for each job, get cost items (cost vs price)
+Step 3: Calculate margins, flag jobs below target (e.g., < 35%)
+Step 4: jobtread_create_comment → flag issues on at-risk jobs
+```
+
+### Workflow 4: Vendor Bid Tracking
+```
+Step 1: jobtread_find_a_job → get jobId
+Step 2: jobtread_query_api → get documents where type = vendorBill for this job
+Step 3: jobtread_query_api → get cost items to compare bids to budget
+Step 4: jobtread_update_task → update bid tracking task progress
+```
+
+### Workflow 5: Close Out a Project
+```
+Step 1: jobtread_find_a_job → get jobId
+Step 2: jobtread_query_api → verify all tasks at 100%
+Step 3: jobtread_query_api → verify all invoices paid
+Step 4: jobtread_create_daily_log → final closeout log
+Step 5: jobtread_update_job → set closedOn date
+Step 6: jobtread_create_comment → closeout summary
+```
+
+---
+
+## TITUS CONTRACTING QUICK REFERENCE
+
+| Value | ID / Detail |
+|-------|-------------|
+| **Organization ID** | `22PGZ29nPpZH` |
+| **Org Name** | Titus Contracting Inc |
+| **Timezone** | America/Chicago |
+| **API Endpoint** | `https://api.jobtread.com/pave` |
+| **Auth** | Grant key at root level |
+
+### Team Roles (for `assigneeEmails`)
+| Role | Person |
+|------|--------|
+| Selections Designer | Lindsey |
+| Design Documentation | Ksusha |
+| Budget / Cost Control PM | Travis |
+| Schedule Management PM | Brian |
+| Client Communication PM | Steph |
+| Workflow Coordinator | Tracy |
+| Vendor Management | Jen |
+| Integration Lead | Zee |
+| Inventory | Kyle |
+
+---
+
+## TIPS & GOTCHAS
+
+1. **Always pass `organizationId: "22PGZ29nPpZH"`** on every Zapier tool call — it's required
+2. **`output_hint` is required** on every Zapier tool call — it controls what data comes back
+3. **`instructions` drives behavior** — be descriptive; include names, dates, IDs, and context
+4. **Find before create** — always check if a customer/vendor/location exists before creating duplicates
+5. **`jobtread_find_a_job` can fail on partial names** — fall back to `jobtread_query_api` with `contains`
+6. **`jobtread_code` may error on `api`** — if `api is not defined`, use `jobtread_query_api` instead
+7. **Pagination** — default `size` varies; explicitly set `size: 50` or `size: 100` for large result sets
+8. **Custom fields** — can't be written via `jobtread_query_api`; use `jobtread_update_job` with instructions describing the custom field update
+9. **Task templates** — name must match exactly; query org → taskTemplates first to verify
+10. **Date formats** — use `YYYY-MM-DD` for dates, ISO 8601 for datetimes
