@@ -82,16 +82,6 @@ chrome.runtime.onInstalled.addListener(async (details) => {
           console.error('Failed to update settings after extension update');
         }
 
-        // Open changelog to show what's new
-        try {
-          await chrome.tabs.create({
-            url: 'https://king0lightai.github.io/JT-Power-Tools/changelog.html',
-            active: true
-          });
-          console.log('Opened changelog to show release notes');
-        } catch (tabError) {
-          console.error('Failed to open changelog tab:', tabError);
-        }
       } catch (updateError) {
         console.error('Error during extension update process:', updateError);
       }
