@@ -1192,6 +1192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize AI Integration section
   await initAiIntegration();
+
+  // Initialize MCP tab
+  await initMcpTab();
 });
 
 // ===================================
@@ -1614,3 +1617,109 @@ function setConnectionStatus(indicator, textEl, status, message) {
   indicator.className = `ai-status-indicator ${status}`;
   textEl.textContent = message;
 }
+
+// ===================================
+// MCP Tab Functionality
+// ===================================
+
+/**
+ * Initialize MCP tab functionality
+ */
+async function initMcpTab() {
+  // Setup copy URL button
+  const copyUrlBtn = document.getElementById('copyMcpUrl');
+  if (copyUrlBtn) {
+    copyUrlBtn.addEventListener('click', async () => {
+      const urlCode = document.getElementById('mcpServerUrl');
+      const urlText = urlCode.textContent;
+
+      try {
+        await navigator.clipboard.writeText(urlText);
+
+        // Show copied state
+        copyUrlBtn.classList.add('copied');
+        const icon = copyUrlBtn.querySelector('i');
+        icon.className = 'ph ph-check';
+
+        // Reset after 2 seconds
+        setTimeout(() => {
+          copyUrlBtn.classList.remove('copied');
+          icon.className = 'ph ph-copy';
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy MCP URL:', err);
+      }
+    });
+  }
+
+  // Check MCP status
+  await checkMcpStatus();
+}
+
+/**
+ * Check MCP server status and update UI
+ */
+async function checkMcpStatus() {
+  const statusSection = document.getElementById('mcpStatus');
+  if (!statusSection) return;
+
+  const statusDot = statusSection.querySelector('.status-dot');
+  const statusText = statusSection.querySelector('.status-text');
+
+  // Check if user has Power User tier
+  const tier = await LicenseService.getTier();
+  const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
+
+  if (!hasPowerUser) {
+    statusDot.classList.remove('connected');
+    statusDot.classList.add('disconnected');
+    statusText.textContent = 'Requires Power User tier';
+    return;
+  }
+
+  // Check if grant key is configured
+  const stored = await chrome.storage.local.get(['jtpro_grant_key', 'jtpro_license_key']);
+
+  if (!stored.jtpro_license_key) {
+    statusDot.classList.remove('connected');
+    statusDot.classList.add('disconnected');
+    statusText.textContent = 'Enter License Key in License tab';
+    return;
+  }
+
+  if (!stored.jtpro_grant_key) {
+    statusDot.classList.remove('connected');
+    statusDot.classList.add('disconnected');
+    statusText.textContent = 'Enter Grant Key in API tab';
+    return;
+  }
+
+  // Both keys configured - check server health
+  try {
+    const response = await fetch(`${MCP_SERVER_URL}/health`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'ok') {
+        statusDot.classList.remove('disconnected');
+        statusDot.classList.add('connected');
+        statusText.textContent = 'Ready to connect';
+        return;
+      }
+    }
+
+    statusDot.classList.remove('connected');
+    statusDot.classList.add('disconnected');
+    statusText.textContent = 'Server unavailable';
+  } catch (error) {
+    console.error('MCP health check failed:', error);
+    statusDot.classList.remove('connected');
+    statusDot.classList.add('disconnected');
+    statusText.textContent = 'Connection error';
+  }
+}
+
+// Initialize MCP tab when DOM is ready (add to existing DOMContentLoaded)
