@@ -112,21 +112,78 @@ export class JobTreadTools {
         }
       },
 
-      // Search Contacts
+      // List Customers
       {
-        name: 'jobtread_search_contacts',
-        description: 'Search for contacts/customers by name, email, or phone.',
+        name: 'jobtread_list_customers',
+        description: 'List customer accounts. Customers are the accounts you bill for work.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'Search term'
+              description: 'Optional search term to filter by name'
             },
-            type: {
+            includeArchived: {
+              type: 'boolean',
+              description: 'Include archived customers (default: false)'
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum results (default 50, max 100)'
+            }
+          }
+        }
+      },
+
+      // List Vendors
+      {
+        name: 'jobtread_list_vendors',
+        description: 'List vendor accounts. Vendors are companies you pay for materials or services.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
               type: 'string',
-              enum: ['customer', 'vendor', 'subcontractor', 'all'],
-              description: 'Contact type filter (default: all)'
+              description: 'Optional search term to filter by name'
+            },
+            includeArchived: {
+              type: 'boolean',
+              description: 'Include archived vendors (default: false)'
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum results (default 50, max 100)'
+            }
+          }
+        }
+      },
+
+      // Get Account Details
+      {
+        name: 'jobtread_get_account',
+        description: 'Get detailed information about a customer or vendor account, including contacts, locations, and jobs.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            accountId: {
+              type: 'string',
+              description: 'The account ID'
+            }
+          },
+          required: ['accountId']
+        }
+      },
+
+      // Search Contacts (people on accounts)
+      {
+        name: 'jobtread_search_contacts',
+        description: 'Search for contact people by name. Contacts are individuals associated with customer or vendor accounts. Note: Returns name and title only.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Search term to match against contact name'
             },
             limit: {
               type: 'number',
@@ -237,6 +294,15 @@ export class JobTreadTools {
 
         case 'jobtread_get_budget':
           return await this.getBudget(args.jobId);
+
+        case 'jobtread_list_customers':
+          return await this.listCustomers(args);
+
+        case 'jobtread_list_vendors':
+          return await this.listVendors(args);
+
+        case 'jobtread_get_account':
+          return await this.getAccount(args.accountId);
 
         case 'jobtread_search_contacts':
           return await this.searchContacts(args);
@@ -476,41 +542,198 @@ export class JobTreadTools {
   }
 
   /**
-   * Search contacts
+   * List customers (accounts with type=customer)
    */
-  async searchContacts({ query, type, limit = 20 }) {
-    const whereConditions = [];
+  async listCustomers({ query, includeArchived = false, limit = 50 }) {
+    const whereConditions = [['type', '=', 'customer']];
 
     if (query) {
-      whereConditions.push({
-        or: [
-          ['name', 'ilike', `%${query}%`],
-          ['email', 'ilike', `%${query}%`]
-        ]
-      });
+      whereConditions.push(['name', 'contains', query]);
     }
 
+    if (!includeArchived) {
+      whereConditions.push(['archivedAt', 'null']);
+    }
+
+    const paveQuery = {
+      organization: {
+        $: { id: this.orgId },
+        accounts: {
+          $: {
+            size: Math.min(limit, 100),
+            where: whereConditions.length === 1 ? whereConditions[0] : { and: whereConditions },
+            sortBy: [{ field: 'name' }]
+          },
+          nextPage: {},
+          nodes: {
+            id: {},
+            name: {},
+            type: {},
+            isTaxable: {},
+            createdAt: {},
+            archivedAt: {},
+            contacts: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                title: {}
+              }
+            },
+            jobs: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                number: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return {
+      customers: data.organization?.accounts?.nodes || [],
+      count: (data.organization?.accounts?.nodes || []).length,
+      nextPage: data.organization?.accounts?.nextPage
+    };
+  }
+
+  /**
+   * List vendors (accounts with type=vendor)
+   */
+  async listVendors({ query, includeArchived = false, limit = 50 }) {
+    const whereConditions = [['type', '=', 'vendor']];
+
+    if (query) {
+      whereConditions.push(['name', 'contains', query]);
+    }
+
+    if (!includeArchived) {
+      whereConditions.push(['archivedAt', 'null']);
+    }
+
+    const paveQuery = {
+      organization: {
+        $: { id: this.orgId },
+        accounts: {
+          $: {
+            size: Math.min(limit, 100),
+            where: whereConditions.length === 1 ? whereConditions[0] : { and: whereConditions },
+            sortBy: [{ field: 'name' }]
+          },
+          nextPage: {},
+          nodes: {
+            id: {},
+            name: {},
+            type: {},
+            createdAt: {},
+            archivedAt: {},
+            contacts: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                title: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return {
+      vendors: data.organization?.accounts?.nodes || [],
+      count: (data.organization?.accounts?.nodes || []).length,
+      nextPage: data.organization?.accounts?.nextPage
+    };
+  }
+
+  /**
+   * Get account details (customer or vendor)
+   */
+  async getAccount(accountId) {
+    const paveQuery = {
+      account: {
+        $: { id: accountId },
+        id: {},
+        name: {},
+        type: {},
+        isTaxable: {},
+        createdAt: {},
+        archivedAt: {},
+        contacts: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            title: {}
+          }
+        },
+        locations: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            address: {}
+          }
+        },
+        jobs: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            closedOn: {}
+          }
+        },
+        customFieldValues: {
+          nodes: {
+            id: {},
+            value: {},
+            customField: {
+              id: {},
+              name: {},
+              type: {}
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return data.account || { error: 'Account not found' };
+  }
+
+  /**
+   * Search contacts (people on accounts)
+   * Note: Contacts only have id, name, title - no email/phone per API schema
+   */
+  async searchContacts({ query, limit = 20 }) {
     const paveQuery = {
       organization: {
         $: { id: this.orgId },
         contacts: {
           $: {
             size: Math.min(limit, 100),
-            where: whereConditions.length > 0 ? whereConditions[0] : undefined,
+            where: query ? ['name', 'contains', query] : undefined,
             sortBy: [{ field: 'name' }]
           },
           nodes: {
             id: {},
             name: {},
-            email: {},
-            phone: {},
-            type: {}
+            title: {},
+            createdAt: {}
           }
         }
       }
     };
 
-    if (whereConditions.length === 0) {
+    if (!query) {
       delete paveQuery.organization.contacts.$.where;
     }
 
