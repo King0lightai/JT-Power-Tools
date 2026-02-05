@@ -224,13 +224,13 @@ export class JobTreadTools {
     if (this.knowledgeLookup) {
       tools.push({
         name: 'jobtread_knowledge_lookup',
-        description: 'Query JobTread documentation and your company SOPs before performing operations. Returns your SOPs first, then official docs. Call this BEFORE create/update/import operations to ensure you follow your company processes.',
+        description: 'Query JobTread documentation and your company SOPs. Returns your SOPs first (highest priority), then official docs from Gemini. Use this to understand how JobTread features work, best practices, API query syntax, and your company\'s standard procedures. RECOMMENDED: Call this when users ask "how do I..." or need guidance on JobTread workflows.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'What to look up (e.g., "change order creation", "budget formulas", "task templates")'
+              description: 'What to look up (e.g., "how do budgets work", "cost code setup", "task scheduling", "change orders")'
             },
             category: {
               type: 'string',
