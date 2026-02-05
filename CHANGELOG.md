@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### Availability Filter (Pro Feature)
+- New filter for the Schedule Availability view to show/hide assignees by role or category
+- **Hierarchical filter structure**:
+  - **INTERNAL category**: Expandable dropdown with individual roles (e.g., "01 Field", "02 Project Supervisor")
+  - **VENDOR category**: Expandable dropdown with individual vendor company names (uses company name, not contact name)
+  - **Other categories**: Expandable dropdown with assignee names
+  - Click category to toggle all children; click individual items for granular control
+  - Partial state indicator (dashed border) shows when some but not all children are selected
+  - Role/assignee count badges show selection status (e.g., "3/12")
+- Automatically detects roles, vendors, and categories from your organization's assignee structure
+- **Saved Views**: Save and load filter configurations via dropdown in header
+  - Save current filter state with custom name
+  - Load saved views to quickly restore filter configurations
+  - Delete saved views when no longer needed
+  - Persists across sessions using browser storage
+- **Smooth collapse animation**: Filtered-out rows collapse smoothly instead of abruptly disappearing
+- **Visual highlight**: Visible (filtered) rows get a subtle blue left border for easy identification
+- Filter selections persist across sessions
+- Quick actions: "Show All" and "Hide All" buttons
+- **Collapsible filter panel**: Entire header bar clickable to expand/collapse; starts collapsed by default
+- Full dark mode support (using proper dark grey palette)
+- Full RGB/Custom Theme support (uses CSS custom properties)
+- Located in Schedule & Calendar category in popup settings
+
+### Improved
+
+#### Dark Mode Colors
+- Updated Availability Filter dark mode styling to use proper dark grey colors (#2c2c2c, #252525, #333333) instead of dark blues
+- Added Dark Mode Color Palette guide to CLAUDE.md for consistent dark mode styling across all features
+
+#### Custom Theme Support
+- Added RGB/Custom Theme support to Availability Filter for consistent theming with user-selected color palettes
+
 ---
 
 ## [3.5.4] - 2026-02-03 (Beta)

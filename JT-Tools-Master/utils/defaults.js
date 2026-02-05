@@ -40,6 +40,9 @@ const JTDefaults = (() => {
     // Power User Features (require API connection)
     budgetChangelog: false,
 
+    // Pro Features - Schedule & Calendar
+    availabilityFilter: false,
+
     // Theme Configuration
     themeColors: {
       primary: '#3B82F6',     // Default blue
@@ -55,7 +58,7 @@ const JTDefaults = (() => {
    * Feature categories for UI organization
    */
   const FEATURE_CATEGORIES = {
-    scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups'],
+    scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter'],
     productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
@@ -65,7 +68,7 @@ const JTDefaults = (() => {
   /**
    * Premium features that require a license
    */
-  const PREMIUM_FEATURES = ['dragDrop', 'previewMode', 'rgbTheme'];
+  const PREMIUM_FEATURES = ['dragDrop', 'previewMode', 'rgbTheme', 'availabilityFilter'];
 
   /**
    * Timing constants (in milliseconds)

@@ -918,6 +918,55 @@ Example:
 }
 ```
 
+### Dark Mode Color Palette
+
+**IMPORTANT**: When styling dark mode, use neutral dark greys - NOT dark blues. This is critical for visual consistency across the extension.
+
+Dark mode color palette:
+- **Background (primary)**: `#2c2c2c` - Main container backgrounds
+- **Background (secondary)**: `#252525` - Headers, footers, action areas
+- **Background (elevated)**: `#333333` - Buttons, chips, interactive elements
+- **Background (hover)**: `#3a3a3a` - Hover states for interactive elements
+- **Border (primary)**: `#404040` - Main borders
+- **Border (secondary)**: `#505050` - Button borders, dividers
+- **Text (primary)**: `#e0e0e0` - Main text
+- **Text (secondary)**: `#b0b0b0` - Secondary text, labels
+- **Text (muted)**: `#a0a0a0` - Icons, placeholders
+- **Text (disabled)**: `#707070` - Disabled states
+
+**DO NOT USE** dark blue colors like:
+- ❌ `#1e293b`, `#0f172a`, `#334155`, `#475569` (Tailwind slate colors)
+- ❌ `#1e3a5f`, `#2d3748` (Blue-grey variants)
+
+**DO USE** neutral grey colors like:
+- ✅ `#2c2c2c`, `#252525`, `#333333`, `#3a3a3a`, `#404040`, `#505050`
+
+Example dark mode styles:
+```css
+body.jt-dark-mode .feature-container,
+.dark .feature-container {
+  background: #2c2c2c;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .feature-header,
+.dark .feature-header {
+  background: #252525;
+}
+
+body.jt-dark-mode .feature-button,
+.dark .feature-button {
+  background: #333333;
+  border-color: #505050;
+  color: #b0b0b0;
+}
+
+body.jt-dark-mode .feature-button:hover,
+.dark .feature-button:hover {
+  background: #3a3a3a;
+}
+```
+
 ### HTML Style
 
 - Use semantic HTML elements
