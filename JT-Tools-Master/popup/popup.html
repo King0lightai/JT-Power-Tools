@@ -47,6 +47,11 @@
           <i class="ph ph-key tab-icon"></i>
           <span class="tab-label">License</span>
         </button>
+        <button class="tab-item" data-tab="mcp">
+          <i class="ph ph-robot tab-icon"></i>
+          <span class="tab-label">MCP</span>
+          <span class="tab-badge mcp-badge">AI</span>
+        </button>
       </div>
     </nav>
 
@@ -464,6 +469,125 @@
               <p>API access & advanced features</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ==================== MCP TAB ==================== -->
+      <div class="tab-content" id="tab-mcp">
+        <div class="tab-panel-content">
+          <div class="panel-header">
+            <div class="panel-icon"><i class="ph ph-robot"></i></div>
+            <div class="panel-info">
+              <h2 class="panel-title">MCP Server</h2>
+              <p class="panel-desc">Connect AI assistants to JobTread</p>
+            </div>
+          </div>
+
+          <!-- MCP Status -->
+          <div class="mcp-status-section">
+            <div class="mcp-status" id="mcpStatus">
+              <div class="status-indicator">
+                <i class="ph ph-circle status-dot"></i>
+                <span class="status-text">Checking status...</span>
+              </div>
+              <span class="badge power-user">Power User</span>
+            </div>
+          </div>
+
+          <!-- What is MCP -->
+          <div class="mcp-info-card">
+            <h3><i class="ph ph-info"></i> What is MCP?</h3>
+            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude Code</strong>, <strong>Cursor</strong>, and <strong>ChatGPT</strong> read your JobTread data directly. Ask questions, analyze budgets, and get insights using natural language.</p>
+          </div>
+
+          <!-- Quick Setup Guide -->
+          <div class="mcp-section">
+            <h3 class="mcp-section-title"><i class="ph ph-rocket-launch"></i> Quick Setup</h3>
+
+            <div class="mcp-steps">
+              <div class="mcp-step">
+                <span class="step-number">1</span>
+                <div class="step-content">
+                  <strong>Get Your Keys</strong>
+                  <p>You need your <em>License Key</em> and <em>Grant Key</em> from the License and API tabs.</p>
+                </div>
+              </div>
+
+              <div class="mcp-step">
+                <span class="step-number">2</span>
+                <div class="step-content">
+                  <strong>Configure Your AI Tool</strong>
+                  <p>Add the MCP server URL to your AI assistant's settings.</p>
+                </div>
+              </div>
+
+              <div class="mcp-step">
+                <span class="step-number">3</span>
+                <div class="step-content">
+                  <strong>Start Chatting</strong>
+                  <p>Ask about jobs, budgets, tasks, customers, and more!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MCP Server URL -->
+          <div class="mcp-section">
+            <h3 class="mcp-section-title"><i class="ph ph-link"></i> Server Connection</h3>
+            <div class="mcp-url-box">
+              <code id="mcpServerUrl">https://mcp.jobtread-tools.pro/sse</code>
+              <button class="copy-btn" id="copyMcpUrl" title="Copy URL">
+                <i class="ph ph-copy"></i>
+              </button>
+            </div>
+            <p class="mcp-hint">Auth format: <code>Bearer LICENSE_KEY:GRANT_KEY</code></p>
+          </div>
+
+          <!-- Tool Guides -->
+          <div class="mcp-section">
+            <h3 class="mcp-section-title"><i class="ph ph-book-open"></i> Setup Guides</h3>
+
+            <div class="mcp-guides">
+              <a href="https://jtpowertools.com/docs/mcp/claude-code" target="_blank" class="mcp-guide-card">
+                <i class="ph ph-terminal"></i>
+                <span>Claude Code</span>
+                <i class="ph ph-arrow-square-out"></i>
+              </a>
+
+              <a href="https://jtpowertools.com/docs/mcp/cursor" target="_blank" class="mcp-guide-card">
+                <i class="ph ph-cursor-text"></i>
+                <span>Cursor</span>
+                <i class="ph ph-arrow-square-out"></i>
+              </a>
+
+              <a href="https://jtpowertools.com/docs/mcp/chatgpt" target="_blank" class="mcp-guide-card">
+                <i class="ph ph-openai-logo"></i>
+                <span>ChatGPT</span>
+                <i class="ph ph-arrow-square-out"></i>
+              </a>
+
+              <a href="https://jtpowertools.com/docs/mcp/other" target="_blank" class="mcp-guide-card">
+                <i class="ph ph-dots-three"></i>
+                <span>Other Tools</span>
+                <i class="ph ph-arrow-square-out"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Available Tools -->
+          <div class="mcp-section">
+            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (Read-Only)</h3>
+            <div class="mcp-tools-list">
+              <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Jobs</div>
+              <div class="mcp-tool"><i class="ph ph-user"></i> List Customers</div>
+              <div class="mcp-tool"><i class="ph ph-storefront"></i> List Vendors</div>
+              <div class="mcp-tool"><i class="ph ph-list-checks"></i> List Tasks</div>
+              <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budgets</div>
+              <div class="mcp-tool"><i class="ph ph-book-bookmark"></i> Knowledge Lookup</div>
+            </div>
+            <p class="mcp-hint"><i class="ph ph-info"></i> Write operations coming soon. For now, use JobTread UI for changes.</p>
+          </div>
+
         </div>
       </div>
 
