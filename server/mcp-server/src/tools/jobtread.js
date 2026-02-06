@@ -96,80 +96,6 @@ export class JobTreadTools {
         }
       },
 
-      // Create Task
-      {
-        name: 'jobtread_create_task',
-        description: 'Create a new task on a job.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            jobId: {
-              type: 'string',
-              description: 'Job ID to create task on'
-            },
-            name: {
-              type: 'string',
-              description: 'Task name/title'
-            },
-            description: {
-              type: 'string',
-              description: 'Task description'
-            },
-            startDate: {
-              type: 'string',
-              description: 'Start date (YYYY-MM-DD)'
-            },
-            endDate: {
-              type: 'string',
-              description: 'End date (YYYY-MM-DD)'
-            },
-            assigneeEmails: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Array of assignee email addresses'
-            }
-          },
-          required: ['jobId', 'name']
-        }
-      },
-
-      // Update Task
-      {
-        name: 'jobtread_update_task',
-        description: 'Update an existing task.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            taskId: {
-              type: 'string',
-              description: 'Task ID to update'
-            },
-            name: {
-              type: 'string',
-              description: 'New task name'
-            },
-            description: {
-              type: 'string',
-              description: 'New task description'
-            },
-            status: {
-              type: 'string',
-              enum: ['pending', 'in_progress', 'completed'],
-              description: 'New task status'
-            },
-            startDate: {
-              type: 'string',
-              description: 'New start date (YYYY-MM-DD)'
-            },
-            endDate: {
-              type: 'string',
-              description: 'New end date (YYYY-MM-DD)'
-            }
-          },
-          required: ['taskId']
-        }
-      },
-
       // Get Budget
       {
         name: 'jobtread_get_budget',
@@ -186,66 +112,84 @@ export class JobTreadTools {
         }
       },
 
-      // Search Contacts
+      // List Customers
       {
-        name: 'jobtread_search_contacts',
-        description: 'Search for contacts/customers by name, email, or phone.',
+        name: 'jobtread_list_customers',
+        description: 'List customer accounts. Customers are the accounts you bill for work.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'Search term'
+              description: 'Optional search term to filter by name'
             },
-            type: {
+            includeArchived: {
+              type: 'boolean',
+              description: 'Include archived customers (default: false)'
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum results (default 50, max 100)'
+            }
+          }
+        }
+      },
+
+      // List Vendors
+      {
+        name: 'jobtread_list_vendors',
+        description: 'List vendor accounts. Vendors are companies you pay for materials or services.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
               type: 'string',
-              enum: ['customer', 'vendor', 'subcontractor', 'all'],
-              description: 'Contact type filter (default: all)'
+              description: 'Optional search term to filter by name'
+            },
+            includeArchived: {
+              type: 'boolean',
+              description: 'Include archived vendors (default: false)'
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum results (default 50, max 100)'
+            }
+          }
+        }
+      },
+
+      // Get Account Details
+      {
+        name: 'jobtread_get_account',
+        description: 'Get detailed information about a customer or vendor account, including contacts, locations, and jobs.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            accountId: {
+              type: 'string',
+              description: 'The account ID'
+            }
+          },
+          required: ['accountId']
+        }
+      },
+
+      // Search Contacts (people on accounts)
+      {
+        name: 'jobtread_search_contacts',
+        description: 'Search for contact people by name. Contacts are individuals associated with customer or vendor accounts. Note: Returns name and title only.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Search term to match against contact name'
             },
             limit: {
               type: 'number',
               description: 'Maximum results (default 20)'
             }
           }
-        }
-      },
-
-      // Create Contact
-      {
-        name: 'jobtread_create_contact',
-        description: 'Create a new contact (customer, vendor, or subcontractor).',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string',
-              description: 'Contact name'
-            },
-            email: {
-              type: 'string',
-              description: 'Email address'
-            },
-            phone: {
-              type: 'string',
-              description: 'Phone number'
-            },
-            type: {
-              type: 'string',
-              enum: ['customer', 'vendor', 'subcontractor'],
-              description: 'Contact type'
-            },
-            address: {
-              type: 'object',
-              properties: {
-                street: { type: 'string' },
-                city: { type: 'string' },
-                state: { type: 'string' },
-                zip: { type: 'string' }
-              },
-              description: 'Contact address'
-            }
-          },
-          required: ['name', 'type']
         }
       },
 
@@ -280,13 +224,13 @@ export class JobTreadTools {
     if (this.knowledgeLookup) {
       tools.push({
         name: 'jobtread_knowledge_lookup',
-        description: 'Query JobTread documentation and your company SOPs before performing operations. Returns your SOPs first, then official docs. Call this BEFORE create/update/import operations to ensure you follow your company processes.',
+        description: 'Query JobTread documentation and your company SOPs. Returns your SOPs first (highest priority), then official docs from Gemini. Use this to understand how JobTread features work, best practices, API query syntax, and your company\'s standard procedures. RECOMMENDED: Call this when users ask "how do I..." or need guidance on JobTread workflows.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'What to look up (e.g., "change order creation", "budget formulas", "task templates")'
+              description: 'What to look up (e.g., "how do budgets work", "cost code setup", "task scheduling", "change orders")'
             },
             category: {
               type: 'string',
@@ -314,63 +258,6 @@ export class JobTreadTools {
         }
       });
 
-      tools.push({
-        name: 'sop_add',
-        description: 'Add an external SOP document link (Google Docs, Notion, etc.) to your organization. The AI will use this document as context when helping with related tasks.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            title: {
-              type: 'string',
-              description: 'Name/title of the SOP document'
-            },
-            document_url: {
-              type: 'string',
-              description: 'URL to the document (Google Docs, Notion, or public URL)'
-            },
-            description: {
-              type: 'string',
-              description: 'Brief description of what this SOP covers'
-            },
-            category: {
-              type: 'string',
-              enum: ['estimating', 'scheduling', 'budgeting', 'invoicing', 'tasks', 'documents', 'general', 'company_policies', 'client_communication'],
-              description: 'Category for the SOP'
-            }
-          },
-          required: ['title', 'document_url']
-        }
-      });
-
-      tools.push({
-        name: 'sop_remove',
-        description: 'Remove an SOP document from your organization by ID.',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            sop_id: {
-              type: 'string',
-              description: 'ID of the SOP to remove (get from sop_list)'
-            }
-          },
-          required: ['sop_id']
-        }
-      });
-
-      tools.push({
-        name: 'sop_refresh',
-        description: 'Force refresh the cached content of an SOP document (re-fetch from source URL).',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            sop_id: {
-              type: 'string',
-              description: 'ID of the SOP to refresh'
-            }
-          },
-          required: ['sop_id']
-        }
-      });
     }
 
     return tools;
@@ -392,18 +279,9 @@ export class JobTreadTools {
           }
           return await this.knowledgeLookup.lookup(args.query, args.category);
 
-        // SOP Management
+        // SOP Management (read-only)
         case 'sop_list':
           return await this.listSops(args.category);
-
-        case 'sop_add':
-          return await this.addSop(args);
-
-        case 'sop_remove':
-          return await this.removeSop(args.sop_id);
-
-        case 'sop_refresh':
-          return await this.refreshSop(args.sop_id);
 
         case 'jobtread_search_jobs':
           return await this.searchJobs(args);
@@ -414,20 +292,20 @@ export class JobTreadTools {
         case 'jobtread_list_tasks':
           return await this.listTasks(args);
 
-        case 'jobtread_create_task':
-          return await this.createTask(args);
-
-        case 'jobtread_update_task':
-          return await this.updateTask(args);
-
         case 'jobtread_get_budget':
           return await this.getBudget(args.jobId);
 
+        case 'jobtread_list_customers':
+          return await this.listCustomers(args);
+
+        case 'jobtread_list_vendors':
+          return await this.listVendors(args);
+
+        case 'jobtread_get_account':
+          return await this.getAccount(args.accountId);
+
         case 'jobtread_search_contacts':
           return await this.searchContacts(args);
-
-        case 'jobtread_create_contact':
-          return await this.createContact(args);
 
         case 'jobtread_get_custom_fields':
           return await this.getCustomFields();
@@ -623,41 +501,6 @@ export class JobTreadTools {
   }
 
   /**
-   * Create task
-   */
-  async createTask({ jobId, name, description, startDate, endDate, assigneeEmails }) {
-    // Note: This requires mutation support in Pave
-    // For now, return info about what would be created
-    const taskInfo = {
-      jobId,
-      name,
-      description,
-      startDate,
-      endDate,
-      assigneeEmails,
-      _note: 'Task creation via MCP requires mutation implementation'
-    };
-
-    return {
-      success: false,
-      message: 'Task creation is not yet fully implemented. Use JobTread UI for now.',
-      taskInfo
-    };
-  }
-
-  /**
-   * Update task
-   */
-  async updateTask({ taskId, name, description, status, startDate, endDate }) {
-    return {
-      success: false,
-      message: 'Task update is not yet fully implemented. Use JobTread UI for now.',
-      taskId,
-      updates: { name, description, status, startDate, endDate }
-    };
-  }
-
-  /**
    * Get budget
    */
   async getBudget(jobId) {
@@ -699,41 +542,198 @@ export class JobTreadTools {
   }
 
   /**
-   * Search contacts
+   * List customers (accounts with type=customer)
    */
-  async searchContacts({ query, type, limit = 20 }) {
-    const whereConditions = [];
+  async listCustomers({ query, includeArchived = false, limit = 50 }) {
+    const whereConditions = [['type', '=', 'customer']];
 
     if (query) {
-      whereConditions.push({
-        or: [
-          ['name', 'ilike', `%${query}%`],
-          ['email', 'ilike', `%${query}%`]
-        ]
-      });
+      whereConditions.push(['name', 'contains', query]);
     }
 
+    if (!includeArchived) {
+      whereConditions.push(['archivedAt', 'null']);
+    }
+
+    const paveQuery = {
+      organization: {
+        $: { id: this.orgId },
+        accounts: {
+          $: {
+            size: Math.min(limit, 100),
+            where: whereConditions.length === 1 ? whereConditions[0] : { and: whereConditions },
+            sortBy: [{ field: 'name' }]
+          },
+          nextPage: {},
+          nodes: {
+            id: {},
+            name: {},
+            type: {},
+            isTaxable: {},
+            createdAt: {},
+            archivedAt: {},
+            contacts: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                title: {}
+              }
+            },
+            jobs: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                number: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return {
+      customers: data.organization?.accounts?.nodes || [],
+      count: (data.organization?.accounts?.nodes || []).length,
+      nextPage: data.organization?.accounts?.nextPage
+    };
+  }
+
+  /**
+   * List vendors (accounts with type=vendor)
+   */
+  async listVendors({ query, includeArchived = false, limit = 50 }) {
+    const whereConditions = [['type', '=', 'vendor']];
+
+    if (query) {
+      whereConditions.push(['name', 'contains', query]);
+    }
+
+    if (!includeArchived) {
+      whereConditions.push(['archivedAt', 'null']);
+    }
+
+    const paveQuery = {
+      organization: {
+        $: { id: this.orgId },
+        accounts: {
+          $: {
+            size: Math.min(limit, 100),
+            where: whereConditions.length === 1 ? whereConditions[0] : { and: whereConditions },
+            sortBy: [{ field: 'name' }]
+          },
+          nextPage: {},
+          nodes: {
+            id: {},
+            name: {},
+            type: {},
+            createdAt: {},
+            archivedAt: {},
+            contacts: {
+              $: { size: 5 },
+              nodes: {
+                id: {},
+                name: {},
+                title: {}
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return {
+      vendors: data.organization?.accounts?.nodes || [],
+      count: (data.organization?.accounts?.nodes || []).length,
+      nextPage: data.organization?.accounts?.nextPage
+    };
+  }
+
+  /**
+   * Get account details (customer or vendor)
+   */
+  async getAccount(accountId) {
+    const paveQuery = {
+      account: {
+        $: { id: accountId },
+        id: {},
+        name: {},
+        type: {},
+        isTaxable: {},
+        createdAt: {},
+        archivedAt: {},
+        contacts: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            title: {}
+          }
+        },
+        locations: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            address: {}
+          }
+        },
+        jobs: {
+          $: { size: 20 },
+          nodes: {
+            id: {},
+            name: {},
+            number: {},
+            status: {},
+            closedOn: {}
+          }
+        },
+        customFieldValues: {
+          nodes: {
+            id: {},
+            value: {},
+            customField: {
+              id: {},
+              name: {},
+              type: {}
+            }
+          }
+        }
+      }
+    };
+
+    const data = await this.jobtreadRequest(paveQuery);
+    return data.account || { error: 'Account not found' };
+  }
+
+  /**
+   * Search contacts (people on accounts)
+   * Note: Contacts only have id, name, title - no email/phone per API schema
+   */
+  async searchContacts({ query, limit = 20 }) {
     const paveQuery = {
       organization: {
         $: { id: this.orgId },
         contacts: {
           $: {
             size: Math.min(limit, 100),
-            where: whereConditions.length > 0 ? whereConditions[0] : undefined,
+            where: query ? ['name', 'contains', query] : undefined,
             sortBy: [{ field: 'name' }]
           },
           nodes: {
             id: {},
             name: {},
-            email: {},
-            phone: {},
-            type: {}
+            title: {},
+            createdAt: {}
           }
         }
       }
     };
 
-    if (whereConditions.length === 0) {
+    if (!query) {
       delete paveQuery.organization.contacts.$.where;
     }
 
@@ -741,17 +741,6 @@ export class JobTreadTools {
     return {
       contacts: data.organization?.contacts?.nodes || [],
       count: (data.organization?.contacts?.nodes || []).length
-    };
-  }
-
-  /**
-   * Create contact
-   */
-  async createContact({ name, email, phone, type, address }) {
-    return {
-      success: false,
-      message: 'Contact creation is not yet fully implemented. Use JobTread UI for now.',
-      contactInfo: { name, email, phone, type, address }
     };
   }
 
@@ -793,11 +782,11 @@ export class JobTreadTools {
   }
 
   // ==========================================
-  // SOP Management Methods
+  // SOP Management Methods (Read-Only)
   // ==========================================
 
   /**
-   * List all SOPs for the organization
+   * List all SOPs for the organization (read-only)
    */
   async listSops(category) {
     try {
@@ -839,168 +828,6 @@ export class JobTreadTools {
       };
     } catch (error) {
       console.error('List SOPs error:', error);
-      return { error: error.message };
-    }
-  }
-
-  /**
-   * Add a new SOP document
-   */
-  async addSop({ title, document_url, description, category }) {
-    try {
-      if (!this.env.AI_KNOWLEDGE_DB) {
-        return { error: 'SOP database not configured' };
-      }
-
-      // Validate URL format
-      try {
-        new URL(document_url);
-      } catch {
-        return { error: 'Invalid document URL format' };
-      }
-
-      // Generate ID
-      const id = `sop_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-
-      await this.env.AI_KNOWLEDGE_DB.prepare(`
-        INSERT INTO user_sops (id, org_id, user_id, title, description, document_url, category, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-      `).bind(
-        id,
-        this.orgId,
-        this.user.id,
-        title,
-        description || null,
-        document_url,
-        category || 'general'
-      ).run();
-
-      // Try to fetch and cache the document content immediately
-      let fetchStatus = 'pending';
-      if (this.knowledgeLookup) {
-        try {
-          const content = await this.knowledgeLookup.fetchExternalDocument(document_url);
-          if (content) {
-            await this.env.AI_KNOWLEDGE_DB.prepare(`
-              UPDATE user_sops
-              SET cached_content = ?, cached_at = CURRENT_TIMESTAMP
-              WHERE id = ?
-            `).bind(content, id).run();
-            fetchStatus = 'cached';
-          } else {
-            await this.env.AI_KNOWLEDGE_DB.prepare(`
-              UPDATE user_sops
-              SET fetch_error = 'Could not fetch document - check URL and permissions'
-              WHERE id = ?
-            `).bind(id).run();
-            fetchStatus = 'fetch_failed';
-          }
-        } catch (e) {
-          fetchStatus = 'fetch_error';
-        }
-      }
-
-      return {
-        success: true,
-        id: id,
-        title: title,
-        category: category || 'general',
-        fetchStatus: fetchStatus,
-        message: fetchStatus === 'cached'
-          ? 'SOP added and document content cached successfully'
-          : 'SOP added. Document will be fetched on first use.'
-      };
-    } catch (error) {
-      console.error('Add SOP error:', error);
-      return { error: error.message };
-    }
-  }
-
-  /**
-   * Remove an SOP document
-   */
-  async removeSop(sopId) {
-    try {
-      if (!this.env.AI_KNOWLEDGE_DB) {
-        return { error: 'SOP database not configured' };
-      }
-
-      // Check SOP exists and belongs to this org
-      const existing = await this.env.AI_KNOWLEDGE_DB.prepare(`
-        SELECT id, title FROM user_sops WHERE id = ? AND org_id = ?
-      `).bind(sopId, this.orgId).first();
-
-      if (!existing) {
-        return { error: 'SOP not found or access denied' };
-      }
-
-      await this.env.AI_KNOWLEDGE_DB.prepare(`
-        DELETE FROM user_sops WHERE id = ? AND org_id = ?
-      `).bind(sopId, this.orgId).run();
-
-      return {
-        success: true,
-        message: `SOP "${existing.title}" has been removed`
-      };
-    } catch (error) {
-      console.error('Remove SOP error:', error);
-      return { error: error.message };
-    }
-  }
-
-  /**
-   * Refresh SOP document cache
-   */
-  async refreshSop(sopId) {
-    try {
-      if (!this.env.AI_KNOWLEDGE_DB) {
-        return { error: 'SOP database not configured' };
-      }
-
-      // Get SOP details
-      const sop = await this.env.AI_KNOWLEDGE_DB.prepare(`
-        SELECT id, title, document_url FROM user_sops WHERE id = ? AND org_id = ?
-      `).bind(sopId, this.orgId).first();
-
-      if (!sop) {
-        return { error: 'SOP not found or access denied' };
-      }
-
-      if (!this.knowledgeLookup) {
-        return { error: 'Knowledge lookup not available' };
-      }
-
-      // Fetch fresh content
-      const content = await this.knowledgeLookup.fetchExternalDocument(sop.document_url);
-
-      if (content) {
-        await this.env.AI_KNOWLEDGE_DB.prepare(`
-          UPDATE user_sops
-          SET cached_content = ?, cached_at = CURRENT_TIMESTAMP, fetch_error = NULL
-          WHERE id = ?
-        `).bind(content, sopId).run();
-
-        return {
-          success: true,
-          title: sop.title,
-          contentLength: content.length,
-          message: `SOP "${sop.title}" refreshed successfully (${content.length} characters)`
-        };
-      } else {
-        await this.env.AI_KNOWLEDGE_DB.prepare(`
-          UPDATE user_sops
-          SET fetch_error = 'Could not fetch document - check URL and permissions', last_fetch_attempt = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `).bind(sopId).run();
-
-        return {
-          success: false,
-          title: sop.title,
-          error: 'Could not fetch document. Check that the URL is accessible and the document is shared properly.'
-        };
-      }
-    } catch (error) {
-      console.error('Refresh SOP error:', error);
       return { error: error.message };
     }
   }

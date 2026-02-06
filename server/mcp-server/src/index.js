@@ -33,7 +33,9 @@ export default {
         status: 'ok',
         version: '4.0.0',
         protocol: 'MCP 2024-11-05',
+        mode: 'read-only',
         features: ['knowledge-lookup', 'process-docs', 'three-tier-retrieval'],
+        note: 'Read-only access for advanced users (Claude Code, Cursor, etc.)',
         timestamp: new Date().toISOString()
       }), {
         status: 200,
@@ -64,7 +66,9 @@ export default {
       return new Response(JSON.stringify({
         name: 'JobTread Tools Pro MCP Server',
         version: '4.0.0',
-        description: 'AI-powered JobTread access for Claude, ChatGPT, Gemini, Cursor, and more.',
+        mode: 'read-only',
+        description: 'Read-only AI-powered JobTread access for advanced users. Works with Claude Code, Cursor, ChatGPT, Gemini, and more.',
+        note: 'This MCP server provides read-only access to JobTread data. Write operations require using the JobTread UI.',
         endpoints: {
           health: '/health',
           sse: '/sse',
