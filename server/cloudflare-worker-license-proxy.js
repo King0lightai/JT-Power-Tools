@@ -365,6 +365,12 @@ function isValidOrigin(origin, env) {
     return false;
   }
 
+  // Allow the JobTread app origin (content scripts make requests from this context)
+  if (origin === 'https://app.jobtread.com') {
+    console.log('[DEBUG] Allowed JobTread app origin');
+    return true;
+  }
+
   // Allow Chrome extension origins
   if (origin.startsWith('chrome-extension://')) {
     // In production, check against specific extension ID

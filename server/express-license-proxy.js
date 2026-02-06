@@ -36,6 +36,11 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
 
+    // Allow the JobTread app origin (content scripts make requests from this context)
+    if (origin === 'https://app.jobtread.com') {
+      return callback(null, true);
+    }
+
     // Check if origin is from allowed Chrome extension
     if (origin.startsWith('chrome-extension://')) {
       if (ALLOWED_ORIGINS.some(allowed => origin === allowed)) {
