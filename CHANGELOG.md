@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Custom Theme Support
 - Added RGB/Custom Theme support to Availability Filter for consistent theming with user-selected color palettes
 
+#### MCP Documentation
+- Added setup guides for MCP server integration:
+  - Claude Code setup guide
+  - Cursor setup guide
+  - ChatGPT setup guide
+  - Generic MCP client guide with API documentation
+- Fixed MCP guide links in popup to point to correct URLs
+
 ---
 
 ## [3.5.4] - 2026-02-03 (Beta)
