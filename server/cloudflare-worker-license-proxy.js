@@ -42,11 +42,6 @@ export default {
   }
 };
 
-// Legacy format for backwards compatibility
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request, {}));
-});
-
 async function handleRequest(request, env, ctx) {
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
