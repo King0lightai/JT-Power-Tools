@@ -366,15 +366,11 @@ function isValidOrigin(origin, env) {
     return true;
   }
 
-  // Allow Chrome extension origins
+  // Allow all Chrome extension origins - only real extensions can send this scheme
+  // (license key + device ID provide the actual authentication)
   if (origin.startsWith('chrome-extension://')) {
-    // In production, check against specific extension ID
-    const allowedOriginsStr = env?.ALLOWED_ORIGINS || (typeof ALLOWED_ORIGINS !== 'undefined' ? ALLOWED_ORIGINS : '');
-    const allowedExtensions = allowedOriginsStr.split(',');
-    console.log('[DEBUG] Allowed extensions:', allowedExtensions);
-    const isAllowed = allowedExtensions.some(allowed => origin === allowed.trim());
-    console.log('[DEBUG] Origin allowed?', isAllowed);
-    return isAllowed;
+    console.log('[DEBUG] Allowed Chrome extension origin');
+    return true;
   }
 
   console.log('[DEBUG] Origin does not start with chrome-extension://');

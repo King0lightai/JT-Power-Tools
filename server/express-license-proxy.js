@@ -41,11 +41,9 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Check if origin is from allowed Chrome extension
+    // Allow all Chrome extension origins - only real extensions can send this scheme
     if (origin.startsWith('chrome-extension://')) {
-      if (ALLOWED_ORIGINS.some(allowed => origin === allowed)) {
-        return callback(null, true);
-      }
+      return callback(null, true);
     }
 
     callback(new Error('Unauthorized origin'));
