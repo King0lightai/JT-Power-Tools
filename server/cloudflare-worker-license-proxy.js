@@ -42,11 +42,6 @@ export default {
   }
 };
 
-// Legacy format for backwards compatibility
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request, {}));
-});
-
 async function handleRequest(request, env, ctx) {
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
@@ -365,15 +360,17 @@ function isValidOrigin(origin, env) {
     return false;
   }
 
-  // Allow Chrome extension origins
+  // Allow the JobTread app origin (content scripts make requests from this context)
+  if (origin === 'https://app.jobtread.com') {
+    console.log('[DEBUG] Allowed JobTread app origin');
+    return true;
+  }
+
+  // Allow all Chrome extension origins - only real extensions can send this scheme
+  // (license key + device ID provide the actual authentication)
   if (origin.startsWith('chrome-extension://')) {
-    // In production, check against specific extension ID
-    const allowedOriginsStr = env?.ALLOWED_ORIGINS || (typeof ALLOWED_ORIGINS !== 'undefined' ? ALLOWED_ORIGINS : '');
-    const allowedExtensions = allowedOriginsStr.split(',');
-    console.log('[DEBUG] Allowed extensions:', allowedExtensions);
-    const isAllowed = allowedExtensions.some(allowed => origin === allowed.trim());
-    console.log('[DEBUG] Origin allowed?', isAllowed);
-    return isAllowed;
+    console.log('[DEBUG] Allowed Chrome extension origin');
+    return true;
   }
 
   console.log('[DEBUG] Origin does not start with chrome-extension://');

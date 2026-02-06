@@ -1285,7 +1285,7 @@
   border-radius: 0.25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-wrap: nowrap;
-  z-index: 1; /* Low z-index - embedded toolbar should NOT appear over dropdowns/popups */
+  z-index: 9; /* Low z-index - embedded toolbar should NOT appear over dropdowns/popups */
   padding: 0.25rem;
   gap: 2px;
 }
@@ -1293,7 +1293,7 @@
 /* Sticky-active state - when toolbar becomes fixed during scroll */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
   position: fixed !important;
-  z-index: 50; /* Below JobTread's headers (usually z-index 100+) but above content */
+  z-index: 9; /* Below JobTread's headers (usually z-index 100+) but above content */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-color: #d1d5db;
   margin-bottom: 0; /* Remove margin when fixed */
