@@ -1378,6 +1378,7 @@ a.feature-card h3 {
 /* Pricing Section */
 .home-pricing {
     padding: 120px 0;
+    scroll-margin-top: 80px;
     background: linear-gradient(180deg, transparent 0%, rgba(255, 140, 66, 0.03) 50%, transparent 100%);
 }
 
