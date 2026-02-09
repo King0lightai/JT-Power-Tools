@@ -1001,11 +1001,17 @@ footer {
     max-width: 480px;
 }
 
+.store-badges {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .chrome-badge {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 32px;
     color: var(--gray);
     font-size: 14px;
 }
@@ -1013,6 +1019,74 @@ footer {
 .chrome-badge svg {
     width: 20px;
     height: 20px;
+}
+
+.edge-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gray);
+    font-size: 14px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.edge-badge:hover {
+    color: var(--light);
+}
+
+.edge-badge svg {
+    width: 20px;
+    height: 20px;
+    color: #0078D7;
+}
+
+.mobile-callout {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 12px 18px;
+    background: rgba(0, 120, 215, 0.1);
+    border: 1px solid rgba(0, 120, 215, 0.25);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--gray);
+    line-height: 1.4;
+}
+
+.mobile-callout strong {
+    color: #3BA0FF;
+}
+
+.mobile-callout-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+/* CTA buttons row */
+.cta-buttons-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-button.edge-cta {
+    background: linear-gradient(135deg, #0078D7, #00A4EF);
+    color: #fff;
+}
+
+.cta-button.edge-cta:hover {
+    box-shadow: 0 8px 30px rgba(0, 120, 215, 0.3);
+    color: #fff;
+}
+
+.mobile-cta-note {
+    display: none;
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--gray);
 }
 
 .hero-visual {
@@ -1623,6 +1697,14 @@ a.feature-card h3 {
         justify-content: center;
     }
 
+    .edge-badge {
+        justify-content: center;
+    }
+
+    .store-badges {
+        align-items: center;
+    }
+
     .hero-visual {
         display: none;
     }
@@ -1673,6 +1755,24 @@ a.feature-card h3 {
         width: 100%;
         text-align: center;
         padding: 16px 24px;
+    }
+
+    .mobile-callout {
+        display: flex;
+    }
+
+    .mobile-cta-note {
+        display: block;
+    }
+
+    .cta-buttons-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-buttons-row .cta-button {
+        width: 100%;
+        max-width: 320px;
     }
 
     .home-steps {
