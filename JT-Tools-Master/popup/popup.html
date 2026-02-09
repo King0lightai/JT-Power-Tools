@@ -19,7 +19,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>Power Tools</h1>
-        <span class="version">v3.5.5</span>
+        <span class="version">v3.6.0</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <i class="ph ph-sun theme-icon light-icon"></i>
           <i class="ph ph-moon theme-icon dark-icon"></i>
@@ -50,7 +50,7 @@
         <button class="tab-item" data-tab="mcp">
           <i class="ph ph-robot tab-icon"></i>
           <span class="tab-label">MCP</span>
-          <span class="tab-badge mcp-badge">AI</span>
+          <span class="tab-badge mcp-badge">SOON</span>
         </button>
       </div>
     </nav>
@@ -67,7 +67,7 @@
             <div class="category-header" data-category="schedule">
               <i class="ph ph-calendar-blank category-icon"></i>
               <span class="category-title">Schedule & Calendar</span>
-              <span class="category-count">4</span>
+              <span class="category-count">5</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features" data-category-content="schedule">
@@ -90,6 +90,17 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="autoCollapseGroups" data-feature="autoCollapseGroups">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item">
+                <div class="feature-info">
+                  <h3>Fat Gantt <i class="ph ph-question feature-help" data-guide="fat-gantt" title="Learn more"></i></h3>
+                  <p>Thicker dependency lines for easier clicking</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="ganttLines" data-feature="ganttLines">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -454,6 +465,109 @@
             </p>
           </div>
 
+          <!-- Account Section -->
+          <div class="account-section" id="accountSection">
+            <!-- Logged In State -->
+            <div class="account-logged-in" id="accountLoggedIn" style="display: none;">
+              <div class="account-card">
+                <div class="account-avatar">
+                  <i class="ph ph-user-circle"></i>
+                </div>
+                <div class="account-info">
+                  <p class="account-email" id="accountEmail">user@example.com</p>
+                  <p class="account-tier" id="accountTier">Pro Tier</p>
+                </div>
+                <button id="logoutBtn" class="btn-secondary btn-small">Sign Out</button>
+              </div>
+              <div class="sync-status" id="syncStatus">
+                <i class="ph ph-cloud-check"></i>
+                <span>Data synced across devices</span>
+              </div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="account-login" id="accountLogin" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-sign-in"></i> Sign In</h3>
+                <p>Access your account across devices</p>
+              </div>
+              <div class="account-form">
+                <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+                <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                <button id="loginBtn" class="btn-primary">Sign In</button>
+                <p class="form-switch">
+                  <a href="#" id="showForgotPasswordBtn" class="forgot-link">Forgot Password?</a>
+                </p>
+                <p class="form-switch">
+                  Don't have an account? <a href="#" id="showRegisterBtn">Create one</a>
+                </p>
+              </div>
+              <div class="account-error" id="loginError" style="display: none;"></div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="account-register" id="accountRegister" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-user-plus"></i> Create Account</h3>
+                <p>Sync your data across all devices</p>
+              </div>
+              <div class="account-form">
+                <input type="text" id="registerName" placeholder="Display Name (optional)" autocomplete="name">
+                <input type="email" id="registerEmail" placeholder="Email" autocomplete="email">
+                <input type="password" id="registerPassword" placeholder="Password (8+ characters)" autocomplete="new-password">
+                <button id="registerBtn" class="btn-primary">Create Account</button>
+                <p class="form-switch">
+                  Already have an account? <a href="#" id="showLoginBtn">Sign in</a>
+                </p>
+              </div>
+              <div class="account-error" id="registerError" style="display: none;"></div>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div class="account-forgot-password" id="accountForgotPassword" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-envelope"></i> Reset Password</h3>
+                <p>Enter your email to receive a reset link</p>
+              </div>
+              <div class="account-form">
+                <input type="email" id="forgotEmail" placeholder="Email" autocomplete="email">
+                <button id="sendResetBtn" class="btn-primary">Send Reset Link</button>
+                <p class="form-switch">
+                  <a href="#" id="backToLoginBtn">Back to Sign In</a>
+                </p>
+              </div>
+              <div class="account-success" id="forgotSuccess" style="display: none;"></div>
+              <div class="account-error" id="forgotError" style="display: none;"></div>
+            </div>
+
+            <!-- Reset Password Form (shown when reset_token is in URL) -->
+            <div class="account-reset-password" id="accountResetPassword" style="display: none;">
+              <div class="account-form-header">
+                <h3><i class="ph ph-lock-key"></i> Set New Password</h3>
+                <p>Enter your new password below</p>
+              </div>
+              <div class="account-form">
+                <input type="password" id="newPassword" placeholder="New password (8+ characters)" autocomplete="new-password">
+                <input type="password" id="confirmPassword" placeholder="Confirm password" autocomplete="new-password">
+                <button id="resetPasswordBtn" class="btn-primary">Reset Password</button>
+              </div>
+              <div class="account-success" id="resetSuccess" style="display: none;"></div>
+              <div class="account-error" id="resetError" style="display: none;"></div>
+            </div>
+
+            <!-- Setup Prompt (shown after license validation) -->
+            <div class="account-setup-prompt" id="accountSetupPrompt" style="display: none;">
+              <div class="setup-prompt-content">
+                <i class="ph ph-cloud-arrow-up"></i>
+                <h3>Sync Across Devices</h3>
+                <p>Create an account to sync your notes, templates, and settings across all your devices.</p>
+                <button id="setupAccountBtn" class="btn-primary">Create Account</button>
+                <a href="#" id="skipAccountBtn" class="skip-link">Skip for now</a>
+                <a href="#" id="signInBtn" class="sign-in-link">Already have an account? Sign in</a>
+              </div>
+            </div>
+          </div>
+
           <!-- Tier info -->
           <div class="tier-info">
             <div class="tier-card">
@@ -475,6 +589,32 @@
       <!-- ==================== MCP TAB ==================== -->
       <div class="tab-content" id="tab-mcp">
         <div class="tab-panel-content">
+          <!-- Coming Soon Placeholder -->
+          <div class="coming-soon-container">
+            <div class="coming-soon-icon">
+              <i class="ph ph-robot"></i>
+            </div>
+            <h2 class="coming-soon-title">MCP Server</h2>
+            <p class="coming-soon-subtitle">Connect AI assistants to JobTread</p>
+            <div class="coming-soon-badge">
+              <i class="ph ph-clock"></i>
+              <span>Coming Soon</span>
+            </div>
+            <p class="coming-soon-desc">
+              Model Context Protocol (MCP) integration will let AI tools like <strong>Claude Code</strong>,
+              <strong>Cursor</strong>, and <strong>ChatGPT</strong> read your JobTread data directly.
+            </p>
+            <p class="coming-soon-hint">
+              <i class="ph ph-bell-ringing"></i>
+              Stay tuned for updates!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MCP TAB CONTENT - COMMENTED OUT FOR FUTURE RELEASE
+      <div class="tab-content" id="tab-mcp">
+        <div class="tab-panel-content">
           <div class="panel-header">
             <div class="panel-icon"><i class="ph ph-robot"></i></div>
             <div class="panel-info">
@@ -483,7 +623,6 @@
             </div>
           </div>
 
-          <!-- MCP Status -->
           <div class="mcp-status-section">
             <div class="mcp-status" id="mcpStatus">
               <div class="status-indicator">
@@ -494,13 +633,11 @@
             </div>
           </div>
 
-          <!-- What is MCP -->
           <div class="mcp-info-card">
             <h3><i class="ph ph-info"></i> What is MCP?</h3>
             <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude Code</strong>, <strong>Cursor</strong>, and <strong>ChatGPT</strong> read your JobTread data directly. Ask questions, analyze budgets, and get insights using natural language.</p>
           </div>
 
-          <!-- Quick Setup Guide -->
           <div class="mcp-section">
             <h3 class="mcp-section-title"><i class="ph ph-rocket-launch"></i> Quick Setup</h3>
 
@@ -531,7 +668,81 @@
             </div>
           </div>
 
-          <!-- MCP Server URL -->
+          <div class="mcp-section" id="mcpCredentialsSection">
+            <h3 class="mcp-section-title"><i class="ph ph-key"></i> Your Credentials</h3>
+            <div class="mcp-credentials">
+              <div class="credential-row">
+                <span class="credential-label">License Key:</span>
+                <span class="credential-value" id="mcpLicenseKey">Not configured</span>
+                <span class="credential-status" id="mcpLicenseStatus"></span>
+              </div>
+              <div class="credential-row">
+                <span class="credential-label">Grant Key:</span>
+                <span class="credential-value" id="mcpGrantKey">Not configured</span>
+                <span class="credential-status" id="mcpGrantStatus"></span>
+              </div>
+            </div>
+
+            <div class="grant-key-update" id="grantKeyUpdateSection">
+              <p class="mcp-hint"><i class="ph ph-warning"></i> Grant keys can expire. Update yours below if needed.</p>
+              <div class="grant-key-input-row">
+                <input type="password" id="mcpGrantKeyInput" placeholder="Enter new Grant Key" class="mcp-input">
+                <button id="updateGrantKeyBtn" class="btn-small btn-secondary">
+                  <i class="ph ph-arrows-clockwise"></i> Update
+                </button>
+              </div>
+              <div class="grant-key-error" id="grantKeyError" style="display: none;"></div>
+            </div>
+
+            <div class="mcp-config-generator">
+              <h4 class="mcp-config-title">Generate Config for:</h4>
+
+              <div class="platform-tabs">
+                <button class="platform-tab active" data-platform="claude-code">
+                  <i class="ph ph-terminal"></i>
+                  <span>Claude Code</span>
+                </button>
+                <button class="platform-tab" data-platform="claude-desktop">
+                  <i class="ph ph-desktop"></i>
+                  <span>Claude Desktop</span>
+                </button>
+                <button class="platform-tab" data-platform="chatgpt">
+                  <i class="ph ph-openai-logo"></i>
+                  <span>ChatGPT</span>
+                </button>
+                <button class="platform-tab" data-platform="gemini">
+                  <i class="ph ph-sparkle"></i>
+                  <span>Gemini</span>
+                </button>
+              </div>
+
+              <div class="platform-notes">
+                <div class="platform-note active" data-platform="claude-code">
+                  <i class="ph ph-info"></i>
+                  Paste into <code>~/.claude/claude_desktop_config.json</code> or use <code>claude mcp add</code>
+                </div>
+                <div class="platform-note" data-platform="claude-desktop">
+                  <i class="ph ph-warning"></i>
+                  Requires <a href="https://www.npmjs.com/package/mcp-remote" target="_blank">mcp-remote</a> wrapper (npx)
+                </div>
+                <div class="platform-note" data-platform="chatgpt">
+                  <i class="ph ph-warning"></i>
+                  Requires ChatGPT Plus with <a href="https://chatgpt.com/settings/developer" target="_blank">Developer Mode</a> enabled
+                </div>
+                <div class="platform-note" data-platform="gemini">
+                  <i class="ph ph-info"></i>
+                  Use HTTP URL in Gemini's MCP server settings
+                </div>
+              </div>
+
+              <div class="mcp-config-actions">
+                <button id="copyMcpConfigBtn" class="btn-primary mcp-config-btn" disabled>
+                  <i class="ph ph-copy"></i> Copy Config
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="mcp-section">
             <h3 class="mcp-section-title"><i class="ph ph-link"></i> Server Connection</h3>
             <div class="mcp-url-box">
@@ -543,7 +754,6 @@
             <p class="mcp-hint">Auth format: <code>Bearer LICENSE_KEY:GRANT_KEY</code></p>
           </div>
 
-          <!-- Tool Guides -->
           <div class="mcp-section">
             <h3 class="mcp-section-title"><i class="ph ph-book-open"></i> Setup Guides</h3>
 
@@ -574,7 +784,6 @@
             </div>
           </div>
 
-          <!-- Available Tools -->
           <div class="mcp-section">
             <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (Read-Only)</h3>
             <div class="mcp-tools-list">
@@ -590,6 +799,7 @@
 
         </div>
       </div>
+      END MCP TAB CONTENT -->
 
     </div>
 
@@ -607,6 +817,7 @@
 
   <script src="../config/worker-config.js"></script>
   <script src="../services/license.js"></script>
+  <script src="../services/account-service.js"></script>
   <script src="../services/jobtread-pro-service.js"></script>
   <script src="../services/jobtread-api.js"></script>
   <script src="popup.js"></script>

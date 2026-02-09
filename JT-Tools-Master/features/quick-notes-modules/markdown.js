@@ -33,19 +33,57 @@ const QuickNotesMarkdown = (() => {
     // Parse inline code `code`
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');
 
-    // Parse bold **text** or *text*
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
-
-    // Parse italic _text_
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-    // Parse strikethrough ~~text~~
+    // Parse strikethrough ~~text~~ (must be before underline)
     html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
 
-    // Parse underline __text__
+    // Parse underline __text__ (must be before bold to not confuse with **)
     html = html.replace(/__(.+?)__/g, '<u>$1</u>');
 
+    // Parse bold **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Parse bold *text* (single asterisks, but not if preceded/followed by another asterisk)
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
+
+    // Parse italic _text_ (single underscores, but not if preceded/followed by another underscore)
+    html = html.replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '<em>$1</em>');
+
+    return html;
+  }
+
+  /**
+   * Parse markdown table to HTML
+   * @param {string[]} tableLines - Array of table lines
+   * @returns {string} HTML table
+   */
+  function parseMarkdownTable(tableLines) {
+    if (tableLines.length < 2) return '';
+
+    const parseRow = (line) => {
+      return line.split('|')
+        .map(cell => cell.trim())
+        .filter((cell, i, arr) => i > 0 && i < arr.length - 1); // Remove empty first/last from split
+    };
+
+    const headerCells = parseRow(tableLines[0]);
+    // Skip separator line (index 1)
+    const bodyRows = tableLines.slice(2).map(parseRow);
+
+    let html = '<div class="jt-note-table-container"><table class="jt-note-table"><thead><tr>';
+    headerCells.forEach(cell => {
+      html += `<th contenteditable="true">${escapeHtml(cell)}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    bodyRows.forEach(cells => {
+      html += '<tr>';
+      cells.forEach(cell => {
+        html += `<td contenteditable="true">${escapeHtml(cell)}</td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
     return html;
   }
 
@@ -58,15 +96,38 @@ const QuickNotesMarkdown = (() => {
     if (!text) return '<div><br></div>';
 
     const lines = text.split('\n');
-    const htmlLines = lines.map(line => {
+    const htmlParts = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Check if this is the start of a table (line starts with |)
+      if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+        // Collect all table lines
+        const tableLines = [];
+        while (i < lines.length && lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|')) {
+          tableLines.push(lines[i]);
+          i++;
+        }
+        if (tableLines.length >= 2) {
+          htmlParts.push(parseMarkdownTable(tableLines));
+        }
+        continue;
+      }
+
       // Checkbox lists
       if (line.match(/^- \[x\]/i)) {
         const content = line.replace(/^- \[x\]\s*/i, '');
-        return `<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
+        htmlParts.push(`<div class="jt-note-checkbox checked" contenteditable="false"><input type="checkbox" checked><span contenteditable="true">${processInlineFormatting(content)}</span></div>`);
+        i++;
+        continue;
       }
       if (line.match(/^- \[ \]/)) {
         const content = line.replace(/^- \[ \]\s*/, '');
-        return `<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${processInlineFormatting(content)}</span></div>`;
+        htmlParts.push(`<div class="jt-note-checkbox" contenteditable="false"><input type="checkbox"><span contenteditable="true">${processInlineFormatting(content)}</span></div>`);
+        i++;
+        continue;
       }
       // Bullet lists with indentation support
       if (line.match(/^(\s*)- /)) {
@@ -74,13 +135,29 @@ const QuickNotesMarkdown = (() => {
         const indent = Math.floor(match[1].length / 2); // 2 spaces = 1 indent level
         const content = match[2];
         const indentAttr = indent > 0 ? ` data-indent="${indent}"` : '';
-        return `<div class="jt-note-bullet"${indentAttr}>• ${processInlineFormatting(content)}</div>`;
+        htmlParts.push(`<div class="jt-note-bullet"${indentAttr}>• ${processInlineFormatting(content)}</div>`);
+        i++;
+        continue;
+      }
+      // Numbered lists: 1. item, 2. item
+      if (line.match(/^(\s*)(\d+)\. /)) {
+        const match = line.match(/^(\s*)(\d+)\. (.*)$/);
+        if (match) {
+          const indent = Math.floor(match[1].length / 2);
+          const number = match[2];
+          const content = match[3];
+          const indentAttr = indent > 0 ? ` data-indent="${indent}"` : '';
+          htmlParts.push(`<div class="jt-note-numbered" data-number="${number}"${indentAttr}>${number}. ${processInlineFormatting(content)}</div>`);
+          i++;
+          continue;
+        }
       }
       // Regular text with inline formatting
-      return `<div>${processInlineFormatting(line) || '<br>'}</div>`;
-    });
+      htmlParts.push(`<div>${processInlineFormatting(line) || '<br>'}</div>`);
+      i++;
+    }
 
-    return htmlLines.join('');
+    return htmlParts.join('');
   }
 
   /**
@@ -100,18 +177,20 @@ const QuickNotesMarkdown = (() => {
     // Parse inline code `code`
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');
 
-    // Parse bold **text** or *text*
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
-
-    // Parse italic _text_
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-    // Parse strikethrough ~~text~~
+    // Parse strikethrough ~~text~~ (must be before underline)
     html = html.replace(/~~(.+?)~~/g, '<s>$1</s>');
 
-    // Parse underline __text__
+    // Parse underline __text__ (must be before bold)
     html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+
+    // Parse bold **text**
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Parse bold *text* (single asterisks)
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<strong>$1</strong>');
+
+    // Parse italic _text_ (single underscores)
+    html = html.replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '<em>$1</em>');
 
     // Parse line by line for lists and checkboxes
     const lines = html.split('\n');
@@ -174,6 +253,43 @@ const QuickNotesMarkdown = (() => {
   }
 
   /**
+   * Convert HTML table to markdown table format
+   * @param {HTMLTableElement} table - Table element
+   * @returns {string} Markdown table
+   */
+  function tableToMarkdown(table) {
+    const rows = [];
+    const headerRow = table.querySelector('thead tr');
+    const bodyRows = table.querySelectorAll('tbody tr');
+
+    // Process header row
+    if (headerRow) {
+      const headers = [];
+      const separators = [];
+      headerRow.querySelectorAll('th').forEach(th => {
+        const text = th.textContent.trim() || ' ';
+        headers.push(text);
+        separators.push('-'.repeat(Math.max(3, text.length)));
+      });
+      rows.push('| ' + headers.join(' | ') + ' |');
+      rows.push('| ' + separators.join(' | ') + ' |');
+    }
+
+    // Process body rows
+    bodyRows.forEach(tr => {
+      const cells = [];
+      tr.querySelectorAll('td').forEach(td => {
+        cells.push(td.textContent.trim() || ' ');
+      });
+      if (cells.length > 0) {
+        rows.push('| ' + cells.join(' | ') + ' |');
+      }
+    });
+
+    return rows.join('\n');
+  }
+
+  /**
    * Convert contenteditable HTML back to markdown
    * @param {HTMLElement} element - Contenteditable element
    * @returns {string} Markdown text
@@ -197,6 +313,19 @@ const QuickNotesMarkdown = (() => {
           const indent = parseInt(node.getAttribute('data-indent') || '0');
           const indentSpaces = '  '.repeat(indent); // 2 spaces per indent level
           markdown += `${indentSpaces}- ${extractInlineMarkdown(node)}\n`;
+        } else if (node.classList.contains('jt-note-numbered')) {
+          const number = node.getAttribute('data-number') || '1';
+          const indent = parseInt(node.getAttribute('data-indent') || '0');
+          const indentSpaces = '  '.repeat(indent);
+          // Remove the number prefix from content before extracting markdown
+          const textContent = node.textContent.replace(/^\d+\.\s*/, '');
+          markdown += `${indentSpaces}${number}. ${textContent}\n`;
+        } else if (node.classList.contains('jt-note-table-container') || tag === 'table') {
+          // Handle table conversion to markdown
+          const table = tag === 'table' ? node : node.querySelector('table');
+          if (table) {
+            markdown += tableToMarkdown(table) + '\n';
+          }
         } else if (tag === 'div') {
           const content = extractInlineMarkdown(node);
           if (content) markdown += content + '\n';

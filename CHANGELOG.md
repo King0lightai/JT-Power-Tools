@@ -9,6 +9,161 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Fat Gantt - Thicker Dependency Lines
+- **New feature: Fat Gantt**: Makes Gantt chart dependency lines thicker (3.5px vs 1.5px) and easier to click
+  - Increased stroke width from 1.5px to 3.5px for better visibility
+  - Rounded line caps and joins for smoother appearance
+  - Slightly enlarged arrow markers for visual balance
+  - Dark mode compatible with brighter blue (#60a5fa) for visibility
+  - Toggleable in Settings under "Schedule & Calendar" category
+  - Enabled by default (free feature)
+
+#### Quick Notes Panel Improvements
+- **Push page content**: Quick Notes panel now pushes JobTread page content to the left instead of overlaying it, allowing you to still see and interact with JobTread while a note is open
+- **Collapsible sidebar**: Added a collapse button (<<) in the sidebar header to hide the notes list while keeping the editor visible. Collapsed state is remembered across sessions.
+- **Minimum editor width**: Editor enforces a minimum width of 452px to ensure toolbar buttons (including undo/redo) are always visible
+- **Custom theme compatibility**: Added complete custom RGB theme support for collapsed sidebar state and all new UI elements (borders, backgrounds, button containers)
+
+#### Account & License UI
+- **Sign in link**: Added "Already have an account? Sign in" link to the account setup prompt for users who already have an account on another device
+
+#### Team Notes Enhancements
+- **Folder support for team notes**: Team notes now persist folder assignments to the server, enabling folder organization that syncs across team members
+- **Pin notes in folders**: Notes can now be pinned to appear at the top of their folder. Click the pin icon next to any note to pin/unpin. Pinned notes display with a cyan left border accent.
+- **Polling sync for team notes**: Team notes now automatically sync every 15 seconds when the panel is open, allowing near real-time collaboration without page refresh
+- **Drag to reorder folders**: Folders can now be reordered by dragging the grip handle on folder headers. Custom folder order is saved per tab (My Notes vs Team Notes)
+- **Drag notes between folders**: Notes can now be moved between folders by dragging them onto a folder header. The folder header highlights when hovering with a dragged note.
+- **Delete folders**: Folders (except General) can now be deleted by hovering over the folder header and clicking the × button. Notes in deleted folders are automatically moved to General.
+- **Drag notes to reorder**: Notes can now be reordered within a folder or moved to a different position in another folder by dragging them onto other notes. A blue indicator shows where the note will be placed.
+
+### Fixed
+
+#### Folder Persistence Fixes
+- **Fixed personal notes folders not syncing**: The `syncNotes()` function was not including the `folder` property in the sync payload, causing folders to be lost after server sync. Folders now persist correctly across devices.
+- **Fixed team notes folder column missing**: Added database migration to add `folder` column to `team_notes` table, fixing "table has no column named folder" errors when saving team notes to folders.
+
+#### Quick Notes Editor Fixes
+- **Fixed folder showing "[object PointerEvent]"**: The "New Note" button was incorrectly passing the click event object as the folder parameter, causing folders to display as "[object PointerEvent]" instead of "General"
+- **Fixed toolbar buttons not working**: Added `mousedown` event handler to prevent toolbar buttons from stealing focus, which was causing formatting commands to fail because the text selection was lost
+- **Fixed Quick Notes toolbar affecting Text Formatter**: Quick Notes formatting button state updates now scope queries to its own toolbar, preventing it from accidentally highlighting the Text Formatter toolbar buttons when both features are active on the same page
+- **Added Enter key support for lists**: Pressing Enter while in a bullet, numbered, or checkbox item now creates a new list item of the same type on the next line. Numbered lists are automatically renumbered.
+- **Fixed checkbox deletion**: Empty checkboxes can now be deleted with Backspace or Delete keys. Empty bullet and numbered list items can also be removed with Backspace.
+- **Fixed invalid folder names**: Added automatic cleanup of invalid folder names (like "[object Object]" or "[object PointerEvent]") that may have been created due to the earlier bug. These are now automatically reset to "General" on load.
+- **Fixed redo not working**: Redo was broken because undo/redo operations were incorrectly triggering history saves, which cleared the redo stack. Now undo/redo operations are handled separately and don't corrupt the history.
+- **Fixed markdown formatting order**: Reordered regex patterns to process strikethrough and underline before bold/italic, preventing incorrect parsing of formatting markers.
+- **Improved toolbar button responsiveness**: Formatting buttons (Bold, Italic, etc.) now immediately show active/inactive state after clicking, using `document.queryCommandState()` for accurate detection even when cursor is positioned without text selection.
+- **Fixed undo/redo buttons not working**: Switched to browser's native undo/redo commands (`document.execCommand('undo'/'redo')`) which properly track all user edits made during the session.
+- **Enhanced active button styling**: Made active formatting buttons more visually prominent with stronger cyan background (`#cffafe`) and a subtle glow effect (`box-shadow`).
+- **Fixed formatting in list items**: Formatting buttons (Bold, Italic, etc.) now work correctly inside bullet points, numbered lists, and checkboxes. The selection is preserved and restored before applying formatting commands.
+- **Fixed "wall" issue between formatted and unformatted text**: Backspace can now properly cross the boundary between bold/italic/underline text and normal text. Empty formatting elements are automatically cleaned up, preventing invisible barriers that blocked cursor movement.
+- **Added Ctrl+click to open links**: Links in Quick Notes can now be opened by Ctrl+clicking (or Cmd+click on Mac) while editing.
+- **Added table support**: New table button in toolbar allows inserting markdown tables with customizable rows/columns. Tables are editable directly in the WYSIWYG editor and properly convert to/from markdown format.
+- **Removed code button**: Removed the inline code formatting button from the toolbar to simplify the interface.
+- **Improved extension context handling**: Quick Notes now gracefully handles extension context invalidation (e.g., after reloading the extension) instead of throwing errors.
+- **Fixed resize handle showing on sidebar-only view**: The resize handle is now only visible and functional when a note is open in the editor. Previously it was active even when viewing the sidebar list, causing users to drag an empty area.
+- **Added table row/column management**: Right-click on any table cell to add/remove rows and columns via context menu. Options include Add Row Above/Below, Add Column Left/Right, Delete Row, Delete Column, and Delete Table.
+- **Added folder colors**: Folders can now be assigned custom colors for visual organization. Click the circle icon next to a folder name to choose from 18 color options. Colored folders display a left border accent and filled color indicator.
+
+### Added
+
+#### Quick Notes - Pure WYSIWYG Editor & Folder Organization
+- **Pure WYSIWYG Editor**: Quick Notes now uses a clean rendered-only editor
+  - SVG icon toolbar with bold, italic, underline, strikethrough, lists, checkboxes, links, code, undo/redo
+  - Formatting is rendered directly - no markdown syntax visible to users
+  - Keyboard shortcuts: Ctrl+B (bold), Ctrl+I (italic), Ctrl+U (underline), Ctrl+K (link), Ctrl+Z (undo), Ctrl+Y (redo)
+  - Full undo/redo support with history tracking
+  - Proper spell checking (uses browser's native spellcheck)
+  - Interactive checkboxes that toggle on click
+  - Notes still stored as markdown for backward compatibility
+  - Removed EasyMDE library (~110KB saved)
+- **Numbered list support**: Added numbered/ordered list formatting
+  - Click numbered list button or convert existing content
+  - Supports indentation levels
+  - Proper markdown conversion (1. item, 2. item, etc.)
+- **Folder organization for notes**: Notes can now be organized into collapsible folders
+  - Each folder shows a note count badge
+  - Click folder header to expand/collapse
+  - Quick [+] button on folder header to create note directly in that folder
+  - Folder dropdown selector in editor header (select existing or create new)
+  - "+ New Folder..." option in dropdown to create new folders
+  - Separate folders for My Notes vs Team Notes tabs
+  - Collapsed folder state persists across sessions
+  - Existing notes are automatically migrated to "General" folder
+- **Dark mode support**: Full WYSIWYG editor and folder styling for dark theme
+- **Custom theme support**: Editor and folders respect custom RGB theme
+
+#### User Accounts System (P0 Core)
+- **Account-based authentication**: Users can now create accounts with email/password to sync data across devices
+- **New AccountService** (`services/account-service.js`): Handles JWT authentication, session management, and data sync
+- **Server-side auth endpoints**: Added to Cloudflare Worker:
+  - `/auth/setup-token` - Generate registration token after license validation
+  - `/auth/register` - Create account with email/password
+  - `/auth/login` - Authenticate and receive JWT tokens
+  - `/auth/refresh` - Refresh access tokens
+  - `/auth/logout` - Invalidate session
+  - `/auth/update-grant-key` - Update grant key for Power Users
+  - `/auth/forgot-password` - Request password reset email
+  - `/auth/reset-password` - Complete password reset with token
+- **New database schema**: Added D1 tables for accounts, sessions, notes sync, templates sync, and settings sync
+- **Popup UI updates**:
+  - Login form for existing account holders
+  - Registration form for new users after license validation
+  - Logged-in state showing user email and sync status
+  - Setup prompt after license validation to encourage account creation
+  - **Forgot Password flow**: Request password reset via email
+  - **Reset Password form**: Set new password from email link
+- **Email integration**: Password reset emails sent via Resend API
+- **Security features**:
+  - PBKDF2 password hashing with 100k iterations
+  - AES-256-GCM encryption for grant keys
+  - JWT tokens with short-lived access (15 min) and long-lived refresh (30 days)
+  - Secure token storage in `chrome.storage.local`
+  - Password reset tokens expire after 1 hour (single-use)
+  - All sessions invalidated after password reset
+- **Backward compatible**: Existing device-auth users can continue without creating an account
+
+#### Quick Notes Cloud Sync
+- **Automatic sync**: Notes automatically sync to cloud when you're logged in
+- **Last-write-wins conflict resolution**: When the same note is edited on multiple devices, the most recent edit wins
+- **Bidirectional sync**: Push local changes and pull remote changes in a single operation
+- **Background sync**: Changes sync automatically after a short delay (3 seconds after last edit)
+- **On-demand sync**: Sync triggers when you switch tabs back to JobTread
+- **Local-first architecture**: Notes always save locally first, then sync to server
+- **Preserves existing notes**: All your existing notes in browser storage are preserved and merged with cloud
+- **Server-side endpoints**: Added `/sync/notes`, `/sync/notes/pull`, `/sync/notes/push` endpoints
+- **Soft delete support**: Deleted notes sync across devices properly
+
+#### Message Templates Cloud Sync
+- **Automatic sync**: Templates from Character Counter automatically sync when logged in
+- **Same sync architecture as Quick Notes**: Last-write-wins, bidirectional, background sync
+- **Default template syncs**: The default template selection syncs across devices
+- **Server-side endpoints**: Added `/sync/templates`, `/sync/templates/pull`, `/sync/templates/push` endpoints
+- **Local-first**: Templates save locally first, then sync to cloud
+- **Free feature**: Template sync works for all users with an account (doesn't require premium)
+
+#### Team Notes (Shared Notes)
+- **New "Team Notes" tab**: Quick Notes now has tabs for "My Notes" (personal) and "Team Notes" (shared)
+- **Organization-wide sharing**: Team notes are visible and editable by all users under the same license
+- **Real-time attribution**: Each team note shows who created it and who last updated it
+- **Server-first sync**: Team notes are stored on the server and refresh when switching tabs or returning to JobTread
+- **Debounced saves**: Team note edits are saved automatically after 1 second of inactivity
+- **Login prompt**: Team Notes tab shows a helpful sign-in prompt for users not logged in
+- **Loading states**: Visual spinner while team notes are loading from server
+- **Server-side endpoints**: Added `/sync/team-notes`, `/sync/team-notes/push`, `/sync/team-notes/delete`
+- **Database migration**: New `team_notes` table with org scoping and soft delete support
+- **Full dark mode support**: Tabs and attribution styled for dark theme
+
+#### MCP Setup Improvements (Power Users)
+- **Credentials Display**: MCP tab now shows your License Key and Grant Key status
+- **Grant Key Management**: Update your Grant Key directly from the MCP tab when it expires
+- **Multi-Platform Config Generator**: Platform selector tabs generate ready-to-use configs for:
+  - **Claude Code**: Direct SSE config with headers
+  - **Claude Desktop**: mcp-remote wrapper config (npx command)
+  - **ChatGPT**: URL and Bearer token format for UI setup
+  - **Gemini**: HTTP endpoint config format
+- **Platform-specific notes**: Helpful hints and requirements for each platform
+- **Enhanced UX**: Clear status indicators and error messages for credential configuration
+
 #### Availability Filter (Pro Feature)
 - New filter for the Schedule Availability view to show/hide assignees by role or category
 - **Hierarchical filter structure**:

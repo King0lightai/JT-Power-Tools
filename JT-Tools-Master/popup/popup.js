@@ -98,6 +98,7 @@ const defaultSettings = {
   kanbanTypeFilter: false,
   autoCollapseGroups: false,
   availabilityFilter: false,
+  ganttLines: true,
   pdfMarkupTools: true,
   themeColors: {
     primary: '#3B82F6',     // Default blue
@@ -450,6 +451,12 @@ async function verifyLicenseKey() {
       // Update UI
       await checkLicenseStatus();
       await loadSettings();
+
+      // Update account UI to show setup prompt (if AccountService available)
+      if (typeof AccountService !== 'undefined') {
+        sessionStorage.removeItem('accountSetupSkipped'); // Reset skip state on new license
+        await updateAccountUI();
+      }
     } else {
       showStatus(result.error || 'Invalid license key', 'error');
     }
@@ -488,6 +495,7 @@ async function loadSettings() {
     setCheckbox('budgetHierarchy', settings.budgetHierarchy !== undefined ? settings.budgetHierarchy : false);
     setCheckbox('kanbanTypeFilter', settings.kanbanTypeFilter !== undefined ? settings.kanbanTypeFilter : false);
     setCheckbox('autoCollapseGroups', settings.autoCollapseGroups !== undefined ? settings.autoCollapseGroups : false);
+    setCheckbox('ganttLines', settings.ganttLines !== undefined ? settings.ganttLines : true);
 
     // ESSENTIAL features - require any license (Essential, Pro, Power User)
     setCheckbox('quickNotes', hasEssentialFeatures && (settings.quickNotes !== undefined ? settings.quickNotes : true));
@@ -677,6 +685,7 @@ async function getCurrentSettings() {
     characterCounter: getCheckboxValue('characterCounter', defaultSettings.characterCounter),
     kanbanTypeFilter: getCheckboxValue('kanbanTypeFilter', defaultSettings.kanbanTypeFilter),
     autoCollapseGroups: getCheckboxValue('autoCollapseGroups', defaultSettings.autoCollapseGroups),
+    ganttLines: getCheckboxValue('ganttLines', defaultSettings.ganttLines),
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
@@ -1000,6 +1009,15 @@ function initFeatureHelpLinks() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('JT Power Tools popup loaded');
 
+  // Check for password reset token in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('reset_token');
+  if (resetToken) {
+    console.log('Password reset token detected, showing reset form');
+    // We'll show the reset form after account UI is initialized
+    window.pendingResetToken = resetToken;
+  }
+
   // Initialize popup theme first (before any other UI updates)
   await initPopupTheme();
 
@@ -1089,6 +1107,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       verifyLicenseKey();
     }
   });
+
+  // Initialize account UI
+  await initAccountUI();
 
   // Listen for checkbox changes
   const checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -1652,8 +1673,309 @@ async function initMcpTab() {
     });
   }
 
-  // Check MCP status
+  // Setup Grant Key update button
+  const updateGrantKeyBtn = document.getElementById('updateGrantKeyBtn');
+  if (updateGrantKeyBtn) {
+    updateGrantKeyBtn.addEventListener('click', handleUpdateGrantKey);
+  }
+
+  // Setup Grant Key input enter key
+  const grantKeyInput = document.getElementById('mcpGrantKeyInput');
+  if (grantKeyInput) {
+    grantKeyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleUpdateGrantKey();
+    });
+  }
+
+  // Setup Copy MCP Config button
+  const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
+  if (copyConfigBtn) {
+    copyConfigBtn.addEventListener('click', handleCopyMcpConfig);
+  }
+
+  // Setup platform tabs
+  initPlatformTabs();
+
+  // Check MCP status and update credentials display
   await checkMcpStatus();
+  await updateMcpCredentialsDisplay();
+}
+
+/**
+ * Update the MCP credentials display
+ */
+async function updateMcpCredentialsDisplay() {
+  const licenseKeyEl = document.getElementById('mcpLicenseKey');
+  const grantKeyEl = document.getElementById('mcpGrantKey');
+  const licenseStatusEl = document.getElementById('mcpLicenseStatus');
+  const grantStatusEl = document.getElementById('mcpGrantStatus');
+  const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
+
+  if (!licenseKeyEl || !grantKeyEl) return;
+
+  // Get license key
+  const licenseData = await LicenseService.getLicenseData();
+  if (licenseData && licenseData.key) {
+    // Show masked key (first 8 chars + ...)
+    const maskedKey = licenseData.key.substring(0, 8) + '••••••••';
+    licenseKeyEl.textContent = maskedKey;
+    licenseKeyEl.classList.remove('not-set');
+    licenseStatusEl.className = 'credential-status valid';
+  } else {
+    licenseKeyEl.textContent = 'Not configured';
+    licenseKeyEl.classList.add('not-set');
+    licenseStatusEl.className = 'credential-status invalid';
+  }
+
+  // Get grant key
+  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+  if (stored.jtpro_grant_key) {
+    // Show masked grant key
+    const maskedGrant = stored.jtpro_grant_key.substring(0, 8) + '••••••••';
+    grantKeyEl.textContent = maskedGrant;
+    grantKeyEl.classList.remove('not-set');
+    grantStatusEl.className = 'credential-status valid';
+  } else {
+    grantKeyEl.textContent = 'Not configured';
+    grantKeyEl.classList.add('not-set');
+    grantStatusEl.className = 'credential-status invalid';
+  }
+
+  // Enable/disable Copy MCP Config button
+  if (copyConfigBtn) {
+    const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
+    copyConfigBtn.disabled = !hasCredentials;
+  }
+}
+
+/**
+ * Handle updating the grant key
+ */
+async function handleUpdateGrantKey() {
+  const grantKeyInput = document.getElementById('mcpGrantKeyInput');
+  const updateBtn = document.getElementById('updateGrantKeyBtn');
+  const errorEl = document.getElementById('grantKeyError');
+
+  const newGrantKey = grantKeyInput.value.trim();
+
+  if (!newGrantKey) {
+    showGrantKeyError('Please enter a Grant Key');
+    return;
+  }
+
+  // Disable button during update
+  updateBtn.disabled = true;
+  updateBtn.innerHTML = '<i class="ph ph-spinner"></i> Updating...';
+  errorEl.style.display = 'none';
+
+  try {
+    // Test the new grant key via Pro Service
+    const result = await JobTreadProService.verifyOrgAccess(newGrantKey);
+
+    if (result.success) {
+      // Clear input
+      grantKeyInput.value = '';
+
+      // Show success
+      showGrantKeySuccess(`Grant Key updated! Connected to ${result.organizationName || 'organization'}`);
+
+      // Update displays
+      await updateMcpCredentialsDisplay();
+      await checkMcpStatus();
+      await checkApiStatus();
+    } else {
+      // Show error
+      if (result.code === 'ORG_MISMATCH') {
+        showGrantKeyError('This Grant Key is from a different organization than your license');
+      } else if (result.code === 'INVALID_GRANT_KEY') {
+        showGrantKeyError('Invalid Grant Key. Please check and try again.');
+      } else {
+        showGrantKeyError(result.message || result.error || 'Failed to verify Grant Key');
+      }
+    }
+  } catch (error) {
+    console.error('Error updating grant key:', error);
+    showGrantKeyError('Error connecting to server. Please try again.');
+  } finally {
+    updateBtn.disabled = false;
+    updateBtn.innerHTML = '<i class="ph ph-arrows-clockwise"></i> Update';
+  }
+}
+
+/**
+ * Show grant key error message
+ */
+function showGrantKeyError(message) {
+  const errorEl = document.getElementById('grantKeyError');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.className = 'grant-key-error';
+    errorEl.style.display = 'block';
+  }
+}
+
+/**
+ * Show grant key success message
+ */
+function showGrantKeySuccess(message) {
+  const errorEl = document.getElementById('grantKeyError');
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.className = 'grant-key-success';
+    errorEl.style.display = 'block';
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      errorEl.style.display = 'none';
+    }, 3000);
+  }
+}
+
+// Current selected platform for MCP config
+let selectedMcpPlatform = 'claude-code';
+
+/**
+ * Initialize platform tabs for MCP config generator
+ */
+function initPlatformTabs() {
+  const platformTabs = document.querySelectorAll('.platform-tab');
+  const platformNotes = document.querySelectorAll('.platform-note');
+
+  platformTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const platform = tab.dataset.platform;
+      selectedMcpPlatform = platform;
+
+      // Update active tab
+      platformTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Update active note
+      platformNotes.forEach(note => {
+        note.classList.remove('active');
+        if (note.dataset.platform === platform) {
+          note.classList.add('active');
+        }
+      });
+    });
+  });
+}
+
+/**
+ * Generate MCP config for the selected platform
+ * @param {string} platform - The platform to generate config for
+ * @param {string} licenseKey - The license key
+ * @param {string} grantKey - The grant key
+ * @returns {string} The config as a formatted string
+ */
+function generateMcpConfig(platform, licenseKey, grantKey) {
+  const authToken = `${licenseKey}:${grantKey}`;
+  const serverUrl = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
+
+  switch (platform) {
+    case 'claude-code':
+      // Claude Code: Direct SSE support with JSON config
+      return JSON.stringify({
+        "mcpServers": {
+          "jobtread": {
+            "type": "sse",
+            "url": `${serverUrl}/sse`,
+            "headers": {
+              "Authorization": `Bearer ${authToken}`
+            }
+          }
+        }
+      }, null, 2);
+
+    case 'claude-desktop':
+      // Claude Desktop: Requires mcp-remote wrapper (stdio to SSE bridge)
+      return JSON.stringify({
+        "mcpServers": {
+          "jobtread": {
+            "command": "npx",
+            "args": [
+              "-y",
+              "mcp-remote",
+              `${serverUrl}/sse`,
+              "--header",
+              `Authorization:Bearer ${authToken}`
+            ]
+          }
+        }
+      }, null, 2);
+
+    case 'chatgpt':
+      // ChatGPT: Uses URL with trailing slash and bearer token
+      // Note: ChatGPT MCP setup is done via UI, this is just for reference
+      return `MCP Server URL:
+${serverUrl}/sse/
+
+Authentication:
+Bearer Token: ${authToken}
+
+Note: In ChatGPT settings, select "Bearer Token" as
+authentication type and paste the token above.`;
+
+    case 'gemini':
+      // Gemini: Uses HTTP endpoint
+      return JSON.stringify({
+        "mcpServers": {
+          "jobtread": {
+            "httpUrl": `${serverUrl}/mcp`,
+            "headers": {
+              "Authorization": `Bearer ${authToken}`
+            }
+          }
+        }
+      }, null, 2);
+
+    default:
+      return '';
+  }
+}
+
+/**
+ * Handle copying MCP config to clipboard
+ */
+async function handleCopyMcpConfig() {
+  const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
+
+  // Get credentials
+  const licenseData = await LicenseService.getLicenseData();
+  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+
+  if (!licenseData?.key || !stored.jtpro_grant_key) {
+    showStatus('Please configure both License Key and Grant Key first', 'error');
+    return;
+  }
+
+  // Generate platform-specific config
+  const config = generateMcpConfig(selectedMcpPlatform, licenseData.key, stored.jtpro_grant_key);
+
+  try {
+    await navigator.clipboard.writeText(config);
+
+    // Show copied state
+    copyConfigBtn.classList.add('copied');
+    copyConfigBtn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+
+    // Reset after 2 seconds
+    setTimeout(() => {
+      copyConfigBtn.classList.remove('copied');
+      copyConfigBtn.innerHTML = '<i class="ph ph-copy"></i> Copy Config';
+    }, 2000);
+
+    const platformNames = {
+      'claude-code': 'Claude Code',
+      'claude-desktop': 'Claude Desktop',
+      'chatgpt': 'ChatGPT',
+      'gemini': 'Gemini'
+    };
+    showStatus(`${platformNames[selectedMcpPlatform]} config copied!`, 'success');
+  } catch (err) {
+    console.error('Failed to copy MCP config:', err);
+    showStatus('Failed to copy to clipboard', 'error');
+  }
 }
 
 /**
@@ -1723,3 +2045,551 @@ async function checkMcpStatus() {
 }
 
 // Initialize MCP tab when DOM is ready (add to existing DOMContentLoaded)
+
+// ===================================
+// Account Section
+// ===================================
+
+// Temporary setup token storage
+let currentSetupToken = null;
+
+/**
+ * Initialize account UI
+ */
+async function initAccountUI() {
+  // Get elements
+  const accountSection = document.getElementById('accountSection');
+  const accountLoggedIn = document.getElementById('accountLoggedIn');
+  const accountLogin = document.getElementById('accountLogin');
+  const accountRegister = document.getElementById('accountRegister');
+  const accountSetupPrompt = document.getElementById('accountSetupPrompt');
+
+  if (!accountSection) return;
+
+  // Check if AccountService is available
+  if (typeof AccountService === 'undefined') {
+    console.warn('AccountService not available');
+    accountSection.style.display = 'none';
+    return;
+  }
+
+  // Initialize AccountService
+  await AccountService.init();
+
+  // Set up event listeners
+  setupAccountEventListeners();
+
+  // Check if there's a pending password reset token
+  if (window.pendingResetToken) {
+    // Switch to License tab and show reset form
+    const licenseTab = document.querySelector('[data-tab="license"]');
+    if (licenseTab) licenseTab.click();
+    showAccountForm('reset');
+    delete window.pendingResetToken;
+  } else {
+    // Update account UI state
+    await updateAccountUI();
+  }
+}
+
+/**
+ * Set up event listeners for account forms
+ */
+function setupAccountEventListeners() {
+  // Login button
+  const loginBtn = document.getElementById('loginBtn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', handleLogin);
+  }
+
+  // Register button
+  const registerBtn = document.getElementById('registerBtn');
+  if (registerBtn) {
+    registerBtn.addEventListener('click', handleRegister);
+  }
+
+  // Logout button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+
+  // Show register form
+  const showRegisterBtn = document.getElementById('showRegisterBtn');
+  if (showRegisterBtn) {
+    showRegisterBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccountForm('register');
+    });
+  }
+
+  // Show login form
+  const showLoginBtn = document.getElementById('showLoginBtn');
+  if (showLoginBtn) {
+    showLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccountForm('login');
+    });
+  }
+
+  // Setup account button (from prompt)
+  const setupAccountBtn = document.getElementById('setupAccountBtn');
+  if (setupAccountBtn) {
+    setupAccountBtn.addEventListener('click', () => {
+      showAccountForm('register');
+    });
+  }
+
+  // Skip account button
+  const skipAccountBtn = document.getElementById('skipAccountBtn');
+  if (skipAccountBtn) {
+    skipAccountBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Hide setup prompt, show nothing (user chose to skip)
+      document.getElementById('accountSetupPrompt').style.display = 'none';
+      // Store that user skipped (won't show prompt again this session)
+      sessionStorage.setItem('accountSetupSkipped', 'true');
+    });
+  }
+
+  // Sign in button (from prompt - for users who already have an account)
+  const signInBtn = document.getElementById('signInBtn');
+  if (signInBtn) {
+    signInBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccountForm('login');
+    });
+  }
+
+  // Show forgot password form
+  const showForgotPasswordBtn = document.getElementById('showForgotPasswordBtn');
+  if (showForgotPasswordBtn) {
+    showForgotPasswordBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccountForm('forgot');
+    });
+  }
+
+  // Back to login from forgot password
+  const backToLoginBtn = document.getElementById('backToLoginBtn');
+  if (backToLoginBtn) {
+    backToLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      showAccountForm('login');
+    });
+  }
+
+  // Send reset link button
+  const sendResetBtn = document.getElementById('sendResetBtn');
+  if (sendResetBtn) {
+    sendResetBtn.addEventListener('click', handleForgotPassword);
+  }
+
+  // Reset password button
+  const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+  if (resetPasswordBtn) {
+    resetPasswordBtn.addEventListener('click', handleResetPassword);
+  }
+
+  // Enter key for forgot password form
+  const forgotEmail = document.getElementById('forgotEmail');
+  if (forgotEmail) {
+    forgotEmail.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleForgotPassword();
+    });
+  }
+
+  // Enter key for reset password form
+  const confirmPassword = document.getElementById('confirmPassword');
+  if (confirmPassword) {
+    confirmPassword.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleResetPassword();
+    });
+  }
+
+  // Enter key for login form
+  const loginPassword = document.getElementById('loginPassword');
+  if (loginPassword) {
+    loginPassword.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleLogin();
+    });
+  }
+
+  // Enter key for register form
+  const registerPassword = document.getElementById('registerPassword');
+  if (registerPassword) {
+    registerPassword.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleRegister();
+    });
+  }
+}
+
+/**
+ * Update account UI based on current state
+ */
+async function updateAccountUI() {
+  const accountLoggedIn = document.getElementById('accountLoggedIn');
+  const accountLogin = document.getElementById('accountLogin');
+  const accountRegister = document.getElementById('accountRegister');
+  const accountSetupPrompt = document.getElementById('accountSetupPrompt');
+  const accountSection = document.getElementById('accountSection');
+
+  if (!accountSection) return;
+
+  // Check if user is logged in
+  if (AccountService.isLoggedIn()) {
+    // Show logged in state
+    const user = AccountService.getCurrentUser();
+    document.getElementById('accountEmail').textContent = user?.email || 'Unknown';
+    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName(user?.tier)} Tier`;
+
+    accountLoggedIn.style.display = 'block';
+    accountLogin.style.display = 'none';
+    accountRegister.style.display = 'none';
+    accountSetupPrompt.style.display = 'none';
+    accountSection.style.display = 'block';
+    return;
+  }
+
+  // Check if user has a valid license
+  const licenseData = await LicenseService.getLicenseData();
+  if (licenseData && licenseData.valid) {
+    // User has license but not logged in
+    // Check if we already have a setup token
+    if (currentSetupToken) {
+      // Show register form
+      showAccountForm('register');
+    } else if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
+      // Show setup prompt (unless skipped)
+      accountLoggedIn.style.display = 'none';
+      accountLogin.style.display = 'none';
+      accountRegister.style.display = 'none';
+      accountSetupPrompt.style.display = 'block';
+      accountSection.style.display = 'block';
+    } else {
+      // User skipped - hide account section
+      accountSection.style.display = 'none';
+    }
+  } else {
+    // No license - hide account section
+    accountSection.style.display = 'none';
+  }
+}
+
+/**
+ * Show a specific account form
+ */
+async function showAccountForm(formType) {
+  const accountLoggedIn = document.getElementById('accountLoggedIn');
+  const accountLogin = document.getElementById('accountLogin');
+  const accountRegister = document.getElementById('accountRegister');
+  const accountSetupPrompt = document.getElementById('accountSetupPrompt');
+  const accountForgotPassword = document.getElementById('accountForgotPassword');
+  const accountResetPassword = document.getElementById('accountResetPassword');
+  const accountSection = document.getElementById('accountSection');
+
+  // Hide all
+  accountLoggedIn.style.display = 'none';
+  accountLogin.style.display = 'none';
+  accountRegister.style.display = 'none';
+  accountSetupPrompt.style.display = 'none';
+  if (accountForgotPassword) accountForgotPassword.style.display = 'none';
+  if (accountResetPassword) accountResetPassword.style.display = 'none';
+
+  // Clear errors and success messages
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('registerError').style.display = 'none';
+  const forgotError = document.getElementById('forgotError');
+  const forgotSuccess = document.getElementById('forgotSuccess');
+  const resetError = document.getElementById('resetError');
+  const resetSuccess = document.getElementById('resetSuccess');
+  if (forgotError) forgotError.style.display = 'none';
+  if (forgotSuccess) forgotSuccess.style.display = 'none';
+  if (resetError) resetError.style.display = 'none';
+  if (resetSuccess) resetSuccess.style.display = 'none';
+
+  if (formType === 'login') {
+    accountLogin.style.display = 'block';
+  } else if (formType === 'register') {
+    // Get setup token if we don't have one
+    if (!currentSetupToken) {
+      const licenseData = await LicenseService.getLicenseData();
+      if (licenseData && licenseData.key) {
+        const result = await AccountService.requestSetupToken(licenseData.key);
+        if (result.success) {
+          currentSetupToken = result.data.setupToken;
+          // Pre-fill email if available
+          const emailInput = document.getElementById('registerEmail');
+          if (emailInput && result.data.purchaseEmail) {
+            emailInput.value = result.data.purchaseEmail;
+          }
+        } else {
+          showAccountError('register', result.error || 'Failed to prepare registration');
+          return;
+        }
+      }
+    }
+    accountRegister.style.display = 'block';
+  } else if (formType === 'forgot') {
+    if (accountForgotPassword) accountForgotPassword.style.display = 'block';
+  } else if (formType === 'reset') {
+    if (accountResetPassword) accountResetPassword.style.display = 'block';
+  }
+
+  accountSection.style.display = 'block';
+}
+
+/**
+ * Handle login form submission
+ */
+async function handleLogin() {
+  const emailInput = document.getElementById('loginEmail');
+  const passwordInput = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn');
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAccountError('login', 'Please enter email and password');
+    return;
+  }
+
+  // Disable button
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'Signing in...';
+
+  try {
+    const result = await AccountService.login(email, password);
+
+    if (result.success) {
+      // Clear form
+      emailInput.value = '';
+      passwordInput.value = '';
+      // Update UI
+      await updateAccountUI();
+      showStatus('Signed in successfully!', 'success');
+    } else {
+      showAccountError('login', result.error || 'Login failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    showAccountError('login', 'An error occurred. Please try again.');
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+  }
+}
+
+/**
+ * Handle register form submission
+ */
+async function handleRegister() {
+  const nameInput = document.getElementById('registerName');
+  const emailInput = document.getElementById('registerEmail');
+  const passwordInput = document.getElementById('registerPassword');
+  const registerBtn = document.getElementById('registerBtn');
+
+  const displayName = nameInput.value.trim();
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    showAccountError('register', 'Please enter email and password');
+    return;
+  }
+
+  if (password.length < 8) {
+    showAccountError('register', 'Password must be at least 8 characters');
+    return;
+  }
+
+  if (!currentSetupToken) {
+    showAccountError('register', 'Registration session expired. Please try again.');
+    showAccountForm('register');
+    return;
+  }
+
+  // Disable button
+  registerBtn.disabled = true;
+  registerBtn.textContent = 'Creating account...';
+
+  try {
+    const result = await AccountService.register(currentSetupToken, email, password, displayName);
+
+    if (result.success) {
+      // Clear form and token
+      nameInput.value = '';
+      emailInput.value = '';
+      passwordInput.value = '';
+      currentSetupToken = null;
+      // Update UI
+      await updateAccountUI();
+      showStatus('Account created successfully!', 'success');
+    } else {
+      showAccountError('register', result.error || 'Registration failed');
+      // If token expired or invalid, clear it
+      if (result.error && (result.error.includes('token') || result.error.includes('expired'))) {
+        currentSetupToken = null;
+      }
+    }
+  } catch (error) {
+    console.error('Register error:', error);
+    showAccountError('register', 'An error occurred. Please try again.');
+  } finally {
+    registerBtn.disabled = false;
+    registerBtn.textContent = 'Create Account';
+  }
+}
+
+/**
+ * Handle logout
+ */
+async function handleLogout() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  logoutBtn.disabled = true;
+  logoutBtn.textContent = 'Signing out...';
+
+  try {
+    await AccountService.logout();
+    await updateAccountUI();
+    showStatus('Signed out', 'success');
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    logoutBtn.disabled = false;
+    logoutBtn.textContent = 'Sign Out';
+  }
+}
+
+/**
+ * Handle forgot password form submission
+ */
+async function handleForgotPassword() {
+  const emailInput = document.getElementById('forgotEmail');
+  const sendResetBtn = document.getElementById('sendResetBtn');
+  const forgotSuccess = document.getElementById('forgotSuccess');
+  const forgotError = document.getElementById('forgotError');
+
+  const email = emailInput.value.trim();
+
+  if (!email) {
+    showAccountError('forgot', 'Please enter your email address');
+    return;
+  }
+
+  // Disable button
+  sendResetBtn.disabled = true;
+  sendResetBtn.textContent = 'Sending...';
+  forgotSuccess.style.display = 'none';
+  forgotError.style.display = 'none';
+
+  try {
+    const result = await AccountService.requestPasswordReset(email);
+
+    if (result.success) {
+      // Show success message
+      forgotSuccess.textContent = 'If an account exists with that email, a reset link has been sent. Please check your inbox.';
+      forgotSuccess.style.display = 'block';
+      // Clear email input
+      emailInput.value = '';
+    } else {
+      showAccountError('forgot', result.error || 'Failed to send reset email');
+    }
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    showAccountError('forgot', 'An error occurred. Please try again.');
+  } finally {
+    sendResetBtn.disabled = false;
+    sendResetBtn.textContent = 'Send Reset Link';
+  }
+}
+
+/**
+ * Handle reset password form submission
+ */
+async function handleResetPassword() {
+  const newPasswordInput = document.getElementById('newPassword');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+  const resetSuccess = document.getElementById('resetSuccess');
+  const resetError = document.getElementById('resetError');
+
+  const newPassword = newPasswordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
+
+  if (!newPassword) {
+    showAccountError('reset', 'Please enter a new password');
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    showAccountError('reset', 'Password must be at least 8 characters');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showAccountError('reset', 'Passwords do not match');
+    return;
+  }
+
+  // Get reset token from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('reset_token');
+
+  if (!resetToken) {
+    showAccountError('reset', 'Invalid reset link. Please request a new one.');
+    return;
+  }
+
+  // Disable button
+  resetPasswordBtn.disabled = true;
+  resetPasswordBtn.textContent = 'Resetting...';
+  resetSuccess.style.display = 'none';
+  resetError.style.display = 'none';
+
+  try {
+    const result = await AccountService.resetPassword(resetToken, newPassword);
+
+    if (result.success) {
+      // Show success message
+      resetSuccess.textContent = 'Password has been reset successfully! You can now sign in with your new password.';
+      resetSuccess.style.display = 'block';
+      // Clear inputs
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      // Clear token from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // After 2 seconds, show login form
+      setTimeout(() => {
+        showAccountForm('login');
+      }, 2000);
+    } else {
+      showAccountError('reset', result.error || 'Failed to reset password');
+    }
+  } catch (error) {
+    console.error('Reset password error:', error);
+    showAccountError('reset', 'An error occurred. Please try again.');
+  } finally {
+    resetPasswordBtn.disabled = false;
+    resetPasswordBtn.textContent = 'Reset Password';
+  }
+}
+
+/**
+ * Show account error message
+ */
+function showAccountError(formType, message) {
+  const errorIds = {
+    'login': 'loginError',
+    'register': 'registerError',
+    'forgot': 'forgotError',
+    'reset': 'resetError'
+  };
+
+  const errorEl = document.getElementById(errorIds[formType]);
+  if (errorEl) {
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+}

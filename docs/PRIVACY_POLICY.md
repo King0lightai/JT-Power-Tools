@@ -1,101 +1,153 @@
 # Privacy Policy for JT Power Tools
 
-**Last Updated:** October 31, 2025
+**Last Updated:** February 8, 2026
 
 ## Overview
 
 JT Power Tools ("the Extension") is committed to protecting your privacy. This Privacy Policy explains how the Extension handles information when you use it with JobTread.
 
-## Information We Don't Collect
+## Information We Collect
 
-**The Extension does NOT collect, store, or transmit any personal information, including:**
-- Your name, email address, or contact information
-- JobTread account credentials
-- Project data or client information
-- Schedule information or task details
-- Budget data or financial information
-- Browsing history or usage patterns
-- Analytics or tracking data
+### Local Storage (All Users)
 
-## Data Storage
-
-**All Extension settings are stored locally in your browser using Chrome's sync storage:**
+**Feature settings stored locally in your browser using Chrome's sync storage:**
 - Feature toggle states (on/off)
 - License key (if you subscribe to premium features)
 - Dark mode preference
-- User preferences
+- Theme color preferences
+- Quick Notes panel width and collapse state
 
-**This data:**
+**This local data:**
 - Stays entirely within your browser
 - Syncs across your Chrome devices (via Chrome's built-in sync)
-- Is never sent to external servers
 - Is automatically deleted when you uninstall the Extension
+
+### Cloud Storage (Premium Users with Account)
+
+**If you create an account and enable cloud sync, the following data is stored on our servers:**
+
+**Account Information:**
+- Email address (for login)
+- Display name (optional)
+- Hashed password (never stored in plain text)
+- License key association
+
+**Personal Notes (My Notes):**
+- Note titles and content
+- Folder organization
+- Pin status
+- Creation and modification timestamps
+- Notes are associated with your account only
+
+**Team Notes (Shared with your organization):**
+- Note titles and content
+- Folder organization
+- Pin status
+- Author information (your display name or email)
+- Creation and modification timestamps
+- Notes are shared with all team members in your JobTread organization
+
+**What We DON'T Collect:**
+- JobTread login credentials
+- Project data, client information, or budget data
+- Browsing history or usage patterns
+- Analytics or tracking data
+- Payment information (handled by Gumroad)
+
+## Data Storage Locations
+
+| Data Type | Storage Location | Shared With |
+|-----------|------------------|-------------|
+| Feature settings | Local browser (Chrome sync) | Your Chrome devices only |
+| Personal Notes (local mode) | Local browser | Your Chrome devices only |
+| Personal Notes (sync enabled) | Our secure servers | Only you |
+| Team Notes | Our secure servers | Your organization's team members |
+| License key | Local browser + our servers | Gumroad (for verification) |
+
+## Server Infrastructure
+
+Our cloud services run on **Cloudflare Workers** with **Cloudflare D1** database:
+- Data is encrypted in transit (HTTPS/TLS)
+- Hosted in Cloudflare's global network
+- Subject to Cloudflare's security practices: https://www.cloudflare.com/trust-hub/
 
 ## Premium License Verification
 
 **If you subscribe to premium features:**
-- Your license key is verified with Gumroad's servers (not ours)
+- Your license key is verified with Gumroad's servers
 - Only your license key is sent to Gumroad for verification
 - Gumroad may collect information according to their privacy policy: https://gumroad.com/privacy
 - We do not receive or store your payment information
-- License verification is entirely optional (only for premium features)
 
 ## Permissions Explained
 
 The Extension requests the following Chrome permissions:
 
 **storage**
-- Purpose: Save your feature preferences locally in Chrome
-- Data: Toggle states, license key, preferences
-- Storage: Local only, synced via Chrome
+- Purpose: Save your feature preferences and local notes
+- Data: Toggle states, license key, preferences, local notes
+- Storage: Local browser, synced via Chrome
 
 **activeTab**
-- Purpose: Apply formatting and dark mode to the current JobTread tab
+- Purpose: Apply formatting and features to the current JobTread tab
 - Access: Only when you actively use JobTread pages
 - Data: No data is read, only CSS/formatting is applied
 
 **Host Permission: https://*.jobtread.com/***
 - Purpose: Enable features on JobTread pages
 - Access: Limited to JobTread domains only
-- Data: Modifies display and behavior, does not read private data
+- Data: Modifies display and behavior, reads minimal DOM data for features
 
 **Host Permission: https://api.gumroad.com/***
 - Purpose: Verify premium license keys (optional)
 - Access: Only when you activate a premium license
 - Data: Only license key is sent to Gumroad
 
-## Third-Party Services
+**Host Permission: https://*.workers.dev/***
+- Purpose: Sync notes and verify accounts (Premium users only)
+- Access: Only when sync features are enabled
+- Data: Notes content, account credentials, license association
 
-**Gumroad (Optional - Premium Features Only)**
-- Used for: Premium license verification
-- Data shared: License key only
-- Privacy Policy: https://gumroad.com/privacy
-- Note: Only used if you subscribe to premium features
+## How We Use Your Data
 
-## How We Use Permissions
-
-The Extension only uses its permissions to:
-1. Apply visual styling (dark mode, contrast fixes)
-2. Enable drag-and-drop functionality on schedule pages
-3. Provide rich text formatting in budget fields
-4. Save your preferences locally
-5. Verify premium licenses (optional)
+**We use your data to:**
+1. Apply visual styling (dark mode, contrast fixes, themes)
+2. Enable productivity features (drag-and-drop, formatting, notes)
+3. Sync your notes across devices (if enabled)
+4. Share Team Notes with your organization members
+5. Verify premium licenses
 
 **We do NOT:**
-- Read your JobTread data
-- Access client or project information
-- Monitor your activity
-- Send data to external servers (except Gumroad for license verification)
-- Use analytics or tracking
-- Display advertisements
+- Sell your data to third parties
+- Use your data for advertising
+- Share your data outside your organization (except Team Notes with teammates)
+- Access your JobTread project/client data
+- Monitor your activity beyond what's needed for features
+
+## Data Retention
+
+- **Local data**: Retained until you uninstall the Extension or clear browser data
+- **Cloud notes**: Retained while your account is active
+- **Account data**: Retained until you delete your account
+- **Deleted notes**: Permanently removed from our servers
+
+## Your Rights
+
+You have the right to:
+- **View** all data stored by the Extension (Chrome DevTools → Application → Storage)
+- **Export** your notes (copy content manually)
+- **Delete** local data (uninstall the Extension or clear storage)
+- **Delete** cloud data (delete individual notes or your account)
+- **Opt out** of cloud sync (use local-only mode)
+- **Request** information about your data (contact us)
 
 ## Data Security
 
-- All data is stored locally in your browser
-- Chrome's built-in encryption protects synced data
-- No external databases or servers
-- No data transmission (except optional license verification)
-- Extension code is transparent and auditable
+- All network communication uses HTTPS/TLS encryption
+- Passwords are hashed using industry-standard algorithms
+- Access tokens expire and require refresh
+- Database access is authenticated and logged
+- No plain-text sensitive data storage
 
 ## Children's Privacy
 
@@ -105,24 +157,23 @@ The Extension is designed for business professionals and is not directed at chil
 
 We may update this Privacy Policy from time to time. Changes will be reflected in the "Last Updated" date. Continued use of the Extension after changes constitutes acceptance of the updated policy.
 
-## Your Rights
+## Third-Party Services
 
-You have the right to:
-- View all data stored by the Extension (Chrome DevTools → Application → Storage)
-- Delete all Extension data (uninstall the Extension)
-- Opt out of premium features (simply don't subscribe)
-- Request information about data practices (contact us)
+| Service | Purpose | Data Shared | Privacy Policy |
+|---------|---------|-------------|----------------|
+| Gumroad | License verification | License key | https://gumroad.com/privacy |
+| Cloudflare | Server infrastructure | Notes, account data | https://www.cloudflare.com/privacypolicy/ |
 
 ## Open Source
 
 The Extension's source code is available on GitHub, allowing you to verify our privacy practices:
-https://github.com/King0lightai/JT-Tools
+https://github.com/King0lightai/JT-Power-Tools
 
 ## Contact
 
 For privacy questions or concerns:
-- GitHub Issues: https://github.com/King0lightai/JT-Tools/issues
-- Premium: https://premium.jtpowertools.com
+- Email: support@jtpowertools.com
+- GitHub Issues: https://github.com/King0lightai/JT-Power-Tools/issues
 
 ## Legal Disclaimer
 
@@ -134,4 +185,6 @@ By installing and using JT Power Tools, you consent to this Privacy Policy.
 
 ---
 
-**Summary:** We don't collect your data. Period. Everything stays local in your browser. The only external communication is optional license verification with Gumroad if you buy premium features.
+**Summary:**
+- **Free users**: All data stays local in your browser. No server communication except optional license verification.
+- **Premium users with accounts**: Notes can sync to our servers for cross-device access and team collaboration. We only store what's needed for the features you use.

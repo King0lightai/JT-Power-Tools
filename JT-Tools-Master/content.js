@@ -120,6 +120,11 @@ const featureModules = {
     name: 'Availability Filter',
     feature: () => window.AvailabilityFilterFeature,
     instance: null
+  },
+  ganttLines: {
+    name: 'Fat Gantt',
+    feature: () => window.GanttLinesFeature,
+    instance: null
   }
 };
 

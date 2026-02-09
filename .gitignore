@@ -67,3 +67,6 @@ key.pem
 # package-lock.json
 # yarn.lock
 .wrangler/
+
+# Server-side code (private - contains API logic and infrastructure details)
+server/

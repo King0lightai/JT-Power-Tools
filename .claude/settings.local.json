@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Release v3.5.0 with Message Signature feature and privacy updates\n\n- Add message signature functionality to character counter feature\n  - Edit signature button opens modal for creating/editing signatures\n  - Insert button adds saved signature to message fields\n  - Signatures sync across devices via Chrome storage\n  - Sidebar layout support with responsive container positioning\n  - Dark mode compatible styling\n\n- Update privacy policy for Cloudflare and API disclosures\n  - Document server-side data storage for premium users\n  - Add Cloudflare D1/KV storage details\n  - Document JobTread API proxy for Power Users\n  - Add data processing summary table entries\n\n- Update Chrome Web Store listing\n  - New short description with message signatures\n  - Four-tier pricing structure \\(FREE/Essential/Pro/Power User\\)\n  - Updated feature list\n\n- Version bump to 3.5.0\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}

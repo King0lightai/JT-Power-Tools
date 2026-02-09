@@ -105,6 +105,13 @@
   z-index: 10;
   background: transparent;
   transition: background 0.2s;
+  /* Hide resize handle when editor is not open (sidebar-only view) */
+  display: none;
+}
+
+/* Only show resize handle when editor is open */
+.jt-quick-notes-panel.editor-open .jt-notes-resize-handle {
+  display: block;
 }
 
 .jt-notes-resize-handle:hover {
@@ -160,9 +167,11 @@
   z-index: 10;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background: white;
   box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
   padding: 16px;
+  gap: 8px;
 }
 
 .jt-notes-sidebar-title {
@@ -393,6 +402,42 @@
   color: #ef4444;
 }
 
+/* Pin button */
+.jt-note-pin {
+  background: transparent;
+  border: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  color: #d1d5db;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.jt-note-pin:hover {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.jt-note-pin.pinned {
+  color: #f59e0b;
+}
+
+.jt-note-pin.pinned:hover {
+  background: #fef3c7;
+}
+
+/* Pinned note styling */
+.jt-note-item.pinned {
+  border-left: 3px solid #f59e0b;
+  padding-left: 9px;
+}
+
 .jt-note-item-preview {
   font-size: 12px;
   color: #6b7280;
@@ -572,9 +617,10 @@
 }
 
 .jt-notes-format-btn.active {
-  background: #ecfeff;
-  color: #0891b2;
+  background: #cffafe;
+  color: #0e7490;
   border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
 }
 
 .jt-notes-format-btn svg {
@@ -754,6 +800,152 @@
   padding-left: 100px;
 }
 
+/* Table Styles */
+.jt-note-table-container {
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.jt-note-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.jt-note-table th,
+.jt-note-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+  min-width: 80px;
+}
+
+.jt-note-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.jt-note-table td {
+  background: white;
+  color: #4b5563;
+}
+
+.jt-note-table th:focus,
+.jt-note-table td:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+.jt-note-table tr:hover td {
+  background: #f9fafb;
+}
+
+/* Table Dark Mode */
+body.jt-dark-mode .jt-note-table,
+.dark .jt-note-table {
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table th,
+.dark .jt-note-table th {
+  background: #333333;
+  color: #e0e0e0;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table td,
+.dark .jt-note-table td {
+  background: #2c2c2c;
+  color: #b0b0b0;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-note-table th:focus,
+body.jt-dark-mode .jt-note-table td:focus,
+.dark .jt-note-table th:focus,
+.dark .jt-note-table td:focus {
+  outline-color: #60a5fa;
+}
+
+body.jt-dark-mode .jt-note-table tr:hover td,
+.dark .jt-note-table tr:hover td {
+  background: #333333;
+}
+
+/* Table Context Menu */
+.jt-note-table-context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  min-width: 160px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.jt-table-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #374151;
+  transition: background 0.1s;
+}
+
+.jt-table-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.jt-table-menu-danger {
+  color: #dc2626;
+}
+
+.jt-table-menu-danger:hover {
+  background: #fef2f2;
+}
+
+.jt-table-menu-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0;
+}
+
+/* Table Context Menu Dark Mode */
+body.jt-dark-mode .jt-note-table-context-menu,
+.dark .jt-note-table-context-menu {
+  background: #2c2c2c;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-table-menu-item,
+.dark .jt-table-menu-item {
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-table-menu-item:hover,
+.dark .jt-table-menu-item:hover {
+  background: #333333;
+}
+
+body.jt-dark-mode .jt-table-menu-danger,
+.dark .jt-table-menu-danger {
+  color: #f87171;
+}
+
+body.jt-dark-mode .jt-table-menu-danger:hover,
+.dark .jt-table-menu-danger:hover {
+  background: #3f1f1f;
+}
+
+body.jt-dark-mode .jt-table-menu-divider,
+.dark .jt-table-menu-divider {
+  background: #404040;
+}
+
 /* Editor Footer */
 .jt-notes-editor-footer {
   padding: 12px 16px;
@@ -774,6 +966,124 @@
 
 .jt-notes-updated {
   font-style: italic;
+}
+
+/* Tabs - My Notes / Team Notes */
+.jt-notes-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+}
+
+.jt-notes-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.jt-notes-tab:hover:not(.active) {
+  background: #f9fafb;
+  color: #374151;
+}
+
+.jt-notes-tab.active {
+  color: #0891b2;
+  border-bottom-color: #0891b2;
+}
+
+.jt-notes-tab-count {
+  padding: 2px 6px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.jt-notes-tab.active .jt-notes-tab-count {
+  background: #cffafe;
+  color: #0891b2;
+}
+
+/* Note Item Meta with Attribution */
+.jt-note-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.jt-note-attribution {
+  font-size: 10px;
+  color: #6b7280;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* Team Notes Login Prompt */
+.jt-notes-login-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.jt-notes-login-prompt svg {
+  color: #9ca3af;
+  opacity: 0.6;
+}
+
+.jt-notes-login-prompt p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.jt-notes-login-prompt .jt-notes-login-hint {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Loading State */
+.jt-notes-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.jt-notes-loading::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #0891b2;
+  border-radius: 50%;
+  animation: jt-notes-spin 0.8s linear infinite;
+}
+
+@keyframes jt-notes-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Theme Compatibility - Dark Mode - Matches JT Power Tools Dark Mode */
@@ -854,6 +1164,78 @@
   color: #6b7280;
 }
 
+/* Dark theme - Pin button */
+.jt-quick-notes-panel.dark-theme .jt-note-pin {
+  color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-pin:hover {
+  background: #3d3424;
+  color: #f59e0b;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-pin.pinned {
+  color: #f59e0b;
+}
+
+/* Dark theme - Tabs */
+.jt-quick-notes-panel.dark-theme .jt-notes-tabs {
+  background: #2c2c2c;
+  border-bottom-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab:hover:not(.active) {
+  background: #353535;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab.active {
+  color: #22d3ee;
+  border-bottom-color: #22d3ee;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab-count {
+  background: #404040;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-tab.active .jt-notes-tab-count {
+  background: #164e63;
+  color: #22d3ee;
+}
+
+/* Dark theme - Attribution */
+.jt-quick-notes-panel.dark-theme .jt-note-attribution {
+  color: #6b7280;
+}
+
+/* Dark theme - Login prompt */
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt svg {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt p {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-login-prompt .jt-notes-login-hint {
+  color: #6b7280;
+}
+
+/* Dark theme - Loading */
+.jt-quick-notes-panel.dark-theme .jt-notes-loading {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-loading::before {
+  border-color: #464646;
+  border-top-color: #22d3ee;
+}
+
 .jt-quick-notes-panel.dark-theme .jt-notes-close-button {
   background: #353535;
   border-color: #464646;
@@ -877,6 +1259,13 @@
 
 .jt-quick-notes-panel.dark-theme .jt-notes-format-btn:active {
   background: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-format-btn.active {
+  background: #164e63;
+  color: #22d3ee;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.4);
 }
 
 .jt-quick-notes-panel.dark-theme .jt-notes-toolbar-divider {
@@ -1073,6 +1462,51 @@
   border-color: var(--jt-notes-primary, #06b6d4);
 }
 
+/* Custom theme - borders and sidebar */
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar {
+  border-left-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-sidebar-header,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-header {
+  box-shadow: 0 1px 0 0 var(--jt-notes-border, rgba(0, 0, 0, 0.1));
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-search-container,
+.jt-quick-notes-panel.custom-theme .jt-notes-toolbar,
+.jt-quick-notes-panel.custom-theme .jt-notes-editor-footer {
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tabs {
+  background: var(--jt-notes-bg, white);
+  border-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab {
+  color: var(--jt-notes-text-secondary, #6b7280);
+  border-color: transparent;
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab:hover {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-tab.active {
+  color: var(--jt-notes-primary, #06b6d4);
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+/* Custom theme - close button */
+.jt-quick-notes-panel.custom-theme .jt-notes-close-button {
+  color: var(--jt-notes-text-secondary, #6b7280);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-close-button:hover {
+  color: var(--jt-notes-text, #374151);
+  background: var(--jt-notes-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .jt-quick-notes-panel {
@@ -1193,4 +1627,675 @@
   .jt-note-item {
     padding: 10px 12px;
   }
+}
+
+/* ============================================
+   Folder Organization Styles
+   ============================================ */
+
+/* Folder Group Container */
+.jt-notes-folder-group {
+  margin-bottom: 4px;
+}
+
+/* Folder Header - Clickable */
+.jt-notes-folder-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  gap: 6px;
+  transition: background 0.15s;
+}
+
+.jt-notes-folder-header:hover {
+  background: #e5e7eb;
+}
+
+/* Folder Chevron */
+.jt-notes-folder-chevron {
+  font-size: 10px;
+  color: #6b7280;
+  transition: transform 0.2s;
+  width: 12px;
+  text-align: center;
+}
+
+.jt-notes-folder-group.collapsed .jt-notes-folder-chevron {
+  transform: rotate(-90deg);
+}
+
+/* Folder Name */
+.jt-notes-folder-name {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Folder Count Badge */
+.jt-notes-folder-count {
+  padding: 2px 6px;
+  background: #d1d5db;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+/* Folder Actions */
+.jt-notes-folder-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-actions {
+  opacity: 1;
+}
+
+.jt-notes-folder-add {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: #d1d5db;
+  color: #374151;
+  border-radius: 3px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.jt-notes-folder-add:hover {
+  background: #0891b2;
+  color: white;
+}
+
+/* Folder Delete Button */
+.jt-notes-folder-delete {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s, background 0.2s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-delete {
+  opacity: 1;
+}
+
+.jt-notes-folder-delete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Folder Color Button */
+.jt-notes-folder-color-btn {
+  width: 14px;
+  height: 14px;
+  min-width: 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+  color: #9ca3af;
+}
+
+.jt-notes-folder-color-btn:hover {
+  border-color: #9ca3af;
+  transform: scale(1.1);
+}
+
+.jt-notes-folder-color-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* When folder has a color */
+.jt-notes-folder-group.has-color .jt-notes-folder-color-btn {
+  border-color: transparent;
+}
+
+/* Folder drag handle */
+.jt-notes-folder-drag-handle {
+  font-size: 10px;
+  color: #d1d5db;
+  cursor: grab;
+  user-select: none;
+  padding: 0 2px;
+  letter-spacing: -1px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.jt-notes-folder-header:hover .jt-notes-folder-drag-handle {
+  opacity: 1;
+}
+
+.jt-notes-folder-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Folder drag states */
+.jt-notes-folder-group.dragging {
+  opacity: 0.5;
+}
+
+.jt-notes-folder-group.drag-over-above {
+  border-top: 2px solid #06b6d4;
+  margin-top: -2px;
+}
+
+.jt-notes-folder-group.drag-over-below {
+  border-bottom: 2px solid #06b6d4;
+  margin-bottom: -2px;
+}
+
+/* Note drag states */
+.jt-note-item.dragging {
+  opacity: 0.5;
+}
+
+.jt-note-item.drag-over-above {
+  border-top: 2px solid #4f46e5 !important;
+  margin-top: -2px;
+}
+
+.jt-note-item.drag-over-below {
+  border-bottom: 2px solid #4f46e5 !important;
+  margin-bottom: -2px;
+}
+
+.jt-notes-folder-group.drag-over {
+  background: rgba(6, 182, 212, 0.1);
+  border-color: #06b6d4;
+}
+
+.jt-notes-folder-group.drag-over .jt-notes-folder-header {
+  background: rgba(6, 182, 212, 0.2);
+  border-radius: 4px;
+}
+
+/* Folder Color Picker Dropdown */
+.jt-folder-color-picker {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 200px;
+}
+
+.jt-color-picker-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.jt-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.jt-color-swatch {
+  width: 28px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: white;
+  font-weight: 600;
+  transition: all 0.15s;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.jt-color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.jt-color-swatch.selected {
+  border-color: #1f2937;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #1f2937;
+}
+
+.jt-color-swatch.jt-color-none {
+  background: white;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+  text-shadow: none;
+}
+
+.jt-color-swatch.jt-color-none:hover {
+  border-color: #9ca3af;
+}
+
+.jt-color-swatch.jt-color-none.selected {
+  border-style: solid;
+  border-color: #1f2937;
+}
+
+/* Folder Content - Collapsible */
+.jt-notes-folder-content {
+  padding: 4px 0 4px 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out, padding 0.2s;
+}
+
+.jt-notes-folder-group.collapsed .jt-notes-folder-content {
+  max-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Folder Selector in Editor Header */
+.jt-notes-folder-select-wrapper {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.jt-notes-folder-select {
+  padding: 4px 24px 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #374151;
+  background: #f9fafb;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  min-width: 90px;
+  max-width: 140px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.jt-notes-folder-select:hover {
+  border-color: #9ca3af;
+  background-color: #f3f4f6;
+}
+
+.jt-notes-folder-select:focus {
+  border-color: #06b6d4;
+  background-color: white;
+  box-shadow: 0 0 0 1px #06b6d4;
+}
+
+.jt-notes-folder-select option {
+  padding: 8px;
+}
+
+/* ============================================
+   Folder Dark Mode Styles
+   ============================================ */
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-header {
+  background: #353535;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-header:hover {
+  background: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-chevron {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-name {
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-count {
+  background: #464646;
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-add {
+  background: #464646;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-add:hover {
+  background: #0891b2;
+  color: white;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-delete {
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-delete:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn {
+  border-color: #525252;
+  color: #6b7280;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-color-btn:hover {
+  border-color: #6b7280;
+}
+
+/* Dark theme drag handle */
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-drag-handle {
+  color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over-above {
+  border-top-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over-below {
+  border-bottom-color: #06b6d4;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-group.drag-over {
+  background: rgba(6, 182, 212, 0.15);
+}
+
+/* Dark theme note drag indicators */
+.jt-quick-notes-panel.dark-theme .jt-note-item.drag-over-above {
+  border-top-color: #818cf8 !important;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-note-item.drag-over-below {
+  border-bottom-color: #818cf8 !important;
+}
+
+/* Dark theme color picker */
+body.jt-dark-mode .jt-folder-color-picker,
+.dark .jt-folder-color-picker {
+  background: #2c2c2c;
+  border-color: #404040;
+}
+
+body.jt-dark-mode .jt-color-picker-header,
+.dark .jt-color-picker-header {
+  color: #9ca3af;
+}
+
+body.jt-dark-mode .jt-color-swatch.selected,
+.dark .jt-color-swatch.selected {
+  border-color: #e5e7eb;
+  box-shadow: 0 0 0 2px #2c2c2c, 0 0 0 4px #e5e7eb;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none,
+.dark .jt-color-swatch.jt-color-none {
+  background: #2c2c2c;
+  border-color: #525252;
+  color: #6b7280;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none:hover,
+.dark .jt-color-swatch.jt-color-none:hover {
+  border-color: #6b7280;
+}
+
+body.jt-dark-mode .jt-color-swatch.jt-color-none.selected,
+.dark .jt-color-swatch.jt-color-none.selected {
+  border-color: #e5e7eb;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select {
+  background-color: #353535;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  border-color: #464646;
+  color: #d1d5db;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select:hover {
+  background-color: #404040;
+  border-color: #525252;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select:focus {
+  border-color: #06b6d4;
+  background-color: #404040;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-folder-select option {
+  background: #353535;
+  color: #d1d5db;
+}
+
+/* ============================================
+   Folder Custom Theme Styles
+   ============================================ */
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-header {
+  background: var(--jt-notes-input-bg, #f3f4f6);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-name {
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-count {
+  background: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-select {
+  background-color: var(--jt-notes-input-bg, #f9fafb);
+  border-color: var(--jt-notes-border, #d1d5db);
+  color: var(--jt-notes-text, #374151);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-folder-select:focus {
+  border-color: var(--jt-notes-primary, #06b6d4);
+}
+
+/* ============================================
+   WYSIWYG Editor Container
+   ============================================ */
+
+/* WYSIWYG Container */
+.jt-notes-wysiwyg-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Numbered List Styles */
+.jt-note-numbered {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.jt-notes-content-input .jt-note-numbered {
+  min-height: 1.6em;
+  margin: 2px 0;
+}
+
+/* Numbered list indentation */
+.jt-note-numbered[data-indent="1"] {
+  padding-left: 20px;
+}
+
+.jt-note-numbered[data-indent="2"] {
+  padding-left: 40px;
+}
+
+.jt-note-numbered[data-indent="3"] {
+  padding-left: 60px;
+}
+
+/* Dark theme - WYSIWYG Container */
+.jt-quick-notes-panel.dark-theme .jt-notes-wysiwyg-container {
+  background: #2c2c2c;
+}
+
+/* Custom theme - WYSIWYG Container */
+.jt-quick-notes-panel.custom-theme .jt-notes-wysiwyg-container {
+  background: var(--jt-notes-bg, white);
+}
+
+/* ==========================================================================
+   SIDEBAR COLLAPSE FEATURE
+   ========================================================================== */
+
+/* Sidebar header buttons container */
+.jt-notes-sidebar-header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Collapse button in sidebar header */
+.jt-notes-collapse-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #6b7280;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.jt-notes-collapse-btn:hover {
+  color: #374151;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Rotate chevron when sidebar is collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-collapse-btn svg {
+  transform: rotate(180deg);
+}
+
+/* Collapsed sidebar state - hide content but keep header strip */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  overflow: hidden !important;
+}
+
+/* Hide sidebar content when collapsed, but keep header */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-tabs,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-search-container,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-actions-container,
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-list {
+  display: none !important;
+}
+
+/* Make sidebar header vertical when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-header {
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 12px;
+}
+
+/* Hide title when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-title {
+  display: none;
+}
+
+/* Stack buttons vertically when collapsed */
+.jt-quick-notes-panel.sidebar-collapsed .jt-notes-sidebar-header-buttons {
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Panel width adjustments when sidebar is collapsed */
+.jt-quick-notes-panel.sidebar-collapsed.editor-open {
+  width: 500px; /* Editor min width (452px) + collapsed sidebar strip (48px) */
+}
+
+/* When collapsed without editor open, just show the thin strip */
+.jt-quick-notes-panel.sidebar-collapsed:not(.editor-open) {
+  width: 48px;
+}
+
+/* Smooth transition for sidebar collapse */
+.jt-notes-sidebar {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark theme styles for collapse button */
+.jt-quick-notes-panel.dark-theme .jt-notes-collapse-btn {
+  color: #9ca3af;
+}
+
+.jt-quick-notes-panel.dark-theme .jt-notes-collapse-btn:hover {
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme - collapsed sidebar strip */
+.jt-quick-notes-panel.dark-theme.sidebar-collapsed .jt-notes-sidebar {
+  background: #2c2c2c;
+  border-left-color: #464646;
+}
+
+.jt-quick-notes-panel.dark-theme.sidebar-collapsed .jt-notes-sidebar-header {
+  background: #2c2c2c;
+}
+
+/* Custom theme styles for collapse button */
+.jt-quick-notes-panel.custom-theme .jt-notes-collapse-btn {
+  color: var(--jt-notes-text-secondary, #6b7280);
+}
+
+.jt-quick-notes-panel.custom-theme .jt-notes-collapse-btn:hover {
+  color: var(--jt-notes-text, #374151);
+  background: var(--jt-notes-hover-bg, rgba(0, 0, 0, 0.05));
+}
+
+/* Custom theme - collapsed sidebar strip */
+.jt-quick-notes-panel.custom-theme.sidebar-collapsed .jt-notes-sidebar {
+  background: var(--jt-notes-bg, white);
+  border-left-color: var(--jt-notes-border, #d1d5db);
+}
+
+.jt-quick-notes-panel.custom-theme.sidebar-collapsed .jt-notes-sidebar-header {
+  background: var(--jt-notes-bg, white);
 }

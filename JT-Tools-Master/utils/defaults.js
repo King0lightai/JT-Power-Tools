@@ -18,6 +18,7 @@ const JTDefaults = (() => {
     contrastFix: true,
     kanbanTypeFilter: false,
     autoCollapseGroups: false,
+    ganttLines: true,
 
     // Free Features - Productivity Tools
     formatter: true,
@@ -58,7 +59,7 @@ const JTDefaults = (() => {
    * Feature categories for UI organization
    */
   const FEATURE_CATEGORIES = {
-    scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter'],
+    scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
     productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],

@@ -1005,9 +1005,39 @@ const CharacterCounterFeature = (() => {
     }
   }
 
+  // Debounced template sync
+  let templateSyncTimeout = null;
+  const TEMPLATE_SYNC_DEBOUNCE = 3000; // 3 seconds
+
+  /**
+   * Trigger debounced template sync
+   */
+  function triggerDebouncedTemplateSync() {
+    if (templateSyncTimeout) {
+      clearTimeout(templateSyncTimeout);
+    }
+    templateSyncTimeout = setTimeout(async () => {
+      if (window.AccountService?.isLoggedIn()) {
+        console.log('CharacterCounter: Triggering background template sync...');
+        const data = cachedTemplates || { templates: [], defaultTemplateId: null };
+        const result = await window.AccountService.syncTemplates(data);
+        if (result.success && result.templates) {
+          // Update local cache and storage with merged data
+          cachedTemplates = {
+            templates: result.templates,
+            defaultTemplateId: result.defaultTemplateId
+          };
+          await chrome.storage.sync.set({ [TEMPLATES_STORAGE_KEY]: cachedTemplates });
+          console.log('CharacterCounter: Background template sync complete', result.stats);
+        }
+      }
+    }, TEMPLATE_SYNC_DEBOUNCE);
+  }
+
   /**
    * Load templates from Chrome storage
    * Includes migration from old messageSignature format
+   * Syncs with server when logged in
    * @returns {Promise<Object>}
    */
   async function loadTemplates() {
@@ -1034,7 +1064,28 @@ const CharacterCounterFeature = (() => {
         return migrated;
       }
 
-      cachedTemplates = result[TEMPLATES_STORAGE_KEY] || { templates: [], defaultTemplateId: null };
+      let data = result[TEMPLATES_STORAGE_KEY] || { templates: [], defaultTemplateId: null };
+
+      // Sync with server if logged in
+      if (window.AccountService?.isLoggedIn()) {
+        try {
+          console.log('CharacterCounter: Syncing templates on load...');
+          const syncResult = await window.AccountService.syncTemplates(data);
+          if (syncResult.success && syncResult.templates) {
+            data = {
+              templates: syncResult.templates,
+              defaultTemplateId: syncResult.defaultTemplateId
+            };
+            // Save merged data locally
+            await chrome.storage.sync.set({ [TEMPLATES_STORAGE_KEY]: data });
+            console.log('CharacterCounter: Templates synced', syncResult.stats);
+          }
+        } catch (syncError) {
+          console.log('CharacterCounter: Template sync failed, using local', syncError);
+        }
+      }
+
+      cachedTemplates = data;
       return cachedTemplates;
     } catch (error) {
       console.error('CharacterCounter: Failed to load templates', error);
@@ -1044,6 +1095,7 @@ const CharacterCounterFeature = (() => {
 
   /**
    * Save templates to Chrome storage
+   * Triggers debounced sync when logged in
    * @param {Object} data - The templates data object
    * @returns {Promise<void>}
    */
@@ -1051,6 +1103,11 @@ const CharacterCounterFeature = (() => {
     try {
       cachedTemplates = data;
       await chrome.storage.sync.set({ [TEMPLATES_STORAGE_KEY]: data });
+
+      // Trigger debounced sync if logged in
+      if (window.AccountService?.isLoggedIn()) {
+        triggerDebouncedTemplateSync();
+      }
     } catch (error) {
       console.error('CharacterCounter: Failed to save templates', error);
     }
