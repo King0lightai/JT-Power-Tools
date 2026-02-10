@@ -11,6 +11,8 @@ const QuickNotesStorage = (() => {
   const WIDTH_STORAGE_KEY = 'jtToolsQuickNotesWidth';
   const FOLDER_PREFS_KEY = 'jtToolsQuickNotesFolderPrefs';
   const FOLDER_MIGRATION_KEY = 'jtToolsQuickNotesFolderMigration';
+  const DELETED_NOTES_KEY = 'jtToolsDeletedNotes';
+  const DELETED_TEMPLATES_KEY = 'jtToolsDeletedTemplates';
 
   // Width constraints
   const MIN_WIDTH = 320;
@@ -496,6 +498,115 @@ const QuickNotesStorage = (() => {
     return Array.from(folders);
   }
 
+  /**
+   * Track a deleted note ID for sync
+   * @param {string} noteId - ID of the deleted note
+   * @returns {Promise<boolean>} Success status
+   */
+  async function trackDeletedNote(noteId) {
+    if (!noteId) return false;
+
+    try {
+      const stored = await chrome.storage.local.get([DELETED_NOTES_KEY]);
+      const deletedNotes = stored[DELETED_NOTES_KEY] || [];
+
+      // Add if not already tracked
+      if (!deletedNotes.includes(noteId)) {
+        deletedNotes.push(noteId);
+        await chrome.storage.local.set({ [DELETED_NOTES_KEY]: deletedNotes });
+        console.log('QuickNotesStorage: Tracked deleted note', noteId);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('QuickNotesStorage: Error tracking deleted note', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get all tracked deleted note IDs
+   * @returns {Promise<Array<string>>} Array of deleted note IDs
+   */
+  async function getDeletedNoteIds() {
+    try {
+      const stored = await chrome.storage.local.get([DELETED_NOTES_KEY]);
+      return stored[DELETED_NOTES_KEY] || [];
+    } catch (error) {
+      console.error('QuickNotesStorage: Error getting deleted notes', error);
+      return [];
+    }
+  }
+
+  /**
+   * Clear tracked deleted note IDs (after successful sync)
+   * @returns {Promise<boolean>} Success status
+   */
+  async function clearDeletedNotes() {
+    try {
+      await chrome.storage.local.remove([DELETED_NOTES_KEY]);
+      console.log('QuickNotesStorage: Cleared deleted notes tracking');
+      return true;
+    } catch (error) {
+      console.error('QuickNotesStorage: Error clearing deleted notes', error);
+      return false;
+    }
+  }
+
+  /**
+   * Track a deleted template ID for sync
+   * @param {string} templateId - ID of the deleted template
+   * @returns {Promise<boolean>} Success status
+   */
+  async function trackDeletedTemplate(templateId) {
+    if (!templateId) return false;
+
+    try {
+      const stored = await chrome.storage.local.get([DELETED_TEMPLATES_KEY]);
+      const deletedTemplates = stored[DELETED_TEMPLATES_KEY] || [];
+
+      if (!deletedTemplates.includes(templateId)) {
+        deletedTemplates.push(templateId);
+        await chrome.storage.local.set({ [DELETED_TEMPLATES_KEY]: deletedTemplates });
+        console.log('QuickNotesStorage: Tracked deleted template', templateId);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('QuickNotesStorage: Error tracking deleted template', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get all tracked deleted template IDs
+   * @returns {Promise<Array<string>>} Array of deleted template IDs
+   */
+  async function getDeletedTemplateIds() {
+    try {
+      const stored = await chrome.storage.local.get([DELETED_TEMPLATES_KEY]);
+      return stored[DELETED_TEMPLATES_KEY] || [];
+    } catch (error) {
+      console.error('QuickNotesStorage: Error getting deleted templates', error);
+      return [];
+    }
+  }
+
+  /**
+   * Clear tracked deleted template IDs (after successful sync)
+   * @returns {Promise<boolean>} Success status
+   */
+  async function clearDeletedTemplates() {
+    try {
+      await chrome.storage.local.remove([DELETED_TEMPLATES_KEY]);
+      console.log('QuickNotesStorage: Cleared deleted templates tracking');
+      return true;
+    } catch (error) {
+      console.error('QuickNotesStorage: Error clearing deleted templates', error);
+      return false;
+    }
+  }
+
   // Public API
   return {
     // Constants
@@ -527,7 +638,15 @@ const QuickNotesStorage = (() => {
     migrateNotesToFolders,
     hasFolderMigrationRun,
     setFolderMigrationComplete,
-    getFoldersFromNotes
+    getFoldersFromNotes,
+
+    // Deletion tracking methods
+    trackDeletedNote,
+    getDeletedNoteIds,
+    clearDeletedNotes,
+    trackDeletedTemplate,
+    getDeletedTemplateIds,
+    clearDeletedTemplates
   };
 })();
 

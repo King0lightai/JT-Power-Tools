@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Fat Gantt - Thicker Dependency Lines
 - **New feature: Fat Gantt**: Makes Gantt chart dependency lines thicker (3.5px vs 1.5px) and easier to click
   - Increased stroke width from 1.5px to 3.5px for better visibility
+  - Applies to all dependency line colors: blue (default), red (selected), and gray (completed/inactive)
   - Rounded line caps and joins for smoother appearance
   - Slightly enlarged arrow markers for visual balance
-  - Dark mode compatible with brighter blue (#60a5fa) for visibility
+  - Dark mode compatible with brighter colors for visibility
   - Toggleable in Settings under "Schedule & Calendar" category
   - Enabled by default (free feature)
 
@@ -27,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Account & License UI
 - **Sign in link**: Added "Already have an account? Sign in" link to the account setup prompt for users who already have an account on another device
 
+#### Popup UI Improvements
+- **Updated feature count badge**: Feature count now shows 18 (up from 14) to reflect all available features
+- **Device compatibility icons**: Added mobile phone icon to Fat Gantt feature. Added tablet icon to Freeze Header, Availability Filter, and PDF Markup Tools to indicate these work on wider screens (tablet/desktop)
+
 #### Team Notes Enhancements
 - **Folder support for team notes**: Team notes now persist folder assignments to the server, enabling folder organization that syncs across team members
 - **Pin notes in folders**: Notes can now be pinned to appear at the top of their folder. Click the pin icon next to any note to pin/unpin. Pinned notes display with a cyan left border accent.
@@ -38,7 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-#### Folder Persistence Fixes
+#### Sync & Data Persistence Fixes
+- **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.
+- **Fixed grant key not syncing on new device login**: Grant keys for Power Users are now properly returned from the server on login and stored locally for MCP/AI integrations.
+- **Fixed deleted notes/templates reappearing on new devices**: Deleted notes and templates were not being synced to the server, causing them to reappear when logging in on a new device. Now tracks deleted item IDs and sends them during sync so the server can soft-delete them.
 - **Fixed personal notes folders not syncing**: The `syncNotes()` function was not including the `folder` property in the sync payload, causing folders to be lost after server sync. Folders now persist correctly across devices.
 - **Fixed team notes folder column missing**: Added database migration to add `folder` column to `team_notes` table, fixing "table has no column named folder" errors when saving team notes to folders.
 

@@ -596,6 +596,32 @@ body.dark-theme .feature-mobile:hover {
   color: #6ee7b7;
 }
 
+/* Tablet/Desktop Icon (for wider screen features) */
+.feature-tablet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 11px;
+  color: #3b82f6; /* Blue color for tablet/desktop */
+  cursor: help;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+.feature-tablet:hover {
+  color: #2563eb;
+}
+
+body.dark-theme .feature-tablet {
+  color: #60a5fa;
+}
+
+body.dark-theme .feature-tablet:hover {
+  color: #93c5fd;
+}
+
 /* ============================================
    CUSTOMIZE THEME BUTTON
    ============================================ */

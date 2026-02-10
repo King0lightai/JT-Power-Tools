@@ -22,6 +22,14 @@ svg path.cursor-pointer.pointer-events-auto.stroke-red-400 {
   z-index: 10;
 }
 
+/* Thicken gray dependency lines (completed/inactive dependencies) */
+svg path.cursor-pointer.stroke-gray-400,
+svg path.cursor-pointer.pointer-events-auto.stroke-gray-400 {
+  stroke-width: 3.5 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
 /* Dark mode - ensure good visibility */
 body.jt-dark-mode svg path.stroke-blue-400,
 .dark svg path.stroke-blue-400 {
@@ -31,4 +39,9 @@ body.jt-dark-mode svg path.stroke-blue-400,
 body.jt-dark-mode svg path.stroke-red-400,
 .dark svg path.stroke-red-400 {
   stroke: #f87171 !important;
+}
+
+body.jt-dark-mode svg path.stroke-gray-400,
+.dark svg path.stroke-gray-400 {
+  stroke: #9ca3af !important;
 }

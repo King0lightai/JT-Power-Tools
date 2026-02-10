@@ -1160,6 +1160,11 @@ const CharacterCounterFeature = (() => {
    * @returns {Promise<void>}
    */
   async function deleteTemplate(id) {
+    // Track deletion for sync before removing
+    if (window.QuickNotesStorage && window.QuickNotesStorage.trackDeletedTemplate) {
+      await window.QuickNotesStorage.trackDeletedTemplate(id);
+    }
+
     const data = await loadTemplates();
     data.templates = data.templates.filter(t => t.id !== id);
     if (data.defaultTemplateId === id) {

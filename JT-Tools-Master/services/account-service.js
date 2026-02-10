@@ -292,6 +292,13 @@ const AccountService = (() => {
     if (data.grantKey) {
       await chrome.storage.local.set({ jtAccountGrantKey: data.grantKey });
     }
+
+    // Store license key if provided (syncs license across devices)
+    if (data.licenseKey && window.LicenseService) {
+      console.log('AccountService: Syncing license key from server');
+      // Verify and store the license using LicenseService
+      await window.LicenseService.verifyLicense(data.licenseKey);
+    }
   }
 
   /**
@@ -425,8 +432,15 @@ const AccountService = (() => {
       const stored = await chrome.storage.local.get([STORAGE_KEYS.NOTES_SYNC_TIMESTAMP]);
       const lastSyncTimestamp = stored[STORAGE_KEYS.NOTES_SYNC_TIMESTAMP] || null;
 
+      // Get deleted note IDs to sync
+      let deletedNoteIds = [];
+      if (window.QuickNotesStorage && window.QuickNotesStorage.getDeletedNoteIds) {
+        deletedNoteIds = await window.QuickNotesStorage.getDeletedNoteIds();
+      }
+
       console.log('AccountService: Syncing notes...', {
         localNotesCount: localNotes.length,
+        deletedCount: deletedNoteIds.length,
         lastSyncTimestamp
       });
 
@@ -443,7 +457,8 @@ const AccountService = (() => {
             isPinned: note.isPinned || false,
             createdAt: note.createdAt,
             updatedAt: note.updatedAt
-          }))
+          })),
+          deletedNoteIds: deletedNoteIds
         })
       });
 
@@ -454,6 +469,11 @@ const AccountService = (() => {
         await chrome.storage.local.set({
           [STORAGE_KEYS.NOTES_SYNC_TIMESTAMP]: result.data.syncTimestamp
         });
+
+        // Clear deleted note IDs after successful sync
+        if (deletedNoteIds.length > 0 && window.QuickNotesStorage && window.QuickNotesStorage.clearDeletedNotes) {
+          await window.QuickNotesStorage.clearDeletedNotes();
+        }
 
         console.log('AccountService: Notes synced successfully', result.data.stats);
         return {
@@ -505,8 +525,15 @@ const AccountService = (() => {
       const stored = await chrome.storage.local.get([STORAGE_KEYS.TEMPLATES_SYNC_TIMESTAMP]);
       const lastSyncTimestamp = stored[STORAGE_KEYS.TEMPLATES_SYNC_TIMESTAMP] || null;
 
+      // Get deleted template IDs to sync
+      let deletedTemplateIds = [];
+      if (window.QuickNotesStorage && window.QuickNotesStorage.getDeletedTemplateIds) {
+        deletedTemplateIds = await window.QuickNotesStorage.getDeletedTemplateIds();
+      }
+
       console.log('AccountService: Syncing templates...', {
         localTemplatesCount: localData.templates?.length || 0,
+        deletedCount: deletedTemplateIds.length,
         defaultTemplateId: localData.defaultTemplateId,
         lastSyncTimestamp
       });
@@ -523,7 +550,8 @@ const AccountService = (() => {
             createdAt: template.createdAt,
             updatedAt: template.updatedAt
           })),
-          defaultTemplateId: localData.defaultTemplateId
+          defaultTemplateId: localData.defaultTemplateId,
+          deletedTemplateIds: deletedTemplateIds
         })
       });
 
@@ -534,6 +562,11 @@ const AccountService = (() => {
         await chrome.storage.local.set({
           [STORAGE_KEYS.TEMPLATES_SYNC_TIMESTAMP]: result.data.syncTimestamp
         });
+
+        // Clear deleted template IDs after successful sync
+        if (deletedTemplateIds.length > 0 && window.QuickNotesStorage && window.QuickNotesStorage.clearDeletedTemplates) {
+          await window.QuickNotesStorage.clearDeletedTemplates();
+        }
 
         console.log('AccountService: Templates synced successfully', result.data.stats);
         return {

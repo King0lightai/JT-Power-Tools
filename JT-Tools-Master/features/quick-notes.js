@@ -277,6 +277,9 @@ const QuickNotesFeature = (() => {
       // Delete team note
       await deleteTeamNote(noteId);
     } else {
+      // Track deletion for sync before removing from array
+      await QuickNotesStorage.trackDeletedNote(noteId);
+
       // Delete personal note
       notes = notes.filter(n => n.id !== noteId);
       if (currentNoteId === noteId) {
