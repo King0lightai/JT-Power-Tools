@@ -7,6 +7,11 @@ const DragDropFeature = (() => {
   // Feature state
   let observer = null;
   let isActive = false;
+  let retryTimeout = null;
+
+  // Debounce timer for MutationObserver
+  let debounceTimer = null;
+  const DEBOUNCE_DELAY = 300;
 
   /**
    * Initialize the schedule feature (task completion only - drag & drop disabled)
@@ -20,9 +25,9 @@ const DragDropFeature = (() => {
     // NOTE: Drag & drop disabled - JobTread now has native drag & drop
     // Weekend styling and event handlers no longer needed
 
-    // Initial setup - only task completion features
+    // Initial setup - only task completion features (with retry for slow-loading pages)
     setTimeout(() => {
-      initTaskCompletion();
+      initTaskCompletionWithRetry(3, 500);
 
       // Initialize Action Items Completion
       if (window.ActionItemsCompletion) {
@@ -42,7 +47,14 @@ const DragDropFeature = (() => {
         });
 
         if (shouldReinit) {
-          setTimeout(initTaskCompletion, 500);
+          // Debounce rapid DOM changes to prevent multiple reinitializations
+          if (debounceTimer) {
+            clearTimeout(debounceTimer);
+          }
+          debounceTimer = setTimeout(() => {
+            initTaskCompletion();
+            debounceTimer = null;
+          }, DEBOUNCE_DELAY);
         }
       } catch (error) {
         console.error('ScheduleFeature: Error in MutationObserver callback:', error);
@@ -65,6 +77,16 @@ const DragDropFeature = (() => {
 
     isActive = false;
     console.log('DragDrop: Deactivated');
+
+    // Clear any pending timers
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+      retryTimeout = null;
+    }
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
 
     // Disconnect observer
     if (observer) {
@@ -93,6 +115,43 @@ const DragDropFeature = (() => {
     // Add completion checkboxes to task cards
     if (window.TaskCompletion) {
       window.TaskCompletion.addCompletionCheckboxes();
+    }
+  }
+
+  /**
+   * Initialize task completion with retry logic for slow-loading pages
+   * Retries with exponential backoff if no task cards are found
+   * @param {number} attemptsLeft - Number of retry attempts remaining
+   * @param {number} delay - Current delay between retries (increases exponentially)
+   */
+  function initTaskCompletionWithRetry(attemptsLeft, delay) {
+    if (!isActive) return;
+
+    // Run the initialization
+    initTaskCompletion();
+
+    // Check if any task cards exist on the page
+    const calendarTasks = document.querySelectorAll('div.cursor-pointer[style*="background-color"]');
+    const kanbanCards = document.querySelectorAll('div.cursor-\\[grab\\]');
+    const hasTaskCards = calendarTasks.length > 0 || kanbanCards.length > 0;
+
+    // Check if we added any checkboxes
+    const checkboxes = document.querySelectorAll('.jt-complete-checkbox');
+
+    // If we found task cards but no checkboxes were added, and we have retries left, try again
+    if (hasTaskCards && checkboxes.length === 0 && attemptsLeft > 0) {
+      console.log(`DragDrop: No checkboxes added yet, retrying in ${delay}ms (${attemptsLeft} attempts left)`);
+      retryTimeout = setTimeout(() => {
+        initTaskCompletionWithRetry(attemptsLeft - 1, Math.min(delay * 1.5, 2000));
+      }, delay);
+    } else if (!hasTaskCards && attemptsLeft > 0) {
+      // No task cards found yet - page may still be loading
+      console.log(`DragDrop: No task cards found, retrying in ${delay}ms (${attemptsLeft} attempts left)`);
+      retryTimeout = setTimeout(() => {
+        initTaskCompletionWithRetry(attemptsLeft - 1, Math.min(delay * 1.5, 2000));
+      }, delay);
+    } else if (checkboxes.length > 0) {
+      console.log(`DragDrop: Successfully added ${checkboxes.length} checkboxes`);
     }
   }
 

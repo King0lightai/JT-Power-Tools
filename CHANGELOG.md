@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Takeoff Print Tool (PDF Markup Tools)
+- **New feature: Takeoff Print Tool** integrated into PDF Markup Tools for printing construction takeoff drawings to PDF
+  - **Integrated Print button**: Embedded directly into JobTread's native takeoff toolbar (next to Rotate, Ruler, Scale Plan)
+  - **Plan comparison view support**: Single print button in comparison mode prints the full visible composite (both overlaid image layers with red/blue filters). Users can toggle layers before printing to control what's included.
+  - **Dynamic page sizing**: Automatically measures the drawing and sets the print page size to fit the content exactly (no more hardcoded Tabloid). Based on [FitToPage.js](https://github.com/sulimanbenhalim/fit-to-page) (MIT)
+  - **Auto orientation detection**: Automatically selects landscape or portrait based on the drawing's aspect ratio
+  - **Clean export**: Hides all JobTread UI when printing, showing only the takeoff drawing
+  - **Full theme support**: Works with light mode, dark mode, and custom RGB themes
+  - Print button appears automatically whenever the takeoff toolbar is present (SPA-navigation aware)
+
 #### Fat Gantt - Thicker Dependency Lines
 - **New feature: Fat Gantt**: Makes Gantt chart dependency lines thicker (3.5px vs 1.5px) and easier to click
   - Increased stroke width from 1.5px to 3.5px for better visibility
@@ -41,7 +51,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Delete folders**: Folders (except General) can now be deleted by hovering over the folder header and clicking the × button. Notes in deleted folders are automatically moved to General.
 - **Drag notes to reorder**: Notes can now be reordered within a folder or moved to a different position in another folder by dragging them onto other notes. A blue indicator shows where the note will be placed.
 
+### Improved
+
+#### Takeoff Print Tool
+- **Auto orientation + fit-to-page printing**: Drawing auto-detects landscape vs portrait from its aspect ratio and scales to fill whatever paper size the user selects (Tabloid, Letter, etc.). No longer hardcoded to Tabloid 11x17".
+- **Proper SVG measurement**: Uses SVG `viewBox` attributes for accurate intrinsic dimensions instead of `scrollWidth`/`scrollHeight` which could return the wrong container size.
+- **Clean print layout**: Drawing is cloned into a dedicated print wrapper instead of using `visibility: hidden`. This prevents the drawing from being trapped inside JobTread's nested flex/absolute containers that distorted print layout.
+
+#### Eraser Tool
+- **Improved eraser reliability**: Eraser now simulates a Backspace keypress after selecting an annotation instead of searching for the trash icon button in the DOM. This is more reliable since JobTread natively handles Backspace to delete selected annotations.
+
 ### Fixed
+
+#### PDF Markup Tools Fixes
+- **Fixed Print button not appearing in takeoff toolbar**: The Print button was gated behind a URL check (`/files/`, `/takeoff/`, `/plans/`) that didn't account for SPA navigation. Since JobTread is a single-page app, navigating to a takeoff page after initial load never triggered the injection. Removed the URL gate and added `injectTakeoffButtons()` to the main MutationObserver so the Print button is injected whenever the takeoff toolbar appears in the DOM, regardless of navigation timing.
+- **Fixed "Cannot find takeoff drawing area" in plan comparison view**: The comparison view renders plans as `<img>` elements (not SVGs), so the print container detection failed. Updated `detectTakeoffContainer()` to also find image-based comparison containers, `measurePrintSize()` to read `naturalWidth`/`naturalHeight` from images, and `printDrawingOnly()` to clone comparison images with their CSS filter overlays (red/blue color effects) and `mix-blend-mode` compositing intact. Single print button in comparison mode captures the full visible composite.
+
+#### Account & Login Fixes
+- **Fixed account login/register forms hidden without license key**: The account section (Sign In / Create Account) was completely hidden when no license key was entered. Users on a new device couldn't sign in to sync their data without first entering a license key. The account forms are now always visible regardless of license status — the server handles license validation on login.
+
+#### Schedule Task Checkboxes Fixes
+- **Added retry logic for slow-loading pages**: Schedule Task Checkboxes now retry initialization up to 3 times with exponential backoff if task cards aren't detected immediately. This fixes issues on slower connections or devices where the Kanban/Calendar view loads after the initial check.
+- **Added debounce to MutationObserver**: Prevents multiple rapid reinitializations when DOM changes quickly (e.g., during Kanban drag operations), improving performance and reliability.
 
 #### Sync & Data Persistence Fixes
 - **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.

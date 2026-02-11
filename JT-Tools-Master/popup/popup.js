@@ -2271,8 +2271,17 @@ async function updateAccountUI() {
       accountSection.style.display = 'none';
     }
   } else {
-    // No license - hide account section
-    accountSection.style.display = 'none';
+    // No license - still show login/register so users can sign in.
+    // The server will validate whether they have a license on login.
+    if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
+      accountLoggedIn.style.display = 'none';
+      accountLogin.style.display = 'none';
+      accountRegister.style.display = 'none';
+      accountSetupPrompt.style.display = 'block';
+      accountSection.style.display = 'block';
+    } else {
+      accountSection.style.display = 'none';
+    }
   }
 }
 

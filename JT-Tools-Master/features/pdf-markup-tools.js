@@ -361,6 +361,37 @@ const PDFMarkupToolsFeature = (() => {
         color: var(--jt-theme-primary-text, #fff) !important;
         border-color: var(--jt-theme-primary, #3b82f6) !important;
       }
+
+      /* ========== TAKEOFF PRINT TOOL STYLES ========== */
+
+      /* Injected Print button - matches JobTread's native button style */
+      .jt-takeoff-injected-btn {
+        transition: all 0.15s ease;
+      }
+
+      /* Dark mode styling for injected button */
+      body.jt-dark-mode .jt-takeoff-injected-btn,
+      .dark .jt-takeoff-injected-btn {
+        background: #333333 !important;
+        border-color: #505050 !important;
+        color: #e0e0e0 !important;
+      }
+
+      body.jt-dark-mode .jt-takeoff-injected-btn:hover,
+      .dark .jt-takeoff-injected-btn:hover {
+        background: #3a3a3a !important;
+      }
+
+      /* Custom theme styling for injected button */
+      body.jt-custom-theme .jt-takeoff-injected-btn {
+        background: var(--jt-theme-background-subtle, #f3f4f6) !important;
+        border-color: var(--jt-theme-border, #d1d5db) !important;
+        color: var(--jt-theme-text, #374151) !important;
+      }
+
+      body.jt-custom-theme .jt-takeoff-injected-btn:hover {
+        background: var(--jt-theme-background-hover, #e5e7eb) !important;
+      }
     `;
 
     styleElement = document.createElement('style');
@@ -1199,41 +1230,30 @@ const PDFMarkupToolsFeature = (() => {
         return;
       }
 
-      // Check if we clicked on an SVG element (annotation)
+      // Check if we clicked within the SVG drawing area
       const target = e.target;
       const svgParent = target.closest('svg.h-full.object-contain');
+      if (!svgParent) return;
 
-      if (svgParent) {
-        // Find the clicked element within the SVG
-        const clickedElement = target.closest('path, rect, circle, line, polyline, polygon, text, g');
-
-        if (clickedElement && clickedElement !== svgParent) {
-          // Check if this is likely an annotation (not part of the base PDF)
-          const isAnnotation = clickedElement.hasAttribute('data-annotation') ||
-                              clickedElement.style.fill ||
-                              clickedElement.style.stroke ||
-                              clickedElement.getAttribute('stroke-width') ||
-                              clickedElement.getAttribute('fill') ||
-                              clickedElement.getAttribute('stroke');
-
-          if (isAnnotation || clickedElement.tagName === 'path' || clickedElement.tagName === 'rect' ||
-              clickedElement.tagName === 'circle' || clickedElement.tagName === 'line' ||
-              clickedElement.tagName === 'text') {
-
-            // Let the click propagate first to select the element
-            // Don't stop propagation - let JobTread's select tool handle the selection
-
-            // Wait for the delete button to appear after selection, then click it
-            setTimeout(() => {
-              clickDeleteButton();
-            }, 200); // Wait for selection UI to render
-          }
-        }
-      }
+      // Don't try to detect specific annotations - just let the click
+      // propagate to JT's select tool. After a delay for React to process
+      // the selection, fire Backspace. If nothing was selected, Backspace
+      // is harmless. If something was selected, it gets deleted.
+      setTimeout(() => {
+        document.dispatchEvent(new KeyboardEvent('keydown', {
+          key: 'Backspace',
+          code: 'Backspace',
+          keyCode: 8,
+          which: 8,
+          bubbles: true,
+          cancelable: true
+        }));
+      }, 300); // Give React time to process the selection state
     };
 
-    // Add click listener - don't use capture so the selection happens first
-    document.addEventListener('click', deleteClickHandler, false);
+    // Use mouseup instead of click - fires after JT's mousedown/mouseup
+    // selection logic has completed, before React re-renders
+    document.addEventListener('mouseup', deleteClickHandler, false);
   }
 
   /**
@@ -1285,7 +1305,7 @@ const PDFMarkupToolsFeature = (() => {
     deleteOnClickEnabled = false;
 
     if (deleteClickHandler) {
-      document.removeEventListener('click', deleteClickHandler, false);
+      document.removeEventListener('mouseup', deleteClickHandler, false);
       deleteClickHandler = null;
     }
   }
@@ -1676,6 +1696,451 @@ const PDFMarkupToolsFeature = (() => {
     });
   }
 
+  // ============================================================================
+  // TAKEOFF PRINT TOOL
+  // Print takeoff drawings cleanly to PDF (auto-sized to fit content)
+  // ============================================================================
+
+  // Takeoff toolkit state
+  let takeoffToolbar = null;
+  let takeoffToolbarObserver = null;
+
+  /**
+   * Detect the takeoff drawing container element
+   */
+  /**
+   * Detect the takeoff drawing container.
+   * Finds the SVG plan element in standard view, or the image container
+   * in comparison view (with overlaid red/blue filtered images).
+   * @returns {HTMLElement|null} The drawing element (SVG or comparison image container)
+   */
+  function detectTakeoffContainer() {
+    const root = document;
+
+    // Priority order: most specific to least specific
+    const selectors = [
+      'svg.h-full.object-contain',  // Standard SVG plan drawing
+      '[data-takeoff-container]',
+      '.takeoff-viewer',
+      '.plan-viewer'
+    ];
+
+    for (const selector of selectors) {
+      const element = root.querySelector(selector);
+      if (element) {
+        return element;
+      }
+    }
+
+    // Comparison view: look for the image container with plan images
+    // Structure: div.bg-gray-100.relative > div.absolute > div.overflow-auto > div (with <img> children)
+    const comparisonImg = root.querySelector('img.object-contain.select-none.pointer-events-none');
+    if (comparisonImg) {
+      // Return the parent flex container that holds both overlaid images
+      const imageContainer = comparisonImg.closest('div.flex.items-center.justify-center')
+        || comparisonImg.parentElement;
+      if (imageContainer) {
+        return imageContainer;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Convert pixels to millimeters
+   * @param {number} px - Pixel value
+   * @param {number} dpi - Screen DPI (default 96)
+   * @returns {number} Millimeter value
+   */
+  function pxToMm(px, dpi = 96) {
+    return (px * 25.4) / dpi;
+  }
+
+  /**
+   * Measure the drawing container and calculate optimal print page size.
+   * Handles both SVG elements (via viewBox/getBBox) and regular HTML elements.
+   * Auto-detects orientation based on content aspect ratio.
+   * Based on FitToPage.js (MIT License, Suliman Benhalim).
+   *
+   * @param {HTMLElement} container - The drawing container element
+   * @returns {{ widthMm: number, heightMm: number, orientation: string, aspectRatio: number }}
+   */
+  function measurePrintSize(container) {
+    const MARGIN_MM = 6.35; // ~0.25in margin on each side
+
+    let widthPx, heightPx;
+
+    if (container.tagName === 'svg' || container instanceof SVGElement) {
+      // For SVG elements, use viewBox or getBBox for accurate intrinsic dimensions
+      const viewBox = container.getAttribute('viewBox');
+      if (viewBox) {
+        const parts = viewBox.split(/[\s,]+/).map(Number);
+        widthPx = parts[2];  // viewBox width
+        heightPx = parts[3]; // viewBox height
+      } else {
+        // Fallback to getBBox which gives the bounding box of SVG content
+        try {
+          const bbox = container.getBBox();
+          widthPx = bbox.width;
+          heightPx = bbox.height;
+        } catch (e) {
+          // getBBox can fail if SVG not rendered; use client dimensions
+          widthPx = container.clientWidth;
+          heightPx = container.clientHeight;
+        }
+      }
+    } else {
+      // For HTML containers (including comparison view image containers),
+      // try to get dimensions from the first <img> element inside
+      const img = container.tagName === 'IMG'
+        ? container
+        : container.querySelector('img');
+      if (img && img.naturalWidth && img.naturalHeight) {
+        widthPx = img.naturalWidth;
+        heightPx = img.naturalHeight;
+      } else {
+        widthPx = container.scrollWidth;
+        heightPx = container.scrollHeight;
+      }
+    }
+
+    // Calculate aspect ratio for print sizing
+    const aspectRatio = widthPx / heightPx;
+
+    // Convert to millimeters and add margins
+    const contentWidthMm = pxToMm(widthPx) + (MARGIN_MM * 2);
+    const contentHeightMm = pxToMm(heightPx) + (MARGIN_MM * 2);
+
+    // Auto-detect orientation based on content aspect ratio
+    let pageWidth, pageHeight, orientation;
+    if (aspectRatio > 1) {
+      // Content is wider than tall - landscape
+      pageWidth = Math.max(contentWidthMm, contentHeightMm);
+      pageHeight = Math.min(contentWidthMm, contentHeightMm);
+      orientation = 'landscape';
+    } else {
+      // Content is taller than wide - portrait
+      pageWidth = Math.min(contentWidthMm, contentHeightMm);
+      pageHeight = Math.max(contentWidthMm, contentHeightMm);
+      orientation = 'portrait';
+    }
+
+    return { widthMm: pageWidth, heightMm: pageHeight, orientation, aspectRatio };
+  }
+
+  /**
+   * Print only the takeoff drawing (hide all other UI).
+   * Auto-detects landscape vs portrait orientation from the drawing's aspect ratio.
+   * The drawing scales to fill whatever paper size the user selects in the print dialog.
+   *
+   * Approach: Clone the drawing element into a clean top-level print wrapper so it's
+   * not trapped inside nested flex/absolute containers that distort layout.
+   * In comparison mode, prints the full visible composite (both overlaid image layers).
+   */
+  function printDrawingOnly() {
+    const container = detectTakeoffContainer();
+    if (!container) {
+      showNotification('Could not find takeoff drawing area', 'error');
+      return;
+    }
+
+    // Measure drawing to determine orientation
+    const { orientation } = measurePrintSize(container);
+
+    // Create a top-level print wrapper
+    const printWrapper = document.createElement('div');
+    printWrapper.id = 'jt-print-wrapper';
+
+    const isSVG = container.tagName === 'svg' || container instanceof SVGElement;
+    const isImageContainer = !isSVG && container.querySelector('img');
+
+    if (isSVG) {
+      // Clone SVG and clean up for print
+      const clone = container.cloneNode(true);
+      clone.removeAttribute('cursor');
+      clone.removeAttribute('class');
+      clone.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      printWrapper.appendChild(clone);
+    } else if (isImageContainer) {
+      // Comparison view: clone all images with their CSS filters intact
+      const images = container.querySelectorAll('img');
+      const imgWrapper = document.createElement('div');
+      imgWrapper.style.cssText = 'position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;';
+
+      images.forEach((img, index) => {
+        const imgClone = img.cloneNode(true);
+        // Preserve the filter styles (red/blue overlay)
+        imgClone.style.maxWidth = '100%';
+        imgClone.style.maxHeight = '100%';
+        imgClone.style.objectFit = 'contain';
+        imgClone.removeAttribute('class');
+
+        if (index > 0) {
+          // Overlay images: position absolute with blend mode
+          const overlay = document.createElement('div');
+          overlay.style.cssText = 'position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; mix-blend-mode: multiply; pointer-events: none;';
+          overlay.appendChild(imgClone);
+          imgWrapper.appendChild(overlay);
+        } else {
+          imgWrapper.appendChild(imgClone);
+        }
+      });
+
+      printWrapper.appendChild(imgWrapper);
+    } else {
+      // Generic fallback: clone the container
+      const clone = container.cloneNode(true);
+      clone.removeAttribute('class');
+      printWrapper.appendChild(clone);
+    }
+
+    document.body.appendChild(printWrapper);
+
+    // Inject print CSS - uses auto orientation, lets user pick paper size
+    const printStyle = document.createElement('style');
+    printStyle.id = 'jt-takeoff-print-styles';
+    printStyle.textContent = `
+      @page {
+        size: ${orientation};
+        margin: 0;
+      }
+
+      @media print {
+        /* Hide everything except our print wrapper */
+        body > *:not(#jt-print-wrapper) {
+          display: none !important;
+        }
+
+        /* Reset body for clean print */
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+        }
+
+        /* Print wrapper fills the entire page */
+        #jt-print-wrapper {
+          display: block !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+
+        /* SVG fills the full page, maintaining aspect ratio */
+        #jt-print-wrapper > svg {
+          display: block !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          object-fit: contain !important;
+        }
+
+        /* Image container fills the full page */
+        #jt-print-wrapper > div {
+          width: 100vw !important;
+          height: 100vh !important;
+        }
+
+        #jt-print-wrapper img {
+          max-width: 100vw !important;
+          max-height: 100vh !important;
+          object-fit: contain !important;
+        }
+      }
+
+      /* Hide wrapper on screen - only visible in print */
+      @media screen {
+        #jt-print-wrapper {
+          display: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(printStyle);
+
+    // Trigger print dialog
+    window.print();
+
+    // Cleanup after print dialog closes (or is cancelled)
+    setTimeout(() => {
+      printStyle.remove();
+      printWrapper.remove();
+    }, 1000);
+
+    showNotification(`Print: ${orientation} - select your paper size in the dialog`);
+  }
+
+  /**
+   * Find the JobTread takeoff toolbar
+   * Supports two toolbar types:
+   * 1. Standard takeoff toolbar (with Rotate, Scale Plan buttons)
+   * 2. Plan comparison toolbar (with Exit, v1/v2 panels, zoom controls)
+   */
+  /**
+   * Find all takeoff toolbars on the page.
+   * Returns an array of toolbar results (can be multiple in comparison view).
+   */
+  function findAllTakeoffToolbars() {
+    const results = [];
+
+    // Standard toolbar - has Rotate or Scale Plan buttons
+    const allButtons = document.querySelectorAll('[role="button"]');
+    for (const btn of allButtons) {
+      const text = btn.textContent?.trim() || '';
+      if (text === 'Rotate' || text.includes('Scale Plan')) {
+        const toolbar = btn.closest('div.border-t') || btn.parentElement;
+        if (toolbar) {
+          results.push({ toolbar, type: 'standard' });
+          break; // Only one standard toolbar
+        }
+      }
+    }
+
+    // Comparison view: detect by v1/v2 panels, then use the parent
+    // comparison toolbar container (which holds both panels + shared controls
+    // like zoom, locked, magnify buttons).
+    const comparisonPanels = document.querySelectorAll(
+      'div.flex.self-stretch[class*="border-red-"], div.flex.self-stretch[class*="border-blue-"]'
+    );
+    if (comparisonPanels.length > 0) {
+      const firstPanel = comparisonPanels[0];
+      const label = firstPanel.firstElementChild?.textContent?.trim();
+      if (label === 'v1' || label === 'v2') {
+        // Use the parent container that holds v1, v2, and shared controls
+        const comparisonBar = firstPanel.parentElement;
+        if (comparisonBar) {
+          results.push({ toolbar: comparisonBar, type: 'comparison' });
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Find the first available takeoff toolbar (for backward compat).
+   */
+  function findTakeoffToolbar() {
+    const all = findAllTakeoffToolbars();
+    return all.length > 0 ? all[0] : null;
+  }
+
+  /**
+   * Create a print button element for the given toolbar type.
+   * In comparison mode, prints the entire visible composite (both layers).
+   */
+  function createPrintButton(toolbarType, jtToolbar) {
+    const printBtn = document.createElement('div');
+    printBtn.setAttribute('role', 'button');
+    printBtn.setAttribute('tabindex', '0');
+    printBtn.title = 'Print Drawing Only (auto-fit page size)';
+    printBtn.addEventListener('click', () => printDrawingOnly());
+    printBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        printDrawingOnly();
+      }
+    });
+
+    const printerSvg = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
+
+    if (toolbarType === 'comparison') {
+      // Shared comparison toolbar: neutral icon-only style matching zoom controls
+      printBtn.className = 'inline-block align-bottom relative cursor-pointer px-2 content-center text-gray-400 min-w-10 hover:bg-gray-700 jt-takeoff-injected-btn';
+      printBtn.innerHTML = printerSvg;
+    } else {
+      // Standard toolbar styling (icon + text)
+      printBtn.id = 'jt-print-drawing';
+      printBtn.className = 'inline-block align-bottom relative cursor-pointer select-none truncate py-2 px-4 shadow-xs active:shadow-inner text-gray-600 bg-white hover:bg-gray-50 rounded-sm border text-center shrink-0 jt-takeoff-injected-btn';
+      printBtn.innerHTML = printerSvg + ' Print';
+    }
+
+    return printBtn;
+  }
+
+  /**
+   * Inject Print button into all detected takeoff toolbars
+   */
+  function injectTakeoffButtons() {
+    const toolbars = findAllTakeoffToolbars();
+    if (toolbars.length === 0) return;
+
+    for (const { toolbar: jtToolbar, type: toolbarType } of toolbars) {
+      // Skip if this toolbar already has our button
+      if (jtToolbar.querySelector('.jt-takeoff-injected-btn')) continue;
+
+      const printBtn = createPrintButton(toolbarType, jtToolbar);
+
+      if (toolbarType === 'standard') {
+        // Standard toolbar: insert before Scale Plan button
+        const scalePlanBtn = Array.from(jtToolbar.querySelectorAll('[role="button"]')).find(btn =>
+          btn.textContent?.includes('Scale Plan')
+        );
+
+        if (scalePlanBtn) {
+          jtToolbar.insertBefore(printBtn, scalePlanBtn);
+        } else {
+          jtToolbar.appendChild(printBtn);
+        }
+
+        // Store reference for cleanup (standard toolbar is the primary)
+        takeoffToolbar = { printBtn, jtToolbar };
+      } else if (toolbarType === 'comparison') {
+        // Comparison toolbar structure:
+        //   [Exit] [middle flex-wrap: v2 panel, v1 panel] [magnify group]
+        // Insert print button right before the magnify group (last child of the bar).
+        const magnifyGroup = jtToolbar.querySelector('div.flex.items-center.group');
+        if (magnifyGroup) {
+          jtToolbar.insertBefore(printBtn, magnifyGroup);
+        } else {
+          jtToolbar.appendChild(printBtn);
+        }
+      }
+
+      console.log(`PDF Markup Tools: Print button injected into ${toolbarType} toolbar`);
+    }
+  }
+
+  /**
+   * Initialize takeoff toolkit
+   * No longer gates on URL - the main MutationObserver handles dynamic injection,
+   * and injectTakeoffButtons() safely no-ops when no toolbar is present.
+   */
+  function initTakeoffToolkit() {
+    // Try to inject button into existing toolbar
+    injectTakeoffButtons();
+
+    console.log('PDF Markup Tools: Takeoff print tool initialized');
+  }
+
+  /**
+   * Cleanup takeoff toolkit
+   */
+  function cleanupTakeoffToolkit() {
+    // Disconnect toolbar observer
+    if (takeoffToolbarObserver) {
+      takeoffToolbarObserver.disconnect();
+      takeoffToolbarObserver = null;
+    }
+
+    // Remove all injected print buttons (standard + comparison panels)
+    if (takeoffToolbar) {
+      if (takeoffToolbar.printBtn) takeoffToolbar.printBtn.remove();
+      takeoffToolbar = null;
+    }
+    document.querySelectorAll('.jt-takeoff-injected-btn').forEach(btn => btn.remove());
+
+    // Remove any leftover print styles and wrapper
+    const printStyle = document.getElementById('jt-takeoff-print-styles');
+    if (printStyle) printStyle.remove();
+
+    const printWrapper = document.getElementById('jt-print-wrapper');
+    if (printWrapper) printWrapper.remove();
+  }
+
   /**
    * Handle Delete key press to remove selected annotations
    */
@@ -1730,10 +2195,11 @@ const PDFMarkupToolsFeature = (() => {
       // Find and enhance existing toolbars
       findAndEnhanceToolbars();
 
-      // Watch for new toolbars and Input Text modals (PDF pages loaded dynamically)
+      // Watch for new toolbars, Input Text modals, and takeoff toolbar (PDF pages loaded dynamically)
       observer = new MutationObserver(() => {
         findAndEnhanceToolbars();
         checkForInputTextModal();
+        injectTakeoffButtons();
       });
 
       observer.observe(document.body, {
@@ -1746,6 +2212,9 @@ const PDFMarkupToolsFeature = (() => {
 
       // Handle Delete key for removing annotations
       document.addEventListener('keydown', handleDeleteKey);
+
+      // Initialize takeoff toolkit if on takeoff page
+      initTakeoffToolkit();
 
       console.log('PDF Markup Tools: Activated');
     } catch (error) {
@@ -1781,6 +2250,9 @@ const PDFMarkupToolsFeature = (() => {
 
     // Remove event listeners
     document.removeEventListener('keydown', handleDeleteKey);
+
+    // Cleanup takeoff toolkit
+    cleanupTakeoffToolkit();
 
     // Remove injected CSS
     if (styleElement) {
