@@ -66,8 +66,10 @@ const TaskCompletion = (() => {
    * Kanban cards have a different structure than calendar tasks
    */
   function addKanbanCheckboxes() {
-    // Kanban task cards have cursor-[grab] class and contain a role="button" header
-    const kanbanCards = document.querySelectorAll('div.cursor-\\[grab\\]');
+    // Kanban task cards have cursor-[grab] or cursor-grab class and contain a role="button" header
+    // Note: JobTread may use either Tailwind arbitrary value syntax (cursor-[grab]) or
+    // the built-in utility class (cursor-grab) depending on their Tailwind version
+    const kanbanCards = document.querySelectorAll('div.cursor-\\[grab\\], div.cursor-grab');
 
     kanbanCards.forEach(card => {
       // Skip if already processed
