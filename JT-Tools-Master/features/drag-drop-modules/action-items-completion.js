@@ -607,6 +607,12 @@ const ActionItemsCompletion = (() => {
     const allButtons = searchRoot.querySelectorAll('div[role="button"], [role="button"]');
 
     for (const button of allButtons) {
+      // Skip checkboxes injected by our own extension (task completion / action items)
+      if (button.classList.contains('jt-complete-checkbox') ||
+          button.classList.contains('jt-action-item-checkbox')) {
+        continue;
+      }
+
       // Check if this looks like a checkbox (has SVG with rect)
       const svg = button.querySelector('svg');
       if (!svg) continue;

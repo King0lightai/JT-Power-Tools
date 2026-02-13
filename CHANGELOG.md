@@ -74,6 +74,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added retry logic for slow-loading pages**: Schedule Task Checkboxes now retry initialization up to 3 times with exponential backoff if task cards aren't detected immediately. This fixes issues on slower connections or devices where the Kanban/Calendar view loads after the initial check.
 - **Added debounce to MutationObserver**: Prevents multiple rapid reinitializations when DOM changes quickly (e.g., during Kanban drag operations), improving performance and reliability.
 
+#### Action Items Completion Fix
+- **Fixed Action Items checkbox failing to complete tasks**: The extension's task completion checkboxes (injected by content scripts running inside the hidden iframe) were being misidentified as native checklist items. This caused `findChecklistItemsInDoc` to click the wrong elements instead of the Progress checkbox, resulting in "Failed to complete task". Now explicitly skips `.jt-complete-checkbox` and `.jt-action-item-checkbox` elements when scanning for checklist items.
+
 #### Sync & Data Persistence Fixes
 - **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.
 - **Fixed grant key not syncing on new device login**: Grant keys for Power Users are now properly returned from the server on login and stored locally for MCP/AI integrations.
