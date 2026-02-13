@@ -270,6 +270,7 @@ const ActionItemsCompletion = (() => {
     const targetUrl = item.getAttribute('href');
 
     // Complete the task in a hidden iframe (no page navigation)
+    // The iframe URL includes a marker hash so content.js skips feature initialization
     completeTaskInIframe(targetUrl, taskId, item, (success) => {
       if (success) {
         // Fade out and remove the action item from the list
@@ -299,6 +300,9 @@ const ActionItemsCompletion = (() => {
 
   /**
    * Complete a task in a hidden iframe (no visible page navigation)
+   * Appends #jt-completion-iframe to the URL so that content.js detects
+   * the marker and skips all feature initialization inside the iframe.
+   * This prevents injected checkboxes from interfering with sidebar detection.
    * @param {string} targetUrl - The URL of the task page
    * @param {string} taskId - The task ID
    * @param {HTMLElement} item - The action item element
@@ -353,61 +357,53 @@ const ActionItemsCompletion = (() => {
               return;
             }
 
-            // Check if task has checklist items - if so, we need to check them all first
-            const checklistItems = findChecklistItemsInDoc(iframeDoc);
+            // Use Progress checkbox approach to mark task complete
+            const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
+            if (!progressCheckbox) {
+              clearTimeout(failsafeTimeout);
+              iframe.remove();
+              callback(false);
+              return;
+            }
+            progressCheckbox.click();
 
-            if (checklistItems.length > 0) {
-              // Click all unchecked checklist items
-              completeChecklistItems(checklistItems, iframeDoc, iframe, failsafeTimeout, callback);
-            } else {
-              // No checklist - use Progress checkbox approach
-              const progressCheckbox = findProgressCheckboxInDoc(iframeDoc);
-              if (!progressCheckbox) {
+            // Wait for Save button to appear and become enabled
+            setTimeout(async () => {
+              const saveButton = findSaveButtonInDoc(iframeDoc);
+              if (!saveButton) {
                 clearTimeout(failsafeTimeout);
                 iframe.remove();
                 callback(false);
                 return;
               }
-              progressCheckbox.click();
 
-              // Wait for Save button to appear and become enabled
-              setTimeout(async () => {
-                const saveButton = findSaveButtonInDoc(iframeDoc);
-                if (!saveButton) {
-                  clearTimeout(failsafeTimeout);
-                  iframe.remove();
-                  callback(false);
-                  return;
-                }
+              // Wait for Save button to become enabled
+              const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
+              if (!isEnabled) {
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(false);
+                return;
+              }
 
-                // Wait for Save button to become enabled
-                const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 2000);
-                if (!isEnabled) {
-                  clearTimeout(failsafeTimeout);
-                  iframe.remove();
-                  callback(false);
-                  return;
-                }
+              // Click Save button
+              saveButton.click();
 
-                // Click Save button
-                saveButton.click();
+              // Also dispatch mouse event for React compatibility
+              const clickEvent = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: iframe.contentWindow
+              });
+              saveButton.dispatchEvent(clickEvent);
 
-                // Also dispatch mouse event for React compatibility
-                const clickEvent = new MouseEvent('click', {
-                  bubbles: true,
-                  cancelable: true,
-                  view: iframe.contentWindow
-                });
-                saveButton.dispatchEvent(clickEvent);
-
-                // Wait for save to complete
-                setTimeout(() => {
-                  clearTimeout(failsafeTimeout);
-                  iframe.remove();
-                  callback(true);
-                }, 2000);
-              }, 800);
-            }
+              // Wait for save to complete
+              setTimeout(() => {
+                clearTimeout(failsafeTimeout);
+                iframe.remove();
+                callback(true);
+              }, 2000);
+            }, 800);
           }, 1000);
         } catch (error) {
           clearTimeout(failsafeTimeout);
@@ -423,13 +419,15 @@ const ActionItemsCompletion = (() => {
       callback(false);
     };
 
-    // Add iframe to page and load the task URL
+    // Add iframe to page with marker hash so content.js skips feature init
     document.body.appendChild(iframe);
-    iframe.src = targetUrl;
+    const markerHash = '#jt-completion-iframe';
+    const separator = targetUrl.includes('#') ? '' : markerHash;
+    iframe.src = separator ? targetUrl + markerHash : targetUrl;
   }
 
   /**
-   * Find the progress checkbox in a document
+   * Find the progress checkbox in a document (iframe)
    * @param {Document} doc - The iframe document to search in
    * @returns {HTMLElement|null} The progress checkbox or null
    */
@@ -452,62 +450,19 @@ const ActionItemsCompletion = (() => {
     // Fallback: search the entire document
     const searchRoot = sidebar || doc.body;
 
-    // Find "Progress" label using multiple selectors
-    const labelSelectors = [
-      'span.font-bold',
-      'span[class*="font-bold"]',
-      'label',
-      'div.font-bold',
-      'strong'
-    ];
-
-    let progressLabel = null;
-    for (const selector of labelSelectors) {
-      const labels = Array.from(searchRoot.querySelectorAll(selector));
-      progressLabel = labels.find(el => el.textContent.trim() === 'Progress');
-      if (progressLabel) break;
-    }
-
-    if (!progressLabel) {
-      // Last resort: search by text content
-      const allElements = searchRoot.querySelectorAll('*');
-      for (const el of allElements) {
-        if (el.childNodes.length === 1 &&
-            el.childNodes[0].nodeType === Node.TEXT_NODE &&
-            el.textContent.trim() === 'Progress') {
-          progressLabel = el;
-          break;
-        }
-      }
-    }
+    // Find "Progress" label
+    const allLabels = Array.from(searchRoot.querySelectorAll('span.font-bold'));
+    const progressLabel = allLabels.find(el => el.textContent.trim() === 'Progress');
 
     if (!progressLabel) return null;
 
-    // Find the checkbox button near the Progress label
-    // Try multiple container patterns
-    let progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
-    if (!progressContainer) {
-      progressContainer = progressLabel.closest('div.flex.items-center');
-    }
-    if (!progressContainer) {
-      progressContainer = progressLabel.closest('div[class*="flex"]');
-    }
-    if (!progressContainer) {
-      progressContainer = progressLabel.parentElement;
-    }
-
+    // Find the container with Progress label
+    const progressContainer = progressLabel.closest('div.flex.items-center.space-x-1');
     if (!progressContainer) return null;
 
-    // Find the button in the container
-    let button = progressContainer.querySelector('div[role="button"]');
-    if (!button) {
-      button = progressContainer.querySelector('[role="button"]');
-    }
-    if (!button) {
-      button = progressContainer.querySelector('button');
-    }
-
-    return button;
+    // Find the checkbox button in the progress container
+    const button = progressContainer.querySelector('div[role="button"]');
+    return button || null;
   }
 
   /**
@@ -575,141 +530,6 @@ const ActionItemsCompletion = (() => {
 
       checkEnabled();
     });
-  }
-
-  /**
-   * Find unchecked checklist items in a document
-   * @param {Document} doc - The iframe document to search in
-   * @returns {HTMLElement[]} Array of unchecked checklist item checkboxes
-   */
-  function findChecklistItemsInDoc(doc) {
-    const uncheckedItems = [];
-
-    // Look for checklist section - typically has "Checklist" label
-    const allLabels = doc.querySelectorAll('span, div, label');
-    let checklistSection = null;
-
-    for (const label of allLabels) {
-      if (label.textContent.trim() === 'Checklist') {
-        // Find the parent container that holds the checklist
-        checklistSection = label.closest('div[class*="flex-col"]') ||
-                          label.closest('div[class*="space-y"]') ||
-                          label.parentElement?.parentElement;
-        break;
-      }
-    }
-
-    // Search root - either checklist section or whole document
-    const searchRoot = checklistSection || doc.body;
-
-    // Find all checkbox buttons in the checklist
-    // Checklist items typically have a checkbox SVG with a rect element
-    const allButtons = searchRoot.querySelectorAll('div[role="button"], [role="button"]');
-
-    for (const button of allButtons) {
-      // Skip checkboxes injected by our own extension (task completion / action items)
-      if (button.classList.contains('jt-complete-checkbox') ||
-          button.classList.contains('jt-action-item-checkbox')) {
-        continue;
-      }
-
-      // Check if this looks like a checkbox (has SVG with rect)
-      const svg = button.querySelector('svg');
-      if (!svg) continue;
-
-      const rect = svg.querySelector('rect');
-      if (!rect) continue;
-
-      // Check if it's unchecked (no checkmark path)
-      const checkmark = svg.querySelector('path[d*="M20 6"], path[d*="9 17"], path.jt-checkmark');
-
-      // Also check for circle checkboxes (complete indicator)
-      const circle = svg.querySelector('circle');
-
-      // If it has a rect but no checkmark, it's an unchecked checkbox
-      if (rect && !checkmark) {
-        // Make sure it's actually a checklist item checkbox, not the main Progress checkbox
-        // Checklist item checkboxes are typically smaller and in a list structure
-        const parent = button.closest('div[class*="flex"]');
-        if (parent) {
-          // Check if there's text next to the checkbox (checklist item description)
-          const hasTextContent = parent.textContent.trim().length > 0;
-          const isNotProgressCheckbox = !parent.textContent.includes('Progress');
-
-          if (hasTextContent && isNotProgressCheckbox) {
-            uncheckedItems.push(button);
-          }
-        }
-      }
-    }
-
-    return uncheckedItems;
-  }
-
-  /**
-   * Complete all checklist items and then save
-   * @param {HTMLElement[]} checklistItems - Array of unchecked checklist checkboxes
-   * @param {Document} iframeDoc - The iframe document
-   * @param {HTMLIFrameElement} iframe - The iframe element
-   * @param {number} failsafeTimeout - The failsafe timeout ID
-   * @param {Function} callback - Callback function (success: boolean)
-   */
-  function completeChecklistItems(checklistItems, iframeDoc, iframe, failsafeTimeout, callback) {
-    let currentIndex = 0;
-
-    function clickNextItem() {
-      if (currentIndex >= checklistItems.length) {
-        // All items checked, now wait for Save button and click it
-
-        setTimeout(async () => {
-          const saveButton = findSaveButtonInDoc(iframeDoc);
-          if (!saveButton) {
-            clearTimeout(failsafeTimeout);
-            iframe.remove();
-            callback(false);
-            return;
-          }
-
-          // Wait for Save button to become enabled
-          const isEnabled = await waitForSaveButtonEnabledInDoc(saveButton, 3000);
-          if (!isEnabled) {
-            clearTimeout(failsafeTimeout);
-            iframe.remove();
-            callback(false);
-            return;
-          }
-
-          // Click Save button
-          saveButton.click();
-
-          const clickEvent = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: iframe.contentWindow
-          });
-          saveButton.dispatchEvent(clickEvent);
-
-          // Wait for save to complete
-          setTimeout(() => {
-            clearTimeout(failsafeTimeout);
-            iframe.remove();
-            callback(true);
-          }, 2000);
-        }, 500);
-
-        return;
-      }
-
-      const item = checklistItems[currentIndex];
-      item.click();
-
-      currentIndex++;
-      // Wait a bit between clicks for UI to update
-      setTimeout(clickNextItem, 300);
-    }
-
-    // Start clicking checklist items
-    clickNextItem();
   }
 
   /**

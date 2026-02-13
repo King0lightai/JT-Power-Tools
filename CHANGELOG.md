@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Added debounce to MutationObserver**: Prevents multiple rapid reinitializations when DOM changes quickly (e.g., during Kanban drag operations), improving performance and reliability.
 
 #### Action Items Completion Fix
-- **Fixed Action Items checkbox failing to complete tasks**: The extension's task completion checkboxes (injected by content scripts running inside the hidden iframe) were being misidentified as native checklist items. This caused `findChecklistItemsInDoc` to click the wrong elements instead of the Progress checkbox, resulting in "Failed to complete task". Now explicitly skips `.jt-complete-checkbox` and `.jt-action-item-checkbox` elements when scanning for checklist items.
+- **Fixed Action Items checkbox failing to complete tasks**: The extension's content scripts (including task completion checkboxes) were running inside the hidden iframe used for action item completion, injecting elements that interfered with sidebar and Progress checkbox detection. Added `#jt-completion-iframe` URL marker so `content.js` skips all feature initialization inside the iframe. Also simplified the iframe completion logic to use the Progress checkbox directly (removed checklist detection that was prone to false positives from injected elements).
 
 #### Sync & Data Persistence Fixes
 - **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.

@@ -430,6 +430,15 @@ async function waitForFeatures(
 
 // Initialize on page load
 (async function() {
+  // Skip all feature initialization inside Action Items completion iframes.
+  // The iframe URL contains #jt-completion-iframe as a marker — if present,
+  // the extension's features (especially task completion checkboxes) must NOT
+  // run, as they would inject elements that interfere with sidebar detection.
+  if (window.location.hash === '#jt-completion-iframe') {
+    console.log('JT-Tools: Completion iframe detected, skipping feature initialization');
+    return;
+  }
+
   console.log('JT-Tools: Starting initialization...');
 
   // Load settings
