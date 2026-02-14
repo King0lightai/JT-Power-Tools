@@ -1279,32 +1279,43 @@
   top: auto;
   left: auto;
   width: 100%;
-  margin-bottom: 0.5rem;
+  margin-bottom: 2px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.25rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-wrap: nowrap;
   z-index: 1; /* Low z-index - embedded toolbar should NOT appear over dropdowns/popups */
-  padding: 0.25rem;
-  gap: 2px;
+  padding: 1px 2px;
+  gap: 1px;
 }
 
-/* Sticky-active state - when toolbar becomes fixed during scroll */
+/* Modal context - override Tailwind space-y-* margin on injected child elements */
+.m-auto.shadow-lg .jt-formatter-toolbar.jt-formatter-toolbar-embedded {
+  margin-top: 0 !important;
+}
+
+/* Ensure the modal's sticky footer (Delete/Cancel/Save buttons) renders
+   above formatter toolbars so they never visually overlap */
+.m-auto.shadow-lg .sticky.border-t {
+  z-index: 2;
+}
+
+/* Sticky-active state - when toolbar becomes sticky during scroll */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
-  position: fixed !important;
-  z-index: 50; /* Below JobTread's headers (usually z-index 100+) but above content */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border-color: #d1d5db;
-  margin-bottom: 0; /* Remove margin when fixed */
+  margin-bottom: 0; /* Remove margin when sticky */
+  /* position and z-index set inline by JS based on context */
 }
 
-/* Toolbar placed BELOW the textarea (Message fields) */
-.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-below {
+/* Toolbar placed ABOVE the textarea in Message fields (between TO line and textarea) */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-message {
   margin-bottom: 0;
-  margin-top: 0.5rem;
-  border-radius: 0 0 0.25rem 0.25rem; /* Rounded bottom corners only */
-  border-top: 1px solid #e5e7eb;
+  margin-top: 0;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
 }
 
 /* Responsive toolbar - flat button layout like JobTread */
@@ -1314,19 +1325,19 @@
   overflow: hidden;
 }
 
-/* Toolbar item buttons - flat style like JobTread */
+/* Toolbar item buttons - compact flat style */
 .jt-responsive-toolbar .jt-toolbar-item {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0.25rem 0.5rem;
+  min-width: 22px;
+  height: 22px;
+  padding: 0.125rem 0.25rem;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0.25rem;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 11px;
   color: #64748b;
   transition: all 0.1s ease;
   flex-shrink: 0;
@@ -1356,34 +1367,34 @@
 /* Text formatting in toolbar items */
 .jt-responsive-toolbar .jt-toolbar-item strong {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .jt-responsive-toolbar .jt-toolbar-item em {
   font-style: italic;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .jt-responsive-toolbar .jt-toolbar-item u {
   text-decoration: underline;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .jt-responsive-toolbar .jt-toolbar-item s {
   text-decoration: line-through;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .jt-responsive-toolbar .jt-toolbar-item sub {
-  font-size: 9px;
+  font-size: 8px;
   vertical-align: sub;
   line-height: 0;
 }
 
 /* SVG icons in toolbar items */
 .jt-responsive-toolbar .jt-toolbar-item svg {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   stroke-width: 2;
 }
 
@@ -1434,7 +1445,7 @@
   border-color: #bbf7d0;
   color: #166534;
   font-weight: 500;
-  padding: 0.25rem 0.5rem;
+  padding: 0.125rem 0.375rem;
 }
 
 .jt-responsive-toolbar .jt-preview-toggle:hover {
@@ -1457,9 +1468,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  padding: 0.25rem;
+  min-width: 22px;
+  height: 22px;
+  padding: 0.125rem;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 0.25rem;
@@ -1475,8 +1486,8 @@
 }
 
 .jt-overflow-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
 }
 
 .jt-overflow-dropdown {

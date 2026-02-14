@@ -127,7 +127,7 @@ const FormatterFeature = (() => {
 
     // Skip if on excluded paths (but NOT documents - sidebar fields are allowed there)
     const path = window.location.pathname;
-    if (path.includes('/files') || path.includes('/vendors') || path.includes('/customers') || path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
+    if (path.includes('/settings') || path.includes('/plans') || path.includes('/catalog')) {
       return;
     }
 
@@ -318,7 +318,11 @@ const FormatterFeature = (() => {
         if (Detection().isFormatterField) {
           return Detection().isFormatterField(field);
         }
-        // Fallback: exclude all fields on document-type pages if detection module unavailable
+        // Fallback: allow Message fields, exclude everything else on document-type pages
+        const fieldPlaceholder = field.getAttribute('placeholder');
+        if (fieldPlaceholder === 'Message') {
+          return true;
+        }
         return false;
       }
 

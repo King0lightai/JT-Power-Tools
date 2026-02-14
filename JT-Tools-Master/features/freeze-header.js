@@ -125,9 +125,9 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
-    /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary - just fix z-index stacking */
+    /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary - fix z-index stacking */
     /* These are job-specific sidebars (Update Task, Task Details, COST ITEM DETAILS) */
-    /* Do NOT modify top or max-height - let JobTread handle positioning */
+    /* Do NOT modify top - let JobTread handle positioning */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky,
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain {
       z-index: 1 !important;

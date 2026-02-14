@@ -165,6 +165,11 @@ div.border-l div.select-none.break-inside-avoid {
     background-color: rgba(59, 130, 246, 0.2); /* Blue with 20% opacity for consistent selection highlighting */
 }
 
+/* SVG fill colors for dark mode - used by checkbox/radio circle interiors */
+.fill-blue-50 {
+    fill: #2c2c2c; /* Match dark mode background so checkbox circle interior is dark */
+}
+
 /* Alert background colors for dark mode */
 .bg-green-50 {
     background-color: #1a3a2e; /* Dark green for green alerts */

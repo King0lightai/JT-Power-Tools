@@ -5,7 +5,47 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.3] - 2026-02-13
+
+### Improved
+
+#### Custom Theme Presets
+- **Quick Themes**: Added 10 preloaded theme presets to the Theme tab as clickable color circles above the saved themes section. Clicking a preset instantly loads and applies the theme.
+  - **Light row**: Ocean, Forest, Sunset, Berry, Slate
+  - **Dark row**: Midnight, Ember, Neon, Plum, Charcoal
+
+#### Text Formatter Toolbar
+- **Compact toolbar everywhere**: Reduced the embedded toolbar size to match the compact modal version (22px buttons, 11px font, 12px SVG icons) for a cleaner, less intrusive look across all contexts
+- **Sticky scroll in all contexts**: Extended the sticky scroll behavior (toolbar follows textarea during scroll) to all embedded toolbar locations — modals, job overview columns, and custom fields — not just sidebars
+- **Message field toolbar repositioned**: Moved the formatter toolbar from below the message textarea to above it, embedded between the TO line and the message area for easier access while composing
+
+### Fixed
+
+#### Text Formatter on More Pages
+- **Re-enabled Text Formatter on Files, Customer, and Vendor pages**: The formatter was previously excluded from these pages. Now that toolbar positioning has been fixed (modal and sidebar overlap issues resolved), the formatter is available on all content pages. Only `/settings`, `/plans`, and `/catalog` remain excluded.
+- **Fixed Text Formatter missing on Message fields in document-type pages**: On documents, invoices, estimates, proposals, contracts, and purchase order pages, the formatter was blocked for all non-sidebar fields. Message compose areas are now allowed through the document-type page filter.
+
+#### Text Formatter Toolbar Fix
+- **Fixed toolbar covering bottom buttons in edit job popup**: The embedded formatter toolbars were adding too much height in modal popups (e.g., Update Job), pushing the bottom button bar (Delete / Cancel / Update) out of view. Added compact modal-specific toolbar styles — smaller buttons (22px), tighter padding, and minimal margins — so toolbars remain visible and functional without interfering with the modal layout.
+- **Fixed sticky toolbar overlapping page headers in sidebars**: When scrolling a sidebar (e.g., UPDATE TASK panel), the formatter toolbar's sticky/fixed positioning would float up into page-level headers (action bar with + Task/+ To-Do, or the Documents/Files/Reports tab bar). Fixed by detecting the sidebar's sticky header boundary and reverting the toolbar to its natural flow position when the textarea scrolls completely above the header area, preventing any overlap with page navigation elements.
+- **Fixed formatter toolbar appearing below character counter on page load**: On message fields, a race condition between the formatter and character counter MutationObservers could cause the toolbar to render below the counter and template buttons instead of directly below the textarea. Fixed by anchoring toolbar insertion to the native action bar (Send button row) rather than relying on `nextSibling` ordering.
+- **Fixed floating toolbar appearing on custom fields in budget table**: Custom fields like "Internal Notes" on the budget page were incorrectly showing the floating expanded toolbar (meant only for Description fields). A fallthrough bug in `showToolbar()` caused non-Description budget fields to bypass the embedded toolbar check and fall into the floating toolbar code path. Added explicit return to prevent fallthrough.
+- **Fixed sidebar toolbar positioning and scroll behavior**: Replaced `position: fixed` with `position: sticky` for sidebar toolbar positioning. Fixed positioning took the toolbar out of the sidebar's stacking context, causing it to render on top of the sidebar header (z-50 vs z-10) and creating phantom hover states on toolbar buttons when the cursor was over the textarea. Sticky positioning keeps the toolbar in the sidebar's flow, naturally slides behind the header, and eliminates all z-index and hover issues.
+- **Fixed toolbar staying in floating position after clicking away**: Embedded toolbars in sidebars would remain stuck in `position: fixed` after the textarea lost focus, because `hideToolbar()` only reset floating toolbars. Now resets embedded toolbars back to `position: relative` on blur, and keeps toolbar visible when focus moves to the preview panel.
+
+#### Schedule Task Checkboxes Fixes
+- **Added retry logic for slow-loading pages**: Schedule Task Checkboxes now retry initialization up to 3 times with exponential backoff if task cards aren't detected immediately. This fixes issues on slower connections or devices where the Kanban/Calendar view loads after the initial check.
+- **Added debounce to MutationObserver**: Prevents multiple rapid reinitializations when DOM changes quickly (e.g., during Kanban drag operations), improving performance and reliability.
+
+#### Dark Mode Checkbox Fix
+- **Fixed checkbox circle appearing white in dark mode and custom themes**: JobTread updated their checkbox SVG to use `fill-blue-50` for the circle interior, which rendered as bright white in dark mode and custom themes. Added `fill-blue-50` overrides in both dark mode CSS and custom RGB theme to match the respective background colors.
+
+#### Action Items Completion Fix
+- **Fixed Action Items checkbox failing to complete tasks**: The extension's content scripts (including task completion checkboxes) were running inside the hidden iframe used for action item completion, injecting elements that interfered with sidebar and Progress checkbox detection. Added `#jt-completion-iframe` URL marker so `content.js` skips all feature initialization inside the iframe. Also simplified the iframe completion logic to use the Progress checkbox directly (removed checklist detection that was prone to false positives from injected elements).
+
+---
+
+## [3.6.2] - 2026-02-12
 
 ### Added
 
@@ -18,6 +58,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Clean export**: Hides all JobTread UI when printing, showing only the takeoff drawing
   - **Full theme support**: Works with light mode, dark mode, and custom RGB themes
   - Print button appears automatically whenever the takeoff toolbar is present (SPA-navigation aware)
+
+### Improved
+
+#### Takeoff Print Tool
+- **Auto orientation + fit-to-page printing**: Drawing auto-detects landscape vs portrait from its aspect ratio and scales to fill whatever paper size the user selects (Tabloid, Letter, etc.). No longer hardcoded to Tabloid 11x17".
+- **Proper SVG measurement**: Uses SVG `viewBox` attributes for accurate intrinsic dimensions instead of `scrollWidth`/`scrollHeight` which could return the wrong container size.
+- **Clean print layout**: Drawing is cloned into a dedicated print wrapper instead of using `visibility: hidden`. This prevents the drawing from being trapped inside JobTread's nested flex/absolute containers that distorted print layout.
+
+#### Eraser Tool
+- **Improved eraser reliability**: Eraser now simulates a Backspace keypress after selecting an annotation instead of searching for the trash icon button in the DOM. This is more reliable since JobTread natively handles Backspace to delete selected annotations.
+
+### Fixed
+
+#### PDF Markup Tools Fixes
+- **Fixed Print button not appearing in takeoff toolbar**: The Print button was gated behind a URL check (`/files/`, `/takeoff/`, `/plans/`) that didn't account for SPA navigation. Since JobTread is a single-page app, navigating to a takeoff page after initial load never triggered the injection. Removed the URL gate and added `injectTakeoffButtons()` to the main MutationObserver so the Print button is injected whenever the takeoff toolbar appears in the DOM, regardless of navigation timing.
+- **Fixed "Cannot find takeoff drawing area" in plan comparison view**: The comparison view renders plans as `<img>` elements (not SVGs), so the print container detection failed. Updated `detectTakeoffContainer()` to also find image-based comparison containers, `measurePrintSize()` to read `naturalWidth`/`naturalHeight` from images, and `printDrawingOnly()` to clone comparison images with their CSS filter overlays (red/blue color effects) and `mix-blend-mode` compositing intact. Single print button in comparison mode captures the full visible composite.
+
+#### Account & Login Fixes
+- **Fixed account login/register forms hidden without license key**: The account section (Sign In / Create Account) was completely hidden when no license key was entered. Users on a new device couldn't sign in to sync their data without first entering a license key. The account forms are now always visible regardless of license status — the server handles license validation on login.
+
+---
+
+## [3.6.1] - 2026-02-10
+
+### Fixed
+
+#### Sync & Data Persistence Fixes
+- **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.
+- **Fixed grant key not syncing on new device login**: Grant keys for Power Users are now properly returned from the server on login and stored locally for MCP/AI integrations.
+- **Fixed deleted notes/templates reappearing on new devices**: Deleted notes and templates were not being synced to the server, causing them to reappear when logging in on a new device. Now tracks deleted item IDs and sends them during sync so the server can soft-delete them.
+- **Fixed personal notes folders not syncing**: The `syncNotes()` function was not including the `folder` property in the sync payload, causing folders to be lost after server sync. Folders now persist correctly across devices.
+- **Fixed team notes folder column missing**: Added database migration to add `folder` column to `team_notes` table, fixing "table has no column named folder" errors when saving team notes to folders.
+
+---
+
+## [3.6.0] - 2026-02-08
+
+### Added
+
+#### Files Drag to Folder (Pro)
+- **New feature: Files Drag to Folder** allows dragging files directly onto folder buttons to organize them
+  - Supports both list view and grid view on the JobTread Files page
+  - Visual drop zone highlighting on folder buttons during drag
+  - Handles grid view's extra steps (Select Files / Edit File) automatically
+  - Simulates the native folder assignment workflow behind the scenes
+  - Dark mode compatible
 
 #### Fat Gantt - Thicker Dependency Lines
 - **New feature: Fat Gantt**: Makes Gantt chart dependency lines thicker (3.5px vs 1.5px) and easier to click
@@ -50,63 +136,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Drag notes between folders**: Notes can now be moved between folders by dragging them onto a folder header. The folder header highlights when hovering with a dragged note.
 - **Delete folders**: Folders (except General) can now be deleted by hovering over the folder header and clicking the × button. Notes in deleted folders are automatically moved to General.
 - **Drag notes to reorder**: Notes can now be reordered within a folder or moved to a different position in another folder by dragging them onto other notes. A blue indicator shows where the note will be placed.
-
-### Improved
-
-#### Takeoff Print Tool
-- **Auto orientation + fit-to-page printing**: Drawing auto-detects landscape vs portrait from its aspect ratio and scales to fill whatever paper size the user selects (Tabloid, Letter, etc.). No longer hardcoded to Tabloid 11x17".
-- **Proper SVG measurement**: Uses SVG `viewBox` attributes for accurate intrinsic dimensions instead of `scrollWidth`/`scrollHeight` which could return the wrong container size.
-- **Clean print layout**: Drawing is cloned into a dedicated print wrapper instead of using `visibility: hidden`. This prevents the drawing from being trapped inside JobTread's nested flex/absolute containers that distorted print layout.
-
-#### Eraser Tool
-- **Improved eraser reliability**: Eraser now simulates a Backspace keypress after selecting an annotation instead of searching for the trash icon button in the DOM. This is more reliable since JobTread natively handles Backspace to delete selected annotations.
-
-### Fixed
-
-#### PDF Markup Tools Fixes
-- **Fixed Print button not appearing in takeoff toolbar**: The Print button was gated behind a URL check (`/files/`, `/takeoff/`, `/plans/`) that didn't account for SPA navigation. Since JobTread is a single-page app, navigating to a takeoff page after initial load never triggered the injection. Removed the URL gate and added `injectTakeoffButtons()` to the main MutationObserver so the Print button is injected whenever the takeoff toolbar appears in the DOM, regardless of navigation timing.
-- **Fixed "Cannot find takeoff drawing area" in plan comparison view**: The comparison view renders plans as `<img>` elements (not SVGs), so the print container detection failed. Updated `detectTakeoffContainer()` to also find image-based comparison containers, `measurePrintSize()` to read `naturalWidth`/`naturalHeight` from images, and `printDrawingOnly()` to clone comparison images with their CSS filter overlays (red/blue color effects) and `mix-blend-mode` compositing intact. Single print button in comparison mode captures the full visible composite.
-
-#### Account & Login Fixes
-- **Fixed account login/register forms hidden without license key**: The account section (Sign In / Create Account) was completely hidden when no license key was entered. Users on a new device couldn't sign in to sync their data without first entering a license key. The account forms are now always visible regardless of license status — the server handles license validation on login.
-
-#### Schedule Task Checkboxes Fixes
-- **Added retry logic for slow-loading pages**: Schedule Task Checkboxes now retry initialization up to 3 times with exponential backoff if task cards aren't detected immediately. This fixes issues on slower connections or devices where the Kanban/Calendar view loads after the initial check.
-- **Added debounce to MutationObserver**: Prevents multiple rapid reinitializations when DOM changes quickly (e.g., during Kanban drag operations), improving performance and reliability.
-
-#### Action Items Completion Fix
-- **Fixed Action Items checkbox failing to complete tasks**: The extension's content scripts (including task completion checkboxes) were running inside the hidden iframe used for action item completion, injecting elements that interfered with sidebar and Progress checkbox detection. Added `#jt-completion-iframe` URL marker so `content.js` skips all feature initialization inside the iframe. Also simplified the iframe completion logic to use the Progress checkbox directly (removed checklist detection that was prone to false positives from injected elements).
-
-#### Sync & Data Persistence Fixes
-- **Fixed license key not syncing on new device login**: When logging into the extension on a new device, the license key was not being fetched from the server, causing premium features to be unavailable. The server now returns the license key on login, and the client automatically verifies and stores it.
-- **Fixed grant key not syncing on new device login**: Grant keys for Power Users are now properly returned from the server on login and stored locally for MCP/AI integrations.
-- **Fixed deleted notes/templates reappearing on new devices**: Deleted notes and templates were not being synced to the server, causing them to reappear when logging in on a new device. Now tracks deleted item IDs and sends them during sync so the server can soft-delete them.
-- **Fixed personal notes folders not syncing**: The `syncNotes()` function was not including the `folder` property in the sync payload, causing folders to be lost after server sync. Folders now persist correctly across devices.
-- **Fixed team notes folder column missing**: Added database migration to add `folder` column to `team_notes` table, fixing "table has no column named folder" errors when saving team notes to folders.
-
-#### Quick Notes Editor Fixes
-- **Fixed folder showing "[object PointerEvent]"**: The "New Note" button was incorrectly passing the click event object as the folder parameter, causing folders to display as "[object PointerEvent]" instead of "General"
-- **Fixed toolbar buttons not working**: Added `mousedown` event handler to prevent toolbar buttons from stealing focus, which was causing formatting commands to fail because the text selection was lost
-- **Fixed Quick Notes toolbar affecting Text Formatter**: Quick Notes formatting button state updates now scope queries to its own toolbar, preventing it from accidentally highlighting the Text Formatter toolbar buttons when both features are active on the same page
-- **Added Enter key support for lists**: Pressing Enter while in a bullet, numbered, or checkbox item now creates a new list item of the same type on the next line. Numbered lists are automatically renumbered.
-- **Fixed checkbox deletion**: Empty checkboxes can now be deleted with Backspace or Delete keys. Empty bullet and numbered list items can also be removed with Backspace.
-- **Fixed invalid folder names**: Added automatic cleanup of invalid folder names (like "[object Object]" or "[object PointerEvent]") that may have been created due to the earlier bug. These are now automatically reset to "General" on load.
-- **Fixed redo not working**: Redo was broken because undo/redo operations were incorrectly triggering history saves, which cleared the redo stack. Now undo/redo operations are handled separately and don't corrupt the history.
-- **Fixed markdown formatting order**: Reordered regex patterns to process strikethrough and underline before bold/italic, preventing incorrect parsing of formatting markers.
-- **Improved toolbar button responsiveness**: Formatting buttons (Bold, Italic, etc.) now immediately show active/inactive state after clicking, using `document.queryCommandState()` for accurate detection even when cursor is positioned without text selection.
-- **Fixed undo/redo buttons not working**: Switched to browser's native undo/redo commands (`document.execCommand('undo'/'redo')`) which properly track all user edits made during the session.
-- **Enhanced active button styling**: Made active formatting buttons more visually prominent with stronger cyan background (`#cffafe`) and a subtle glow effect (`box-shadow`).
-- **Fixed formatting in list items**: Formatting buttons (Bold, Italic, etc.) now work correctly inside bullet points, numbered lists, and checkboxes. The selection is preserved and restored before applying formatting commands.
-- **Fixed "wall" issue between formatted and unformatted text**: Backspace can now properly cross the boundary between bold/italic/underline text and normal text. Empty formatting elements are automatically cleaned up, preventing invisible barriers that blocked cursor movement.
-- **Added Ctrl+click to open links**: Links in Quick Notes can now be opened by Ctrl+clicking (or Cmd+click on Mac) while editing.
-- **Added table support**: New table button in toolbar allows inserting markdown tables with customizable rows/columns. Tables are editable directly in the WYSIWYG editor and properly convert to/from markdown format.
-- **Removed code button**: Removed the inline code formatting button from the toolbar to simplify the interface.
-- **Improved extension context handling**: Quick Notes now gracefully handles extension context invalidation (e.g., after reloading the extension) instead of throwing errors.
-- **Fixed resize handle showing on sidebar-only view**: The resize handle is now only visible and functional when a note is open in the editor. Previously it was active even when viewing the sidebar list, causing users to drag an empty area.
-- **Added table row/column management**: Right-click on any table cell to add/remove rows and columns via context menu. Options include Add Row Above/Below, Add Column Left/Right, Delete Row, Delete Column, and Delete Table.
-- **Added folder colors**: Folders can now be assigned custom colors for visual organization. Click the circle icon next to a folder name to choose from 18 color options. Colored folders display a left border accent and filled color indicator.
-
-### Added
 
 #### Quick Notes - Pure WYSIWYG Editor & Folder Organization
 - **Pure WYSIWYG Editor**: Quick Notes now uses a clean rendered-only editor
@@ -246,6 +275,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ChatGPT setup guide
   - Generic MCP client guide with API documentation
 - Fixed MCP guide links in popup to point to correct URLs
+
+### Fixed
+
+#### Quick Notes Editor Fixes
+- **Fixed folder showing "[object PointerEvent]"**: The "New Note" button was incorrectly passing the click event object as the folder parameter, causing folders to display as "[object PointerEvent]" instead of "General"
+- **Fixed toolbar buttons not working**: Added `mousedown` event handler to prevent toolbar buttons from stealing focus, which was causing formatting commands to fail because the text selection was lost
+- **Fixed Quick Notes toolbar affecting Text Formatter**: Quick Notes formatting button state updates now scope queries to its own toolbar, preventing it from accidentally highlighting the Text Formatter toolbar buttons when both features are active on the same page
+- **Added Enter key support for lists**: Pressing Enter while in a bullet, numbered, or checkbox item now creates a new list item of the same type on the next line. Numbered lists are automatically renumbered.
+- **Fixed checkbox deletion**: Empty checkboxes can now be deleted with Backspace or Delete keys. Empty bullet and numbered list items can also be removed with Backspace.
+- **Fixed invalid folder names**: Added automatic cleanup of invalid folder names (like "[object Object]" or "[object PointerEvent]") that may have been created due to the earlier bug. These are now automatically reset to "General" on load.
+- **Fixed redo not working**: Redo was broken because undo/redo operations were incorrectly triggering history saves, which cleared the redo stack. Now undo/redo operations are handled separately and don't corrupt the history.
+- **Fixed markdown formatting order**: Reordered regex patterns to process strikethrough and underline before bold/italic, preventing incorrect parsing of formatting markers.
+- **Improved toolbar button responsiveness**: Formatting buttons (Bold, Italic, etc.) now immediately show active/inactive state after clicking, using `document.queryCommandState()` for accurate detection even when cursor is positioned without text selection.
+- **Fixed undo/redo buttons not working**: Switched to browser's native undo/redo commands (`document.execCommand('undo'/'redo')`) which properly track all user edits made during the session.
+- **Enhanced active button styling**: Made active formatting buttons more visually prominent with stronger cyan background (`#cffafe`) and a subtle glow effect (`box-shadow`).
+- **Fixed formatting in list items**: Formatting buttons (Bold, Italic, etc.) now work correctly inside bullet points, numbered lists, and checkboxes. The selection is preserved and restored before applying formatting commands.
+- **Fixed "wall" issue between formatted and unformatted text**: Backspace can now properly cross the boundary between bold/italic/underline text and normal text. Empty formatting elements are automatically cleaned up, preventing invisible barriers that blocked cursor movement.
+- **Added Ctrl+click to open links**: Links in Quick Notes can now be opened by Ctrl+clicking (or Cmd+click on Mac) while editing.
+- **Added table support**: New table button in toolbar allows inserting markdown tables with customizable rows/columns. Tables are editable directly in the WYSIWYG editor and properly convert to/from markdown format.
+- **Removed code button**: Removed the inline code formatting button from the toolbar to simplify the interface.
+- **Improved extension context handling**: Quick Notes now gracefully handles extension context invalidation (e.g., after reloading the extension) instead of throwing errors.
+- **Fixed resize handle showing on sidebar-only view**: The resize handle is now only visible and functional when a note is open in the editor. Previously it was active even when viewing the sidebar list, causing users to drag an empty area.
+- **Added table row/column management**: Right-click on any table cell to add/remove rows and columns via context menu. Options include Add Row Above/Below, Add Column Left/Right, Delete Row, Delete Column, and Delete Table.
+- **Added folder colors**: Folders can now be assigned custom colors for visual organization. Click the circle icon next to a folder name to choose from 18 color options. Colored folders display a left border accent and filled color indicator.
 
 ---
 
@@ -868,6 +921,13 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
+[3.6.3]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.6.3
+[3.6.2]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.6.2
+[3.6.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.6.1
+[3.6.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.6.0
+[3.5.4]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.5.4
+[3.5.1]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.5.1
+[3.5.0]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.5.0
 [3.3.10]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.10
 [3.3.6]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.6
 [3.3.4]: https://github.com/King0lightai/JT-Power-Tools/releases/tag/v3.3.4

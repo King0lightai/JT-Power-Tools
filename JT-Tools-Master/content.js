@@ -125,7 +125,12 @@ const featureModules = {
     name: 'Fat Gantt',
     feature: () => window.GanttLinesFeature,
     instance: null
-  }
+  },
+  // fileDragToFolder: {
+  //   name: 'Files Drag to Folder',
+  //   feature: () => window.FileDragToFolderFeature,
+  //   instance: null
+  // }
 };
 
 // Current settings - use shared defaults from JTDefaults

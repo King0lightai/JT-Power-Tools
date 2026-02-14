@@ -19,7 +19,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>Power Tools</h1>
-        <span class="version">v3.6.2</span>
+        <span class="version">v3.6.3</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <i class="ph ph-sun theme-icon light-icon"></i>
           <i class="ph ph-moon theme-icon dark-icon"></i>
@@ -134,7 +134,7 @@
             <div class="category-header" data-category="productivity">
               <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
-              <span class="category-count">7</span>
+              <span class="category-count">8</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features" data-category-content="productivity">
@@ -217,6 +217,19 @@
                   <span class="slider"></span>
                 </label>
               </div>
+
+              <!-- Saved for a later version
+              <div class="feature-item premium" id="fileDragToFolderFeature">
+                <div class="feature-info">
+                  <h3>Files Drag to Folder <i class="ph ph-question feature-help" data-guide="file-drag-to-folder" title="Learn more"></i><i class="ph ph-device-tablet feature-tablet" title="Tablet & desktop"></i> <span class="badge pro">Pro</span></h3>
+                  <p>Drag files onto folders to organize them</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="fileDragToFolder" data-feature="fileDragToFolder">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              -->
             </div>
           </div>
 
@@ -334,6 +347,45 @@
             </div>
 
             <button id="applyThemeBtn" class="btn-primary">Apply Theme</button>
+
+            <!-- Preloaded Themes -->
+            <div class="preloaded-themes">
+              <div class="preview-label">Quick Themes</div>
+              <div class="preloaded-theme-circles">
+                <button class="preloaded-theme-circle" data-preset="ocean" title="Ocean">
+                  <span class="preset-ring" style="background: conic-gradient(#0EA5E9 0% 33%, #E0F2FE 33% 66%, #0C4A6E 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="forest" title="Forest">
+                  <span class="preset-ring" style="background: conic-gradient(#16A34A 0% 33%, #DCFCE7 33% 66%, #14532D 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="sunset" title="Sunset">
+                  <span class="preset-ring" style="background: conic-gradient(#EA580C 0% 33%, #FFF7ED 33% 66%, #431407 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="berry" title="Berry">
+                  <span class="preset-ring" style="background: conic-gradient(#7C3AED 0% 33%, #F3E8FF 33% 66%, #1F1B29 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="slate" title="Slate">
+                  <span class="preset-ring" style="background: conic-gradient(#64748B 0% 33%, #F1F5F9 33% 66%, #1E293B 66% 100%);"></span>
+                </button>
+              </div>
+              <div class="preloaded-theme-circles" style="margin-top: 8px;">
+                <button class="preloaded-theme-circle" data-preset="midnight" title="Midnight">
+                  <span class="preset-ring" style="background: conic-gradient(#60A5FA 0% 33%, #1E293B 33% 66%, #CBD5E1 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="ember" title="Ember">
+                  <span class="preset-ring" style="background: conic-gradient(#F97316 0% 33%, #292524 33% 66%, #D6D3D1 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="neon" title="Neon">
+                  <span class="preset-ring" style="background: conic-gradient(#22D3EE 0% 33%, #18181B 33% 66%, #E4E4E7 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="plum" title="Plum">
+                  <span class="preset-ring" style="background: conic-gradient(#A78BFA 0% 33%, #1C1917 33% 66%, #D4D4D8 66% 100%);"></span>
+                </button>
+                <button class="preloaded-theme-circle" data-preset="charcoal" title="Charcoal">
+                  <span class="preset-ring" style="background: conic-gradient(#A1A1AA 0% 33%, #27272A 33% 66%, #E4E4E7 66% 100%);"></span>
+                </button>
+              </div>
+            </div>
 
             <!-- Saved Themes -->
             <div class="saved-themes">

@@ -44,6 +44,9 @@ const JTDefaults = (() => {
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,
 
+    // Pro Features - Productivity Tools
+    // fileDragToFolder: false, // Saved for a later version
+
     // Theme Configuration
     themeColors: {
       primary: '#3B82F6',     // Default blue

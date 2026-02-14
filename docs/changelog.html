@@ -39,11 +39,138 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.3 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.3</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">February 13, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Theme Quick Presets</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">10 preloaded theme presets as clickable color circles in the Theme tab</li>
+                            <li class="sub-item">Light themes: Ocean, Forest, Sunset, Berry, Slate</li>
+                            <li class="sub-item">Dark themes: Midnight, Ember, Neon, Plum, Charcoal</li>
+                            <li class="sub-item">Click any preset to instantly load and apply the theme</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter Toolbar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Compact toolbar everywhere — smaller buttons (22px), 11px font, 12px icons for a cleaner look</li>
+                            <li class="sub-item">Sticky scroll in all contexts — toolbar follows textarea during scroll in modals, job overview, and custom fields (not just sidebars)</li>
+                            <li class="sub-item">Message field toolbar repositioned from below to above the textarea</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Re-enabled Text Formatter on Files, Customer, and Vendor pages (previously excluded)</li>
+                    <li class="change-item">Fixed Text Formatter missing on Message fields in document-type pages</li>
+                    <li class="change-item">Fixed toolbar covering bottom buttons in edit job popup modals</li>
+                    <li class="change-item">Fixed sticky toolbar overlapping page headers in sidebars</li>
+                    <li class="change-item">Fixed formatter toolbar appearing below character counter on page load</li>
+                    <li class="change-item">Fixed floating toolbar appearing on custom fields in budget table</li>
+                    <li class="change-item">Fixed sidebar toolbar positioning — switched from fixed to sticky positioning</li>
+                    <li class="change-item">Fixed toolbar staying in floating position after clicking away from textarea</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.2 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.2</span>
+                <span class="version-date">February 12, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Takeoff Print Tool (PDF Markup Tools)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Print construction takeoff drawings directly from JobTread</li>
+                            <li class="sub-item">Integrated Print button in JobTread's native takeoff toolbar</li>
+                            <li class="sub-item">Plan comparison view support — prints both overlaid layers with color filters</li>
+                            <li class="sub-item">Dynamic page sizing fits the drawing to any paper size</li>
+                            <li class="sub-item">Auto landscape/portrait detection based on drawing aspect ratio</li>
+                            <li class="sub-item">Clean export hides all UI, showing only the drawing</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔧</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Eraser Tool</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Improved eraser reliability — simulates Backspace keypress instead of searching for trash icon in DOM</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Takeoff Print Tool</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto orientation and fit-to-page printing for any paper size</li>
+                            <li class="sub-item">Proper SVG measurement using viewBox attributes for accurate dimensions</li>
+                            <li class="sub-item">Clean print layout using dedicated print wrapper instead of visibility: hidden</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed Print button not appearing in takeoff toolbar due to SPA navigation URL gating</li>
+                    <li class="change-item">Fixed "Cannot find takeoff drawing area" in plan comparison view with image-based containers</li>
+                    <li class="change-item">Fixed account login/register forms hidden when no license key was entered</li>
+                    <li class="change-item">Added retry logic with exponential backoff for schedule task checkboxes on slow-loading pages</li>
+                    <li class="change-item">Fixed checkbox circle appearing white in dark mode and custom themes (fill-blue-50 override)</li>
+                    <li class="change-item">Fixed Action Items completion failing due to extension running inside hidden iframe</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 3.6.1 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.1</span>
+                <span class="version-date">February 10, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">Fixed license key not syncing on new device login</li>
+                    <li class="change-item">Fixed grant key not syncing on new device login</li>
+                    <li class="change-item">Fixed deleted notes and templates reappearing on new devices</li>
+                    <li class="change-item">Fixed personal notes folders not syncing across devices</li>
+                    <li class="change-item">Fixed team notes folder column missing in database</li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.0 -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.0</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">February 8, 2026</span>
             </div>
 

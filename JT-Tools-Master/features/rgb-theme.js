@@ -455,6 +455,11 @@ const CustomThemeFeature = (() => {
         background-color: ${p.primary.selection} !important;
       }
 
+      /* SVG fill colors - checkbox/radio circle interiors */
+      .fill-blue-50 {
+        fill: ${p.background.base} !important;
+      }
+
       /* Sticky columns - solid colors */
       .sticky[style*="left"].bg-blue-50,
       .sticky[style*="left"].bg-blue-100 {

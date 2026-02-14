@@ -222,11 +222,12 @@ const FormatterDetection = (() => {
     }
 
     // On document-type pages (documents, invoices, estimates, etc.),
-    // only allow formatter in the COST ITEM DETAILS sidebar
+    // only allow formatter in the COST ITEM DETAILS sidebar and Message compose areas
     // JobTread has native formatter in the main document area
     if (isDocumentTypePage()) {
-      // Allow sidebar fields on document-type pages - they get the compact embedded toolbar
-      if (!isInSidebar(textarea)) {
+      const placeholder = textarea.getAttribute('placeholder');
+      // Allow sidebar fields and Message fields on document-type pages
+      if (!isInSidebar(textarea) && placeholder !== 'Message') {
         return false;
       }
     }

@@ -690,6 +690,7 @@ async function getCurrentSettings() {
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
+    // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes
   };
@@ -864,6 +865,41 @@ async function applyTheme() {
     console.error('Error applying theme:', error);
     showStatus('Error applying theme', 'error');
   }
+}
+
+// Preloaded theme presets
+const PRESET_THEMES = {
+  // Light themes
+  ocean:    { primary: '#0EA5E9', background: '#E0F2FE', text: '#0C4A6E' },
+  forest:   { primary: '#16A34A', background: '#DCFCE7', text: '#14532D' },
+  sunset:   { primary: '#EA580C', background: '#FFF7ED', text: '#431407' },
+  berry:    { primary: '#7C3AED', background: '#F3E8FF', text: '#1F1B29' },
+  slate:    { primary: '#64748B', background: '#F1F5F9', text: '#1E293B' },
+  // Dark themes
+  midnight: { primary: '#60A5FA', background: '#1E293B', text: '#CBD5E1' },
+  ember:    { primary: '#F97316', background: '#292524', text: '#D6D3D1' },
+  neon:     { primary: '#22D3EE', background: '#18181B', text: '#E4E4E7' },
+  plum:     { primary: '#A78BFA', background: '#1C1917', text: '#D4D4D8' },
+  charcoal: { primary: '#A1A1AA', background: '#27272A', text: '#E4E4E7' }
+};
+
+// Load a preset theme — updates pickers, applies, and saves
+async function loadPresetTheme(presetKey) {
+  const colors = PRESET_THEMES[presetKey];
+  if (!colors) return;
+
+  // Update the pickers
+  loadThemeColors(colors);
+
+  // Apply and save in one step (same as applyTheme)
+  await applyTheme();
+
+  // Highlight the active circle
+  document.querySelectorAll('.preloaded-theme-circle').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.preset === presetKey);
+  });
+
+  showStatus(`Loaded "${presetKey}" theme`, 'success');
 }
 
 // Load saved themes into slots
@@ -1188,6 +1224,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // Listen for preset theme circles
+  document.querySelectorAll('.preloaded-theme-circle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadPresetTheme(btn.dataset.preset);
+    });
+  });
 
   // Listen for save theme buttons
   document.querySelectorAll('.save-theme-btn').forEach(btn => {

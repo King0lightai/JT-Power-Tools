@@ -445,7 +445,7 @@ const FormatterToolbar = (() => {
       setupPreviewButton(toolbar, field);
     }
 
-    // Check if this is a Message field - these get toolbar BELOW the textarea
+    // Check if this is a Message field
     const isMessageField = field.getAttribute('placeholder') === 'Message';
 
     // Find the right insertion point - need to insert OUTSIDE any relative/absolute container
@@ -471,31 +471,38 @@ const FormatterToolbar = (() => {
     // This ensures findEmbeddedToolbar returns the correct toolbar for this field
     toolbar.dataset.forField = field.dataset.formatterId;
 
-    // Insert toolbar - AFTER for Message fields (below textarea), BEFORE for others (above)
+    // Insert toolbar ABOVE the field for all contexts
     if (isMessageField) {
-      // For Message fields, insert toolbar AFTER the scroll container
-      // The scroll container has max-h-[20vh] overflow-auto class
-      // We need to insert OUTSIDE this container so toolbar is always visible
+      // For Message fields, insert toolbar between the TO line and the textarea
+      // scroll container. The TO line is a div.flex.border-t.rounded-t-sm.border-x
+      // and the textarea is inside a div.border.rounded-b-sm scroll container.
       const scrollContainer = field.closest('.overflow-auto, .overflow-y-auto');
-      toolbar.classList.add('jt-toolbar-below');
+      toolbar.classList.add('jt-toolbar-message');
 
-      if (scrollContainer && scrollContainer.parentElement) {
-        // Insert after the scroll container
-        if (scrollContainer.nextSibling) {
-          scrollContainer.parentElement.insertBefore(toolbar, scrollContainer.nextSibling);
-        } else {
-          scrollContainer.parentElement.appendChild(toolbar);
-        }
-      } else if (insertTarget.nextSibling) {
-        insertParent.insertBefore(toolbar, insertTarget.nextSibling);
+      if (scrollContainer) {
+        // Insert directly before the scroll container (between TO line and textarea)
+        scrollContainer.parentElement.insertBefore(toolbar, scrollContainer);
+      } else if (insertParent) {
+        insertParent.insertBefore(toolbar, insertTarget);
       } else {
-        insertParent.appendChild(toolbar);
+        field.parentElement.insertBefore(toolbar, field);
       }
     } else if (insertParent) {
       insertParent.insertBefore(toolbar, insertTarget);
     } else {
       // Fallback: insert before the field
       field.parentElement.insertBefore(toolbar, field);
+    }
+
+    // In modals, add bottom padding to the scroll container so the last toolbar
+    // doesn't sit behind the sticky footer (Delete/Cancel/Save button bar)
+    const modalContainer = field.closest('.m-auto.shadow-lg');
+    if (modalContainer) {
+      const scrollArea = modalContainer.querySelector('.overflow-y-auto, .overflow-auto');
+      if (scrollArea && !scrollArea.dataset.jtPaddingAdded) {
+        scrollArea.dataset.jtPaddingAdded = 'true';
+        scrollArea.style.paddingBottom = '2.5rem';
+      }
     }
 
     return toolbar;
@@ -903,158 +910,37 @@ const FormatterToolbar = (() => {
   function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
 
-    // CRITICAL: If toolbar is already marked as a custom field toolbar, skip all repositioning
-    // Custom field toolbars should never have their positioning changed after initial setup
-    if (toolbar.dataset.customField === 'true') {
-      return;
-    }
-
-    // Check if toolbar is placed BELOW the textarea (Message fields)
-    // These don't need sticky positioning - they stay in normal document flow
-    if (toolbar.classList.contains('jt-toolbar-below')) {
-      toolbar.style.position = 'relative';
-      toolbar.style.top = 'auto';
-      toolbar.style.left = 'auto';
-      toolbar.style.width = '100%';
-      toolbar.classList.remove('jt-toolbar-sticky-active');
-      return;
-    }
-
-    // Check if this is a sidebar field FIRST - sidebar fields get sticky positioning
-    // even if they're inside <label> elements (like Cost Item Details sidebar)
-    const isSidebar = isSidebarField(field);
-
-    // Custom fields (fields inside <label> elements) should NOT use sticky positioning
-    // UNLESS they are in a sidebar panel - sidebar fields always get sticky behavior
-    if (field.closest('label') && !isSidebar) {
-      // Mark this toolbar as a custom field toolbar so it's never processed for sticky positioning
-      toolbar.dataset.customField = 'true';
-      // Use !important to override CSS .jt-toolbar-sticky-active { position: fixed !important; }
-      toolbar.style.setProperty('position', 'relative', 'important');
-      toolbar.style.setProperty('top', 'auto', 'important');
-      toolbar.style.setProperty('left', 'auto', 'important');
-      toolbar.style.setProperty('width', '100%', 'important');
-      toolbar.classList.remove('jt-toolbar-sticky-active');
-      return;
-    }
-
-    // Check if this is a modal/popup field (but NOT Message fields - they get special handling)
-    // Modals have .m-auto.shadow-lg pattern or are inside fixed overlays
-    const isInModal = field.closest('.m-auto.shadow-lg') !== null ||
-                      field.closest('[class*="modal"]') !== null;
-
-    if (isInModal) {
-      // For modals/popups, just keep toolbar in normal document flow - no sticky behavior
-      toolbar.style.position = 'relative';
-      toolbar.style.top = 'auto';
-      toolbar.style.left = 'auto';
-      toolbar.style.width = '100%';
-      toolbar.classList.remove('jt-toolbar-sticky-active');
-      return;
-    }
-
-    // Get sidebar container for width constraints (isSidebar already checked above)
-    const sidebarContainer = isSidebar ? findSidebarContainer(field) : null;
-
-    // For non-sidebar fields, try to find a containing column (job overview columns, etc.)
-    const containingColumn = sidebarContainer || findContainingColumn(field);
-
-    // For non-sidebar column fields (like job overview columns), keep toolbar in normal document flow
-    // These fields should have the toolbar embedded without sticky behavior
-    if (!isSidebar && containingColumn) {
-      toolbar.style.position = 'relative';
-      toolbar.style.top = 'auto';
-      toolbar.style.left = 'auto';
-      toolbar.style.width = '100%';
-      toolbar.classList.remove('jt-toolbar-sticky-active');
-      return;
-    }
-
-    // Check if this is a Message field - these have their own scroll container
-    const isMessageField = field.getAttribute('placeholder') === 'Message';
-
-    // Find the scrollable container
-    // For Message fields, look for the immediate scrollable parent (the message input area)
-    // For other fields, look for the sidebar/form scroll container
-    let scrollContainer;
-    if (isMessageField) {
-      // Message fields: find the closest scrollable ancestor (could be the textarea wrapper)
-      scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll') ||
-                        field.parentElement?.closest('.overflow-y-auto, .overflow-auto');
-    } else {
-      scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
-    }
+    // Find scrollable ancestor — any context (sidebar, modal, job overview, etc.)
+    const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
 
     if (!scrollContainer) {
-      // No scroll container - just keep toolbar in normal flow
-      toolbar.style.position = 'relative';
-      toolbar.style.top = 'auto';
-      toolbar.style.left = 'auto';
-      toolbar.style.width = '100%';
-      return;
-    }
-
-    const toolbarHeight = toolbar.offsetHeight || 36;
-    const padding = 8;
-
-    // Get positions relative to viewport
-    const fieldRect = field.getBoundingClientRect();
-    const scrollRect = scrollContainer.getBoundingClientRect();
-
-    // For contained fields (sidebars, job columns), use container bounds for width constraints
-    // This prevents toolbar from expanding across the entire viewport
-    const constraintRect = containingColumn ? containingColumn.getBoundingClientRect() : scrollRect;
-
-    // Find any sticky headers within the scroll container and account for their height
-    // Look for common sticky header patterns in JobTread
-    let stickyHeaderHeight = 0;
-    const stickyHeaders = scrollContainer.querySelectorAll('.sticky, [class*="sticky"]');
-    stickyHeaders.forEach(header => {
-      const headerStyle = window.getComputedStyle(header);
-      if (headerStyle.position === 'sticky' || header.classList.contains('sticky')) {
-        const headerRect = header.getBoundingClientRect();
-        // Only count headers that are at the top of the scroll container
-        if (headerRect.top <= scrollRect.top + 50) {
-          stickyHeaderHeight = Math.max(stickyHeaderHeight, headerRect.height);
-        }
-      }
-    });
-
-    // The sticky position should be below any sticky headers
-    const stickyTop = scrollRect.top + padding + stickyHeaderHeight;
-
-    // Calculate where the top of the toolbar would be if it were in normal flow
-    // When in relative position, the toolbar sits right above the field
-    const naturalToolbarTop = fieldRect.top - toolbarHeight - 8; // 8px is margin-bottom
-
-    // Calculate the bottom boundary - toolbar shouldn't go past the bottom of the textarea
-    const maxToolbarTop = fieldRect.bottom - toolbarHeight - padding;
-
-    if (naturalToolbarTop >= stickyTop) {
-      // Toolbar is visible in its natural position - use relative positioning
+      // No scroll container — keep in normal flow
       toolbar.style.position = 'relative';
       toolbar.style.top = 'auto';
       toolbar.style.left = 'auto';
       toolbar.style.width = '100%';
       toolbar.classList.remove('jt-toolbar-sticky-active');
-    } else if (stickyTop <= maxToolbarTop) {
-      // Toolbar would scroll out of view but field is still visible - make it sticky
-      // Position below any sticky headers
-      // Use constraint rect (column/sidebar bounds) for left/width to keep toolbar within container
-      toolbar.style.position = 'fixed';
-      toolbar.style.top = `${stickyTop}px`;
-      toolbar.style.left = `${constraintRect.left + padding}px`;
-      toolbar.style.width = `${constraintRect.width - (padding * 2)}px`;
-      toolbar.classList.add('jt-toolbar-sticky-active');
-    } else {
-      // Field is mostly scrolled out - position toolbar at bottom of field
-      // Use constraint rect (column/sidebar bounds) for left/width to keep toolbar within container
-      toolbar.style.position = 'fixed';
-      toolbar.style.top = `${maxToolbarTop}px`;
-      toolbar.style.left = `${constraintRect.left + padding}px`;
-      toolbar.style.width = `${constraintRect.width - (padding * 2)}px`;
-      toolbar.classList.add('jt-toolbar-sticky-active');
+      return;
     }
+
+    // Find sticky header offset (sidebar header, modal header, etc.)
+    // The toolbar should stick just below any existing sticky header
+    const stickyHeader = scrollContainer.querySelector(':scope > .sticky.z-10') ||
+                          scrollContainer.querySelector(':scope > .sticky');
+    let stickyOffset = 0;
+    if (stickyHeader && !stickyHeader.classList.contains('jt-formatter-toolbar-embedded')) {
+      stickyOffset = stickyHeader.offsetHeight;
+    }
+
+    // Apply sticky positioning — browser handles scroll clamping automatically.
+    // The toolbar stays in its stacking context so it slides behind any
+    // sticky headers (z-10) without creating phantom hover issues.
+    toolbar.style.position = 'sticky';
+    toolbar.style.top = `${stickyOffset}px`;
+    toolbar.style.left = 'auto';
+    toolbar.style.width = '100%';
+    toolbar.style.zIndex = '9'; // Below sticky headers (z-10)
+    toolbar.classList.add('jt-toolbar-sticky-active');
   }
 
   /**
@@ -1488,7 +1374,7 @@ const FormatterToolbar = (() => {
 
     // Get available width (toolbar width minus overflow button width and padding)
     const toolbarRect = toolbar.getBoundingClientRect();
-    const overflowBtnWidth = 36; // Approximate width of overflow button
+    const overflowBtnWidth = 28; // Approximate width of overflow button
     const padding = 16; // Toolbar padding
     const availableWidth = toolbarRect.width - overflowBtnWidth - padding;
 
@@ -1989,8 +1875,12 @@ const FormatterToolbar = (() => {
         // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
         positionToolbar(embeddedToolbar, field);
         updateToolbarState(field, embeddedToolbar);
-        return;
       }
+      // ALWAYS return here for non-budget fields — prevent fallthrough to the
+      // floating expanded toolbar below, which is only for Description fields.
+      // If embedToolbarForField returned null (e.g., custom fields in the budget
+      // table like Internal Notes), the field intentionally gets no toolbar.
+      return;
     }
 
     // For Budget Description fields ONLY - use floating EXPANDED toolbar
@@ -2042,8 +1932,19 @@ const FormatterToolbar = (() => {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
 
-      // Embedded toolbars stay visible, only floating toolbars are removed
-      if (!activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+      // Embedded toolbars stay in the DOM but reset to their natural position;
+      // floating toolbars are removed entirely.
+      if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+        // Reset from sticky/fixed back to normal document flow
+        activeToolbar.style.position = 'relative';
+        activeToolbar.style.top = 'auto';
+        activeToolbar.style.left = 'auto';
+        activeToolbar.style.width = '100%';
+        activeToolbar.style.zIndex = '';
+        activeToolbar.style.display = '';
+        activeToolbar.style.pointerEvents = '';
+        activeToolbar.classList.remove('jt-toolbar-sticky-active');
+      } else {
         // For floating toolbars, remove from DOM
         activeToolbar.remove();
       }
@@ -2060,8 +1961,11 @@ const FormatterToolbar = (() => {
     clearHideTimeout();
     hideTimeout = setTimeout(() => {
       const newFocus = document.activeElement;
-      // Keep toolbar open if focus is on toolbar or any formatter-enabled textarea
-      if (!newFocus?.closest('.jt-formatter-toolbar') && !newFocus?.dataset?.formatterReady) {
+      // Keep toolbar open if focus is on toolbar, a formatter-enabled textarea,
+      // or the preview panel (which is tied to the toolbar)
+      if (!newFocus?.closest('.jt-formatter-toolbar') &&
+          !newFocus?.closest('.jt-preview-panel') &&
+          !newFocus?.dataset?.formatterReady) {
         hideToolbar();
       }
       hideTimeout = null;
