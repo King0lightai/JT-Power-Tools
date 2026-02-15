@@ -100,6 +100,7 @@ const defaultSettings = {
   availabilityFilter: false,
   ganttLines: true,
   pdfMarkupTools: true,
+  reverseThreadOrder: false,
   themeColors: {
     primary: '#3B82F6',     // Default blue
     background: '#F3E8FF',  // Light purple
@@ -502,6 +503,7 @@ async function loadSettings() {
     setCheckbox('smartJobSwitcher', hasEssentialFeatures && (settings.smartJobSwitcher !== undefined ? settings.smartJobSwitcher : true));
     setCheckbox('freezeHeader', hasEssentialFeatures && (settings.freezeHeader !== undefined ? settings.freezeHeader : false));
     setCheckbox('pdfMarkupTools', hasEssentialFeatures && (settings.pdfMarkupTools !== undefined ? settings.pdfMarkupTools : true));
+    setCheckbox('reverseThreadOrder', hasEssentialFeatures && (settings.reverseThreadOrder !== undefined ? settings.reverseThreadOrder : false));
 
     // PRO features - require Pro or Power User tier
     setCheckbox('dragDrop', hasProFeatures && settings.dragDrop);
@@ -690,6 +692,7 @@ async function getCurrentSettings() {
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
+    reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version
     themeColors: currentColors,
     savedThemes: savedThemes

@@ -5,6 +5,13 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [3.6.4] - 2026-02-15
+
+### Added
+- **Reverse Thread Order** (Essential): New feature that reverses message threads so newest messages appear at the top with the reply form and editor moved above the conversation for immediate access. Works across all message thread locations in JobTread — jobs, documents, daily logs, sidebars, and single-message threads. Uses pure CSS visual reordering to keep React stable.
+
 ## [3.6.3] - 2026-02-13
 
 ### Improved

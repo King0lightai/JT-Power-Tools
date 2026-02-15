@@ -27,6 +27,7 @@ const JTDefaults = (() => {
     freezeHeader: false,
     characterCounter: false,
     pdfMarkupTools: true,
+    reverseThreadOrder: false,
 
     // Free Features - Appearance & Themes
     darkMode: false,
@@ -63,7 +64,7 @@ const JTDefaults = (() => {
    */
   const FEATURE_CATEGORIES = {
     scheduleCalendar: ['dragDrop', 'kanbanTypeFilter', 'autoCollapseGroups', 'availabilityFilter', 'ganttLines'],
-    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools'],
+    productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
     powerUser: ['budgetChangelog']
