@@ -39,11 +39,84 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.5 -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.5</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">February 21, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header — Job Context Indicator</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Never lose track of which job you're in — when you scroll past the job header, the job name/number appears in the top header bar</li>
+                            <li class="sub-item">Click the job name to instantly open the Job Switcher</li>
+                            <li class="sub-item">Uses zero additional screen space — injected between the logo and search bar</li>
+                            <li class="sub-item">Supports dark mode and custom themes</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter — Multi-Select & Saved Filters</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Select multiple values for a custom field with OR logic — jobs matching any selected value are shown</li>
+                            <li class="sub-item">Checkbox dropdown with Select All / Clear All controls and a selected count badge</li>
+                            <li class="sub-item">Save and load named filter presets directly from the status dropdown</li>
+                            <li class="sub-item">Saved filters are shared across your company — requires JT Power Tools account</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Kanban Task Checkboxes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed checkboxes not appearing when Kanban is grouped by Job, Type, or other fields</li>
+                            <li class="sub-item">Improved card detection reliability with fallback selectors for grouped views</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed multi-value filter not returning results due to API format mismatch</li>
+                            <li class="sub-item">Fixed saved filter names being swallowed by Job Switcher keyboard shortcuts</li>
+                            <li class="sub-item">Server now limits to 25 custom fields and excludes unsupported field types</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed toolbar appearing on document signature and metadata fields</li>
+                            <li class="sub-item">Fixed toolbar appearing on file description fields in modals</li>
+                            <li class="sub-item">Fixed floating toolbar not vanishing when switching fields on budget page</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed global sidebars (Notifications, Job Switcher) dropping down with blank space above</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Quick Notes</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed extension running on jobtread.com marketing site instead of only app.jobtread.com</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.4 -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.4</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">February 15, 2026</span>
             </div>
 

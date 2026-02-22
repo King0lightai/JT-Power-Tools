@@ -62,14 +62,50 @@ const TaskCompletion = (() => {
   }
 
   /**
+   * Find the task name div within a header element using fallback selectors
+   * Supports both Schedule Kanban and To-Do Kanban card structures
+   * @param {HTMLElement} header - The header button or card element
+   * @returns {HTMLElement|null} The task name container or null
+   */
+  function findTaskNameDiv(header) {
+    // Primary: Schedule Kanban structure
+    let taskNameDiv = header.querySelector('div.grow.min-w-0.truncate');
+    if (taskNameDiv) return taskNameDiv;
+
+    // Fallback selectors for different Kanban card structures
+    taskNameDiv = header.querySelector('div.truncate');
+    if (taskNameDiv) return taskNameDiv;
+
+    taskNameDiv = header.querySelector('div.min-w-0.truncate');
+    if (taskNameDiv) return taskNameDiv;
+
+    taskNameDiv = header.querySelector('div.grow.truncate');
+    if (taskNameDiv) return taskNameDiv;
+
+    // Look for a container with a strong element (task name text)
+    const strongEl = header.querySelector('strong');
+    if (strongEl) return strongEl.parentElement;
+
+    // Look for any div with font-bold that could be the task name
+    taskNameDiv = header.querySelector('div.font-bold');
+    if (taskNameDiv) return taskNameDiv;
+
+    return null;
+  }
+
+  /**
    * Add completion checkboxes to Kanban task cards
    * Kanban cards have a different structure than calendar tasks
+   * Supports Schedule Kanban, To-Do Kanban, and grouped Kanban views
    */
   function addKanbanCheckboxes() {
-    // Kanban task cards have cursor-[grab] or cursor-grab class and contain a role="button" header
-    // Note: JobTread may use either Tailwind arbitrary value syntax (cursor-[grab]) or
-    // the built-in utility class (cursor-grab) depending on their Tailwind version
-    const kanbanCards = document.querySelectorAll('div.cursor-\\[grab\\], div.cursor-grab');
+    // Kanban task cards can have different outer class patterns:
+    // 1. Standard: div.cursor-[grab] or div.cursor-grab (ungrouped Kanban)
+    // 2. Grouped: div.bg-white.rounded-sm.shadow-sm.overflow-hidden.border-l (grouped by Job/Type/etc.)
+    //    When grouped, cards lose the cursor-grab class but keep the same internal structure
+    const kanbanCards = document.querySelectorAll(
+      'div.cursor-\\[grab\\], div.cursor-grab, div.bg-white.rounded-sm.shadow-sm.overflow-hidden.border-l'
+    );
 
     kanbanCards.forEach(card => {
       // Skip if already processed
@@ -78,19 +114,46 @@ const TaskCompletion = (() => {
       }
 
       // Find the clickable header area (role="button" with task name)
-      const headerButton = card.querySelector('div[role="button"]');
+      // All Kanban card variants use div[role="button"] as the header
+      let headerButton = card.querySelector('div[role="button"]');
+
+      // Fallback: look for any role="button" element (could be non-div)
+      if (!headerButton) {
+        headerButton = card.querySelector('[role="button"]');
+      }
+
+      // Fallback: look for an anchor tag that acts as the card header
+      if (!headerButton) {
+        headerButton = card.querySelector('a');
+      }
+
+      // Last resort: use the card itself if it has a strong/text content
+      if (!headerButton) {
+        const hasTaskName = card.querySelector('strong, div.truncate, div.font-bold');
+        if (hasTaskName) {
+          headerButton = card;
+        }
+      }
+
       if (!headerButton) {
         return;
       }
 
-      // Find the task name container (div with grow min-w-0 truncate containing strong)
-      const taskNameDiv = headerButton.querySelector('div.grow.min-w-0.truncate');
+      // Find the task name container using fallback selectors
+      const taskNameDiv = findTaskNameDiv(headerButton);
+
       if (!taskNameDiv) {
         return;
       }
 
+      // Validate this is actually a Kanban task card (not some other bg-white div)
+      // Must have a <strong> element in the task name area (task name text)
+      if (!taskNameDiv.querySelector('strong') && !headerButton.querySelector('strong')) {
+        return;
+      }
+
       // Check if checkbox already exists
-      if (headerButton.querySelector('.jt-complete-checkbox')) {
+      if (headerButton.querySelector('.jt-complete-checkbox') || card.querySelector('.jt-complete-checkbox')) {
         return;
       }
 
@@ -138,9 +201,9 @@ const TaskCompletion = (() => {
     e.stopPropagation();
     e.preventDefault();
 
-    // Detect current completion state
-    const taskNameDiv = headerButton.querySelector('div.grow.min-w-0.truncate');
-    const wasComplete = isKanbanTaskComplete(taskNameDiv);
+    // Detect current completion state using fallback selectors
+    const taskNameDiv = findTaskNameDiv(headerButton);
+    const wasComplete = taskNameDiv ? isKanbanTaskComplete(taskNameDiv) : false;
 
     // Show a loading state
     checkbox.style.opacity = '0.5';

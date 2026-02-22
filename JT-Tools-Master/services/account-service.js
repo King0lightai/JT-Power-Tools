@@ -729,6 +729,140 @@ const AccountService = (() => {
   }
 
   // ==========================================================================
+  // SAVED FILTERS (Shared across organization)
+  // ==========================================================================
+
+  /**
+   * Get all saved filters for the organization
+   * @returns {Promise<Object>} - Result with filters array
+   */
+  async function getSavedFilters() {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    try {
+      console.log('AccountService: Fetching saved filters...');
+
+      const response = await authenticatedFetch('/sync/saved-filters', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Saved filters fetched', {
+          count: result.data.filters?.length || 0
+        });
+        return {
+          success: true,
+          filters: result.data.filters || [],
+          serverTimestamp: result.data.serverTimestamp
+        };
+      } else {
+        console.error('AccountService: Failed to fetch saved filters', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Saved filters fetch error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  /**
+   * Save (create or update) a saved filter
+   * @param {Object} filter - Filter object { id?, name, fieldId?, fieldName, filterValues, jobStatus? }
+   * @returns {Promise<Object>} - Result with saved filter data
+   */
+  async function saveSavedFilter(filter) {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!filter.name || !filter.name.trim()) {
+      return { success: false, error: 'Filter name is required' };
+    }
+
+    if (!filter.fieldName) {
+      return { success: false, error: 'Field name is required' };
+    }
+
+    if (!Array.isArray(filter.filterValues) || filter.filterValues.length === 0) {
+      return { success: false, error: 'At least one filter value is required' };
+    }
+
+    try {
+      console.log('AccountService: Saving filter...', { id: filter.id || 'new', name: filter.name });
+
+      const response = await authenticatedFetch('/sync/saved-filters/push', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: filter.id || null,
+          name: filter.name.trim(),
+          fieldId: filter.fieldId || null,
+          fieldName: filter.fieldName,
+          filterValues: filter.filterValues,
+          jobStatus: filter.jobStatus || 'all'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Saved filter saved', result.data);
+        return {
+          success: true,
+          data: result.data
+        };
+      } else {
+        console.error('AccountService: Failed to save filter', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Saved filter save error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  /**
+   * Delete a saved filter
+   * @param {string} filterId - ID of the filter to delete
+   * @returns {Promise<Object>} - Result with success/error
+   */
+  async function deleteSavedFilter(filterId) {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!filterId) {
+      return { success: false, error: 'Filter ID is required' };
+    }
+
+    try {
+      console.log('AccountService: Deleting saved filter...', { id: filterId });
+
+      const response = await authenticatedFetch('/sync/saved-filters/delete', {
+        method: 'POST',
+        body: JSON.stringify({ id: filterId })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Saved filter deleted');
+        return { success: true };
+      } else {
+        console.error('AccountService: Failed to delete saved filter', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Saved filter delete error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // ==========================================================================
   // PASSWORD RESET
   // ==========================================================================
 
@@ -846,7 +980,12 @@ const AccountService = (() => {
     // Team notes
     getTeamNotes,
     saveTeamNote,
-    deleteTeamNote
+    deleteTeamNote,
+
+    // Saved filters
+    getSavedFilters,
+    saveSavedFilter,
+    deleteSavedFilter
   };
 })();
 

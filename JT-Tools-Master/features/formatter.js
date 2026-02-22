@@ -282,6 +282,32 @@ const FormatterFeature = (() => {
         }
       }
 
+      // Exclude document metadata fields (signature, prepared by, terms, etc.)
+      // These fields should NEVER have the formatter regardless of URL path
+      {
+        const metaLabel = field.closest('label');
+        if (metaLabel) {
+          const metaHeading = metaLabel.querySelector('div.font-bold');
+          if (metaHeading) {
+            const headingText = metaHeading.textContent.trim().toLowerCase();
+            const documentMetadataLabels = [
+              'signature', 'prepared by', 'prepared for',
+              'signed by', 'from', 'to', 'bill to', 'ship to',
+              'remit to', 'terms', 'footer', 'header', 'memo'
+            ];
+            if (documentMetadataLabels.includes(headingText)) {
+              return false;
+            }
+          }
+        }
+      }
+
+      // Exclude file description fields in file edit modals
+      // Budget Description fields are inline (not in .m-auto modals) so they're safe
+      if (field.closest('.m-auto') && path.includes('/files')) {
+        return false;
+      }
+
       // CRITICAL: Exclude fields in the ADD / EDIT ITEMS table (Documents page only)
       // NOTE: Budget page has similar structure but SHOULD have the formatter
       // Use the Detection module for reliable detection

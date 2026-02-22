@@ -1856,15 +1856,18 @@ const FormatterToolbar = (() => {
     const isBudgetField = isBudgetTableField(field);
 
     if (!isBudgetField) {
+      // CRITICAL: Always remove any floating expanded toolbar when switching to a non-budget field.
+      // This must happen BEFORE embedToolbarForField, because embedToolbarForField may return null
+      // for some fields (e.g., budget table fields that aren't Description), and we'd skip cleanup.
+      if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
+        activeToolbar.remove();
+        activeToolbar = null;
+      }
+
       // For ALL non-budget fields, use embedded toolbar for consistent compact styling
       // This includes: sidebar fields, modal fields, Message fields, etc.
       const embeddedToolbar = embedToolbarForField(field);
       if (embeddedToolbar) {
-        // Hide any active floating toolbar
-        if (activeToolbar && !activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-          activeToolbar.remove();
-          activeToolbar = null;
-        }
         // Close overflow dropdowns on other embedded toolbars
         hideAllEmbeddedToolbars(embeddedToolbar);
         // Ensure this toolbar is visible (may have been hidden when budget field was focused)
@@ -1875,6 +1878,10 @@ const FormatterToolbar = (() => {
         // CRITICAL: Call positionToolbar to apply proper positioning (relative for custom fields, sticky for others)
         positionToolbar(embeddedToolbar, field);
         updateToolbarState(field, embeddedToolbar);
+      } else {
+        // No embedded toolbar created (e.g., non-Description budget table fields like Name)
+        // Clear active state so the old toolbar reference doesn't linger
+        activeField = field;
       }
       // ALWAYS return here for non-budget fields — prevent fallthrough to the
       // floating expanded toolbar below, which is only for Description fields.

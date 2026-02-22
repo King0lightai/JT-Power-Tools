@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.5] - 2026-02-21
+
+### Added
+
+#### Freeze Header
+- **Job context indicator**: When scrolled past the job header, the current job name/number now appears in the top header bar (between the logo and search) so users always know which job they're viewing. Clicking the label opens the Job Switcher. Uses zero additional screen space. Supports dark mode and custom themes.
+
+#### Custom Field Filter Enhancements
+- **Multi-select filtering**: Select multiple values for a custom field with OR logic — jobs matching ANY selected value are shown. Replaces the single-value dropdown with a checkbox dropdown component featuring Select All / Clear All controls and a selected count badge.
+- **Saved Filters**: Save and load named filter presets via the status dropdown. Saved filters appear as selectable options alongside All Jobs / Open Jobs / Closed Jobs. Selecting a saved filter auto-populates the field and values then applies the filter. Save (floppy icon) and delete (trash icon) buttons appear contextually next to the values dropdown. Shared across all users in the same company. Requires login to a JT Power Tools account.
+- **Saved Filters API**: New `/sync/saved-filters` endpoints on the license proxy Worker with D1 database migration for company-scoped filter persistence.
+
+### Removed
+- **Quick Notes floating button**: Removed the floating blue button fallback that appeared when the header bar wasn't found. Quick Notes now only appears via the header icon.
+- **Task completion retry logic**: Removed the exponential-backoff retry mechanism for checkbox injection since the MutationObserver already handles re-initialization when new DOM nodes appear.
+
+### Fixed
+
+#### Quick Notes
+- **Fixed extension running on jobtread.com marketing site**: Content scripts were matching `*.jobtread.com` which caused the extension (including the Quick Notes floating button) to run on the marketing site. Restricted content scripts to `app.jobtread.com` only.
+
+#### Freeze Header
+- **Fixed global sidebars dropping down with blank space above**: Full-height sidebars like Notifications and Job Switcher were being pushed below the frozen tabs/toolbar instead of staying at their native position just below the main header. Added Job Switcher content detection to the global sidebar marker, broadened the inline style exclusion range (48-52px), and increased CSS specificity on the `.jt-global-sidebar` rule to reliably override the generic sticky panel positioning.
+
+#### Text Formatter
+- **Fixed toolbar appearing on document signature/metadata fields**: The formatter toolbar was incorrectly showing on signature lines, "Prepared By", "From", "To", "Terms", "Footer", and other document metadata fields on invoices, estimates, proposals, contracts, and purchase orders. Added a label heading blocklist to exclude these document-specific fields regardless of URL path.
+- **Fixed toolbar appearing on file description fields**: The formatter toolbar was showing on file description textareas in file view/edit popups. The `placeholder="Description"` check was returning `true` before the modal exclusion could run. Moved the modal check inside the Description block so file description fields in any modal are excluded while budget Description fields (which are inline, never in modals) continue to work.
+- **Fixed floating toolbar not vanishing when switching fields on budget page**: When clicking from a budget Description textarea (which shows the expanded floating toolbar) to another field like a custom field or Name column, the floating toolbar would remain on screen and reposition over the new field instead of disappearing. Moved the floating toolbar cleanup to run unconditionally when any non-budget-Description field receives focus, rather than only when an embedded toolbar was successfully created.
+
+#### Custom Field Filter (Job Switcher)
+- **Fixed saved filters disappearing when saving**: The Job Switcher's keyboard shortcut handler was capturing Enter and Escape key events in the capture phase before the custom field filter's save input could process them. Pressing Enter to confirm a filter name would instead trigger "select top job and close sidebar", navigating away and discarding the save. Added input detection to skip Job Switcher keyboard handling when a custom field filter input is focused, and added `stopPropagation` to the filter's save/cancel handlers.
+- **Fixed multi-value custom field filter not returning results**: The Worker API expected a singular `filter.value` property but the client was sending `filter.values` (array) for multi-select support, resulting in undefined filter values and no matching jobs. Updated the Worker to normalize both formats, use the Pave `in` operator for multi-value filtering, and generate correct cache keys from value arrays.
+- **Added server-side custom field limits and type exclusion**: The Worker now enforces a maximum of 25 custom fields per query and excludes `multipleText` type fields from the response, matching the client-side filtering for consistent behavior.
+
+#### Task Completion Checkboxes
+- **Fixed checkboxes not appearing in grouped Kanban views**: When Kanban is grouped by Job, Type, or other fields, task cards lose the `cursor-grab` class that our selector depended on. Added a fallback selector matching the grouped card class pattern with validation to ensure only actual task cards receive checkboxes.
+- **Improved Kanban checkbox reliability**: Made card detection more robust with fallback selectors for header buttons and task name containers. Extracted reusable `findTaskNameDiv()` helper for consistent task name detection across all code paths. Fixed retry logic selector mismatch that only checked `cursor-[grab]` but not `cursor-grab` Tailwind class variant. Increased retry attempts from 3 to 5 for slower-loading pages.
+
 ## [3.6.4] - 2026-02-15
 
 ### Added

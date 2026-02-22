@@ -523,11 +523,18 @@ const SmartJobSwitcherFeature = (() => {
                          document.querySelector('div.z-30.absolute input[type="text"]') ||
                          document.querySelector('div.z-30 input');
 
+      // Skip if the active element is a custom field filter input (save name, etc.)
+      // These inputs need Enter to work normally for their own handlers
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.id && activeEl.id.startsWith('jt-cf-')) {
+        return; // Let the custom field filter handle this Enter key
+      }
+
       // If we're in the sidebar (search input exists and is focused, or just in the sidebar)
       const sidebar = document.querySelector('div.z-30.absolute.top-0.bottom-0.right-0');
-      const isInSidebar = sidebar && sidebar.contains(document.activeElement);
+      const isInSidebar = sidebar && sidebar.contains(activeEl);
 
-      if ((searchInput && document.activeElement === searchInput) || isInSidebar) {
+      if ((searchInput && activeEl === searchInput) || isInSidebar) {
         e.preventDefault();
         e.stopPropagation();
         selectTopJobAndClose();
@@ -537,6 +544,12 @@ const SmartJobSwitcherFeature = (() => {
 
     // Close sidebar on Escape
     if (isSearchOpen && e.key === 'Escape') {
+      // Skip if the active element is a custom field filter input
+      // Let the filter handle Escape first (e.g., to cancel save input)
+      const activeEl2 = document.activeElement;
+      if (activeEl2 && activeEl2.id && activeEl2.id.startsWith('jt-cf-')) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
       closeSidebar();

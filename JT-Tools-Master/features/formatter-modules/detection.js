@@ -276,8 +276,35 @@ const FormatterDetection = (() => {
     }
 
     // Check if it's a Budget Description field
+    // Budget Description textareas are inline in the budget table (never inside modals)
+    // File description textareas also have placeholder="Description" but appear in modals
     if (placeholder === 'Description') {
+      // Exclude file description fields in file view/edit modals
+      // These modals use .m-auto centering - budget fields are never in modals
+      if (textarea.closest('.m-auto')) {
+        return false;
+      }
       return true;
+    }
+
+    // Exclude document metadata fields (signature, prepared by, terms, etc.)
+    // These fields should NEVER have the formatter regardless of URL path
+    {
+      const metaLabel = textarea.closest('label');
+      if (metaLabel) {
+        const metaHeading = metaLabel.querySelector('div.font-bold');
+        if (metaHeading) {
+          const headingText = metaHeading.textContent.trim().toLowerCase();
+          const documentMetadataLabels = [
+            'signature', 'prepared by', 'prepared for',
+            'signed by', 'from', 'to', 'bill to', 'ship to',
+            'remit to', 'terms', 'footer', 'header', 'memo'
+          ];
+          if (documentMetadataLabels.includes(headingText)) {
+            return false;
+          }
+        }
+      }
     }
 
     // Check if it's ANY Daily Log field, Todo, or Task description

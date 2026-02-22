@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JT Power Tools",
-  "version": "3.6.4",
+  "version": "3.6.5",
   "description": "Supercharge JobTread with task checkboxes, dark mode, text formatting, quick notes, and 16+ productivity features for contractors.",
   "icons": {
     "16": "icons/icon16-light.png",
@@ -30,7 +30,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.jobtread.com/*"],
+      "matches": ["https://app.jobtread.com/*"],
       "js": [
         "utils/defaults.js",
         "utils/logger.js",
@@ -103,7 +103,7 @@
         "styles/gantt-lines.css",
         "icons/*.png"
       ],
-      "matches": ["https://*.jobtread.com/*"]
+      "matches": ["https://app.jobtread.com/*"]
     }
   ]
 }

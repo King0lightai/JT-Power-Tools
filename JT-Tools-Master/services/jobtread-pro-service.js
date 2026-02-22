@@ -330,7 +330,7 @@ const JobTreadProService = (() => {
     }
 
     try {
-      const result = await workerRequest('getCustomFields');
+      const result = await workerRequest('getCustomFields', { limit: 25 });
 
       if (result.fields) {
         // Cache the results
@@ -388,7 +388,7 @@ const JobTreadProService = (() => {
 
   /**
    * Get filtered jobs through Worker
-   * @param {Array} filters - Array of { fieldName, value } objects
+   * @param {Array} filters - Array of { fieldName, values: [...] } objects (OR logic within values)
    * @param {string} jobStatus - 'open', 'closed', or 'all' (default: 'all')
    */
   async function getFilteredJobs(filters, jobStatus = 'all') {

@@ -781,19 +781,6 @@ const CustomThemeFeature = (() => {
         background: ${p.primary.hover} !important;
       }
 
-      .jt-quick-notes-floating-btn {
-        background: ${p.primary.base} !important;
-        color: ${primaryText} !important;
-        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
-      }
-
-      .jt-quick-notes-floating-btn:hover {
-        background: ${p.primary.hover} !important;
-      }
-
-      .jt-quick-notes-floating-btn.jt-notes-button-active {
-        background: ${p.primary.active} !important;
-      }
 
       .jt-quick-notes-panel.custom-theme {
         --jt-notes-bg: ${p.background.elevated};

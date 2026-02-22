@@ -43,14 +43,14 @@ const BudgetChangelogUI = (() => {
       <div class="text-sm font-bold text-gray-700 mb-2">Compare Backups</div>
       <div class="space-y-2 mb-2">
         <div>
-          <label class="text-xs text-gray-500 block mb-1">From (older):</label>
-          <select id="jt-backup-old" class="w-full text-xs border rounded p-1.5 bg-white">
+          <label class="text-xs text-gray-500 block mb-1">To (newer):</label>
+          <select id="jt-backup-new" class="w-full text-xs border rounded p-1.5 bg-white">
             <option value="">Select backup...</option>
           </select>
         </div>
         <div>
-          <label class="text-xs text-gray-500 block mb-1">To (newer):</label>
-          <select id="jt-backup-new" class="w-full text-xs border rounded p-1.5 bg-white">
+          <label class="text-xs text-gray-500 block mb-1">From (older):</label>
+          <select id="jt-backup-old" class="w-full text-xs border rounded p-1.5 bg-white">
             <option value="">Select backup...</option>
           </select>
         </div>

@@ -7,6 +7,7 @@ const FreezeHeaderFeature = (() => {
   let styleElement = null;
   let debounceTimer = null;
   let popupObserver = null;
+  let jobContextObserver = null;
 
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
@@ -111,17 +112,21 @@ const FreezeHeaderFeature = (() => {
     /* Sticky scroll containers with overscroll-contain (sidebar panels like Cost Item Details) */
     /* These sidebars don't use data-is-drag-scroll-boundary but need positioning below frozen headers */
     /* Adjust top position to be below the frozen toolbar, not just below the main header */
-    /* EXCLUDE global sidebars via: class .jt-global-sidebar OR inline style top: 48px */
-    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 48"]) {
+    /* EXCLUDE global sidebars via: class .jt-global-sidebar OR inline style matching near-header top values */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="top: 51"]):not([style*="top: 52"]) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
       z-index: 41 !important;
     }
 
-    /* Global sidebars (Time Clock, Daily Log, Notifications) - keep at native position just below main header */
-    /* Use class-based selector ONLY - inline style selector was conflicting with edit panel CSS */
-    .jt-freeze-header-active .jt-global-sidebar {
+    /* Global sidebars (Time Clock, Daily Log, Notifications, Job Switcher) */
+    /* Keep at native position just below main header - never push down below frozen tabs/toolbar */
+    /* Use class-based selector with high specificity to override all other rules */
+    .jt-freeze-header-active .jt-global-sidebar,
+    .jt-freeze-header-active .jt-global-sidebar.sticky,
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain.jt-global-sidebar {
       top: 48px !important;
+      max-height: calc(100vh - 48px) !important;
       z-index: 42 !important;
     }
 
@@ -269,6 +274,33 @@ const FreezeHeaderFeature = (() => {
       background-color: rgb(249, 250, 251) !important;
     }
 
+    /* Job context label - shows job name in top header bar when scrolled past job header */
+    .jt-freeze-header-active .jt-job-context-label {
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-left: 1px solid #e5e7eb;
+      opacity: 0;
+      animation: jt-context-fade-in 0.2s ease forwards;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .jt-freeze-header-active .jt-job-context-label:hover {
+      color: #374151;
+    }
+
+    @keyframes jt-context-fade-in {
+      to { opacity: 1; }
+    }
+
     /* Dark mode compatibility - uses body.jt-dark-mode class added by dark-mode.js */
     /* Note: Both classes are on body, so use body.class1.class2 (no space) */
     /* Note: .jt-top-header excluded - dark mode feature handles it directly */
@@ -302,6 +334,16 @@ const FreezeHeaderFeature = (() => {
       background-color: #353535 !important;
     }
 
+    /* Job context label in dark mode */
+    body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label {
+      color: #9ca3af;
+      border-left-color: #464646;
+    }
+
+    body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label:hover {
+      color: #e5e7eb;
+    }
+
     /* Custom theme compatibility - uses body.jt-custom-theme class added by rgb-theme.js */
     /* Note: Both classes are on body, so use body.class1.class2 (no space) */
     /* Note: .jt-top-header excluded - custom theme feature handles it directly */
@@ -329,6 +371,12 @@ const FreezeHeaderFeature = (() => {
     body.jt-custom-theme.jt-freeze-header-active .jt-job-tabs-container a.bg-gray-50 {
       background-color: var(--jt-theme-background, white) !important;
       filter: brightness(0.95);
+    }
+
+    /* Job context label in custom theme */
+    body.jt-custom-theme.jt-freeze-header-active .jt-job-context-label {
+      color: var(--jt-theme-text-secondary, #6b7280);
+      border-left-color: var(--jt-theme-border, #e5e7eb);
     }
 
     /* ========== POPUP EXCLUSIONS (HIGH SPECIFICITY) ========== */
@@ -1014,6 +1062,10 @@ const FreezeHeaderFeature = (() => {
       const isNotifications = text.includes('NOTIFICATIONS') &&
                               (text.includes('Unread') || text.includes('Mark All As Read') || text.includes('RSVPs'));
 
+      const isJobSwitcher = text.includes('Search Jobs') ||
+                            text.includes('Search jobs') ||
+                            sidebar.querySelector('input[placeholder*="Search Jobs"], input[placeholder*="Search jobs"]');
+
       // Also check computed top position - global sidebars have top ~48-52px
       const computedStyle = window.getComputedStyle(sidebar);
       const topValue = parseInt(computedStyle.top, 10);
@@ -1036,7 +1088,7 @@ const FreezeHeaderFeature = (() => {
         }
       }
 
-      if (isTimeClock || isDailyLog || isNotifications || isNearHeaderLevel) {
+      if (isTimeClock || isDailyLog || isNotifications || isJobSwitcher || isNearHeaderLevel) {
         sidebar.classList.add('jt-global-sidebar');
       }
     }
@@ -1266,6 +1318,105 @@ const FreezeHeaderFeature = (() => {
     freezeHeaderSuspended = false;
   }
 
+  // ========== JOB CONTEXT LABEL ==========
+  // Shows job name/number in the frozen tab bar when scrolled past the native header
+
+  /**
+   * Inject the job context label into the top header bar (between logo and search)
+   */
+  function injectJobContextLabel() {
+    // Already injected?
+    if (document.querySelector('.jt-job-context-label')) return;
+
+    // Get job name text
+    const jobNameEl = document.querySelector('.font-bold.text-2xl div[role="button"]');
+    if (!jobNameEl) return;
+
+    const jobText = jobNameEl.textContent.trim();
+    if (!jobText) return;
+
+    // Find the top header's inner flex container
+    const topHeader = document.querySelector('.jt-top-header');
+    if (!topHeader) return;
+
+    const headerRow = topHeader.querySelector('.flex.items-center');
+    if (!headerRow) return;
+
+    // Find the search bar container (div.grow.min-w-0) to insert before it
+    const searchBar = headerRow.querySelector(':scope > .grow.min-w-0');
+    if (!searchBar) return;
+
+    // Create the label
+    const label = document.createElement('span');
+    label.className = 'jt-job-context-label';
+    label.textContent = jobText;
+    label.title = jobText; // Full text on hover for truncated names
+
+    // Click to open job switcher (clicks the native job name button)
+    label.addEventListener('click', () => {
+      const btn = document.querySelector('.font-bold.text-2xl div[role="button"]');
+      if (btn) btn.click();
+    });
+
+    headerRow.insertBefore(label, searchBar);
+  }
+
+  /**
+   * Remove the job context label from the tab bar
+   */
+  function removeJobContextLabel() {
+    const label = document.querySelector('.jt-job-context-label');
+    if (label) label.remove();
+  }
+
+  /**
+   * Set up IntersectionObserver to detect when the job header scrolls out of view
+   * When hidden, injects job name into frozen tab bar; when visible, removes it
+   */
+  function setupJobContextObserver() {
+    // Clean up any existing observer
+    cleanupJobContextObserver();
+
+    if (!isJobPage()) return;
+
+    // Find the job name container (the .font-bold.text-2xl parent)
+    const jobNameContainer = document.querySelector('.font-bold.text-2xl');
+    if (!jobNameContainer) return;
+
+    // Get the frozen header height for rootMargin
+    const topHeader = document.querySelector('.jt-top-header');
+    const headerHeight = topHeader ? topHeader.offsetHeight : 50;
+
+    // Create IntersectionObserver with negative top margin to account for frozen header
+    jobContextObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) {
+          // Job header scrolled out of view — show label in tab bar
+          injectJobContextLabel();
+        } else {
+          // Job header visible — remove label
+          removeJobContextLabel();
+        }
+      }
+    }, {
+      rootMargin: `-${headerHeight}px 0px 0px 0px`,
+      threshold: 0
+    });
+
+    jobContextObserver.observe(jobNameContainer);
+  }
+
+  /**
+   * Clean up job context observer and remove label
+   */
+  function cleanupJobContextObserver() {
+    if (jobContextObserver) {
+      jobContextObserver.disconnect();
+      jobContextObserver = null;
+    }
+    removeJobContextLabel();
+  }
+
   /**
    * Apply sticky behavior to the page
    */
@@ -1283,7 +1434,10 @@ const FreezeHeaderFeature = (() => {
     findAndMarkGlobalSidebars();
     findAndMarkEditItemsPanel();
     // Small delay to ensure elements are rendered before measuring
-    setTimeout(updatePositions, 100);
+    setTimeout(() => {
+      updatePositions();
+      setupJobContextObserver();
+    }, 100);
   }
 
   /**
@@ -1327,6 +1481,9 @@ const FreezeHeaderFeature = (() => {
       el.classList.remove('jt-edit-items-panel-container');
     });
     document.body.classList.remove('jt-edit-panel-open');
+
+    // Clean up job context observer
+    cleanupJobContextObserver();
 
     // Remove CSS custom properties
     document.documentElement.style.removeProperty('--jt-header-height');
@@ -1405,6 +1562,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkGlobalSidebars();
           findAndMarkEditItemsPanel();
           updatePositions();
+          setupJobContextObserver();
         }, 200);
       }
     });
@@ -1446,6 +1604,7 @@ const FreezeHeaderFeature = (() => {
             findAndMarkGlobalSidebars();
             findAndMarkEditItemsPanel();
             updatePositions();
+            setupJobContextObserver();
           }, 300);
         } else if (wasOnJobPage) {
           // Navigated away from job page - remove freeze header
@@ -1488,6 +1647,9 @@ const FreezeHeaderFeature = (() => {
 
     // Clean up popup observer
     cleanupPopupObserver();
+
+    // Clean up job context observer
+    cleanupJobContextObserver();
 
     // Remove styles and applied classes
     removeStyles();
