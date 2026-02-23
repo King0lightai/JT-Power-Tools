@@ -1495,15 +1495,15 @@
   position: fixed; /* Fixed to escape stacking contexts */
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.08);
-  padding: 0.375rem;
+  padding: 0.25rem;
   z-index: 2147483647; /* Maximum z-index to ensure visibility */
-  min-width: 160px;
-  max-width: 280px;
+  min-width: 120px;
+  max-width: 240px;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 1px;
 }
 
 .jt-overflow-dropdown-visible {
@@ -1511,13 +1511,21 @@
 }
 
 /* Items inside overflow dropdown - Light mode (default) */
+/* Match the compact toolbar sizing (22px) so overflow items aren't oversized */
 .jt-overflow-dropdown .jt-toolbar-item {
-  min-width: 32px;
-  height: 32px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0.125rem 0.25rem;
+  font-size: 11px;
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
   color: #64748b !important;
+}
+
+.jt-overflow-dropdown .jt-toolbar-item svg {
+  width: 12px;
+  height: 12px;
 }
 
 .jt-overflow-dropdown .jt-toolbar-item:hover {
@@ -1536,6 +1544,7 @@
 .jt-overflow-dropdown .jt-preview-toggle {
   width: 100%;
   justify-content: center;
+  padding: 0.125rem 0.375rem;
   background: #f0fdf4;
   border-color: #bbf7d0;
 }
