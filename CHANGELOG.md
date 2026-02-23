@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.51] - 2026-02-23 (Hotfix)
+
+### Fixed
+
+#### Freeze Header
+- **Fixed global sidebars dropping down on some devices**: On devices where the header height resolves to a sub-pixel value (e.g. 47.9688px instead of 48px), global sidebars like Notifications and Daily Logs were incorrectly pushed below the frozen tabs/toolbar. Fixed by allowing content-detected global sidebars inside `data-is-drag-scroll-boundary` containers, using `var(--jt-header-height)` instead of hardcoded 48px for global sidebar positioning, and widening the inline style exclusion range to 45-52px.
+
+#### Text Formatter
+- **Fixed overflow dropdown items oversized compared to compact toolbar**: The overflow dropdown items were 32px while the rest of the compact toolbar uses 22px. Shrunk dropdown items to match with consistent font-size (11px), padding, SVG sizing (12px), and container dimensions.
+
 ## [3.6.5] - 2026-02-21
 
 ### Added
