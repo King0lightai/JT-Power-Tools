@@ -113,7 +113,8 @@ const FreezeHeaderFeature = (() => {
     /* These sidebars don't use data-is-drag-scroll-boundary but need positioning below frozen headers */
     /* Adjust top position to be below the frozen toolbar, not just below the main header */
     /* EXCLUDE global sidebars via: class .jt-global-sidebar OR inline style matching near-header top values */
-    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="top: 51"]):not([style*="top: 52"]) {
+    /* Note: top values can be sub-pixel (e.g. 47.9688px) on some devices, so exclude 45-52px range */
+    .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="top: 51"]):not([style*="top: 52"]) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
       z-index: 41 !important;
@@ -121,20 +122,22 @@ const FreezeHeaderFeature = (() => {
 
     /* Global sidebars (Time Clock, Daily Log, Notifications, Job Switcher) */
     /* Keep at native position just below main header - never push down below frozen tabs/toolbar */
+    /* Use var(--jt-header-height) for dynamic positioning across different screen sizes/zoom levels */
     /* Use class-based selector with high specificity to override all other rules */
     .jt-freeze-header-active .jt-global-sidebar,
     .jt-freeze-header-active .jt-global-sidebar.sticky,
     .jt-freeze-header-active div.sticky.overflow-y-auto.overscroll-contain.jt-global-sidebar {
-      top: 48px !important;
-      max-height: calc(100vh - 48px) !important;
+      top: var(--jt-header-height, 48px) !important;
+      max-height: calc(100vh - var(--jt-header-height, 48px)) !important;
       z-index: 42 !important;
     }
 
     /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary - fix z-index stacking */
     /* These are job-specific sidebars (Update Task, Task Details, COST ITEM DETAILS) */
     /* Do NOT modify top - let JobTread handle positioning */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky,
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain {
+    /* EXCLUDE global sidebars (Notifications, Daily Log, etc.) which need higher z-index */
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky:not(.jt-global-sidebar),
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar) {
       z-index: 1 !important;
     }
 
@@ -215,7 +218,7 @@ const FreezeHeaderFeature = (() => {
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
     /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
     /* These excluded elements keep their native JobTread positioning */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       /* Also fix max-height so sidebar scrollbar reaches viewport bottom */
       max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
@@ -1023,12 +1026,11 @@ const FreezeHeaderFeature = (() => {
         continue;
       }
 
-      // CRITICAL: Skip if inside a data-is-drag-scroll-boundary container
-      // These are job-specific sidebars (Cost Item Details, Task Details, Job Switcher)
-      // that should NOT be marked as global, even if they have top: 48px
-      if (sidebar.closest('[data-is-drag-scroll-boundary="true"]')) {
-        continue;
-      }
+      // Check if inside a data-is-drag-scroll-boundary container
+      // Most sidebars inside these are job-specific (Cost Item Details, Task Details)
+      // BUT global sidebars (Notifications, Daily Log, Time Clock) can also be inside them
+      // We'll check content below and only skip non-global ones
+      const isInsideDragBoundary = !!sidebar.closest('[data-is-drag-scroll-boundary="true"]');
 
       const text = sidebar.textContent || '';
 
@@ -1088,7 +1090,14 @@ const FreezeHeaderFeature = (() => {
         }
       }
 
-      if (isTimeClock || isDailyLog || isNotifications || isJobSwitcher || isNearHeaderLevel) {
+      // Content-based detection is definitive - always mark as global
+      const isGlobalByContent = isTimeClock || isDailyLog || isNotifications || isJobSwitcher;
+
+      if (isGlobalByContent) {
+        sidebar.classList.add('jt-global-sidebar');
+      } else if (!isInsideDragBoundary && isNearHeaderLevel) {
+        // Position-based detection only applies to sidebars NOT inside drag boundaries
+        // (sidebars inside drag boundaries with near-header top are job-specific)
         sidebar.classList.add('jt-global-sidebar');
       }
     }
