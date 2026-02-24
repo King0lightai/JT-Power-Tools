@@ -243,7 +243,15 @@ const FormatterDetection = (() => {
 
     // Include message fields - users can format and preview messages
     // BUT only if not inside a modal that has its own native formatter
+    // AND not inside a <form> (e.g., Help sidebar "Send Us A Message")
     if (placeholder === 'Message') {
+      // Exclude Message textareas inside form elements
+      // Real message compose areas use custom JS handlers, not form submissions
+      // The Help sidebar's "Send Us A Message" uses a <form> and should not have the formatter
+      if (textarea.closest('form')) {
+        return false;
+      }
+
       // Double-check: exclude if inside any modal with native formatter toolbar
       const modalContainer = textarea.closest('.m-auto.shadow-lg');
       if (modalContainer) {
