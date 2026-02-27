@@ -1369,8 +1369,9 @@ const CharacterCounterFeature = (() => {
    * @param {Object|null} template - Existing template to edit, or null to create new
    * @returns {Promise<Object|null>} - { name, content, setAsDefault } or null if cancelled
    */
-  function openTemplateEditModal(template = null) {
+  function openTemplateEditModal(template = null, options = {}) {
     const isNew = !template;
+    const showDefaultCheckbox = options.showDefaultCheckbox !== false; // default true
     return new Promise((resolve) => {
       const abortController = new AbortController();
       const { signal } = abortController;
@@ -1437,20 +1438,26 @@ const CharacterCounterFeature = (() => {
       contentGroup.appendChild(contentLabel);
       contentGroup.appendChild(textarea);
 
-      // Default checkbox
-      const checkboxLabel = document.createElement('label');
-      checkboxLabel.className = 'jt-template-checkbox-label';
+      // Default checkbox (hidden for company templates)
+      let defaultCheckbox = null;
+      if (showDefaultCheckbox) {
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.className = 'jt-template-checkbox-label';
 
-      const defaultCheckbox = document.createElement('input');
-      defaultCheckbox.type = 'checkbox';
-      defaultCheckbox.className = 'jt-template-default-checkbox';
+        defaultCheckbox = document.createElement('input');
+        defaultCheckbox.type = 'checkbox';
+        defaultCheckbox.className = 'jt-template-default-checkbox';
 
-      checkboxLabel.appendChild(defaultCheckbox);
-      checkboxLabel.appendChild(document.createTextNode(' Set as default template'));
+        checkboxLabel.appendChild(defaultCheckbox);
+        checkboxLabel.appendChild(document.createTextNode(' Set as default template'));
 
-      body.appendChild(nameGroup);
-      body.appendChild(contentGroup);
-      body.appendChild(checkboxLabel);
+        body.appendChild(nameGroup);
+        body.appendChild(contentGroup);
+        body.appendChild(checkboxLabel);
+      } else {
+        body.appendChild(nameGroup);
+        body.appendChild(contentGroup);
+      }
 
       // Footer
       const footer = document.createElement('div');
@@ -1489,7 +1496,7 @@ const CharacterCounterFeature = (() => {
           nameInput.style.borderColor = '#ef4444';
           return;
         }
-        closeModal({ name, content, setAsDefault: defaultCheckbox.checked });
+        closeModal({ name, content, setAsDefault: defaultCheckbox ? defaultCheckbox.checked : false });
       }
 
       // Event listeners
@@ -1547,6 +1554,9 @@ const CharacterCounterFeature = (() => {
       const abortController = new AbortController();
       const { signal } = abortController;
 
+      // Track which tab is active within this modal
+      let managerTab = activeTab;
+
       // Create overlay
       const overlay = document.createElement('div');
       overlay.className = 'jt-signature-modal-overlay';
@@ -1572,6 +1582,41 @@ const CharacterCounterFeature = (() => {
       header.appendChild(title);
       header.appendChild(closeBtn);
 
+      // Tab bar (for Essential+ users)
+      const tabBarContainer = document.createElement('div');
+      if (isEssentialPlus) {
+        tabBarContainer.className = 'jt-template-tabs';
+        tabBarContainer.style.margin = '0 16px';
+
+        const personalTab = document.createElement('button');
+        personalTab.className = 'jt-template-tab' + (managerTab === 'personal' ? ' active' : '');
+        personalTab.dataset.tab = 'personal';
+        personalTab.textContent = 'My Templates';
+
+        const companyTab = document.createElement('button');
+        companyTab.className = 'jt-template-tab' + (managerTab === 'company' ? ' active' : '');
+        companyTab.dataset.tab = 'company';
+        companyTab.innerHTML = 'Company <span class="jt-tab-badge">\u2605</span>';
+
+        tabBarContainer.appendChild(personalTab);
+        tabBarContainer.appendChild(companyTab);
+
+        // Tab switching
+        [personalTab, companyTab].forEach(tab => {
+          tab.addEventListener('click', async () => {
+            const newTab = tab.dataset.tab;
+            if (newTab === managerTab) return;
+            managerTab = newTab;
+            personalTab.classList.toggle('active', managerTab === 'personal');
+            companyTab.classList.toggle('active', managerTab === 'company');
+            if (managerTab === 'company') {
+              await loadTeamTemplates();
+            }
+            renderList();
+          }, { signal });
+        });
+      }
+
       // Body - will contain template list
       const body = document.createElement('div');
       body.className = 'jt-signature-modal-body jt-template-list-container';
@@ -1589,24 +1634,44 @@ const CharacterCounterFeature = (() => {
 
       // Assemble modal
       modal.appendChild(header);
+      if (isEssentialPlus) {
+        modal.appendChild(tabBarContainer);
+      }
       modal.appendChild(body);
       modal.appendChild(footer);
       overlay.appendChild(modal);
 
       /**
-       * Render the template list
+       * Render the template list based on active manager tab
        */
       async function renderList() {
-        const data = await loadTemplates();
+        const isCompany = managerTab === 'company';
+        let templates, defaultTemplateId;
+
+        if (isCompany) {
+          await loadTeamTemplates();
+          templates = cachedTeamTemplates.templates;
+          defaultTemplateId = null;
+        } else {
+          const data = await loadTemplates();
+          templates = data.templates;
+          defaultTemplateId = data.defaultTemplateId;
+        }
+
         body.innerHTML = '';
 
-        if (data.templates.length === 0) {
+        if (templates.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'jt-template-empty';
-          empty.innerHTML = `
-            <p>No templates yet</p>
-            <p class="jt-template-empty-hint">Create your first template to get started</p>
-          `;
+          const emptyMsg = document.createElement('p');
+          emptyMsg.textContent = isCompany ? 'No company templates yet' : 'No templates yet';
+          const emptyHint = document.createElement('p');
+          emptyHint.className = 'jt-template-empty-hint';
+          emptyHint.textContent = isCompany
+            ? 'Create a shared template for your team'
+            : 'Create your first template to get started';
+          empty.appendChild(emptyMsg);
+          empty.appendChild(emptyHint);
           body.appendChild(empty);
           return;
         }
@@ -1614,8 +1679,8 @@ const CharacterCounterFeature = (() => {
         const list = document.createElement('div');
         list.className = 'jt-template-list';
 
-        data.templates.forEach(template => {
-          const isDefault = template.id === data.defaultTemplateId;
+        templates.forEach(template => {
+          const isDefault = !isCompany && template.id === defaultTemplateId;
           const item = document.createElement('div');
           item.className = 'jt-template-list-item';
 
@@ -1630,7 +1695,7 @@ const CharacterCounterFeature = (() => {
           if (isDefault) {
             const star = document.createElement('span');
             star.className = 'jt-template-star';
-            star.textContent = '★';
+            star.textContent = '\u2605';
             itemHeader.appendChild(star);
           }
           const nameSpan = document.createElement('span');
@@ -1645,16 +1710,24 @@ const CharacterCounterFeature = (() => {
           info.appendChild(itemHeader);
           info.appendChild(previewDiv);
 
+          // Show "by Name" for company templates
+          if (isCompany && template.createdBy) {
+            const createdByDiv = document.createElement('div');
+            createdByDiv.className = 'jt-template-created-by';
+            createdByDiv.textContent = 'by ' + (template.createdBy.name || 'Unknown');
+            info.appendChild(createdByDiv);
+          }
+
           // Actions section
           const actions = document.createElement('div');
           actions.className = 'jt-template-item-actions';
 
-          // Set as default button (only if not already default)
-          if (!isDefault) {
+          // Set as default button (personal only, not already default)
+          if (!isCompany && !isDefault) {
             const defaultBtn = document.createElement('button');
             defaultBtn.className = 'jt-template-action-btn';
             defaultBtn.title = 'Set as default';
-            defaultBtn.textContent = '☆';
+            defaultBtn.textContent = '\u2606';
             defaultBtn.addEventListener('click', async (e) => {
               e.stopPropagation();
               await setDefaultTemplate(template.id);
@@ -1667,13 +1740,17 @@ const CharacterCounterFeature = (() => {
           const editBtn = document.createElement('button');
           editBtn.className = 'jt-template-action-btn';
           editBtn.title = 'Edit';
-          editBtn.textContent = '✎';
+          editBtn.textContent = '\u270E';
           editBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            const result = await openTemplateEditModal(template);
+            const result = await openTemplateEditModal(template, { showDefaultCheckbox: !isCompany });
             if (result) {
-              await updateTemplate(template.id, { name: result.name, content: result.content });
-              if (result.setAsDefault) await setDefaultTemplate(template.id);
+              if (isCompany) {
+                await saveTeamTemplate({ id: template.id, name: result.name, content: result.content });
+              } else {
+                await updateTemplate(template.id, { name: result.name, content: result.content });
+                if (result.setAsDefault) await setDefaultTemplate(template.id);
+              }
               renderList();
             }
           }, { signal });
@@ -1683,11 +1760,15 @@ const CharacterCounterFeature = (() => {
           const deleteBtn = document.createElement('button');
           deleteBtn.className = 'jt-template-action-btn jt-template-action-delete';
           deleteBtn.title = 'Delete';
-          deleteBtn.textContent = '🗑';
+          deleteBtn.textContent = '\uD83D\uDDD1';
           deleteBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             if (confirm(`Delete "${template.name}"?`)) {
-              await deleteTemplate(template.id);
+              if (isCompany) {
+                await deleteTeamTemplateById(template.id);
+              } else {
+                await deleteTemplate(template.id);
+              }
               renderList();
             }
           }, { signal });
@@ -1727,9 +1808,14 @@ const CharacterCounterFeature = (() => {
 
       // Add new template button
       addBtn.addEventListener('click', async () => {
-        const result = await openTemplateEditModal(null);
+        const isCompany = managerTab === 'company';
+        const result = await openTemplateEditModal(null, { showDefaultCheckbox: !isCompany });
         if (result) {
-          await createTemplate(result.name, result.content, result.setAsDefault);
+          if (isCompany) {
+            await saveTeamTemplate({ name: result.name, content: result.content });
+          } else {
+            await createTemplate(result.name, result.content, result.setAsDefault);
+          }
           renderList();
         }
       }, { signal });
@@ -1854,6 +1940,11 @@ const CharacterCounterFeature = (() => {
       const data = await loadTemplates();
       dropdown.innerHTML = '';
 
+      // If company tab is active, ensure team templates are loaded
+      if (activeTab === 'company') {
+        await loadTeamTemplates();
+      }
+
       // Add tab bar if Essential+ tier
       const tabBarHtml = buildTabBar();
       if (tabBarHtml) {
@@ -1928,7 +2019,7 @@ const CharacterCounterFeature = (() => {
       addNew.addEventListener('click', async (e) => {
         e.stopPropagation();
         hide();
-        const result = await openTemplateEditModal(null);
+        const result = await openTemplateEditModal(null, { showDefaultCheckbox: !isCompanyTab });
         if (result) {
           if (isCompanyTab) {
             // Save as company template
@@ -2095,20 +2186,29 @@ const CharacterCounterFeature = (() => {
     }
 
     // Check if this is the Notes textarea inside the Daily Log sidebar
-    const sidebar = field.closest('.jt-global-sidebar');
+    // Detect sidebar via Freeze Header's class OR native JT sidebar classes
+    const sidebar = field.closest('.jt-global-sidebar') ||
+                    field.closest('div.sticky.overflow-y-auto.overscroll-contain');
     if (sidebar) {
-      const parentDiv = field.closest('.space-y-1')?.parentElement;
-      if (parentDiv) {
-        const label = parentDiv.querySelector(':scope > .font-bold');
-        if (label && label.textContent.trim() === 'Notes') {
-          return true;
+      // Verify this is a Daily Log sidebar (not any random sidebar)
+      const sidebarText = sidebar.textContent || '';
+      const isDailyLog = sidebarText.includes('DAILY LOG') ||
+                         sidebarText.includes('Daily Log') ||
+                         (sidebarText.includes('Weather') && sidebarText.includes('Notes') && sidebarText.includes('Unplanned Tasks'));
+      if (isDailyLog) {
+        const parentDiv = field.closest('.space-y-1')?.parentElement;
+        if (parentDiv) {
+          const label = parentDiv.querySelector(':scope > .font-bold');
+          if (label && label.textContent.trim() === 'Notes') {
+            return true;
+          }
         }
-      }
-      const container = field.closest('.rounded-sm.border');
-      if (container) {
-        const prevLabel = container.parentElement?.querySelector(':scope > .font-bold');
-        if (prevLabel && prevLabel.textContent.trim() === 'Notes') {
-          return true;
+        const container = field.closest('.rounded-sm.border');
+        if (container) {
+          const prevLabel = container.parentElement?.querySelector(':scope > .font-bold');
+          if (prevLabel && prevLabel.textContent.trim() === 'Notes') {
+            return true;
+          }
         }
       }
     }
@@ -2499,12 +2599,11 @@ const CharacterCounterFeature = (() => {
     // Load templates from storage (includes migration from old signature)
     await loadTemplates();
 
-    // Check tier for company templates tab
-    checkEssentialTier().then(() => {
-      if (isEssentialPlus) {
-        activeTab = 'company';
-      }
-    });
+    // Check tier for company templates tab (must await before processing fields)
+    await checkEssentialTier();
+    if (isEssentialPlus) {
+      activeTab = 'company';
+    }
 
     // Process existing fields
     processAllFields();

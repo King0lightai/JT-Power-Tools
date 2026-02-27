@@ -16,10 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tabbed UI with "My Templates" and "Company" tabs (mirrors Team Notes pattern)
 - Company tab selected by default for paid users
 - Created-by attribution shows who made each template
-- 5-minute client-side cache with stale-while-revalidate refresh
+- 5-minute client-side cache for team templates
 - Template buttons now appear on Daily Log Notes textarea in the sidebar
 - Full dark mode support with neutral grey color palette
 - Free users see no changes — personal templates work exactly as before
+
+### Fixed
+
+#### Company Shared Templates
+- **Fixed Manage Templates modal (settings gear) not supporting company templates**: The modal now shows the same My Templates / Company tab bar as the dropdown, with tab-aware create, edit, and delete operations routed to the correct API
+- **Fixed Daily Log Notes detection failing when Freeze Header is disabled**: Detection no longer depends on `.jt-global-sidebar` class (added by Freeze Header); now also detects native sidebar structure (`div.sticky.overflow-y-auto.overscroll-contain`) with Daily Log content verification
+- **Fixed race condition in tier check**: `checkEssentialTier()` is now awaited before processing fields, ensuring tabs render correctly on first load
+- **Fixed Company tab showing empty on first dropdown open**: Team templates are now fetched when Company tab is the default active tab
+- **Fixed "Set as default" checkbox appearing for company templates**: Checkbox is now hidden in the edit modal when creating or editing company templates (defaults are personal-only)
 
 ### Security
 
