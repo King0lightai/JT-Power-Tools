@@ -12,6 +12,17 @@ const PreviewModeFeature = (() => {
   const buttonMap = new WeakMap();
   const previewMap = new WeakMap();
 
+  // Pinned mode state
+  let isPinned = false;
+  let pinnedTextarea = null;
+  let focusinHandler = null;
+  let pinnedInputHandler = null;
+  let pinnedDragHandlers = null;
+  let pinnedResizeHandlers = null;
+  let dragState = null;
+  let resizeState = null;
+  let savePinnedTimeout = null;
+
   // Handle settings changes from other tabs
   function handleSettingsChange(message) {
     if (message.type === 'SETTINGS_CHANGED') {
@@ -66,6 +77,30 @@ const PreviewModeFeature = (() => {
 
     isActive = false;
     console.log('PreviewMode: Deactivated');
+
+    // Tear down pinned mode if active
+    if (isPinned && activePreview) {
+      teardownDragBehavior(activePreview);
+      removeResizeHandles(activePreview);
+
+      if (focusinHandler) {
+        document.removeEventListener('focusin', focusinHandler, true);
+        focusinHandler = null;
+      }
+
+      if (pinnedInputHandler && pinnedTextarea) {
+        pinnedTextarea.removeEventListener('input', pinnedInputHandler);
+        pinnedInputHandler = null;
+      }
+
+      isPinned = false;
+      pinnedTextarea = null;
+    }
+
+    if (savePinnedTimeout) {
+      clearTimeout(savePinnedTimeout);
+      savePinnedTimeout = null;
+    }
 
     // Close any open preview
     closePreview();
@@ -317,6 +352,48 @@ const PreviewModeFeature = (() => {
 
   // Toggle preview panel
   function togglePreview(textarea, button) {
+    // If pinned and panel exists, handle differently
+    if (isPinned && activePreview && document.body.contains(activePreview)) {
+      // Clicking toggle for the same textarea that's pinned → unpin and close
+      if (textarea === pinnedTextarea) {
+        unpinAndClose();
+        if (button) button.classList.remove('active');
+        return;
+      }
+
+      // Different textarea → swap content (same as focusin behavior)
+      if (pinnedInputHandler && pinnedTextarea) {
+        pinnedTextarea.removeEventListener('input', pinnedInputHandler);
+      }
+
+      pinnedTextarea = textarea;
+      activePreview._textarea = textarea;
+
+      // Render new content
+      const contentEl = activePreview.querySelector('.jt-preview-content');
+      if (contentEl) {
+        const md = textarea.value;
+        contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+      }
+
+      // Attach new input handler
+      pinnedInputHandler = () => {
+        const contentEl = activePreview.querySelector('.jt-preview-content');
+        if (contentEl) {
+          const md = textarea.value;
+          contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+        }
+      };
+      textarea.addEventListener('input', pinnedInputHandler);
+
+      // Update button active states
+      if (activeButton && activeButton !== button) activeButton.classList.remove('active');
+      if (button) button.classList.add('active');
+      activeButton = button;
+      return;
+    }
+
+    // Standard docked mode toggle
     // Check if this textarea already has an open preview
     const existingPreview = previewMap.get(textarea);
 
@@ -452,8 +529,39 @@ const PreviewModeFeature = (() => {
         </svg>
         Format Preview
       </span>
+      <div class="jt-preview-header-actions">
+        <button class="jt-preview-pin-btn" title="Pin preview panel" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 4v6l-2 4v2h10v-2l-2-4V4"/>
+            <line x1="12" y1="16" x2="12" y2="22"/>
+            <line x1="8" y1="4" x2="16" y2="4"/>
+          </svg>
+        </button>
+        <button class="jt-preview-close-btn" title="Close preview" type="button" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     `;
     preview.appendChild(header);
+
+    // Attach pin and close button handlers
+    const pinBtn = header.querySelector('.jt-preview-pin-btn');
+    const closeBtn = header.querySelector('.jt-preview-close-btn');
+
+    pinBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      togglePinMode(preview, textarea, button);
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      unpinAndClose();
+    });
 
     // Add content area
     const content = document.createElement('div');
@@ -502,6 +610,9 @@ const PreviewModeFeature = (() => {
 
     // Close preview when textarea loses focus (user clicks out of textarea)
     const handleBlur = (e) => {
+      // Don't auto-close if pinned
+      if (isPinned) return;
+
       // Use a small delay to check where focus went
       setTimeout(() => {
         const newFocus = document.activeElement;
@@ -531,6 +642,369 @@ const PreviewModeFeature = (() => {
     preview._scrollHandler = handleScroll;
     preview._textarea = textarea;
     preview._button = button;
+  }
+
+  // ========================================
+  // Pinned Mode Functions
+  // ========================================
+
+  // Toggle between docked and pinned modes
+  function togglePinMode(preview, textarea, button) {
+    if (isPinned) {
+      // UNPIN: Close the panel entirely (textarea context may be stale)
+      unpinAndClose();
+      console.log('PreviewMode: Unpinned and closed');
+      return;
+    } else {
+      // PIN: Enter pinned mode
+      isPinned = true;
+      pinnedTextarea = textarea;
+      preview.classList.add('jt-preview-pinned');
+
+      // Show close button, highlight pin icon
+      const closeBtn = preview.querySelector('.jt-preview-close-btn');
+      const pinBtn = preview.querySelector('.jt-preview-pin-btn');
+      if (closeBtn) closeBtn.style.display = '';
+      if (pinBtn) pinBtn.classList.add('active');
+
+      // Remove blur handler (no auto-close in pinned mode)
+      if (preview._blurHandler && preview._textarea) {
+        preview._textarea.removeEventListener('blur', preview._blurHandler);
+        preview._blurHandler = null;
+      }
+
+      // Remove scroll repositioning (pinned panel stays put)
+      if (preview._scrollHandler) {
+        window.removeEventListener('scroll', preview._scrollHandler, true);
+        preview._scrollHandler = null;
+      }
+
+      // Load saved position/size and apply
+      loadPinnedState().then(state => {
+        if (state && preview && document.body.contains(preview)) {
+          preview.style.left = `${state.left}px`;
+          preview.style.top = `${state.top}px`;
+          preview.style.width = `${state.width}px`;
+          if (state.height) {
+            preview.style.maxHeight = 'none';
+            preview.style.height = `${state.height}px`;
+            const contentEl = preview.querySelector('.jt-preview-content');
+            if (contentEl) {
+              const headerHeight = preview.querySelector('.jt-preview-header')?.offsetHeight || 44;
+              contentEl.style.maxHeight = `${state.height - headerHeight}px`;
+            }
+          }
+        }
+      });
+
+      // Add resize handles
+      addResizeHandles(preview);
+
+      // Setup drag behavior on header
+      setupDragBehavior(preview);
+
+      // Setup global focusin listener to track textarea changes
+      setupFocusinListener(preview);
+
+      console.log('PreviewMode: Pinned (persistent mode)');
+    }
+  }
+
+  // Force-unpin and close the preview panel
+  function unpinAndClose() {
+    if (isPinned) {
+      isPinned = false;
+
+      if (focusinHandler) {
+        document.removeEventListener('focusin', focusinHandler, true);
+        focusinHandler = null;
+      }
+
+      if (pinnedInputHandler && pinnedTextarea) {
+        pinnedTextarea.removeEventListener('input', pinnedInputHandler);
+        pinnedInputHandler = null;
+      }
+
+      if (activePreview) {
+        teardownDragBehavior(activePreview);
+        removeResizeHandles(activePreview);
+      }
+
+      pinnedTextarea = null;
+    }
+
+    closePreview();
+  }
+
+  // ========================================
+  // Drag Behavior
+  // ========================================
+
+  function setupDragBehavior(preview) {
+    const header = preview.querySelector('.jt-preview-header');
+    if (!header) return;
+
+    const handleMouseDown = (e) => {
+      // Don't drag from buttons inside header
+      if (e.target.closest('.jt-preview-pin-btn') || e.target.closest('.jt-preview-close-btn')) {
+        return;
+      }
+
+      dragState = {
+        isDragging: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        startLeft: parseInt(preview.style.left, 10) || 0,
+        startTop: parseInt(preview.style.top, 10) || 0
+      };
+
+      document.body.style.cursor = 'grabbing';
+      document.body.style.userSelect = 'none';
+      preview.classList.add('jt-preview-dragging');
+      e.preventDefault();
+    };
+
+    const handleMouseMove = (e) => {
+      if (!dragState || !dragState.isDragging) return;
+
+      const deltaX = e.clientX - dragState.startX;
+      const deltaY = e.clientY - dragState.startY;
+
+      let newLeft = dragState.startLeft + deltaX;
+      let newTop = dragState.startTop + deltaY;
+
+      // Viewport bounds clamping (keep at least 50px visible)
+      const pw = preview.offsetWidth;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      newLeft = Math.max(-pw + 50, Math.min(vw - 50, newLeft));
+      newTop = Math.max(0, Math.min(vh - 30, newTop));
+
+      preview.style.left = `${newLeft}px`;
+      preview.style.top = `${newTop}px`;
+    };
+
+    const handleMouseUp = () => {
+      if (!dragState || !dragState.isDragging) return;
+
+      dragState.isDragging = false;
+      dragState = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      preview.classList.remove('jt-preview-dragging');
+
+      savePinnedState(preview);
+    };
+
+    header.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    pinnedDragHandlers = { handleMouseDown, handleMouseMove, handleMouseUp, header };
+  }
+
+  function teardownDragBehavior(preview) {
+    if (!pinnedDragHandlers) return;
+
+    const { handleMouseDown, handleMouseMove, handleMouseUp, header } = pinnedDragHandlers;
+    if (header) header.removeEventListener('mousedown', handleMouseDown);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    pinnedDragHandlers = null;
+    dragState = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  }
+
+  // ========================================
+  // Resize Behavior
+  // ========================================
+
+  const PREVIEW_MIN_WIDTH = 280;
+  const PREVIEW_MAX_WIDTH = 800;
+  const PREVIEW_MIN_HEIGHT = 150;
+  const PREVIEW_MAX_HEIGHT = 600;
+
+  function addResizeHandles(preview) {
+    // Right edge handle
+    const rightHandle = document.createElement('div');
+    rightHandle.className = 'jt-preview-resize-handle jt-preview-resize-right';
+    preview.appendChild(rightHandle);
+
+    // Bottom edge handle
+    const bottomHandle = document.createElement('div');
+    bottomHandle.className = 'jt-preview-resize-handle jt-preview-resize-bottom';
+    preview.appendChild(bottomHandle);
+
+    // Bottom-right corner handle
+    const cornerHandle = document.createElement('div');
+    cornerHandle.className = 'jt-preview-resize-handle jt-preview-resize-corner';
+    preview.appendChild(cornerHandle);
+
+    // Single shared mousemove/mouseup for all handles
+    const handleResizeMove = (e) => {
+      if (!resizeState || !resizeState.isResizing) return;
+
+      const deltaX = e.clientX - resizeState.startX;
+      const deltaY = e.clientY - resizeState.startY;
+
+      if (resizeState.handle === 'right' || resizeState.handle === 'corner') {
+        const newWidth = Math.max(PREVIEW_MIN_WIDTH, Math.min(PREVIEW_MAX_WIDTH, resizeState.startWidth + deltaX));
+        preview.style.width = `${newWidth}px`;
+      }
+
+      if (resizeState.handle === 'bottom' || resizeState.handle === 'corner') {
+        const newHeight = Math.max(PREVIEW_MIN_HEIGHT, Math.min(PREVIEW_MAX_HEIGHT, resizeState.startHeight + deltaY));
+        preview.style.maxHeight = 'none';
+        preview.style.height = `${newHeight}px`;
+
+        // Update content area height
+        const contentEl = preview.querySelector('.jt-preview-content');
+        if (contentEl) {
+          const headerHeight = preview.querySelector('.jt-preview-header')?.offsetHeight || 44;
+          contentEl.style.maxHeight = `${newHeight - headerHeight}px`;
+        }
+      }
+    };
+
+    const handleResizeUp = () => {
+      if (!resizeState || !resizeState.isResizing) return;
+
+      resizeState.isResizing = false;
+      resizeState = null;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      preview.classList.remove('jt-preview-resizing');
+
+      savePinnedState(preview);
+    };
+
+    // Mousedown per handle
+    const startResize = (handle, direction) => {
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        resizeState = {
+          isResizing: true,
+          handle: direction,
+          startX: e.clientX,
+          startY: e.clientY,
+          startWidth: preview.offsetWidth,
+          startHeight: preview.offsetHeight
+        };
+
+        const cursor = direction === 'right' ? 'ew-resize' :
+                       direction === 'bottom' ? 'ns-resize' : 'nwse-resize';
+        document.body.style.cursor = cursor;
+        document.body.style.userSelect = 'none';
+        preview.classList.add('jt-preview-resizing');
+      });
+    };
+
+    startResize(rightHandle, 'right');
+    startResize(bottomHandle, 'bottom');
+    startResize(cornerHandle, 'corner');
+
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeUp);
+
+    pinnedResizeHandlers = { mousemove: handleResizeMove, mouseup: handleResizeUp };
+  }
+
+  function removeResizeHandles(preview) {
+    if (!preview) return;
+    preview.querySelectorAll('.jt-preview-resize-handle').forEach(h => h.remove());
+
+    if (pinnedResizeHandlers) {
+      document.removeEventListener('mousemove', pinnedResizeHandlers.mousemove);
+      document.removeEventListener('mouseup', pinnedResizeHandlers.mouseup);
+      pinnedResizeHandlers = null;
+    }
+    resizeState = null;
+  }
+
+  // ========================================
+  // Focusin Listener (content follows focus)
+  // ========================================
+
+  function setupFocusinListener(preview) {
+    focusinHandler = (e) => {
+      if (!isPinned || !preview || !document.body.contains(preview)) return;
+
+      const textarea = e.target;
+      if (!textarea || textarea.tagName !== 'TEXTAREA') return;
+
+      // Skip if same textarea already tracked
+      if (textarea === pinnedTextarea) return;
+
+      // Remove old input handler from previous textarea
+      if (pinnedInputHandler && pinnedTextarea) {
+        pinnedTextarea.removeEventListener('input', pinnedInputHandler);
+      }
+
+      // Update tracked textarea
+      pinnedTextarea = textarea;
+      preview._textarea = textarea;
+
+      // Remove old button active state, set new one
+      if (activeButton) {
+        activeButton.classList.remove('active');
+      }
+      const newToolbar = textarea.closest('.jt-formatter-container')?.querySelector('.jt-preview-toggle');
+      if (newToolbar) {
+        newToolbar.classList.add('active');
+        activeButton = newToolbar;
+      }
+
+      // Render new textarea's content immediately
+      const contentEl = preview.querySelector('.jt-preview-content');
+      if (contentEl) {
+        const markdown = textarea.value;
+        contentEl.innerHTML = markdown ? markdownToHTML(markdown) : '<p class="jt-preview-empty">No content to preview</p>';
+      }
+
+      // Attach new input handler for live updates
+      pinnedInputHandler = () => {
+        const contentEl = preview.querySelector('.jt-preview-content');
+        if (contentEl) {
+          const md = textarea.value;
+          contentEl.innerHTML = md ? markdownToHTML(md) : '<p class="jt-preview-empty">No content to preview</p>';
+        }
+      };
+      textarea.addEventListener('input', pinnedInputHandler);
+    };
+
+    document.addEventListener('focusin', focusinHandler, true);
+  }
+
+  // ========================================
+  // Persistence (save/load pinned state)
+  // ========================================
+
+  function savePinnedState(preview) {
+    if (!preview) return;
+
+    // Debounce to avoid chrome.storage rate limits
+    if (savePinnedTimeout) clearTimeout(savePinnedTimeout);
+    savePinnedTimeout = setTimeout(() => {
+      const state = {
+        left: parseInt(preview.style.left, 10) || 0,
+        top: parseInt(preview.style.top, 10) || 0,
+        width: preview.offsetWidth,
+        height: preview.offsetHeight
+      };
+      chrome.storage.sync.set({ jtToolsPreviewPinnedState: state });
+    }, 500);
+  }
+
+  async function loadPinnedState() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get(['jtToolsPreviewPinnedState'], (result) => {
+        resolve(result.jtToolsPreviewPinnedState || null);
+      });
+    });
   }
 
   // Get sticky header offset for preview positioning (mirrors toolbar logic)
@@ -921,7 +1395,9 @@ const PreviewModeFeature = (() => {
 
   // Process inline formatting (can be nested inside block elements)
   function processInlineFormatting(text) {
-    let result = text;
+    // Escape HTML entities first to prevent XSS, then apply formatting
+    // Markdown syntax chars (*, ^, _, ~, [, ], (, )) are unaffected by escapeHTML
+    let result = escapeHTML(text);
 
     // Icons [!icon:name] - render as actual SVG icons
     result = result.replace(/\[!icon:(\w+)\]/g, (match, iconName) => renderInlineIcon(iconName));
@@ -929,8 +1405,13 @@ const PreviewModeFeature = (() => {
     // Inline colors [!color:green] text - process before other formatting
     result = result.replace(/\[!color:(\w+)\]\s*(.+?)(?=\[!color:|$)/g, '<span class="jt-color-$1">$2</span>');
 
-    // Links [text](url)
-    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    // Links [text](url) - sanitize URL to block javascript:/data: schemes
+    result = result.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, url) => {
+      const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
+        ? Sanitizer.sanitizeURL(url, '#')
+        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    });
 
     // Inline formatting (bold, italic, underline, strikethrough)
     // Using non-greedy matching to properly handle nested formatting
@@ -948,16 +1429,30 @@ const PreviewModeFeature = (() => {
 
     let html = markdown;
 
-    // Parse tables first (before line-by-line processing)
+    // Parse tables and alerts first - they produce HTML blocks
+    // Use placeholder tokens so we can escape raw text without breaking their output
+    const htmlBlocks = [];
     html = parseMarkdownTables(html);
-
-    // Parse alerts (before line-by-line processing)
     html = parseAlerts(html);
+
+    // Replace already-generated HTML blocks with placeholders
+    html = html.replace(/<(?:table|div class="jt-alert)[^]*?<\/(?:table|div)>/gi, (match) => {
+      const index = htmlBlocks.length;
+      htmlBlocks.push(match);
+      return `\x00HTMLBLOCK${index}\x00`;
+    });
 
     // Process line by line to handle block-level formatting
     const lines = html.split('\n');
     const processedLines = lines.map(line => {
       let processedLine = line.trim();
+
+      // Restore HTML block placeholders as-is (already safe HTML from our parsers)
+      const blockMatch = processedLine.match(/^\x00HTMLBLOCK(\d+)\x00$/);
+      if (blockMatch) {
+        return htmlBlocks[parseInt(blockMatch[1])];
+      }
+
       let isBlockQuote = false;
       let isColored = false;
       let colorClass = '';

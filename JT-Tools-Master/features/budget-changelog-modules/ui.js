@@ -190,7 +190,12 @@ const BudgetChangelogUI = (() => {
       }
       const user = backup.createdByUser?.name || 'Unknown';
 
-      const optionHtml = `<option value="${backup.id}" data-url="${backup.url || ''}" data-date="${backup.createdAt}">${dateStr} - ${user}</option>`;
+      // Escape API-sourced values to prevent XSS
+      const escUser = escapeHtml(user);
+      const escId = escapeHtml(String(backup.id));
+      const escUrl = escapeHtml(backup.url || '');
+      const escDate = escapeHtml(backup.createdAt || '');
+      const optionHtml = `<option value="${escId}" data-url="${escUrl}" data-date="${escDate}">${dateStr} - ${escUser}</option>`;
 
       oldSelect.insertAdjacentHTML('beforeend', optionHtml);
       newSelect.insertAdjacentHTML('beforeend', optionHtml);

@@ -138,6 +138,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       case 'JOBTREAD_API_REQUEST':
         // Proxy API requests from content scripts to bypass CORS
+        // Security: Validate sender and enforce URL allowlist
+        if (!isAllowedApiSender(sender)) {
+          console.warn('JT-Tools API Proxy: Rejected request from untrusted sender:', sender);
+          sendResponse({ success: false, error: 'Untrusted sender' });
+          return false;
+        }
+        if (!isAllowedApiUrl(message.url)) {
+          console.warn('JT-Tools API Proxy: Rejected request to disallowed URL:', message.url);
+          sendResponse({ success: false, error: 'URL not allowed' });
+          return false;
+        }
         handleApiRequest(message.url, message.options)
           .then(result => {
             sendResponse(result);
@@ -159,6 +170,58 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 });
+
+/**
+ * Allowed API origins for the proxy
+ * Only these origins can be fetched through the service worker
+ */
+const ALLOWED_API_ORIGINS = [
+  'https://api.jobtread.com',
+  'https://app.jobtread.com'
+];
+
+/**
+ * Validate that the message sender is trusted
+ * Only allows messages from this extension's own scripts or from JobTread tabs
+ * @param {Object} sender - Chrome runtime message sender
+ * @returns {boolean} True if sender is trusted
+ */
+function isAllowedApiSender(sender) {
+  // Allow messages from the extension itself (popup, other background scripts)
+  if (sender.id === chrome.runtime.id && !sender.tab) {
+    return true;
+  }
+
+  // Allow messages from content scripts running on JobTread
+  if (sender.tab && sender.tab.url) {
+    try {
+      const senderUrl = new URL(sender.tab.url);
+      return senderUrl.hostname === 'app.jobtread.com' ||
+             senderUrl.hostname.endsWith('.jobtread.com');
+    } catch (e) {
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Validate that the target URL is in the allowlist
+ * Prevents the proxy from being used to fetch arbitrary URLs
+ * @param {string} url - URL to validate
+ * @returns {boolean} True if URL is allowed
+ */
+function isAllowedApiUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+
+  try {
+    const parsed = new URL(url);
+    return ALLOWED_API_ORIGINS.some(origin => parsed.origin === origin);
+  } catch (e) {
+    return false;
+  }
+}
 
 /**
  * Handle API request proxy for content scripts

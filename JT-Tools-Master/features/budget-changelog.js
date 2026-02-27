@@ -291,9 +291,13 @@ const BudgetChangelogFeature = (() => {
     const messageDiv = document.createElement('div');
     messageDiv.id = 'jt-budget-compare-controls';
     messageDiv.className = 'p-3 mx-4 mb-3 bg-red-50 border border-red-200 rounded-lg';
+    // Escape error message to prevent XSS from server-returned strings
+    const safeMsg = (typeof Sanitizer !== 'undefined' && Sanitizer.escapeHTML)
+      ? Sanitizer.escapeHTML(errorMsg || 'Failed to load backups')
+      : (errorMsg || 'Failed to load backups').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     messageDiv.innerHTML = `
       <div class="text-sm font-medium text-red-800 mb-1">Compare Backups</div>
-      <div class="text-xs text-red-600">Error: ${errorMsg || 'Failed to load backups'}</div>
+      <div class="text-xs text-red-600">Error: ${safeMsg}</div>
     `;
 
     const instructionText = contentContainer.querySelector('.text-xs.text-gray-500');

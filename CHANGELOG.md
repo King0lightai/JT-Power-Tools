@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+#### Service Worker API Proxy
+- **Fixed SSRF vulnerability in API proxy**: The `JOBTREAD_API_REQUEST` message handler now validates sender origin (must be from the extension or a JobTread tab) and enforces a URL allowlist (only `api.jobtread.com` and `app.jobtread.com`). Previously, the proxy could be used to fetch arbitrary URLs.
+
+#### Preview Mode
+- **Fixed XSS in markdown preview renderer**: Raw text is now HTML-escaped before inline formatting is applied, preventing injection of malicious HTML tags. Link URLs are sanitized via `Sanitizer.sanitizeURL()` to block `javascript:` and `data:` URI schemes. Table and alert HTML blocks are preserved using placeholder tokens during escaping.
+
+#### Quick Notes
+- **Fixed `javascript:` URL injection in markdown links**: Both `processInlineFormatting()` and `parseMarkdown()` now sanitize link URLs through `Sanitizer.sanitizeURL()` to block dangerous URI schemes.
+
+#### Budget Changelog
+- **Fixed XSS via unsanitized error messages**: Server-returned error strings are now escaped before injection into `innerHTML`.
+- **Fixed unsanitized API data in backup selector**: Usernames, IDs, URLs, and dates from the API are now escaped with `escapeHtml()` before being interpolated into HTML option elements.
+
+### Added
+
+#### Preview Mode
+- **Pinned mode**: New pin button in the preview header toggles between docked and pinned modes
+  - **Persistent panel**: Pinned panel stays open even when you leave the textarea, requires manual close via X button
+  - **Draggable**: Drag the panel by its header bar to reposition anywhere on screen, with viewport bounds clamping
+  - **Resizable**: Drag right edge, bottom edge, or corner handle to resize (280-800px wide, 150-600px tall)
+  - **Content follows focus**: When pinned, the preview automatically updates to show whichever textarea you click into — no need to close and reopen
+  - **Position/size memory**: Pinned panel position and dimensions are saved and restored across sessions
+
 ## [3.6.51] - 2026-02-23 (Hotfix)
 
 ### Fixed

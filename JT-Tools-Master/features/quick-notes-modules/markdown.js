@@ -27,8 +27,13 @@ const QuickNotesMarkdown = (() => {
 
     let html = escapeHtml(text);
 
-    // Parse links [text](url)
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Parse links [text](url) - sanitize URL to block javascript:/data: schemes
+    html = html.replace(/\[(.+?)\]\((.+?)\)/g, (match, linkText, url) => {
+      const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
+        ? Sanitizer.sanitizeURL(url, '#')
+        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    });
 
     // Parse inline code `code`
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');
@@ -171,8 +176,13 @@ const QuickNotesMarkdown = (() => {
     // Escape HTML first
     let html = escapeHtml(text);
 
-    // Parse links [text](url)
-    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    // Parse links [text](url) - sanitize URL to block javascript:/data: schemes
+    html = html.replace(/\[(.+?)\]\((.+?)\)/g, (match, linkText, url) => {
+      const safeUrl = (typeof Sanitizer !== 'undefined' && Sanitizer.sanitizeURL)
+        ? Sanitizer.sanitizeURL(url, '#')
+        : (url.trim().toLowerCase().startsWith('javascript:') || url.trim().toLowerCase().startsWith('data:')) ? '#' : url;
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    });
 
     // Parse inline code `code`
     html = html.replace(/`(.+?)`/g, '<code>$1</code>');
