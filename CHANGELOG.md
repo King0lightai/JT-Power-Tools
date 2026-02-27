@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed `setInterval` leak in Freeze Header**: URL-check interval is now tracked and cleared in `cleanup()`.
 - **Fixed `setInterval` leak in Kanban Type Filter**: URL-check interval moved from local const to module-level variable with explicit `clearInterval` in `cleanup()`.
 
+#### Availability Filter
+- **Fixed saved filter views not applying when clicked**: The MutationObserver-triggered UI rebuild was clobbering the applied view state. Added a guard flag (`_applyingView`) to skip rebuilds during view application.
+- **Fixed `document.addEventListener('click')` leak**: The outside-click handler for the saved views dropdown was re-added on every UI rebuild without removing the previous one. Now tracked at module level and properly cleaned up.
+- **Fixed delete view refresh using double-click hack**: Extracted list rendering into a reusable `renderSavedViewsList()` function for direct re-render after deletion.
+- **Fixed z-index too high**: Filter container and saved views dropdown now use z-index 20/25 instead of 30/9999, allowing the panel to slide under the frozen header.
+
 ### Improved
 
 #### Code Deduplication
@@ -40,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed dead `isFormatterField` function from Preview Mode**: Function was defined but never called; removed to reduce code size.
 - **Replaced inline `defaultSettings` in popup.js with shared `JTDefaults`**: Popup now loads `utils/defaults.js` and uses `JTDefaults.getDefaultSettings()`, eliminating a stale copy that was missing newer feature flags (`customFieldFilter`, `budgetChangelog`).
 - **Auto-device registration on login**: Logging into a JT Power Tools account on a new device now automatically registers the device with the Pro Worker and restores the JobTread API connection. Users no longer need to manually re-enter their grant key or click "Test" in the API tab.
+- **Availability filter remembers collapsed/expanded state**: The filter panel no longer resets to collapsed on every UI rebuild. State is preserved across MutationObserver-triggered refreshes.
+- **Active filter count badge**: When the availability filter panel is collapsed and filters are active, a badge shows how many assignees are currently hidden.
 
 #### Server Infrastructure
 - **Fixed tier enforcement in Pro Worker**: `getUser()` now reads tier from the `licenses` table via LEFT JOIN instead of trusting the `users.tier` default, ensuring purchased tier is always enforced.

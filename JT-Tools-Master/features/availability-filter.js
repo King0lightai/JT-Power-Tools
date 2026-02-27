@@ -33,6 +33,15 @@ const AvailabilityFilterFeature = (() => {
   // Track collapsed state (hidden rows are collapsed to minimal height instead of display:none)
   let useCollapseMode = true;
 
+  // Guard flag: prevents observer-triggered rebuild from clobbering a saved view application
+  let _applyingView = false;
+
+  // Preserve collapsed/expanded state across UI rebuilds
+  let _isCollapsed = true;
+
+  // Track global click listener for cleanup
+  let _outsideClickHandler = null;
+
   /**
    * Check if we're on the Schedule Availability view
    */
@@ -298,12 +307,69 @@ const AvailabilityFilterFeature = (() => {
    * Apply a saved view
    */
   function applySavedView(view) {
+    // Guard: prevent observer-triggered rebuild from clobbering this application
+    _applyingView = true;
+
     // Deep copy the saved filters
     currentFilters = JSON.parse(JSON.stringify(view.filters));
     updateChipStates();
     applyFilters();
     saveFilterSelections();
+    updateFilterBadge();
     console.log('AvailabilityFilter: Applied view:', view.name);
+
+    // Clear guard after observer debounce window (300ms debounce + margin)
+    setTimeout(() => { _applyingView = false; }, 500);
+  }
+
+  /**
+   * Render saved views list inside the dropdown and attach event listeners
+   */
+  async function renderSavedViewsList(listContainer, viewsDropdown) {
+    const views = await loadSavedViews();
+
+    if (views.length === 0) {
+      listContainer.innerHTML = '<div class="jt-avail-saved-views-empty">No saved views yet</div>';
+    } else {
+      listContainer.innerHTML = views.map(view => `
+        <div class="jt-avail-saved-view-item" data-view-id="${escapeHtml(view.id)}">
+          <span class="jt-avail-saved-view-name" title="Click to apply">${escapeHtml(view.name)}</span>
+          <button class="jt-avail-saved-view-delete" title="Delete view" data-view-id="${escapeHtml(view.id)}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+
+      // Add click listeners to view items
+      listContainer.querySelectorAll('.jt-avail-saved-view-name').forEach(item => {
+        item.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const viewId = item.closest('.jt-avail-saved-view-item').dataset.viewId;
+          const allViews = await loadSavedViews();
+          const view = allViews.find(v => v.id === viewId);
+          if (view) {
+            applySavedView(view);
+            viewsDropdown.classList.remove('open');
+          }
+        });
+      });
+
+      // Add click listeners to delete buttons
+      listContainer.querySelectorAll('.jt-avail-saved-view-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const viewId = btn.dataset.viewId;
+          if (confirm('Delete this saved view?')) {
+            await deleteSavedView(viewId);
+            // Re-render the list in place
+            await renderSavedViewsList(listContainer, viewsDropdown);
+          }
+        });
+      });
+    }
   }
 
   /**
@@ -334,53 +400,9 @@ const AvailabilityFilterFeature = (() => {
       viewsDropdown.style.top = (btnRect.bottom + 4) + 'px';
       viewsDropdown.style.right = (window.innerWidth - btnRect.right) + 'px';
 
-      // Load and display saved views
-      const views = await loadSavedViews();
+      // Load and render saved views
       const listContainer = viewsDropdown.querySelector('.jt-avail-saved-views-list');
-
-      if (views.length === 0) {
-        listContainer.innerHTML = '<div class="jt-avail-saved-views-empty">No saved views yet</div>';
-      } else {
-        listContainer.innerHTML = views.map(view => `
-          <div class="jt-avail-saved-view-item" data-view-id="${escapeHtml(view.id)}">
-            <span class="jt-avail-saved-view-name" title="Click to apply">${escapeHtml(view.name)}</span>
-            <button class="jt-avail-saved-view-delete" title="Delete view" data-view-id="${escapeHtml(view.id)}">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-        `).join('');
-
-        // Add click listeners to view items
-        listContainer.querySelectorAll('.jt-avail-saved-view-name').forEach(item => {
-          item.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const viewId = item.closest('.jt-avail-saved-view-item').dataset.viewId;
-            const views = await loadSavedViews();
-            const view = views.find(v => v.id === viewId);
-            if (view) {
-              applySavedView(view);
-              viewsDropdown.classList.remove('open');
-            }
-          });
-        });
-
-        // Add click listeners to delete buttons
-        listContainer.querySelectorAll('.jt-avail-saved-view-delete').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const viewId = btn.dataset.viewId;
-            if (confirm('Delete this saved view?')) {
-              await deleteSavedView(viewId);
-              // Refresh the list
-              viewsBtn.click();
-              viewsBtn.click();
-            }
-          });
-        });
-      }
+      await renderSavedViewsList(listContainer, viewsDropdown);
 
       viewsDropdown.classList.add('open');
     });
@@ -392,18 +414,22 @@ const AvailabilityFilterFeature = (() => {
         const viewName = prompt('Enter a name for this view:');
         if (viewName && viewName.trim()) {
           await saveNewView(viewName.trim());
-          // Close and reopen to refresh
+          // Close dropdown after save
           viewsDropdown.classList.remove('open');
         }
       });
     }
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
+    // Close dropdown when clicking outside (remove previous listener to prevent leaks)
+    if (_outsideClickHandler) {
+      document.removeEventListener('click', _outsideClickHandler);
+    }
+    _outsideClickHandler = (e) => {
       if (!e.target.closest('.jt-avail-saved-views-container')) {
         viewsDropdown.classList.remove('open');
       }
-    });
+    };
+    document.addEventListener('click', _outsideClickHandler);
   }
 
   /**
@@ -438,14 +464,15 @@ const AvailabilityFilterFeature = (() => {
    * Create the filter UI container
    */
   function createFilterUI(categories, assigneesByCategory) {
-    // Remove existing container if present
+    // Preserve collapsed state from existing container before removing
     if (filterContainer) {
+      _isCollapsed = filterContainer.classList.contains('collapsed');
       filterContainer.remove();
     }
 
     filterContainer = document.createElement('div');
     filterContainer.id = 'jt-availability-filter';
-    filterContainer.className = 'jt-availability-filter-container collapsed';
+    filterContainer.className = 'jt-availability-filter-container' + (_isCollapsed ? ' collapsed' : '');
 
     // Build the filter HTML
     let html = `
@@ -456,6 +483,7 @@ const AvailabilityFilterFeature = (() => {
           </svg>
         </span>
         <span class="jt-avail-filter-title">Filter Assignees</span>
+        <span class="jt-avail-filter-badge" style="display:none"></span>
         <div class="jt-avail-filter-header-actions">
           <div class="jt-avail-saved-views-container">
             <button class="jt-avail-saved-views-btn" title="Saved filter views">
@@ -748,6 +776,32 @@ const AvailabilityFilterFeature = (() => {
         }
       }
     });
+
+    updateFilterBadge();
+  }
+
+  /**
+   * Update the hidden-count badge on the collapsed header
+   */
+  function updateFilterBadge() {
+    if (!filterContainer) return;
+    const badge = filterContainer.querySelector('.jt-avail-filter-badge');
+    if (!badge) return;
+
+    // Count total hidden assignees across all categories
+    let hiddenCount = 0;
+    Object.entries(currentFilters.assignees).forEach(([category, assignees]) => {
+      Object.values(assignees).forEach(visible => {
+        if (visible === false) hiddenCount++;
+      });
+    });
+
+    if (hiddenCount > 0) {
+      badge.textContent = hiddenCount;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
   }
 
   /**
@@ -1018,6 +1072,7 @@ const AvailabilityFilterFeature = (() => {
    */
   function scanAndBuildFilter() {
     if (!isActiveState) return;
+    if (_applyingView) return; // Skip rebuild during saved view application
     if (!isAvailabilityView()) {
       // Not on availability view, hide filter UI if present
       if (filterContainer) {
@@ -1179,6 +1234,12 @@ const AvailabilityFilterFeature = (() => {
     }
     debouncedScanAndBuild = null;
 
+    // Remove global click listener
+    if (_outsideClickHandler) {
+      document.removeEventListener('click', _outsideClickHandler);
+      _outsideClickHandler = null;
+    }
+
     // Remove filter UI
     if (filterContainer) {
       filterContainer.remove();
@@ -1190,6 +1251,10 @@ const AvailabilityFilterFeature = (() => {
 
     // Remove styles
     removeStyles();
+
+    // Reset state
+    _applyingView = false;
+    _isCollapsed = true;
 
     console.log('AvailabilityFilter: Cleaned up');
   }
