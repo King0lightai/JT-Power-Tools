@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed XSS via unsanitized error messages**: Server-returned error strings are now escaped before injection into `innerHTML`.
 - **Fixed unsanitized API data in backup selector**: Usernames, IDs, URLs, and dates from the API are now escaped with `escapeHtml()` before being interpolated into HTML option elements.
 
+#### CORS Hardening
+- **Tightened CORS on Pro Worker and License Proxy**: Both workers now resolve the `Access-Control-Allow-Origin` header from the `ALLOWED_ORIGINS` environment variable per-request instead of returning `*`. Responses include `Vary: Origin` when origin-specific.
+
 ### Fixed
 
 #### Memory Leaks
@@ -37,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Removed dead `isFormatterField` function from Preview Mode**: Function was defined but never called; removed to reduce code size.
 - **Replaced inline `defaultSettings` in popup.js with shared `JTDefaults`**: Popup now loads `utils/defaults.js` and uses `JTDefaults.getDefaultSettings()`, eliminating a stale copy that was missing newer feature flags (`customFieldFilter`, `budgetChangelog`).
 - **Auto-device registration on login**: Logging into a JT Power Tools account on a new device now automatically registers the device with the Pro Worker and restores the JobTread API connection. Users no longer need to manually re-enter their grant key or click "Test" in the API tab.
+
+#### Server Infrastructure
+- **Fixed tier enforcement in Pro Worker**: `getUser()` now reads tier from the `licenses` table via LEFT JOIN instead of trusting the `users.tier` default, ensuring purchased tier is always enforced.
+- **Added session cleanup on token refresh**: License Proxy now opportunistically deletes all expired sessions during each successful token refresh via `ctx.waitUntil()`.
+- **Added scheduled maintenance in Pro Worker**: New Cron-triggered `scheduled()` handler runs daily to clean up api_usage records older than 90 days and expired sessions.
+- **Populated `licenses.org_name` on org verification**: Pro Worker's `lockUserToOrg()` now also updates the linked `licenses` record with org_name and org_id, keeping both tables in sync.
 
 ### Added
 
