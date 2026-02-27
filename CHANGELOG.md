@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Consolidated `adjustColorBrightness` into shared `ColorUtils.adjustBrightnessPercent`**: Added percentage-based brightness adjustment to `color-utils.js`. Preview Mode and Quick Notes now delegate to the shared utility instead of defining their own copies.
 - **Removed dead `isFormatterField` function from Preview Mode**: Function was defined but never called; removed to reduce code size.
 - **Replaced inline `defaultSettings` in popup.js with shared `JTDefaults`**: Popup now loads `utils/defaults.js` and uses `JTDefaults.getDefaultSettings()`, eliminating a stale copy that was missing newer feature flags (`customFieldFilter`, `budgetChangelog`).
+- **Auto-device registration on login**: Logging into a JT Power Tools account on a new device now automatically registers the device with the Pro Worker and restores the JobTread API connection. Users no longer need to manually re-enter their grant key or click "Test" in the API tab.
 
 ### Added
 

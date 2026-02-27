@@ -2404,6 +2404,7 @@ async function handleLogin() {
       passwordInput.value = '';
       // Update UI
       await updateAccountUI();
+      await checkApiStatus();
       showStatus('Signed in successfully!', 'success');
     } else {
       showAccountError('login', result.error || 'Login failed');

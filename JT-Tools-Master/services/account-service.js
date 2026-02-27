@@ -291,6 +291,20 @@ const AccountService = (() => {
     // Store grant key separately if provided (for Pro Service)
     if (data.grantKey) {
       await chrome.storage.local.set({ jtAccountGrantKey: data.grantKey });
+
+      // Auto-register device with Pro Worker so API features work immediately
+      if (window.JobTreadProService) {
+        try {
+          const proResult = await window.JobTreadProService.verifyOrgAccess(data.grantKey);
+          if (proResult.success) {
+            console.log('AccountService: Auto-registered device with Pro Worker');
+          } else {
+            console.warn('AccountService: Pro Worker auto-registration failed:', proResult.error);
+          }
+        } catch (err) {
+          console.warn('AccountService: Pro Worker auto-registration error:', err);
+        }
+      }
     }
 
     // Store license key if provided (syncs license across devices)
