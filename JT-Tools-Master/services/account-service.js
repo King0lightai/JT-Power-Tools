@@ -743,6 +743,126 @@ const AccountService = (() => {
   }
 
   // ==========================================================================
+  // TEAM TEMPLATES (Company-shared templates, Essential+ tier)
+  // ==========================================================================
+
+  /**
+   * Get all team templates for the organization
+   * @returns {Promise<Object>} - Result with templates array
+   */
+  async function getTeamTemplates() {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    try {
+      console.log('AccountService: Fetching team templates...');
+
+      const response = await authenticatedFetch('/sync/team-templates', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Team templates fetched', {
+          count: result.data.templates?.length || 0
+        });
+        return {
+          success: true,
+          templates: result.data.templates || [],
+          serverTimestamp: result.data.serverTimestamp
+        };
+      } else {
+        console.error('AccountService: Failed to fetch team templates', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Team templates fetch error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  /**
+   * Save (create or update) a team template
+   * @param {Object} template - Template object { id?, name, content }
+   * @returns {Promise<Object>} - Result with saved template data
+   */
+  async function saveTeamTemplate(template) {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!template.name || !template.name.trim()) {
+      return { success: false, error: 'Template name is required' };
+    }
+
+    try {
+      console.log('AccountService: Saving team template...', { id: template.id || 'new' });
+
+      const response = await authenticatedFetch('/sync/team-templates/push', {
+        method: 'POST',
+        body: JSON.stringify({
+          id: template.id || null,
+          name: template.name,
+          content: template.content || ''
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Team template saved', result.data);
+        return { success: true, data: result.data };
+      } else {
+        console.error('AccountService: Failed to save team template', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Team template save error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  /**
+   * Delete a team template
+   * @param {string} templateId - ID of the template to delete
+   * @returns {Promise<Object>} - Result with success/error
+   */
+  async function deleteTeamTemplate(templateId) {
+    if (!isLoggedIn()) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    if (!templateId) {
+      return { success: false, error: 'Template ID is required' };
+    }
+
+    try {
+      console.log('AccountService: Deleting team template...', { id: templateId });
+
+      const response = await authenticatedFetch('/sync/team-templates/delete', {
+        method: 'POST',
+        body: JSON.stringify({ id: templateId })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('AccountService: Team template deleted');
+        return { success: true };
+      } else {
+        console.error('AccountService: Failed to delete team template', result.error);
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error('AccountService: Team template delete error', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  // ==========================================================================
   // SAVED FILTERS (Shared across organization)
   // ==========================================================================
 
@@ -995,6 +1115,11 @@ const AccountService = (() => {
     getTeamNotes,
     saveTeamNote,
     deleteTeamNote,
+
+    // Team templates
+    getTeamTemplates,
+    saveTeamTemplate,
+    deleteTeamTemplate,
 
     // Saved filters
     getSavedFilters,

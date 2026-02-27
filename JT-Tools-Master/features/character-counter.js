@@ -13,12 +13,109 @@ const CharacterCounterFeature = (() => {
   // Storage key for templates
   const TEMPLATES_STORAGE_KEY = 'messageTemplates';
 
+  // Team (company) templates - Essential+ tier
+  const TEAM_TEMPLATES_CACHE_KEY = 'jtTeamTemplates';
+  const TEAM_TEMPLATES_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  let cachedTeamTemplates = { templates: [], lastSync: null };
+  let isEssentialPlus = false; // Cached tier check
+  let activeTab = 'personal'; // 'personal' or 'company'
+
   /**
    * Generate a unique ID for templates
    * @returns {string}
    */
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  }
+
+  async function checkEssentialTier() {
+    try {
+      if (window.LicenseService) {
+        const tier = await window.LicenseService.getTier();
+        isEssentialPlus = tier && window.LicenseService.tierHasFeature(tier, 'quickNotes');
+      } else {
+        isEssentialPlus = false;
+      }
+    } catch (e) {
+      console.log('CharacterCounter: Tier check failed', e);
+      isEssentialPlus = false;
+    }
+    return isEssentialPlus;
+  }
+
+  async function loadTeamTemplates(forceRefresh = false) {
+    if (!forceRefresh && cachedTeamTemplates.templates.length > 0) {
+      const age = Date.now() - (cachedTeamTemplates.lastSync || 0);
+      if (age < TEAM_TEMPLATES_CACHE_TTL) {
+        return cachedTeamTemplates.templates;
+      }
+    }
+
+    try {
+      const stored = await chrome.storage.local.get([TEAM_TEMPLATES_CACHE_KEY]);
+      if (stored[TEAM_TEMPLATES_CACHE_KEY]) {
+        cachedTeamTemplates = stored[TEAM_TEMPLATES_CACHE_KEY];
+        const age = Date.now() - (cachedTeamTemplates.lastSync || 0);
+        if (!forceRefresh && age < TEAM_TEMPLATES_CACHE_TTL) {
+          return cachedTeamTemplates.templates;
+        }
+      }
+    } catch (e) {
+      console.log('CharacterCounter: Local cache read failed', e);
+    }
+
+    if (window.AccountService?.isLoggedIn()) {
+      try {
+        console.log('CharacterCounter: Fetching team templates from server...');
+        const result = await window.AccountService.getTeamTemplates();
+        if (result.success) {
+          cachedTeamTemplates = {
+            templates: result.templates || [],
+            lastSync: Date.now()
+          };
+          await chrome.storage.local.set({ [TEAM_TEMPLATES_CACHE_KEY]: cachedTeamTemplates });
+          console.log('CharacterCounter: Team templates loaded', { count: cachedTeamTemplates.templates.length });
+          return cachedTeamTemplates.templates;
+        }
+      } catch (e) {
+        console.log('CharacterCounter: Team templates fetch failed, using cache', e);
+      }
+    }
+
+    return cachedTeamTemplates.templates;
+  }
+
+  async function saveTeamTemplate(template) {
+    if (!window.AccountService?.isLoggedIn()) {
+      console.error('CharacterCounter: Cannot save team template - not logged in');
+      return null;
+    }
+
+    const result = await window.AccountService.saveTeamTemplate(template);
+    if (result.success) {
+      await loadTeamTemplates(true);
+      return result.data;
+    } else {
+      console.error('CharacterCounter: Failed to save team template', result.error);
+      return null;
+    }
+  }
+
+  async function deleteTeamTemplateById(templateId) {
+    if (!window.AccountService?.isLoggedIn()) {
+      console.error('CharacterCounter: Cannot delete team template - not logged in');
+      return false;
+    }
+
+    const result = await window.AccountService.deleteTeamTemplate(templateId);
+    if (result.success) {
+      cachedTeamTemplates.templates = cachedTeamTemplates.templates.filter(t => t.id !== templateId);
+      await chrome.storage.local.set({ [TEAM_TEMPLATES_CACHE_KEY]: cachedTeamTemplates });
+      return true;
+    } else {
+      console.error('CharacterCounter: Failed to delete team template', result.error);
+      return false;
+    }
   }
 
   // Character limits for JobTread fields
@@ -979,6 +1076,70 @@ const CharacterCounterFeature = (() => {
     .jt-custom-theme .jt-template-empty-hint {
       color: var(--jt-theme-text-muted, #9ca3af);
     }
+
+    /* Template Dropdown Tabs */
+    .jt-template-tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 0;
+      margin: 0;
+    }
+    .jt-template-tab {
+      flex: 1;
+      padding: 8px 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .jt-template-tab:hover {
+      color: #333;
+      background: #f5f5f5;
+    }
+    .jt-template-tab.active {
+      color: #0891b2;
+      border-bottom-color: #0891b2;
+    }
+    .jt-template-tab .jt-tab-badge {
+      font-size: 9px;
+      vertical-align: super;
+      color: #0891b2;
+      margin-left: 2px;
+    }
+    .jt-template-created-by {
+      font-size: 10px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* Dark mode - Template Dropdown Tabs */
+    body.jt-dark-mode .jt-template-tabs,
+    #jt-dark-mode-styles ~ * .jt-template-tabs {
+      border-bottom-color: #404040;
+    }
+    body.jt-dark-mode .jt-template-tab,
+    #jt-dark-mode-styles ~ * .jt-template-tab {
+      color: #b0b0b0;
+    }
+    body.jt-dark-mode .jt-template-tab:hover,
+    #jt-dark-mode-styles ~ * .jt-template-tab:hover {
+      color: #e0e0e0;
+      background: #333333;
+    }
+    body.jt-dark-mode .jt-template-tab.active,
+    #jt-dark-mode-styles ~ * .jt-template-tab.active {
+      color: #22d3ee;
+      border-bottom-color: #22d3ee;
+    }
+    body.jt-dark-mode .jt-template-created-by,
+    #jt-dark-mode-styles ~ * .jt-template-created-by {
+      color: #707070;
+    }
   `;
 
   let styleElement = null;
@@ -1643,6 +1804,49 @@ const CharacterCounterFeature = (() => {
       triggerButton = btn;
     }
 
+    function buildTabBar() {
+      if (!isEssentialPlus) return '';
+      return `
+        <div class="jt-template-tabs">
+          <button class="jt-template-tab ${activeTab === 'personal' ? 'active' : ''}" data-tab="personal">
+            My Templates
+          </button>
+          <button class="jt-template-tab ${activeTab === 'company' ? 'active' : ''}" data-tab="company">
+            Company <span class="jt-tab-badge">\u2605</span>
+          </button>
+        </div>
+      `;
+    }
+
+    function getActiveTemplates() {
+      if (activeTab === 'company') {
+        return cachedTeamTemplates.templates;
+      }
+      return cachedTemplates?.templates || [];
+    }
+
+    function getActiveDefaultId() {
+      if (activeTab === 'company') return null;
+      return cachedTemplates?.defaultTemplateId || null;
+    }
+
+    function attachTabHandlers() {
+      const tabs = dropdown.querySelectorAll('.jt-template-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const newTab = tab.dataset.tab;
+          if (newTab === activeTab) return;
+          activeTab = newTab;
+          tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === activeTab));
+          if (activeTab === 'company') {
+            await loadTeamTemplates();
+          }
+          populate();
+        });
+      });
+    }
+
     /**
      * Populate the dropdown with templates
      */
@@ -1650,9 +1854,25 @@ const CharacterCounterFeature = (() => {
       const data = await loadTemplates();
       dropdown.innerHTML = '';
 
+      // Add tab bar if Essential+ tier
+      const tabBarHtml = buildTabBar();
+      if (tabBarHtml) {
+        const tabBarContainer = document.createElement('div');
+        tabBarContainer.innerHTML = tabBarHtml;
+        // Append the actual tab bar element (the .jt-template-tabs div)
+        const tabBarEl = tabBarContainer.firstElementChild;
+        if (tabBarEl) {
+          dropdown.appendChild(tabBarEl);
+        }
+      }
+
+      const templates = getActiveTemplates();
+      const defaultId = getActiveDefaultId();
+      const isCompanyTab = activeTab === 'company';
+
       // Template items
-      data.templates.forEach(template => {
-        const isDefault = template.id === data.defaultTemplateId;
+      templates.forEach(template => {
+        const isDefault = !isCompanyTab && template.id === defaultId;
         const item = document.createElement('div');
         item.className = 'jt-template-dropdown-item';
 
@@ -1660,7 +1880,7 @@ const CharacterCounterFeature = (() => {
 
         const nameDiv = document.createElement('div');
         nameDiv.className = 'jt-template-dropdown-name';
-        nameDiv.textContent = (isDefault ? '★ ' : '') + template.name;
+        nameDiv.textContent = (isDefault ? '\u2605 ' : '') + template.name;
 
         const previewDiv = document.createElement('div');
         previewDiv.className = 'jt-template-dropdown-preview';
@@ -1668,6 +1888,14 @@ const CharacterCounterFeature = (() => {
 
         item.appendChild(nameDiv);
         item.appendChild(previewDiv);
+
+        // For company tab items, show who created it
+        if (isCompanyTab && template.createdBy) {
+          const createdByDiv = document.createElement('div');
+          createdByDiv.className = 'jt-template-created-by';
+          createdByDiv.textContent = 'by ' + (template.createdBy.name || 'Unknown');
+          item.appendChild(createdByDiv);
+        }
 
         item.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1680,7 +1908,7 @@ const CharacterCounterFeature = (() => {
       });
 
       // Separator (if templates exist)
-      if (data.templates.length > 0) {
+      if (templates.length > 0) {
         const sep = document.createElement('div');
         sep.className = 'jt-template-dropdown-separator';
         dropdown.appendChild(sep);
@@ -1702,13 +1930,26 @@ const CharacterCounterFeature = (() => {
         hide();
         const result = await openTemplateEditModal(null);
         if (result) {
-          const newTemplate = await createTemplate(result.name, result.content, result.setAsDefault);
-          insertSignature(field, newTemplate.content);
-          updateCounter();
+          if (isCompanyTab) {
+            // Save as company template
+            const saved = await saveTeamTemplate({ name: result.name, content: result.content });
+            if (saved) {
+              insertSignature(field, result.content);
+              updateCounter();
+            }
+          } else {
+            // Save as personal template
+            const newTemplate = await createTemplate(result.name, result.content, result.setAsDefault);
+            insertSignature(field, newTemplate.content);
+            updateCounter();
+          }
         }
       });
 
       dropdown.appendChild(addNew);
+
+      // Attach tab handlers after populate
+      attachTabHandlers();
     }
 
     function show() {
@@ -1849,6 +2090,25 @@ const CharacterCounterFeature = (() => {
           if (field.closest('.rounded-sm.border') || field.classList.contains('caret-black')) {
             return true;
           }
+        }
+      }
+    }
+
+    // Check if this is the Notes textarea inside the Daily Log sidebar
+    const sidebar = field.closest('.jt-global-sidebar');
+    if (sidebar) {
+      const parentDiv = field.closest('.space-y-1')?.parentElement;
+      if (parentDiv) {
+        const label = parentDiv.querySelector(':scope > .font-bold');
+        if (label && label.textContent.trim() === 'Notes') {
+          return true;
+        }
+      }
+      const container = field.closest('.rounded-sm.border');
+      if (container) {
+        const prevLabel = container.parentElement?.querySelector(':scope > .font-bold');
+        if (prevLabel && prevLabel.textContent.trim() === 'Notes') {
+          return true;
         }
       }
     }
@@ -2239,6 +2499,13 @@ const CharacterCounterFeature = (() => {
     // Load templates from storage (includes migration from old signature)
     await loadTemplates();
 
+    // Check tier for company templates tab
+    checkEssentialTier().then(() => {
+      if (isEssentialPlus) {
+        activeTab = 'company';
+      }
+    });
+
     // Process existing fields
     processAllFields();
 
@@ -2333,6 +2600,9 @@ const CharacterCounterFeature = (() => {
 
     // Clear cached templates
     cachedTemplates = { templates: [], defaultTemplateId: null };
+    cachedTeamTemplates = { templates: [], lastSync: null };
+    isEssentialPlus = false;
+    activeTab = 'personal';
 
     // Remove styles
     removeStyles();

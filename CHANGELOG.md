@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### Company Shared Templates (Essential+ Tier)
+- Added org-wide "Company Templates" tab to the template dropdown
+- Any team member (Essential tier or higher) can create, edit, and delete shared templates
+- Templates are shared across all users in the same organization
+- Tabbed UI with "My Templates" and "Company" tabs (mirrors Team Notes pattern)
+- Company tab selected by default for paid users
+- Created-by attribution shows who made each template
+- 5-minute client-side cache with stale-while-revalidate refresh
+- Template buttons now appear on Daily Log Notes textarea in the sidebar
+- Full dark mode support with neutral grey color palette
+- Free users see no changes — personal templates work exactly as before
+
 ### Security
 
 #### Service Worker API Proxy
