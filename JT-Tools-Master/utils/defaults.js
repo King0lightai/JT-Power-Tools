@@ -116,7 +116,14 @@ const JTDefaults = (() => {
 
     // Formatter toolbar
     TOOLBAR_HEIGHT: 44,
-    TOOLBAR_PADDING: 8
+    TOOLBAR_PADDING: 8,
+
+    // Preview panel (pinned mode)
+    PREVIEW_PANEL_MIN_WIDTH: 280,
+    PREVIEW_PANEL_MAX_WIDTH: 800,
+    PREVIEW_PANEL_MIN_HEIGHT: 150,
+    PREVIEW_PANEL_MAX_HEIGHT: 600,
+    PREVIEW_PANEL_DEFAULT_WIDTH: 380
   };
 
   /**
@@ -148,7 +155,8 @@ const JTDefaults = (() => {
     LICENSE_VERSION: 'jtToolsLicenseVersion',
     QUICK_NOTES: 'jtToolsQuickNotes',
     QUICK_NOTES_WIDTH: 'jtToolsQuickNotesWidth',
-    MESSAGE_SIGNATURE: 'messageSignature'
+    MESSAGE_SIGNATURE: 'messageSignature',
+    PREVIEW_PINNED_STATE: 'jtToolsPreviewPinnedState'
   };
 
   /**

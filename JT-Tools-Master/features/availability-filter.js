@@ -579,13 +579,9 @@ const AvailabilityFilterFeature = (() => {
   }
 
   /**
-   * Escape HTML to prevent XSS
+   * Escape HTML to prevent XSS - delegates to shared Sanitizer utility
    */
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
 
   /**
    * Setup event listeners for filter UI

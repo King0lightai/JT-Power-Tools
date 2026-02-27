@@ -1149,10 +1149,8 @@ const CustomFieldFilterFeature = (() => {
 
   // ─── Helpers ──────────────────────────────────────────────────────
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
+  // Delegate to shared Sanitizer utility
+  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
 
   function escapeAttr(str) {
     if (!str) return '';

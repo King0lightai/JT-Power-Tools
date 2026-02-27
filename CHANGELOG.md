@@ -22,6 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fixed XSS via unsanitized error messages**: Server-returned error strings are now escaped before injection into `innerHTML`.
 - **Fixed unsanitized API data in backup selector**: Usernames, IDs, URLs, and dates from the API are now escaped with `escapeHtml()` before being interpolated into HTML option elements.
 
+### Fixed
+
+#### Memory Leaks
+- **Fixed `setInterval` leak in Auto Collapse Groups**: URL-check interval and `popstate` listener are now stored at module level and cleared in `cleanup()`, preventing orphaned timers after feature disable.
+- **Fixed `setInterval` leak in Freeze Header**: URL-check interval is now tracked and cleared in `cleanup()`.
+- **Fixed `setInterval` leak in Kanban Type Filter**: URL-check interval moved from local const to module-level variable with explicit `clearInterval` in `cleanup()`.
+
+### Improved
+
+#### Code Deduplication
+- **Consolidated `escapeHtml` into shared `Sanitizer.escapeHTML`**: Six files (availability-filter, budget-changelog-modules/ui, character-counter, custom-field-filter, preview-mode, quick-notes-modules/markdown) now delegate to `Sanitizer.escapeHTML()` instead of maintaining independent copies.
+- **Consolidated `adjustColorBrightness` into shared `ColorUtils.adjustBrightnessPercent`**: Added percentage-based brightness adjustment to `color-utils.js`. Preview Mode and Quick Notes now delegate to the shared utility instead of defining their own copies.
+- **Removed dead `isFormatterField` function from Preview Mode**: Function was defined but never called; removed to reduce code size.
+- **Replaced inline `defaultSettings` in popup.js with shared `JTDefaults`**: Popup now loads `utils/defaults.js` and uses `JTDefaults.getDefaultSettings()`, eliminating a stale copy that was missing newer feature flags (`customFieldFilter`, `budgetChangelog`).
+
 ### Added
 
 #### Preview Mode

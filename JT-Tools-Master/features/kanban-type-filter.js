@@ -7,6 +7,7 @@ const KanbanTypeFilterFeature = (() => {
   let observer = null;
   let styleElement = null;
   let debouncedApplyFiltering = null;
+  let urlCheckInterval = null;
 
   // CSS for hiding empty Kanban columns
   const KANBAN_FILTER_STYLES = `
@@ -295,7 +296,7 @@ const KanbanTypeFilterFeature = (() => {
 
     // Watch for URL changes (SPA navigation)
     let lastUrl = location.href;
-    const urlCheckInterval = setInterval(() => {
+    urlCheckInterval = setInterval(() => {
       if (!isActiveState) {
         clearInterval(urlCheckInterval);
         return;
@@ -320,6 +321,12 @@ const KanbanTypeFilterFeature = (() => {
     }
 
     isActiveState = false;
+
+    // Clear URL check interval
+    if (urlCheckInterval) {
+      clearInterval(urlCheckInterval);
+      urlCheckInterval = null;
+    }
 
     // Disconnect observer
     if (observer) {

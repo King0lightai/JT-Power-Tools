@@ -1200,11 +1200,8 @@ const CharacterCounterFeature = (() => {
    * @param {string} text - Text to escape
    * @returns {string}
    */
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  // Delegate to shared Sanitizer utility
+  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
 
   /**
    * Open the template edit/create modal

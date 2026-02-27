@@ -1061,12 +1061,8 @@ const BudgetChangelogUI = (() => {
    * @param {string} str - String to escape
    * @returns {string} Escaped string
    */
-  function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  // Delegate to shared Sanitizer utility
+  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
 
   /**
    * Remove all injected UI elements

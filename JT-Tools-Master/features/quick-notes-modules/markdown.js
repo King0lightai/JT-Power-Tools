@@ -7,15 +7,11 @@
 
 const QuickNotesMarkdown = (() => {
   /**
-   * Escape HTML special characters
+   * Escape HTML special characters - delegates to shared Sanitizer utility
    * @param {string} text - Text to escape
    * @returns {string} Escaped HTML
    */
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  const escapeHtml = (text) => Sanitizer.escapeHTML(text);
 
   /**
    * Process inline formatting (bold, italic, underline, strikethrough, code, links)

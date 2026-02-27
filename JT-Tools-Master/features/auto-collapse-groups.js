@@ -7,6 +7,8 @@ const AutoCollapseGroupsFeature = (() => {
   let observer = null;
   let initialCollapseApplied = false;
   let collapseTimeout = null;
+  let urlCheckInterval = null;
+  let popstateHandler = null;
 
   // Detect if we're in Gantt/Schedule view or List view
   function detectViewType() {
@@ -320,10 +322,10 @@ const AutoCollapseGroupsFeature = (() => {
     };
 
     // Check periodically for URL changes (handles pushState)
-    setInterval(checkUrl, 500);
+    urlCheckInterval = setInterval(checkUrl, 500);
 
     // Also listen for popstate (browser back/forward)
-    window.addEventListener('popstate', () => {
+    popstateHandler = () => {
       const currentPathname = window.location.pathname;
       if (currentPathname !== lastPathname) {
         lastPathname = currentPathname;
@@ -332,7 +334,8 @@ const AutoCollapseGroupsFeature = (() => {
           applyInitialCollapse();
         }
       }
-    });
+    };
+    window.addEventListener('popstate', popstateHandler);
   }
 
   // Initialize the feature
@@ -366,6 +369,16 @@ const AutoCollapseGroupsFeature = (() => {
     if (collapseTimeout) {
       clearTimeout(collapseTimeout);
       collapseTimeout = null;
+    }
+
+    if (urlCheckInterval) {
+      clearInterval(urlCheckInterval);
+      urlCheckInterval = null;
+    }
+
+    if (popstateHandler) {
+      window.removeEventListener('popstate', popstateHandler);
+      popstateHandler = null;
     }
 
     if (observer) {

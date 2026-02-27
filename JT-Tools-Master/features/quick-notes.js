@@ -1784,28 +1784,8 @@ const QuickNotesFeature = (() => {
     });
   }
 
-  // Adjust color brightness (simple HSL adjustment)
-  function adjustColorBrightness(hex, percent) {
-    // Convert hex to RGB
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-
-    // Adjust brightness
-    const adjust = (color) => {
-      const adjusted = color + (color * percent / 100);
-      return Math.min(255, Math.max(0, Math.round(adjusted)));
-    };
-
-    const newR = adjust(r);
-    const newG = adjust(g);
-    const newB = adjust(b);
-
-    // Convert back to hex
-    return '#' + [newR, newG, newB]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('');
-  }
+  // Delegate to shared ColorUtils utility
+  const adjustColorBrightness = (hex, percent) => ColorUtils.adjustBrightnessPercent(hex, percent);
 
   // ==========================================================================
   // PAGE CONTENT PUSH - Shift JobTread content when panel is open

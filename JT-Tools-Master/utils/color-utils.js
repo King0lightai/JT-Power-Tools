@@ -233,6 +233,22 @@ const ColorUtils = (() => {
   }
 
   /**
+   * Adjust brightness of a color by percentage in RGB space
+   * Each channel is adjusted proportionally: channel + (channel * percent / 100)
+   * @param {string} hex - Hex color string
+   * @param {number} percent - Percentage to adjust (-100 to +100)
+   * @returns {string} Adjusted hex color
+   */
+  function adjustBrightnessPercent(hex, percent) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return hex;
+
+    const adjust = (value) => Math.min(255, Math.max(0, Math.round(value + (value * percent / 100))));
+
+    return rgbToHex(adjust(rgb.r), adjust(rgb.g), adjust(rgb.b));
+  }
+
+  /**
    * Blend two colors together
    * @param {string} hex1 - First hex color
    * @param {string} hex2 - Second hex color
@@ -312,6 +328,7 @@ const ColorUtils = (() => {
     adjustSaturation,
     setSaturation,
     adjustBrightness,
+    adjustBrightnessPercent,
     blendColors,
 
     // Shade generation

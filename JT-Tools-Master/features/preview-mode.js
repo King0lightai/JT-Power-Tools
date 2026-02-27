@@ -147,27 +147,6 @@ const PreviewModeFeature = (() => {
     document.head.appendChild(styleElement);
   }
 
-  // Helper function to check if a textarea should have the formatter
-  function isFormatterField(textarea) {
-    if (!textarea || textarea.tagName !== 'TEXTAREA') return false;
-
-    // Check if it's a Budget Description field
-    if (textarea.getAttribute('placeholder') === 'Description') {
-      return true;
-    }
-
-    // Check if it's ANY Daily Log field
-    const label = textarea.closest('label');
-    if (label) {
-      const heading = label.querySelector('div.font-bold');
-      if (heading && heading.textContent.trim().length > 0) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   // Initialize fields
   function initializeFields() {
     if (!isActive) return;
@@ -487,28 +466,8 @@ const PreviewModeFeature = (() => {
     });
   }
 
-  // Adjust color brightness (simple HSL adjustment)
-  function adjustColorBrightness(hex, percent) {
-    // Convert hex to RGB
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-
-    // Adjust brightness
-    const adjust = (color) => {
-      const adjusted = color + (color * percent / 100);
-      return Math.min(255, Math.max(0, Math.round(adjusted)));
-    };
-
-    const newR = adjust(r);
-    const newG = adjust(g);
-    const newB = adjust(b);
-
-    // Convert back to hex
-    return '#' + [newR, newG, newB]
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('');
-  }
+  // Delegate to shared ColorUtils utility
+  const adjustColorBrightness = (hex, percent) => ColorUtils.adjustBrightnessPercent(hex, percent);
 
   // Show preview panel
   function showPreview(textarea, button) {
@@ -1286,12 +1245,8 @@ const PreviewModeFeature = (() => {
     return html;
   }
 
-  // Escape HTML characters
-  function escapeHTML(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  // Delegate to shared Sanitizer utility
+  const escapeHTML = (text) => Sanitizer.escapeHTML(text);
 
   // Parse and render alerts
   function parseAlerts(text) {

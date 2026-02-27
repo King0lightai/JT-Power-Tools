@@ -81,37 +81,18 @@ async function togglePopupTheme() {
   }
 }
 
-// Default settings
-const defaultSettings = {
-  dragDrop: true,
-  contrastFix: true,
-  formatter: true,
-  previewMode: false,
-  darkMode: false,
-  rgbTheme: false,
-  smartJobSwitcher: true,
-  budgetHierarchy: false,
-  quickNotes: true,
-  helpSidebarSupport: true,
-  freezeHeader: false,
-  characterCounter: false,
-  kanbanTypeFilter: false,
-  autoCollapseGroups: false,
-  availabilityFilter: false,
-  ganttLines: true,
-  pdfMarkupTools: true,
-  reverseThreadOrder: false,
-  themeColors: {
-    primary: '#3B82F6',     // Default blue
-    background: '#F3E8FF',  // Light purple
-    text: '#1F1B29'         // Dark purple
-  },
-  savedThemes: [
-    null, // Slot 1
-    null, // Slot 2
-    null  // Slot 3
-  ]
-};
+// Default settings - use shared JTDefaults (loaded from utils/defaults.js)
+const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefaultSettings)
+  ? JTDefaults.getDefaultSettings()
+  : {
+    dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
+    darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
+    quickNotes: true, helpSidebarSupport: true, freezeHeader: false, characterCounter: false,
+    kanbanTypeFilter: false, autoCollapseGroups: false, availabilityFilter: false,
+    ganttLines: true, pdfMarkupTools: true, reverseThreadOrder: false,
+    themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
+    savedThemes: [null, null, null]
+  };
 
 // Check and update API status on load
 async function checkApiStatus() {

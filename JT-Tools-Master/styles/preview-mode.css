@@ -990,6 +990,217 @@
 .jt-preview-panel.dark-theme .jt-preview-content .jt-alert-bg-purple { background-color: rgba(139, 92, 246, 0.15); }
 .jt-preview-panel.dark-theme .jt-preview-content .jt-alert-text-purple { color: #a78bfa !important; }
 
+/* ========================================
+   Pinned Mode Styles
+   ======================================== */
+
+/* Pinned panel base */
+.jt-preview-panel.jt-preview-pinned {
+  display: flex;
+  flex-direction: column;
+  max-height: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-width: 2px;
+}
+
+/* Header actions container */
+.jt-preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* Pin and close buttons */
+.jt-preview-pin-btn,
+.jt-preview-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.jt-preview-pin-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #e5e7eb;
+}
+
+.jt-preview-pin-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.jt-preview-close-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+/* Draggable header cursor */
+.jt-preview-panel.jt-preview-pinned .jt-preview-header {
+  cursor: grab;
+}
+
+.jt-preview-panel.jt-preview-dragging .jt-preview-header {
+  cursor: grabbing;
+}
+
+/* Disable transitions during drag/resize for smoothness */
+.jt-preview-panel.jt-preview-dragging,
+.jt-preview-panel.jt-preview-resizing {
+  transition: none !important;
+  user-select: none;
+}
+
+/* Resize handles */
+.jt-preview-resize-handle {
+  position: absolute;
+  z-index: 10;
+  background: transparent;
+}
+
+.jt-preview-resize-right {
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.jt-preview-resize-bottom {
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.jt-preview-resize-corner {
+  bottom: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+}
+
+/* Visual indicator on hover */
+.jt-preview-resize-right:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.jt-preview-resize-bottom:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.jt-preview-resize-corner:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.jt-preview-resize-corner::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid #d1d5db;
+  border-bottom: 2px solid #d1d5db;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.jt-preview-resize-corner:hover::after {
+  opacity: 1;
+}
+
+/* Pinned panel content - allow full height scrolling */
+.jt-preview-panel.jt-preview-pinned .jt-preview-content {
+  max-height: none;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* --- Pinned Mode: Dark Theme --- */
+
+.jt-preview-panel.dark-theme .jt-preview-pin-btn,
+.jt-preview-panel.dark-theme .jt-preview-close-btn {
+  color: #9ca3af;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-pin-btn:hover {
+  background: #3a3a3a;
+  color: #d1d5db;
+  border-color: #505050;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-pin-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-close-btn:hover {
+  background: #3a2020;
+  color: #f87171;
+  border-color: #5a2020;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-resize-corner::after {
+  border-color: #505050;
+}
+
+.jt-preview-panel.dark-theme .jt-preview-resize-right:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.jt-preview-panel.dark-theme .jt-preview-resize-bottom:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.jt-preview-panel.dark-theme .jt-preview-resize-corner:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+/* --- Pinned Mode: Custom Theme --- */
+
+.jt-preview-panel.custom-theme .jt-preview-pin-btn,
+.jt-preview-panel.custom-theme .jt-preview-close-btn {
+  color: var(--jt-preview-text-muted, #9ca3af);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-pin-btn:hover {
+  background: var(--jt-preview-btn-hover-bg, #f3f4f6);
+  color: var(--jt-preview-text, #374151);
+  border-color: var(--jt-preview-border, #e5e7eb);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-pin-btn.active {
+  background: var(--jt-preview-primary, #3b82f6);
+  color: white;
+  border-color: var(--jt-preview-primary, #3b82f6);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-close-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.jt-preview-panel.custom-theme .jt-preview-resize-corner::after {
+  border-color: var(--jt-preview-border, #d1d5db);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .jt-preview-panel {

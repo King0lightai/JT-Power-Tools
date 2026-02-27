@@ -8,6 +8,7 @@ const FreezeHeaderFeature = (() => {
   let debounceTimer = null;
   let popupObserver = null;
   let jobContextObserver = null;
+  let urlCheckInterval = null;
 
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
@@ -1584,7 +1585,7 @@ const FreezeHeaderFeature = (() => {
     // Watch for URL changes (SPA navigation)
     let lastUrl = location.href;
     let wasOnJobPage = isJobPage();
-    setInterval(() => {
+    urlCheckInterval = setInterval(() => {
       if (!isActiveState) return;
       if (location.href !== lastUrl) {
         lastUrl = location.href;
@@ -1652,6 +1653,12 @@ const FreezeHeaderFeature = (() => {
     if (debounceTimer) {
       clearTimeout(debounceTimer);
       debounceTimer = null;
+    }
+
+    // Clear URL check interval
+    if (urlCheckInterval) {
+      clearInterval(urlCheckInterval);
+      urlCheckInterval = null;
     }
 
     // Clean up popup observer
