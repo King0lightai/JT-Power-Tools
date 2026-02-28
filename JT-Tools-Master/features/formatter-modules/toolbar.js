@@ -1833,6 +1833,15 @@ const FormatterToolbar = (() => {
         if (overflowDropdown) {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
         }
+        // Reset sticky positioning from previous focus — ensures only ONE toolbar
+        // is ever sticky at a time. Without this, switching between textareas leaves
+        // the old toolbar sticky (hideToolbar is cancelled by clearHideTimeout).
+        if (toolbar.classList.contains('jt-toolbar-sticky-active')) {
+          toolbar.style.position = 'relative';
+          toolbar.style.top = 'auto';
+          toolbar.style.zIndex = '';
+          toolbar.classList.remove('jt-toolbar-sticky-active');
+        }
         // If actuallyHide is true, hide the toolbar (used when budget field is focused)
         if (actuallyHide) {
           toolbar.classList.add('jt-toolbar-hidden');

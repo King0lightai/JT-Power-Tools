@@ -1301,6 +1301,12 @@
   z-index: 2;
 }
 
+/* Ensure sidebar sticky footers (Cancel/Save in Daily Log, etc.) render
+   above formatter toolbars (z-index: 9 when sticky-active) */
+.overflow-y-auto.overscroll-contain > form > .sticky:last-child {
+  z-index: 10;
+}
+
 /* Sticky-active state - when toolbar becomes sticky during scroll */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-sticky-active {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);

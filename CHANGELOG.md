@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Text Formatter
+- **Fixed formatter toolbars covering Cancel/Save buttons in Daily Log sidebar**: When switching between textareas, the previous toolbar's sticky positioning was never cleared (the scheduled `hideToolbar` was cancelled by `clearHideTimeout`). Now only the actively focused toolbar gets sticky positioning — all others are reset to normal document flow. Added CSS z-index rule to ensure sidebar sticky footers always render above formatter toolbars.
+
 #### Company Shared Templates
 - **Fixed Manage Templates modal (settings gear) not supporting company templates**: The modal now shows the same My Templates / Company tab bar as the dropdown, with tab-aware create, edit, and delete operations routed to the correct API
 - **Fixed Daily Log Notes detection failing when Freeze Header is disabled**: Detection no longer depends on `.jt-global-sidebar` class (added by Freeze Header); now also detects native sidebar structure (`div.sticky.overflow-y-auto.overscroll-contain`) with Daily Log content verification
