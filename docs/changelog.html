@@ -39,11 +39,135 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.6 — Major Update -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.6</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">February 27, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Company Shared Templates (Essential+ Tier)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New org-wide "Company Templates" tab in the message template dropdown — any team member on Essential tier or higher can create, edit, and delete shared templates</li>
+                            <li class="sub-item">Tabbed UI with "My Templates" and "Company" tabs; Company tab selected by default for paid users</li>
+                            <li class="sub-item">Created-by attribution shows who made each company template</li>
+                            <li class="sub-item">Template buttons now appear on Daily Log Notes textarea in the sidebar</li>
+                            <li class="sub-item">Manage Templates modal (settings gear) now supports both personal and company templates with tab-aware CRUD</li>
+                            <li class="sub-item">5-minute client-side cache keeps things fast; full dark mode support</li>
+                            <li class="sub-item">Free users see no changes — personal templates work exactly as before</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Preview Mode — Pinned Mode</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New pin button toggles between docked and pinned modes — pinned panel stays open even when you leave the textarea</li>
+                            <li class="sub-item">Drag the panel by its header bar to reposition anywhere on screen</li>
+                            <li class="sub-item">Resize by dragging right edge, bottom edge, or corner handle (280–800px wide, 150–600px tall)</li>
+                            <li class="sub-item">Content follows focus — when pinned, the preview updates to whichever textarea you click into</li>
+                            <li class="sub-item">Position and size are remembered across sessions</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed formatter toolbars covering Cancel/Save buttons in the Daily Log sidebar — only the actively focused toolbar now gets sticky positioning; all others reset to normal document flow</li>
+                            <li class="sub-item">Added CSS z-index rule to ensure sidebar sticky footers always render above formatter toolbars</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Message Templates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Daily Log Notes detection failing when Freeze Header is disabled — no longer depends on Freeze Header's sidebar class</li>
+                            <li class="sub-item">Fixed race condition where tier check hadn't completed before rendering template tabs</li>
+                            <li class="sub-item">Fixed Company tab showing empty on first dropdown open</li>
+                            <li class="sub-item">Fixed "Set as default" checkbox incorrectly appearing for company templates</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Availability Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed saved filter views not applying when clicked — MutationObserver rebuild was clobbering the applied view state</li>
+                            <li class="sub-item">Fixed click listener leak — outside-click handler was re-added on every UI rebuild without removing the previous one</li>
+                            <li class="sub-item">Fixed delete view refresh using a double-click workaround — now properly re-renders the list</li>
+                            <li class="sub-item">Fixed z-index too high — filter panel now slides correctly under the frozen header</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Memory Leaks</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed setInterval leaks in Auto Collapse Groups, Freeze Header, and Kanban Type Filter — intervals are now tracked and cleared in cleanup()</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">API Proxy &amp; CORS</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed SSRF vulnerability in the service worker API proxy — now validates sender origin and enforces a URL allowlist</li>
+                            <li class="sub-item">Tightened CORS on Pro Worker and License Proxy — per-request origin resolution instead of wildcard</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">XSS Prevention</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed XSS in Preview Mode markdown renderer — raw text is now HTML-escaped before formatting; link URLs sanitized to block javascript: and data: schemes</li>
+                            <li class="sub-item">Fixed javascript: URL injection in Quick Notes markdown links</li>
+                            <li class="sub-item">Fixed XSS via unsanitized error messages and API data in Budget Changelog</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Code Quality &amp; Deduplication</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Consolidated escapeHtml across 6 files into shared Sanitizer.escapeHTML()</li>
+                            <li class="sub-item">Consolidated adjustColorBrightness into shared ColorUtils utility</li>
+                            <li class="sub-item">Replaced stale inline defaultSettings in popup with shared JTDefaults module</li>
+                            <li class="sub-item">Removed dead code in Preview Mode</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Availability Filter UX</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Filter panel now remembers its collapsed/expanded state across refreshes</li>
+                            <li class="sub-item">Active filter count badge shows how many assignees are hidden when panel is collapsed</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Account &amp; Server</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Auto-device registration on login — new devices automatically connect without re-entering the grant key</li>
+                            <li class="sub-item">Fixed tier enforcement reading from licenses table instead of trusting user defaults</li>
+                            <li class="sub-item">Added session cleanup on token refresh and scheduled daily maintenance</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.51 — Hotfix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.51</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">February 23, 2026</span>
             </div>
 
