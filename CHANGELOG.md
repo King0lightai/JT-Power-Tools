@@ -5,7 +5,38 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.7] - 2026-03-01
+
+### Fixed
+
+#### Text Formatter
+- **Fixed formatter toolbars appearing in every description field when budget loads with collapsed groups**: When groups were collapsed on load, the DOM structure wasn't fully in place, causing budget description fields to incorrectly receive embedded toolbars. Added a visibility check (`offsetParent`) to skip pre-creating toolbars for hidden fields — they're created on-demand when focused instead.
+
+#### Freeze Header
+- **Fixed Add/Edit Items panel headers scrolling away instead of staying frozen**: Our CSS was resetting `z-index: auto` on the panel's sticky header, causing data rows to paint on top of it. Now preserves the header's z-30 stacking context so line items scroll behind the frozen header.
+- **Fixed Cost Item Details sidebar stuck behind frozen navigation bar**: The sidebar's scroll container wasn't being detected and repositioned below the frozen tabs/toolbar. Now detects both "Add / Edit Items" and "Cost Item Details" panels and positions them correctly below frozen headers.
+- **Fixed footer totals row in Add/Edit Items panel losing its bottom-sticky positioning**: The drag-boundary CSS rule was incorrectly adding a `top` value to footer elements with `bottom: 0`. Added exclusion for sticky elements with bottom positioning.
+
+#### Dark Mode
+- **Fixed spreadsheet exports showing blank data when dark mode is enabled**: Dark mode text color overrides (e.g., white text on dark backgrounds) were being included in exports to apps like Mac Numbers. Wrapped text color rules in `@media screen` so they only apply on-screen, not during export.
+
+### Added
+
+#### MCP Server Integration (Beta)
+- **Launched MCP tab in popup** replacing the "Coming Soon" placeholder with full setup experience
+- MCP tab now includes: prerequisites checklist, platform-specific config generator (Claude Code, Claude Desktop, ChatGPT, Gemini), credential status display, server URL with copy button, and a categorized list of all 21 read-only tools
+- Config generator auto-embeds user's License Key and Grant Key for one-click copy
+- Prerequisite links navigate directly to the License or API tab when keys are missing
+- Prominent BETA badge and read-only banner clearly communicate the current status
+
+#### MCP Server Expansion (Power User Tier)
+- Added 15 new read-only MCP tools for deeper AI assistant visibility into JobTread data
+- **Job-scoped tools**: `get_job_details` (composite summary), `get_daily_logs`, `get_daily_log`, `get_schedule`, `get_time_entries`, `get_job_files`, `get_financial_summary`
+- **Org-wide tools**: `get_account_details`, `get_comments`, `list_locations`, `list_members`, `list_cost_codes`
+- **Team Notes tools**: `search_team_notes` (full-text search), `list_team_notes` — AI can now read and search shared team notes
+- Financial summary uses Pave aggregation for document totals by type and status
+- Time entries include computed `durationHours` from start/end timestamps
+- Added corresponding Pro Worker action handlers for non-MCP clients
 
 ## [3.6.6] - 2026-02-27
 

@@ -2189,12 +2189,152 @@ body.dark-theme .ai-link:hover {
 
 /* MCP Badge in Tab */
 .tab-badge.mcp-badge {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   font-size: 9px;
   padding: 2px 5px;
   border-radius: 3px;
   font-weight: 600;
+}
+
+/* MCP Beta Tag (inline in panel title) */
+.mcp-beta-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+/* MCP Beta Banner */
+.mcp-beta-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.mcp-beta-banner-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.mcp-beta-banner-row > i {
+  font-size: 18px;
+  color: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.mcp-beta-banner-row strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.mcp-beta-banner-row p {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.mcp-beta-banner-row p strong {
+  display: inline;
+  font-size: inherit;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* MCP Prerequisites */
+.mcp-prereqs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mcp-prereq {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.mcp-prereq .prereq-icon {
+  font-size: 16px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.mcp-prereq .prereq-icon.prereq-check {
+  color: #22c55e;
+}
+
+.mcp-prereq .prereq-text {
+  flex: 1;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.mcp-prereq.prereq-done .prereq-text {
+  color: var(--text-primary);
+}
+
+.mcp-prereq .prereq-action a {
+  font-size: 10px;
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mcp-prereq .prereq-action a:hover {
+  text-decoration: underline;
+}
+
+.mcp-prereq.prereq-done .prereq-action {
+  display: none;
+}
+
+/* MCP Tools Categories */
+.mcp-tools-category {
+  margin-bottom: 10px;
+}
+
+.mcp-tools-category:last-of-type {
+  margin-bottom: 0;
+}
+
+.mcp-tools-category-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px 0;
+}
+
+/* Dark theme overrides for new elements */
+body.dark-theme .mcp-beta-banner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.06) 100%);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+body.dark-theme .mcp-prereq {
+  background: var(--steel-800);
 }
 
 /* MCP Status Section */

@@ -137,8 +137,8 @@ const FreezeHeaderFeature = (() => {
     /* These are job-specific sidebars (Update Task, Task Details, COST ITEM DETAILS) */
     /* Do NOT modify top - let JobTread handle positioning */
     /* EXCLUDE global sidebars (Notifications, Daily Log, etc.) which need higher z-index */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky:not(.jt-global-sidebar),
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar) {
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky:not(.jt-global-sidebar):not(.jt-edit-items-panel),
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not(.jt-edit-items-panel) {
       z-index: 1 !important;
     }
 
@@ -186,12 +186,23 @@ const FreezeHeaderFeature = (() => {
       z-index: 35 !important;
     }
 
-    /* COST ITEM DETAILS sidebar (and similar) INSIDE the edit panel should keep relative positioning */
-    /* These nested sidebars position relative to their parent container, not the viewport */
-    .jt-freeze-header-active .jt-edit-items-panel .sticky,
+    /* Sticky elements INSIDE the edit panel should keep their natural top: 0 positioning */
+    /* relative to the panel's scroll container — NOT get pushed down by freeze header rules */
+    /* EXCLUDE .z-10 sticky columns (e.g., the frozen Name column in the line items table) */
+    /* KEEP original z-index so headers (z-30) stay above scrolling data rows */
+    .jt-freeze-header-active .jt-edit-items-panel .sticky:not(.z-10) {
+      top: 0px !important;
+    }
+
+    /* Nested drag-boundary elements (Cost Item Details inside edit panel) keep natural positioning */
     .jt-freeze-header-active .jt-edit-items-panel [data-is-drag-scroll-boundary="true"] {
       top: 0px !important;
       z-index: auto !important;
+    }
+
+    /* Footer sticky elements inside edit panel should keep bottom positioning */
+    .jt-freeze-header-active .jt-edit-items-panel .sticky[style*="bottom"] {
+      top: unset !important;
     }
 
     /* But preserve the sticky header inside COST ITEM DETAILS if it exists */
@@ -219,7 +230,7 @@ const FreezeHeaderFeature = (() => {
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
     /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
     /* These excluded elements keep their native JobTread positioning */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not([style*="top: 0"]):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="bottom"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       /* Also fix max-height so sidebar scrollbar reaches viewport bottom */
       max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
@@ -1081,14 +1092,19 @@ const FreezeHeaderFeature = (() => {
       }
 
       // Also check if this is a COST ITEM DETAILS sidebar (content-based detection)
-      // This sidebar contains item details and should stay with the edit items panel
+      // This sidebar contains item details and should be positioned below frozen headers
       if (text.includes('COST ITEM DETAILS') || text.includes('Item Details')) {
-        // If it has a parent that could be an edit items panel container, skip
+        // Mark the scroll container so freeze header CSS positions it correctly
+        if (!sidebar.classList.contains('jt-edit-items-panel')) {
+          sidebar.classList.add('jt-edit-items-panel');
+          console.log('FreezeHeader: Marked COST ITEM DETAILS panel for positioning');
+        }
+        // Mark the parent container for z-index stacking
         const editItemsPanel = sidebar.closest('div.absolute.right-0');
         if (editItemsPanel) {
           editItemsPanel.classList.add('jt-edit-items-panel-container');
-          continue;
         }
+        continue;
       }
 
       // Content-based detection is definitive - always mark as global
@@ -1127,16 +1143,19 @@ const FreezeHeaderFeature = (() => {
 
       const text = sidebar.textContent || '';
 
-      // Check if this is the ADD/EDIT ITEMS panel
-      if (text.includes('Add / Edit Items') || text.includes('ADD / EDIT ITEMS')) {
-        panelFound = true;
+      // Check if this is the ADD/EDIT ITEMS panel or COST ITEM DETAILS sidebar
+      const isEditPanel = text.includes('Add / Edit Items') || text.includes('ADD / EDIT ITEMS');
+      const isCostDetails = text.includes('COST ITEM DETAILS') || text.includes('Cost Item Details');
 
-        // Mark the panel itself (for potential CSS targeting)
+      if (isEditPanel || isCostDetails) {
+        if (isEditPanel) panelFound = true;
+
+        // Mark the panel itself for CSS targeting (positioning below frozen toolbar)
         if (!sidebar.classList.contains('jt-edit-items-panel')) {
           sidebar.classList.add('jt-edit-items-panel');
-          console.log('FreezeHeader: Marked ADD/EDIT ITEMS panel, lowering frozen header z-index');
+          console.log(`FreezeHeader: Marked ${isEditPanel ? 'ADD/EDIT ITEMS' : 'COST ITEM DETAILS'} panel for positioning`);
         }
-        break;
+        if (isEditPanel) break;
       }
     }
 

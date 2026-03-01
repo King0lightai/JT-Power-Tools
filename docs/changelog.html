@@ -39,11 +39,63 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.7 — MCP Server Beta -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.7</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">March 1, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server Integration (Beta — Power User Tier)</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Connect your AI assistant (Claude, ChatGPT, Gemini) directly to your JobTread data via the Model Context Protocol</li>
+                            <li class="sub-item">21 read-only tools give your AI visibility into jobs, budgets, tasks, schedules, contacts, daily logs, time entries, files, and more</li>
+                            <li class="sub-item">New MCP tab in the popup with full setup guide, prerequisites checklist, and platform-specific config generator</li>
+                            <li class="sub-item">One-click copy configs for Claude Code, Claude Desktop, ChatGPT, and Gemini CLI — auto-embeds your License Key and Grant Key</li>
+                            <li class="sub-item">Team Notes tools let your AI search and read shared notes across your organization</li>
+                            <li class="sub-item">Financial summary tool aggregates documents by type and status for quick reporting</li>
+                            <li class="sub-item">Read-only for now — your AI can view data but cannot create, update, or delete anything</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed formatter toolbars appearing in every description field when a job budget loads with all groups collapsed — hidden fields now skip toolbar pre-creation and get toolbars on-demand when focused</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Add/Edit Items panel headers scrolling away instead of staying frozen</li>
+                            <li class="sub-item">Fixed Cost Item Details sidebar stuck behind frozen navigation bar</li>
+                            <li class="sub-item">Fixed footer totals row losing its bottom-sticky positioning in the Add/Edit Items panel</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Dark Mode</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed spreadsheet exports showing blank data when dark mode is enabled — text color overrides now only apply on-screen via @media screen</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.6 — Major Update -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.6</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">February 27, 2026</span>
             </div>
 

@@ -1723,9 +1723,20 @@ async function initMcpTab() {
   // Setup platform tabs
   initPlatformTabs();
 
-  // Check MCP status and update credentials display
+  // Setup tab-link navigation (prerequisite links that switch to other tabs)
+  document.querySelectorAll('[data-tab-link]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetTab = link.dataset.tabLink;
+      const tabBtn = document.querySelector(`.tab-item[data-tab="${targetTab}"]`);
+      if (tabBtn) tabBtn.click();
+    });
+  });
+
+  // Check MCP status, credentials, and prerequisites
   await checkMcpStatus();
   await updateMcpCredentialsDisplay();
+  await updateMcpPrerequisites();
 }
 
 /**
@@ -1897,16 +1908,16 @@ function initPlatformTabs() {
  */
 function generateMcpConfig(platform, licenseKey, grantKey) {
   const authToken = `${licenseKey}:${grantKey}`;
-  const serverUrl = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
+  const serverUrl = MCP_SERVER_URL;
 
   switch (platform) {
     case 'claude-code':
-      // Claude Code: Direct SSE support with JSON config
+      // Claude Code: HTTP transport (official type per Anthropic docs)
       return JSON.stringify({
         "mcpServers": {
           "jobtread": {
-            "type": "sse",
-            "url": `${serverUrl}/sse`,
+            "type": "http",
+            "url": `${serverUrl}/mcp`,
             "headers": {
               "Authorization": `Bearer ${authToken}`
             }
@@ -1915,7 +1926,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
       }, null, 2);
 
     case 'claude-desktop':
-      // Claude Desktop: Requires mcp-remote wrapper (stdio to SSE bridge)
+      // Claude Desktop: Requires mcp-remote wrapper (stdio bridge to remote)
       return JSON.stringify({
         "mcpServers": {
           "jobtread": {
@@ -1923,7 +1934,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
             "args": [
               "-y",
               "mcp-remote",
-              `${serverUrl}/sse`,
+              `${serverUrl}/mcp`,
               "--header",
               `Authorization:Bearer ${authToken}`
             ]
@@ -1932,19 +1943,21 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
       }, null, 2);
 
     case 'chatgpt':
-      // ChatGPT: Uses URL with trailing slash and bearer token
-      // Note: ChatGPT MCP setup is done via UI, this is just for reference
+      // ChatGPT: Uses SSE transport via the UI (per OpenAI docs)
       return `MCP Server URL:
 ${serverUrl}/sse/
 
-Authentication:
+Authentication Type: Bearer Token
 Bearer Token: ${authToken}
 
-Note: In ChatGPT settings, select "Bearer Token" as
-authentication type and paste the token above.`;
+Steps:
+1. Go to ChatGPT Settings > Connected apps
+2. Click "Add MCP server"
+3. Paste the URL above (must end with /sse/)
+4. Select "Bearer Token" and paste the token`;
 
     case 'gemini':
-      // Gemini: Uses HTTP endpoint
+      // Gemini CLI: Uses httpUrl key (per Google Gemini docs)
       return JSON.stringify({
         "mcpServers": {
           "jobtread": {
@@ -2068,6 +2081,41 @@ async function checkMcpStatus() {
     statusDot.classList.remove('connected');
     statusDot.classList.add('disconnected');
     statusText.textContent = 'Connection error';
+  }
+}
+
+/**
+ * Update MCP prerequisites checklist
+ */
+async function updateMcpPrerequisites() {
+  const prereqLicense = document.getElementById('prereqLicense');
+  const prereqGrantKey = document.getElementById('prereqGrantKey');
+
+  if (!prereqLicense || !prereqGrantKey) return;
+
+  // Check license (Power User tier)
+  const tier = await LicenseService.getTier();
+  const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
+  setPrereqStatus(prereqLicense, hasPowerUser);
+
+  // Check grant key
+  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+  setPrereqStatus(prereqGrantKey, !!stored.jtpro_grant_key);
+
+}
+
+/**
+ * Set a prerequisite row as done or not
+ */
+function setPrereqStatus(el, isDone) {
+  if (!el) return;
+  const icon = el.querySelector('.prereq-icon');
+  if (isDone) {
+    icon.className = 'ph ph-check-circle prereq-icon prereq-check';
+    el.classList.add('prereq-done');
+  } else {
+    icon.className = 'ph ph-circle-dashed prereq-icon';
+    el.classList.remove('prereq-done');
   }
 }
 

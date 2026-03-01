@@ -377,7 +377,9 @@ const FormatterFeature = (() => {
 
         // Pre-create embedded toolbar for non-budget-table fields
         // This makes the toolbar visible on page load, not just on focus
-        if (Toolbar().embedToolbarForField) {
+        // Skip fields that aren't visible (e.g., in collapsed budget groups) —
+        // their toolbar will be created on-demand when focused via showToolbar()
+        if (Toolbar().embedToolbarForField && field.offsetParent !== null) {
           // embedToolbarForField returns null for budget table fields
           // so this only creates toolbars for sidebar, message, daily log fields, etc.
           Toolbar().embedToolbarForField(field);

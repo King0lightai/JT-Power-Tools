@@ -1292,8 +1292,8 @@ The following entities have been confirmed to exist as connections but their ful
 
 | Entity | Status | Notes |
 |--------|--------|-------|
-| `document` | 🟡 Needs testing | Types: customerInvoice, vendorBill, etc. |
-| `comment` | 🟡 Needs testing | Confirmed exists as connection |
+| `document` | ✅ Tested | Fields: `id`, `name`, `type`, `status`, `priceWithTax` (cents), `number`, `createdAt`. Types: customerOrder, customerInvoice, vendorBill, etc. Supports `group.by`/`group.aggs` for aggregation. |
+| `comment` | ✅ Tested | Fields: `id`, `message`, `createdAt`. Text field is `message` (NOT body/text/content/note). `name` exists but returns null. `files` connection works. NO author/user/membership/createdBy field. |
 | `payment` | 🟡 Needs testing | Exists on org, NOT on job |
 | `activity` | 🟡 Needs testing | Exists on org |
 | `access` | 🟡 Needs testing | Exists on org, NOT on job |
@@ -1326,6 +1326,9 @@ These naming inconsistencies caught during testing are critical for your MCP ser
 | `contentType` | ❌ doesn't exist | file |
 | `markup/margin` | ❌ doesn't exist | costItem |
 | `assignedMemberships` | ❌ doesn't exist | dailyLog |
+| `body/text/content` | `message` | comment |
+| `author/user/createdBy` | ❌ doesn't exist | comment |
+| `name` | returns null | comment |
 
 ---
 
