@@ -5,6 +5,22 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### MCP Server
+- **Added `jobtread_knowledge_lookup` tool** — AI assistants can now query a built-in Pave API reference to learn the correct query format, available entity fields, filtering operators, and common pitfalls before writing raw queries. Organized into 8 categories: query syntax, entities, filtering, pagination/sorting, mutations, custom fields, aggregations, gotchas, and examples.
+- **Updated `jobtread_raw_query` description** to direct AIs to call `jobtread_knowledge_lookup` first, reducing failed queries from incorrect format or nonexistent fields.
+
+### Fixed
+
+#### MCP Server
+- **Fixed `jobtread_search_contacts` failing with 400 error** — was using invalid `contains` operator in Pave WHERE clause. Now uses `like` with `%wildcards%`. Also implemented the previously unused `type` filter parameter (customer/vendor/subcontractor).
+- **Fixed `jobtread_search_jobs` failing with 400 error when filtering by status** — `status` is a computed field in Pave that cannot be used in WHERE clauses. Now uses `closedOn` null checks for open/closed filtering with client-side filtering for specific status values. Also corrected the status enum to accept actual Pave values (`created`, `approved`, etc.) instead of incorrect UI labels.
+- **Fixed `jobtread_list_locations` search using invalid `contains` operator** — now uses `like` with `%wildcards%`.
+- **Corrected `jobtread_knowledge_lookup` reference content** — removed `contains` from valid operators, fixed null check syntax (JS `null` not string `"null"`), fixed job status examples to use actual Pave values, added gotcha about `status` being computed/unfilterable.
+
 ## [3.6.7] - 2026-03-01
 
 ### Fixed
@@ -24,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### MCP Server Integration (Beta)
 - **Launched MCP tab in popup** replacing the "Coming Soon" placeholder with full setup experience
-- MCP tab now includes: prerequisites checklist, platform-specific config generator (Claude Code, Claude Desktop, ChatGPT, Gemini), credential status display, server URL with copy button, and a categorized list of all 21 read-only tools
+- MCP tab now includes: prerequisites checklist, platform-specific config generator (Claude Code, Claude Desktop, ChatGPT, Gemini), credential status display, server URL with copy button, and a categorized list of all 22 read-only tools
 - Config generator auto-embeds user's License Key and Grant Key for one-click copy
 - Prerequisite links navigate directly to the License or API tab when keys are missing
 - Prominent BETA badge and read-only banner clearly communicate the current status
@@ -629,7 +645,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - FREE features work without any license to attract new users
 - Essential tier unlocks Quick Notes, Smart Job Switcher, Freeze Header, PDF Markup Tools
 - Pro tier unlocks Schedule & Task Checkboxes, Custom Theme, Preview Mode
-- Power User tier unlocks Custom Field Filter, MCP Access (Coming Soon)
+- Power User tier unlocks Custom Field Filter, MCP Server Access
 - Backwards compatibility: existing "JT Power Tools" purchasers get PRO tier
 
 #### Custom Field Filter Feature
@@ -639,7 +655,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `getCustomFieldValues` API endpoint to fetch unique values for text-based fields
 - Filter dropdown auto-populates with available values from your jobs
 
-#### AI Integration Panel (Power User - Coming Soon)
+#### AI Integration Panel (Power User)
 - Added AI Integration section in extension popup for Power User tier
 - Platform selector with Claude, ChatGPT, Cursor, and Other MCP clients
 - Auto-generates personalized MCP config JSON with user's license and grant keys
@@ -749,7 +765,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.6] - 2025-12-XX (Beta)
+## [3.3.6] - 2025-12-05 (Beta)
 
 ### Added
 
@@ -788,7 +804,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.4] - 2025-01-XX (Beta)
+## [3.3.4] - 2025-11-27 (Beta)
 
 ### Added
 
@@ -806,7 +822,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [3.3.3] - 2025-01-XX (Beta)
+## [3.3.3] - 2025-11-22 (Beta)
 
 ### Improved
 
@@ -832,7 +848,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.3.2] - 2025-01-XX
+## [3.3.2] - 2025-11-20
 
 ### Improved
 
@@ -870,7 +886,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.3.1] - 2025-01-17
+## [3.3.1] - 2025-11-17
 
 ### Added
 
@@ -917,7 +933,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.3.0] - 2024-11-13
+## [3.3.0] - 2025-11-13
 
 ### Added
 
@@ -978,7 +994,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.2.3] - 2024-10-XX
+## [3.2.3] - 2025-11-XX
 
 ### Added
 - **New Feature: Budget Hierarchy Shading**
@@ -1007,7 +1023,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.1.0] - 2024-09-XX
+## [3.1.0] - 2025-11-XX
 
 ### Added
 - **New Feature: Smart Job Switcher**
@@ -1054,7 +1070,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [3.0.0] - 2024-08-XX
+## [3.0.0] - 2025-11-04
 
 ### Added
 - Added Custom Theme feature (Premium)
@@ -1065,7 +1081,7 @@ This release represents a major stability milestone for JT Power Tools. Extensiv
 
 ---
 
-## [1.0.0] - 2024-07-XX
+## [1.0.0] - 2025-10-29
 
 ### Added
 - Initial public release

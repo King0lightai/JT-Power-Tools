@@ -153,8 +153,10 @@ An all-in-one Chrome extension toolkit for JobTread with toggleable features and
 - API-powered dropdown auto-populates with your custom field values
 - Quickly find jobs based on project manager, status, or any custom field
 
-#### 🤖 MCP Server Access (Coming Soon)
+#### 🤖 MCP Server Access
 - Connect AI assistants (Claude, ChatGPT, Cursor, Gemini) to your JobTread data
+- 22 tools for reading jobs, budgets, tasks, schedules, contacts, and more
+- Built-in Pave API knowledge base for AI-assisted raw queries
 - One-click configuration generator
 - Priority support for AI integration issues
 
@@ -281,7 +283,7 @@ For power users who want customization:
 For teams leveraging AI and advanced features:
 - Everything in Pro, plus:
 - **Custom Field Filter** - API-powered job filtering
-- **MCP Server Access** - Connect AI assistants to JobTread (Coming Soon)
+- **MCP Server Access** - Connect AI assistants to JobTread
 
 ### License Activation
 
@@ -430,15 +432,16 @@ const featureModules = {
   - FREE tier: Core features work without any license
   - Essential ($10): Quick Notes, Job Switcher, Freeze Header, PDF Markup
   - Pro ($20): Schedule Checkboxes, Custom Theme, Preview Mode
-  - Power User ($30): Custom Field Filter, MCP Access (Coming Soon)
+  - Power User ($30): Custom Field Filter, MCP Server Access
   - Backwards compatible: existing licenses get PRO tier
 - **New: Custom Field Filter** (Power User)
   - Filter jobs by custom field values in Job Switcher
   - API-powered dropdown with auto-populated values
-- **AI Integration Panel** (Power User - Coming Soon)
-  - MCP server config generator for Claude, ChatGPT, Cursor, Gemini
+- **AI Integration Panel** (Power User)
+  - MCP server with 22 tools for reading JobTread data
+  - Config generator for Claude, ChatGPT, Cursor, Gemini
   - One-click copy configuration
-  - Connection status testing
+  - Built-in Pave API knowledge base
 
 ### v3.3.6
 - **New Feature: Auto Collapse Completed Groups**

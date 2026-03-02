@@ -667,19 +667,8 @@
               <i class="ph ph-flask"></i>
               <div>
                 <strong>Beta &mdash; Read-Only Access</strong>
-                <p>MCP integration is in beta testing. All 21 tools are <strong>read-only</strong> &mdash; your JobTread data cannot be modified. Write operations are planned for a future release.</p>
+                <p>MCP integration is in beta. All 22 tools are <strong>read-only</strong> &mdash; your JobTread data cannot be modified.</p>
               </div>
-            </div>
-          </div>
-
-          <!-- Status Section -->
-          <div class="mcp-status-section">
-            <div class="mcp-status" id="mcpStatus">
-              <div class="status-indicator">
-                <i class="ph ph-circle status-dot"></i>
-                <span class="status-text">Checking status...</span>
-              </div>
-              <span class="badge power-user">Power User</span>
             </div>
           </div>
 
@@ -688,6 +677,21 @@
             <h3><i class="ph ph-info"></i> What is MCP?</h3>
             <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude Code</strong>, <strong>Cursor</strong>, and <strong>ChatGPT</strong> read your JobTread data directly. Ask questions, analyze budgets, review schedules, and get insights using natural language.</p>
           </div>
+
+          <!-- Upgrade CTA (shown to non-Power Users) -->
+          <div class="mcp-upgrade-cta" id="mcpUpgradeCta" style="display: none;">
+            <div class="mcp-upgrade-icon"><i class="ph ph-lock-key"></i></div>
+            <div class="mcp-upgrade-content">
+              <h3>Unlock MCP Integration</h3>
+              <p>Connect AI assistants like Claude, ChatGPT, and Gemini directly to your JobTread data. Requires a <strong>Power User</strong> license.</p>
+            </div>
+            <a href="#" class="mcp-upgrade-btn" data-tab-link="license">
+              <i class="ph ph-arrow-right"></i> Go to License
+            </a>
+          </div>
+
+          <!-- Setup sections (hidden for non-Power Users) -->
+          <div id="mcpSetupSections">
 
           <!-- Prerequisites -->
           <div class="mcp-section">
@@ -829,9 +833,11 @@
             <p class="mcp-hint">Auth header: <code>Authorization: Bearer LICENSE_KEY:GRANT_KEY</code></p>
           </div>
 
+          </div><!-- /mcpSetupSections -->
+
           <!-- Available Tools -->
           <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (21 &mdash; Read-Only)</h3>
+            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (22 &mdash; Read-Only)</h3>
 
             <div class="mcp-tools-category">
               <h4 class="mcp-tools-category-title">Jobs &amp; Budget</h4>
@@ -879,6 +885,7 @@
                 <div class="mcp-tool"><i class="ph ph-tag"></i> Cost Codes</div>
                 <div class="mcp-tool"><i class="ph ph-sliders"></i> Custom Fields</div>
                 <div class="mcp-tool"><i class="ph ph-database"></i> Raw Query</div>
+                <div class="mcp-tool"><i class="ph ph-book-open"></i> Knowledge Lookup</div>
               </div>
             </div>
 
@@ -890,7 +897,7 @@
               </div>
             </div>
 
-            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> All tools are read-only. Write operations are planned for a future release.</p>
+            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> All 22 tools are read-only &mdash; your JobTread data is safe.</p>
           </div>
 
         </div>

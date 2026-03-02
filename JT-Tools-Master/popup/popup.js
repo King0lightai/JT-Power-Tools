@@ -1733,10 +1733,26 @@ async function initMcpTab() {
     });
   });
 
-  // Check MCP status, credentials, and prerequisites
-  await checkMcpStatus();
-  await updateMcpCredentialsDisplay();
-  await updateMcpPrerequisites();
+  // Gate setup sections for non-Power Users
+  const tier = await LicenseService.getTier();
+  const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
+
+  const upgradeCta = document.getElementById('mcpUpgradeCta');
+  const setupSections = document.getElementById('mcpSetupSections');
+
+  if (hasPowerUser) {
+    // Power User — show setup, hide CTA
+    if (upgradeCta) upgradeCta.style.display = 'none';
+    if (setupSections) setupSections.style.display = '';
+
+    // Check MCP credentials and prerequisites
+    await updateMcpCredentialsDisplay();
+    await updateMcpPrerequisites();
+  } else {
+    // Non-Power User — show CTA, hide setup
+    if (upgradeCta) upgradeCta.style.display = '';
+    if (setupSections) setupSections.style.display = 'none';
+  }
 }
 
 /**
@@ -1819,7 +1835,7 @@ async function handleUpdateGrantKey() {
 
       // Update displays
       await updateMcpCredentialsDisplay();
-      await checkMcpStatus();
+      await updateMcpPrerequisites();
       await checkApiStatus();
     } else {
       // Show error
@@ -2015,72 +2031,6 @@ async function handleCopyMcpConfig() {
   } catch (err) {
     console.error('Failed to copy MCP config:', err);
     showStatus('Failed to copy to clipboard', 'error');
-  }
-}
-
-/**
- * Check MCP server status and update UI
- */
-async function checkMcpStatus() {
-  const statusSection = document.getElementById('mcpStatus');
-  if (!statusSection) return;
-
-  const statusDot = statusSection.querySelector('.status-dot');
-  const statusText = statusSection.querySelector('.status-text');
-
-  // Check if user has Power User tier
-  const tier = await LicenseService.getTier();
-  const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
-
-  if (!hasPowerUser) {
-    statusDot.classList.remove('connected');
-    statusDot.classList.add('disconnected');
-    statusText.textContent = 'Requires Power User tier';
-    return;
-  }
-
-  // Check if grant key is configured
-  const stored = await chrome.storage.local.get(['jtpro_grant_key', 'jtpro_license_key']);
-
-  if (!stored.jtpro_license_key) {
-    statusDot.classList.remove('connected');
-    statusDot.classList.add('disconnected');
-    statusText.textContent = 'Enter License Key in License tab';
-    return;
-  }
-
-  if (!stored.jtpro_grant_key) {
-    statusDot.classList.remove('connected');
-    statusDot.classList.add('disconnected');
-    statusText.textContent = 'Enter Grant Key in API tab';
-    return;
-  }
-
-  // Both keys configured - check server health
-  try {
-    const response = await fetch(`${MCP_SERVER_URL}/health`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.status === 'ok') {
-        statusDot.classList.remove('disconnected');
-        statusDot.classList.add('connected');
-        statusText.textContent = 'Ready to connect';
-        return;
-      }
-    }
-
-    statusDot.classList.remove('connected');
-    statusDot.classList.add('disconnected');
-    statusText.textContent = 'Server unavailable';
-  } catch (error) {
-    console.error('MCP health check failed:', error);
-    statusDot.classList.remove('connected');
-    statusDot.classList.add('disconnected');
-    statusText.textContent = 'Connection error';
   }
 }
 

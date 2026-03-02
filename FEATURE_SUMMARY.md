@@ -60,7 +60,7 @@
 | Feature | Description |
 |---------|-------------|
 | **Custom Field Filter** | Filter Job Switcher results by custom field values |
-| **MCP Server Access** | AI integration capabilities (Coming Soon) |
+| **MCP Server Access** | Connect AI assistants to your JobTread data (22 read-only tools) |
 | **Priority Support** | Fast-track issue resolution |
 
 ---

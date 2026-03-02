@@ -2338,45 +2338,6 @@ body.dark-theme .mcp-prereq {
 }
 
 /* MCP Status Section */
-.mcp-status-section {
-  margin-bottom: 16px;
-}
-
-.mcp-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-dot {
-  font-size: 10px;
-  color: var(--steel-400);
-}
-
-.status-dot.connected {
-  color: #22c55e;
-}
-
-.status-dot.disconnected {
-  color: #ef4444;
-}
-
-.mcp-status .status-text {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
 /* MCP Info Card */
 .mcp-info-card {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%);
@@ -2960,6 +2921,75 @@ body.dark-theme .platform-note {
 body.dark-theme .platform-note code {
   background: var(--steel-700);
   color: var(--steel-300);
+}
+
+/* MCP Upgrade CTA */
+.mcp-upgrade-cta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff8f0 0%, #fff3e6 100%);
+  border: 1px solid #f0a050;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.mcp-upgrade-icon {
+  font-size: 28px;
+  color: var(--brand-orange);
+  flex-shrink: 0;
+}
+
+.mcp-upgrade-content {
+  flex: 1;
+}
+
+.mcp-upgrade-content h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.mcp-upgrade-content p {
+  margin: 0;
+  font-size: 12.5px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.mcp-upgrade-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--brand-orange);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.mcp-upgrade-btn:hover {
+  background: #e08830;
+}
+
+body.dark-theme .mcp-upgrade-cta {
+  background: linear-gradient(135deg, #3a3020 0%, #332a1e 100%);
+  border-color: #a07030;
+}
+
+body.dark-theme .mcp-upgrade-content h3 {
+  color: #e0e0e0;
+}
+
+body.dark-theme .mcp-upgrade-content p {
+  color: #b0b0b0;
 }
 
 /* ============================================
