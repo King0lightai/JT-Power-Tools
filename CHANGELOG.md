@@ -10,16 +10,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### MCP Server
+- **Added OAuth 2.1 support** — ChatGPT and Claude.ai can now connect via OAuth auto-discovery (`.well-known/`). Users just paste the server URL; the AI client handles the full OAuth flow with PKCE. Authorization page lets users enter their License Key and Grant Key.
 - **Added `jobtread_knowledge_lookup` tool** — AI assistants can now query a built-in Pave API reference to learn the correct query format, available entity fields, filtering operators, and common pitfalls before writing raw queries. Organized into 8 categories: query syntax, entities, filtering, pagination/sorting, mutations, custom fields, aggregations, gotchas, and examples.
 - **Updated `jobtread_raw_query` description** to direct AIs to call `jobtread_knowledge_lookup` first, reducing failed queries from incorrect format or nonexistent fields.
+
+#### Popup — MCP Tab
+- **Redesigned platform config generator with two-level picker**: Level 1 selects AI provider (Claude, ChatGPT, Gemini), Level 2 selects variant (Code, Desktop, Web) — only shown for Claude
+- **Added Claude.ai (Web) platform** with OAuth badge and step-by-step setup instructions (Settings → Connectors → Add custom connector)
+- **Added ChatGPT OAuth instructions** — Settings → Apps → Advanced settings → Enable developer mode → Create app → Paste URL
+- **Added credential copy buttons** — License Key and Grant Key rows now have individual copy buttons for quick access
+- **OAuth platforms auto-enable Copy button** — ChatGPT and Claude Web only need the server URL (no keys required to copy)
+
+### Changed
+
+#### Popup — MCP Tab
+- Removed standalone "Server URL" section (redundant — config generator handles URL copying for OAuth platforms)
+- Platform notes now use numbered steps for OAuth platforms and command blocks for CLI platforms
+- Updated ChatGPT and Claude Web setup instructions in docs site (`docs/mcp/chatgpt.html`)
 
 ### Fixed
 
 #### MCP Server
+- **Fixed MCP endpoint failing for Claude.ai and other OAuth clients** — replaced `createMcpHandler` from `agents/mcp` (which enforced strict `Accept: text/event-stream` header and returned SSE streams) with a direct Streamable HTTP handler that returns JSON responses. This fixes the "McpServerError: temporarily unavailable" error when connecting from Claude.ai.
+- **Fixed Claude.ai and ChatGPT failing to connect after OAuth** — OAuth clients were posting MCP requests to the base URL (`/`) but the MCP handler only listened on `/mcp`. Added `/` as an authenticated MCP route so both paths work. Also updated the popup copy button and docs to provide the full `/mcp` URL for OAuth platforms.
 - **Fixed `jobtread_search_contacts` failing with 400 error** — was using invalid `contains` operator in Pave WHERE clause. Now uses `like` with `%wildcards%`. Also implemented the previously unused `type` filter parameter (customer/vendor/subcontractor).
 - **Fixed `jobtread_search_jobs` failing with 400 error when filtering by status** — `status` is a computed field in Pave that cannot be used in WHERE clauses. Now uses `closedOn` null checks for open/closed filtering with client-side filtering for specific status values. Also corrected the status enum to accept actual Pave values (`created`, `approved`, etc.) instead of incorrect UI labels.
 - **Fixed `jobtread_list_locations` search using invalid `contains` operator** — now uses `like` with `%wildcards%`.
 - **Corrected `jobtread_knowledge_lookup` reference content** — removed `contains` from valid operators, fixed null check syntax (JS `null` not string `"null"`), fixed job status examples to use actual Pave values, added gotcha about `status` being computed/unfilterable.
+
+#### Popup — MCP Tab
+- **Fixed undefined CSS variables** causing invisible active states on platform tabs — replaced `--accent-primary`, `--accent-subtle`, `--bg-hover` (never defined) with actual color values
+- **Cleaned up duplicate CSS rules** for `.platform-tabs` and `.platform-tab` that were left over from the old layout
 
 ## [3.6.7] - 2026-03-01
 

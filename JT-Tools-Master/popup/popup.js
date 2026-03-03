@@ -1720,6 +1720,53 @@ async function initMcpTab() {
     copyConfigBtn.addEventListener('click', handleCopyMcpConfig);
   }
 
+  // Setup credential copy buttons (grab keys easily)
+  const copyLicenseBtn = document.getElementById('copyLicenseKey');
+  if (copyLicenseBtn) {
+    copyLicenseBtn.addEventListener('click', async () => {
+      const licenseData = await LicenseService.getLicenseData();
+      if (!licenseData?.key) {
+        showStatus('No License Key configured', 'error');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(licenseData.key);
+        copyLicenseBtn.classList.add('copied');
+        copyLicenseBtn.querySelector('i').className = 'ph ph-check';
+        showStatus('License Key copied!', 'success');
+        setTimeout(() => {
+          copyLicenseBtn.classList.remove('copied');
+          copyLicenseBtn.querySelector('i').className = 'ph ph-copy';
+        }, 2000);
+      } catch (err) {
+        showStatus('Failed to copy', 'error');
+      }
+    });
+  }
+
+  const copyGrantBtn = document.getElementById('copyGrantKey');
+  if (copyGrantBtn) {
+    copyGrantBtn.addEventListener('click', async () => {
+      const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+      if (!stored.jtpro_grant_key) {
+        showStatus('No Grant Key configured', 'error');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(stored.jtpro_grant_key);
+        copyGrantBtn.classList.add('copied');
+        copyGrantBtn.querySelector('i').className = 'ph ph-check';
+        showStatus('Grant Key copied!', 'success');
+        setTimeout(() => {
+          copyGrantBtn.classList.remove('copied');
+          copyGrantBtn.querySelector('i').className = 'ph ph-copy';
+        }, 2000);
+      } catch (err) {
+        showStatus('Failed to copy', 'error');
+      }
+    });
+  }
+
   // Setup platform tabs
   initPlatformTabs();
 
@@ -1797,8 +1844,14 @@ async function updateMcpCredentialsDisplay() {
 
   // Enable/disable Copy MCP Config button
   if (copyConfigBtn) {
-    const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
-    copyConfigBtn.disabled = !hasCredentials;
+    const isOAuth = ['chatgpt', 'claude-web'].includes(selectedMcpPlatform);
+    if (isOAuth) {
+      // OAuth platforms don't need keys — always enabled
+      copyConfigBtn.disabled = false;
+    } else {
+      const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
+      copyConfigBtn.disabled = !hasCredentials;
+    }
   }
 }
 
@@ -1889,30 +1942,110 @@ function showGrantKeySuccess(message) {
 let selectedMcpPlatform = 'claude-code';
 
 /**
- * Initialize platform tabs for MCP config generator
+ * Default platform for each AI provider
+ */
+const PROVIDER_DEFAULTS = {
+  'claude': 'claude-code',
+  'chatgpt': 'chatgpt',
+  'gemini': 'gemini'
+};
+
+/**
+ * Initialize two-level platform tabs for MCP config generator
+ * Level 1: AI Provider (Claude, ChatGPT, Gemini)
+ * Level 2: Variant (Code, Desktop, Web) — only for Claude
  */
 function initPlatformTabs() {
-  const platformTabs = document.querySelectorAll('.platform-tab');
+  const providerTabs = document.querySelectorAll('#aiProviderTabs .platform-tab');
+  const variantGroups = document.querySelectorAll('.variant-group');
+  const variantTabs = document.querySelectorAll('.variant-tab');
   const platformNotes = document.querySelectorAll('.platform-note');
 
-  platformTabs.forEach(tab => {
+  // Level 1: AI Provider click
+  providerTabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      const platform = tab.dataset.platform;
-      selectedMcpPlatform = platform;
+      const provider = tab.dataset.provider;
 
-      // Update active tab
-      platformTabs.forEach(t => t.classList.remove('active'));
+      // Update active provider tab
+      providerTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
 
-      // Update active note
-      platformNotes.forEach(note => {
-        note.classList.remove('active');
-        if (note.dataset.platform === platform) {
-          note.classList.add('active');
+      // Show/hide variant groups
+      variantGroups.forEach(g => {
+        g.classList.remove('active');
+        if (g.dataset.provider === provider) {
+          g.classList.add('active');
         }
       });
+
+      // Select the default platform for this provider
+      const defaultPlatform = PROVIDER_DEFAULTS[provider];
+      selectPlatform(defaultPlatform, platformNotes);
     });
   });
+
+  // Level 2: Variant click (within Claude)
+  variantTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const platform = tab.dataset.platform;
+
+      // Update active variant within its group
+      const group = tab.closest('.variant-group');
+      group.querySelectorAll('.variant-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      selectPlatform(platform, platformNotes);
+    });
+  });
+}
+
+/**
+ * Select a specific platform and update notes + copy button
+ */
+function selectPlatform(platform, platformNotes) {
+  selectedMcpPlatform = platform;
+
+  // Update active note
+  platformNotes.forEach(note => {
+    note.classList.remove('active');
+    if (note.dataset.platform === platform) {
+      note.classList.add('active');
+    }
+  });
+
+  // Update copy button text and hint for OAuth vs legacy platforms
+  updateCopyButtonForPlatform(platform);
+}
+
+/**
+ * Update copy button label and hint based on whether platform uses OAuth or legacy auth
+ */
+async function updateCopyButtonForPlatform(platform) {
+  const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
+  const hintText = document.getElementById('mcpConfigHintText');
+  if (!copyConfigBtn) return;
+
+  const isOAuth = ['chatgpt', 'claude-web'].includes(platform);
+
+  if (isOAuth) {
+    // OAuth platforms just need the server URL — no keys needed
+    copyConfigBtn.disabled = false;
+    copyConfigBtn.innerHTML = '<i class="ph ph-copy"></i> Copy Server URL';
+    if (hintText) {
+      hintText.textContent = 'Paste this URL in your AI client \u2014 you\'ll enter your keys on the authorization screen';
+    }
+  } else {
+    // Legacy platforms need keys embedded in config
+    copyConfigBtn.innerHTML = '<i class="ph ph-copy"></i> Copy Config';
+    if (hintText) {
+      hintText.textContent = 'Both keys must be configured to copy';
+    }
+    // Check if keys are available
+    const licenseData = await LicenseService.getLicenseData();
+    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+    const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
+    copyConfigBtn.disabled = !hasCredentials;
+  }
 }
 
 /**
@@ -1959,18 +2092,12 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
       }, null, 2);
 
     case 'chatgpt':
-      // ChatGPT: Uses SSE transport via the UI (per OpenAI docs)
-      return `MCP Server URL:
-${serverUrl}/sse/
+      // ChatGPT: OAuth — paste the MCP endpoint URL, ChatGPT handles OAuth flow
+      return `${serverUrl}/mcp`;
 
-Authentication Type: Bearer Token
-Bearer Token: ${authToken}
-
-Steps:
-1. Go to ChatGPT Settings > Connected apps
-2. Click "Add MCP server"
-3. Paste the URL above (must end with /sse/)
-4. Select "Bearer Token" and paste the token`;
+    case 'claude-web':
+      // Claude Web: OAuth — paste the MCP endpoint URL, Claude handles OAuth flow
+      return `${serverUrl}/mcp`;
 
     case 'gemini':
       // Gemini CLI: Uses httpUrl key (per Google Gemini docs)
@@ -1995,39 +2122,51 @@ Steps:
  */
 async function handleCopyMcpConfig() {
   const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
+  const isOAuthPlatform = ['chatgpt', 'claude-web'].includes(selectedMcpPlatform);
 
-  // Get credentials
-  const licenseData = await LicenseService.getLicenseData();
-  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+  let config;
 
-  if (!licenseData?.key || !stored.jtpro_grant_key) {
-    showStatus('Please configure both License Key and Grant Key first', 'error');
-    return;
+  if (isOAuthPlatform) {
+    // OAuth platforms just need the server URL — no keys needed
+    config = generateMcpConfig(selectedMcpPlatform, '', '');
+  } else {
+    // Legacy platforms need keys embedded
+    const licenseData = await LicenseService.getLicenseData();
+    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+
+    if (!licenseData?.key || !stored.jtpro_grant_key) {
+      showStatus('Please configure both License Key and Grant Key first', 'error');
+      return;
+    }
+
+    config = generateMcpConfig(selectedMcpPlatform, licenseData.key, stored.jtpro_grant_key);
   }
-
-  // Generate platform-specific config
-  const config = generateMcpConfig(selectedMcpPlatform, licenseData.key, stored.jtpro_grant_key);
 
   try {
     await navigator.clipboard.writeText(config);
 
     // Show copied state
+    const isUrl = isOAuthPlatform;
     copyConfigBtn.classList.add('copied');
     copyConfigBtn.innerHTML = '<i class="ph ph-check"></i> Copied!';
 
     // Reset after 2 seconds
     setTimeout(() => {
       copyConfigBtn.classList.remove('copied');
-      copyConfigBtn.innerHTML = '<i class="ph ph-copy"></i> Copy Config';
+      copyConfigBtn.innerHTML = isUrl
+        ? '<i class="ph ph-copy"></i> Copy Server URL'
+        : '<i class="ph ph-copy"></i> Copy Config';
     }, 2000);
 
     const platformNames = {
       'claude-code': 'Claude Code',
       'claude-desktop': 'Claude Desktop',
       'chatgpt': 'ChatGPT',
+      'claude-web': 'Claude Web',
       'gemini': 'Gemini'
     };
-    showStatus(`${platformNames[selectedMcpPlatform]} config copied!`, 'success');
+    const label = isUrl ? 'URL' : 'config';
+    showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
   } catch (err) {
     console.error('Failed to copy MCP config:', err);
     showStatus('Failed to copy to clipboard', 'error');

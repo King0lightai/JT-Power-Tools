@@ -748,11 +748,17 @@
                 <span class="credential-label">License Key:</span>
                 <span class="credential-value" id="mcpLicenseKey">Not configured</span>
                 <span class="credential-status" id="mcpLicenseStatus"></span>
+                <button class="credential-copy-btn" id="copyLicenseKey" title="Copy License Key">
+                  <i class="ph ph-copy"></i>
+                </button>
               </div>
               <div class="credential-row">
                 <span class="credential-label">Grant Key:</span>
                 <span class="credential-value" id="mcpGrantKey">Not configured</span>
                 <span class="credential-status" id="mcpGrantStatus"></span>
+                <button class="credential-copy-btn" id="copyGrantKey" title="Copy Grant Key">
+                  <i class="ph ph-copy"></i>
+                </button>
               </div>
             </div>
 
@@ -770,43 +776,77 @@
 
             <!-- Platform Config Generator -->
             <div class="mcp-config-generator">
-              <h4 class="mcp-config-title">Generate Config for:</h4>
+              <h4 class="mcp-config-title">Pick your AI</h4>
 
-              <div class="platform-tabs">
-                <button class="platform-tab active" data-platform="claude-code">
-                  <i class="ph ph-terminal"></i>
-                  <span>Claude Code</span>
+              <!-- Level 1: AI Provider -->
+              <div class="platform-tabs" id="aiProviderTabs">
+                <button class="platform-tab active" data-provider="claude">
+                  <i class="ph ph-cloud"></i>
+                  <span>Claude</span>
                 </button>
-                <button class="platform-tab" data-platform="claude-desktop">
-                  <i class="ph ph-desktop"></i>
-                  <span>Claude Desktop</span>
-                </button>
-                <button class="platform-tab" data-platform="chatgpt">
+                <button class="platform-tab" data-provider="chatgpt">
                   <i class="ph ph-chat-circle-dots"></i>
                   <span>ChatGPT</span>
                 </button>
-                <button class="platform-tab" data-platform="gemini">
+                <button class="platform-tab" data-provider="gemini">
                   <i class="ph ph-sparkle"></i>
                   <span>Gemini</span>
                 </button>
               </div>
 
+              <!-- Level 2: Variant (Claude only) -->
+              <div class="platform-variants" id="platformVariants">
+                <div class="variant-group active" data-provider="claude">
+                  <button class="variant-tab active" data-platform="claude-code">
+                    <i class="ph ph-terminal"></i> Code
+                  </button>
+                  <button class="variant-tab" data-platform="claude-desktop">
+                    <i class="ph ph-desktop"></i> Desktop
+                  </button>
+                  <button class="variant-tab" data-platform="claude-web">
+                    <i class="ph ph-globe"></i> Web
+                    <span class="oauth-badge">OAuth</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Platform Notes -->
               <div class="platform-notes">
                 <div class="platform-note active" data-platform="claude-code">
-                  <i class="ph ph-info"></i>
-                  Add to <code>.mcp.json</code> in your project root, or run <code>claude mcp add --transport http jobtread URL</code> from terminal.
+                  <div class="platform-note-content">
+                    <p>Add to <code>.mcp.json</code> in your project root, or run from terminal:</p>
+                    <code class="platform-note-cmd">claude mcp add --transport http jobtread URL</code>
+                  </div>
                 </div>
                 <div class="platform-note" data-platform="claude-desktop">
-                  <i class="ph ph-info"></i>
-                  Uses <a href="https://www.npmjs.com/package/mcp-remote" target="_blank">mcp-remote</a> (auto-installed via npx). Paste into Claude Desktop &rarr; Settings &rarr; Developer &rarr; Edit Config.
+                  <div class="platform-note-content">
+                    <p>Uses <a href="https://www.npmjs.com/package/mcp-remote" target="_blank">mcp-remote</a> (auto-installed via npx).</p>
+                    <p>Paste config into Settings &rarr; Developer &rarr; Edit Config.</p>
+                  </div>
+                </div>
+                <div class="platform-note" data-platform="claude-web">
+                  <div class="platform-note-content platform-note-oauth">
+                    <div class="platform-note-steps">
+                      <span class="note-step"><span class="note-step-num">1</span> Settings &rarr; Connectors &rarr; Add custom connector</span>
+                      <span class="note-step"><span class="note-step-num">2</span> Paste the server URL below</span>
+                      <span class="note-step"><span class="note-step-num">3</span> Click <strong>Connect</strong> to open the Power Tools auth page</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="platform-note" data-platform="chatgpt">
-                  <i class="ph ph-info"></i>
-                  Go to ChatGPT Settings &rarr; Connected apps &rarr; Add MCP server. Uses SSE transport with <code>/sse/</code> endpoint.
+                  <div class="platform-note-content platform-note-oauth">
+                    <div class="platform-note-steps">
+                      <span class="note-step"><span class="note-step-num">1</span> Settings &rarr; Apps &rarr; Advanced settings &rarr; Enable developer mode</span>
+                      <span class="note-step"><span class="note-step-num">2</span> Create app &rarr; Paste the server URL below</span>
+                      <span class="note-step"><span class="note-step-num">3</span> Click <strong>Connect</strong> to authorize with your keys</span>
+                    </div>
+                  </div>
                 </div>
                 <div class="platform-note" data-platform="gemini">
-                  <i class="ph ph-info"></i>
-                  Add to <code>~/.gemini/settings.json</code> under <code>mcpServers</code>. Uses <code>httpUrl</code> key per Gemini CLI docs.
+                  <div class="platform-note-content">
+                    <p>Add to <code>~/.gemini/settings.json</code> under <code>mcpServers</code>.</p>
+                    <p>Uses the <code>httpUrl</code> key per Gemini CLI docs.</p>
+                  </div>
                 </div>
               </div>
 
@@ -814,23 +854,11 @@
                 <button id="copyMcpConfigBtn" class="btn-primary mcp-config-btn" disabled>
                   <i class="ph ph-copy"></i> Copy Config
                 </button>
-                <p class="mcp-hint" style="justify-content: center; margin-top: 6px;">
-                  <i class="ph ph-info"></i> Both keys must be configured to copy
+                <p class="mcp-config-hint" id="mcpConfigHint">
+                  <i class="ph ph-info"></i> <span id="mcpConfigHintText">Both keys must be configured to copy</span>
                 </p>
               </div>
             </div>
-          </div>
-
-          <!-- Server URL -->
-          <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-link"></i> Server URL</h3>
-            <div class="mcp-url-box">
-              <code id="mcpServerUrl">https://jobtread-mcp-server.king0light-ai.workers.dev/mcp</code>
-              <button class="copy-btn" id="copyMcpUrl" title="Copy URL">
-                <i class="ph ph-copy"></i>
-              </button>
-            </div>
-            <p class="mcp-hint">Auth header: <code>Authorization: Bearer LICENSE_KEY:GRANT_KEY</code></p>
           </div>
 
           </div><!-- /mcpSetupSections -->

@@ -1956,42 +1956,7 @@ body.dark-theme .api-features .feature-item {
   letter-spacing: 0.04em;
 }
 
-.platform-tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.platform-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  background: var(--bg-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--duration) var(--ease);
-}
-
-.platform-tab:hover {
-  background: var(--bg-secondary);
-  border-color: var(--border-default);
-}
-
-.platform-tab.active {
-  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
-  color: white;
-  border-color: transparent;
-  box-shadow: 0 2px 8px var(--brand-orange-glow);
-}
-
-.platform-tab .platform-icon {
-  font-size: 12px;
-}
+/* Old platform-tab rules removed — see "Platform Tabs — AI Provider level" section below */
 
 /* Config Panel */
 .ai-config-panel {
@@ -2145,10 +2110,6 @@ body.dark-theme .btn-test-connection {
 
 body.dark-theme .btn-test-connection:hover {
   background: rgba(232, 90, 28, 0.25);
-}
-
-body.dark-theme .platform-tab.active {
-  background: linear-gradient(135deg, var(--brand-orange) 0%, var(--brand-orange-dark) 100%);
 }
 
 body.dark-theme .btn-copy {
@@ -2651,6 +2612,49 @@ body.dark-theme .mcp-guide-card:hover {
   color: #ef4444;
 }
 
+.credential-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.credential-copy-btn i {
+  font-size: 11px;
+}
+
+.credential-copy-btn:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+
+.credential-copy-btn.copied {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+body.dark-theme .credential-copy-btn {
+  border-color: var(--steel-700);
+  color: var(--steel-500);
+}
+
+body.dark-theme .credential-copy-btn:hover {
+  background: var(--steel-700);
+  border-color: var(--steel-600);
+  color: var(--steel-300);
+}
+
 /* Grant Key Update Section */
 .grant-key-update {
   background: var(--bg-tertiary);
@@ -2736,113 +2740,235 @@ body.dark-theme .mcp-guide-card:hover {
   background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px;
+  padding: 14px;
 }
 
 .mcp-config-title {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   margin: 0 0 10px 0;
 }
 
-/* Platform Tabs */
+/* Platform Tabs — AI Provider level */
 .platform-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-bottom: 0;
 }
 
 .platform-tab {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 4px;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 6px;
   background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s ease;
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .platform-tab i {
-  font-size: 16px;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
-.platform-tab span {
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+.platform-tab > span {
+  font-weight: 600;
+  line-height: 1;
 }
 
 .platform-tab:hover {
-  background: var(--bg-hover);
+  background: var(--bg-secondary);
   border-color: var(--border-default);
 }
 
 .platform-tab.active {
-  background: var(--accent-subtle);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+  background: rgba(232, 90, 28, 0.08);
+  border-color: var(--brand-orange);
+  color: var(--brand-orange);
+}
+
+/* Variant Tabs — sub-level (Code / Desktop / Web) */
+.platform-variants {
+  margin-bottom: 10px;
+}
+
+.variant-group {
+  display: none;
+  gap: 4px;
+  padding: 6px 0 0 0;
+}
+
+.variant-group.active {
+  display: flex;
+}
+
+.variant-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.variant-tab i {
+  font-size: 11px;
+}
+
+.variant-tab:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+
+.variant-tab.active {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: white;
+}
+
+body.dark-theme .variant-tab {
+  border-color: var(--steel-700);
+  color: var(--steel-500);
+}
+
+body.dark-theme .variant-tab:hover {
+  border-color: var(--steel-600);
+  color: var(--steel-300);
+}
+
+body.dark-theme .variant-tab.active {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  color: white;
+}
+
+/* OAuth Badge — inline pill */
+.oauth-badge {
+  font-size: 7px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: rgba(74, 222, 128, 0.12);
+  color: #34d399;
+  padding: 2px 5px;
+  border-radius: 3px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.platform-tab.active .oauth-badge {
+  background: rgba(74, 222, 128, 0.18);
+  color: #34d399;
 }
 
 /* Platform Notes */
 .platform-notes {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .platform-note {
   display: none;
-  align-items: flex-start;
-  gap: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .platform-note.active {
-  display: flex;
+  display: block;
 }
 
-.platform-note i {
-  font-size: 12px;
-  flex-shrink: 0;
-  margin-top: 1px;
+.platform-note-content p {
+  margin: 0 0 4px 0;
 }
 
-.platform-note i.ph-warning {
-  color: #f59e0b;
-}
-
-.platform-note i.ph-info {
-  color: var(--accent-primary);
+.platform-note-content p:last-child {
+  margin-bottom: 0;
 }
 
 .platform-note code {
-  background: var(--steel-200);
-  padding: 1px 4px;
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 5px;
   border-radius: 3px;
-  font-size: 9px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* Command-style code block in notes */
+.platform-note-cmd {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-family: 'SF Mono', Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: var(--text-primary);
+  word-break: break-all;
+  line-height: 1.4;
 }
 
 .platform-note a {
-  color: var(--accent-primary);
-  text-decoration: underline;
+  color: var(--brand-orange);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 .platform-note a:hover {
-  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+/* OAuth note steps */
+.platform-note-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.note-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.note-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brand-orange);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 /* MCP Config Actions */
@@ -2858,7 +2984,7 @@ body.dark-theme .mcp-guide-card:hover {
   padding: 10px 20px;
   font-size: 12px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .mcp-config-btn:disabled {
@@ -2875,8 +3001,20 @@ body.dark-theme .mcp-guide-card:hover {
   border-color: #22c55e !important;
 }
 
-.mcp-config-actions .mcp-hint {
+.mcp-config-hint {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  line-height: 1.3;
+}
+
+.mcp-config-hint i {
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
 /* MCP Credentials Dark Theme */
@@ -2909,18 +3047,36 @@ body.dark-theme .platform-tab:hover {
 }
 
 body.dark-theme .platform-tab.active {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: var(--accent-primary);
-  color: var(--accent-primary);
+  background: rgba(232, 90, 28, 0.12);
+  border-color: var(--brand-orange);
+  color: var(--brand-orange-light);
+}
+
+body.dark-theme .oauth-badge {
+  background: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+body.dark-theme .platform-tab.active .oauth-badge {
+  background: rgba(74, 222, 128, 0.18);
+  color: #4ade80;
 }
 
 body.dark-theme .platform-note {
   background: var(--steel-900);
+  border-color: var(--steel-700);
 }
 
-body.dark-theme .platform-note code {
-  background: var(--steel-700);
+body.dark-theme .platform-note code,
+body.dark-theme .platform-note-cmd {
+  background: var(--steel-800);
+  border-color: var(--steel-700);
   color: var(--steel-300);
+}
+
+body.dark-theme .note-step-num {
+  background: var(--brand-orange);
+  color: white;
 }
 
 /* MCP Upgrade CTA */
