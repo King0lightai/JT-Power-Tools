@@ -40,11 +40,54 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.8 — OAuth & Multi-Field Filter -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.8</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">March 3, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — OAuth 2.1 Support</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">MCP server now supports OAuth 2.1 authorization flow for platforms that require it (e.g., Claude.ai Remote MCP)</li>
+                            <li class="sub-item">Built-in authorization page lets you enter your License Key and Grant Key directly in the browser during the OAuth handshake</li>
+                            <li class="sub-item">Tokens are issued and validated seamlessly — no manual Bearer header setup needed for OAuth-connected clients</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter — Multi-Field Filtering</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Filter jobs by multiple custom fields simultaneously with AND logic (e.g., PM = "John" AND Job Type = "Renovation")</li>
+                            <li class="sub-item">Active filters display as chip tags — click the chip text to edit that field's values, click × to remove it</li>
+                            <li class="sub-item">Fields already in use are hidden from the dropdown to prevent duplicates</li>
+                            <li class="sub-item">Multi-field saved filters are fully supported with backward compatibility for existing single-field saves</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Custom Field Filter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed saved filters dropdown not appearing — moved to a dedicated dropdown above the field selector for reliable access</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.7 — MCP Server Beta -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.7</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">March 1, 2026</span>
             </div>
 

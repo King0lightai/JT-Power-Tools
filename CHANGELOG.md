@@ -28,7 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Platform notes now use numbered steps for OAuth platforms and command blocks for CLI platforms
 - Updated ChatGPT and Claude Web setup instructions in docs site (`docs/mcp/chatgpt.html`)
 
+### Added
+
+#### Custom Field Filter
+- **Multi-field filtering** — filter jobs by multiple custom fields simultaneously with AND logic (e.g., PM = "John" AND Job Type = "Renovation"). Active filters appear as clickable chips between the field dropdown and values area. Click a chip to edit its values, click × to remove it. Fields already in use are hidden from the dropdown. Saved filters support both single and multi-field formats with backward compatibility.
+
 ### Fixed
+
+#### Custom Field Filter
+- **Added dedicated Saved Filters dropdown** — saved filters were previously hidden inside the job status dropdown as an optgroup, making them undiscoverable. Now appears as its own dropdown between the status and field selects, visible whenever saved filters exist.
 
 #### MCP Server
 - **Fixed MCP endpoint failing for Claude.ai and other OAuth clients** — replaced `createMcpHandler` from `agents/mcp` (which enforced strict `Accept: text/event-stream` header and returned SSE streams) with a direct Streamable HTTP handler that returns JSON responses. This fixes the "McpServerError: temporarily unavailable" error when connecting from Claude.ai.

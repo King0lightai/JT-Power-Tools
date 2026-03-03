@@ -1,14 +1,16 @@
 // JobTread Custom Field Filter Feature
 // API-powered filtering of jobs by custom field values in the Job Switcher sidebar
-// Supports multi-select filtering (OR logic) and saved filters shared across company
-// Requires Power User tier and API configuration (Worker or Direct)
+// Supports multi-field AND filtering with multi-value OR within each field
+// Saved filters shared across company. Requires Power User tier and API configuration.
 
 const CustomFieldFilterFeature = (() => {
   let isActive = false;
   let sidebarObserver = null;
   let customFieldDefinitions = null;
   let filterContainer = null;
-  let activeFilters = {};
+  let filterFields = [];           // Array of { fieldId, fieldName, values: [] }
+  let currentEditFieldId = null;   // Which field's values are currently shown in the editor
+  let activeJobStatus = 'all';     // 'all', 'open', or 'closed'
   let savedFilters = [];
   let activeSavedFilterId = null;
   let dropdownOpen = false;
@@ -92,7 +94,9 @@ const CustomFieldFilterFeature = (() => {
     // Reset state
     customFieldDefinitions = null;
     filterContainer = null;
-    activeFilters = {};
+    filterFields = [];
+    currentEditFieldId = null;
+    activeJobStatus = 'all';
     savedFilters = [];
     activeSavedFilterId = null;
     dropdownOpen = false;
@@ -206,11 +210,17 @@ const CustomFieldFilterFeature = (() => {
           <option value="closed">Closed Jobs</option>
         </select>
       </div>
+      <div id="jt-cf-saved-row" class="flex items-center gap-2 mb-2" style="display: none;">
+        <select id="jt-cf-saved-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0;">
+          <option value="">Saved Filters...</option>
+        </select>
+      </div>
       <div class="flex items-center gap-2">
         <select id="jt-cf-field-select" class="rounded-sm border p-1 text-sm flex-1 appearance-none bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition" style="min-width: 0;">
           <option value="">Filter by Custom Field...</option>
         </select>
       </div>
+      <div id="jt-cf-chips" class="flex flex-wrap gap-1 mt-2" style="display: none;"></div>
       <div id="jt-cf-values-row" class="flex items-center gap-2 mt-2" style="display: none;">
         <div id="jt-cf-value-dropdown" class="relative flex-1" style="min-width: 0;">
           <button id="jt-cf-value-trigger" class="rounded-sm border p-1 text-sm w-full text-left bg-white hover:bg-gray-50 focus:border-cyan-500 focus:shadow-sm transition flex items-center justify-between" type="button">
@@ -359,7 +369,7 @@ const CustomFieldFilterFeature = (() => {
   }
 
   /**
-   * Handle checkbox change — update selected values and trigger filter
+   * Handle checkbox change — update selected values for current field and trigger filter
    */
   function onValueCheckboxChange() {
     const selected = getSelectedValues();
@@ -368,24 +378,209 @@ const CustomFieldFilterFeature = (() => {
     // If user manually changes values, clear saved filter tracking
     if (activeSavedFilterId) {
       activeSavedFilterId = null;
-      // Reset status dropdown to the current job status
-      const statusSelect = document.getElementById('jt-cf-status-select');
-      if (statusSelect) statusSelect.value = activeFilters.jobStatus || 'all';
+      const savedSelect = document.getElementById('jt-cf-saved-select');
+      if (savedSelect) savedSelect.value = '';
     }
+
+    if (!currentEditFieldId) return;
+
+    // Find the field select option to get the field name
+    const fieldSelect = document.getElementById('jt-cf-field-select');
+    const fieldOption = fieldSelect ? Array.from(fieldSelect.options).find(o => o.value === currentEditFieldId) : null;
+    const fieldName = fieldOption ? fieldOption.textContent : '';
 
     const clearBtn = document.getElementById('jt-cf-clear-btn');
 
     if (selected.length > 0) {
-      activeFilters.values = selected;
+      // Add or update this field in filterFields
+      const existing = filterFields.find(f => f.fieldId === currentEditFieldId);
+      if (existing) {
+        existing.values = selected;
+      } else {
+        filterFields.push({ fieldId: currentEditFieldId, fieldName, values: selected });
+      }
       if (clearBtn) clearBtn.style.display = 'block';
+      renderChips();
+      updateFieldSelectOptions();
       updateSaveDeleteVisibility();
       applyFilter();
     } else {
-      delete activeFilters.values;
-      if (clearBtn) clearBtn.style.display = 'none';
+      // Remove this field from filterFields
+      filterFields = filterFields.filter(f => f.fieldId !== currentEditFieldId);
+      renderChips();
+      updateFieldSelectOptions();
       updateSaveDeleteVisibility();
+
+      if (filterFields.length > 0) {
+        // Still have other field filters — re-apply
+        applyFilter();
+      } else {
+        if (clearBtn) clearBtn.style.display = 'none';
+        clearFilter();
+      }
+    }
+  }
+
+  /**
+   * Render filter chips for each active field filter
+   */
+  function renderChips() {
+    const container = document.getElementById('jt-cf-chips');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (filterFields.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'flex';
+
+    filterFields.forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'jt-cf-chip';
+      chip.dataset.fieldId = f.fieldId;
+      chip.style.cssText = 'display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px 2px 8px; border-radius: 4px; font-size: 11px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; max-width: 180px; cursor: pointer;';
+
+      const valuesText = f.values.length <= 2
+        ? f.values.join(', ')
+        : `${f.values.length} values`;
+
+      const labelSpan = document.createElement('span');
+      labelSpan.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+      labelSpan.textContent = `${f.fieldName}: ${valuesText}`;
+      labelSpan.title = `${f.fieldName}: ${f.values.join(', ')}`;
+
+      // Click label to edit this field
+      labelSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editFieldFilter(f.fieldId);
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '\u00d7';
+      removeBtn.title = `Remove ${f.fieldName} filter`;
+      removeBtn.style.cssText = 'background: none; border: none; color: #0369a1; font-size: 14px; cursor: pointer; padding: 0 2px; line-height: 1; font-weight: bold; flex-shrink: 0;';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFieldFilter(f.fieldId);
+      });
+
+      chip.appendChild(labelSpan);
+      chip.appendChild(removeBtn);
+      container.appendChild(chip);
+    });
+  }
+
+  /**
+   * Edit an existing field filter — switch the editor to show that field's values
+   */
+  async function editFieldFilter(fieldId) {
+    const fieldSelect = document.getElementById('jt-cf-field-select');
+    const valuesRow = document.getElementById('jt-cf-values-row');
+    if (!fieldSelect) return;
+
+    const ff = filterFields.find(f => f.fieldId === fieldId);
+    if (!ff) return;
+
+    currentEditFieldId = fieldId;
+
+    // Temporarily show this field's option in the select (it may be hidden)
+    const allOptions = fieldSelect.querySelectorAll('option');
+    allOptions.forEach(opt => {
+      if (opt.value === fieldId) opt.style.display = '';
+    });
+    fieldSelect.value = fieldId;
+    // Re-hide used fields after setting value
+    updateFieldSelectOptions();
+
+    if (valuesRow) valuesRow.style.display = 'flex';
+
+    // Load values for this field
+    const fieldOption = Array.from(fieldSelect.options).find(o => o.value === fieldId);
+    if (!fieldOption) return;
+
+    const fieldOptions = JSON.parse(fieldOption.dataset.options || '[]');
+
+    if (fieldOptions && fieldOptions.length > 0) {
+      populateValueCheckboxes(fieldOptions);
+    } else {
+      try {
+        let values;
+        if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
+          values = await JobTreadProService.getCustomFieldValues(fieldId, ff.fieldName);
+        } else if (typeof JobTreadAPI !== 'undefined') {
+          values = await JobTreadAPI.getCustomFieldValues(fieldId);
+        } else {
+          values = [];
+        }
+        populateValueCheckboxes(values);
+      } catch (error) {
+        console.error('CustomFieldFilter: Failed to load values for edit:', error);
+        populateValueCheckboxes([]);
+      }
+    }
+
+    // Pre-check existing values
+    setCheckedValues(ff.values);
+    updateSaveDeleteVisibility();
+  }
+
+  /**
+   * Remove a field filter by fieldId
+   */
+  async function removeFieldFilter(fieldId) {
+    filterFields = filterFields.filter(f => f.fieldId !== fieldId);
+
+    // If we were editing this field, close the editor
+    if (currentEditFieldId === fieldId) {
+      currentEditFieldId = null;
+      const fieldSelect = document.getElementById('jt-cf-field-select');
+      const valuesRow = document.getElementById('jt-cf-values-row');
+      if (fieldSelect) fieldSelect.value = '';
+      if (valuesRow) valuesRow.style.display = 'none';
+      closeValueDropdown();
+    }
+
+    // Clear saved filter tracking
+    activeSavedFilterId = null;
+    const savedSelect = document.getElementById('jt-cf-saved-select');
+    if (savedSelect) savedSelect.value = '';
+
+    renderChips();
+    updateFieldSelectOptions();
+    updateSaveDeleteVisibility();
+
+    const clearBtn = document.getElementById('jt-cf-clear-btn');
+
+    if (filterFields.length > 0) {
+      if (clearBtn) clearBtn.style.display = 'block';
+      await applyFilter();
+    } else {
+      if (clearBtn) clearBtn.style.display = 'none';
       clearFilter();
     }
+  }
+
+  /**
+   * Hide fields that are already in filterFields from the dropdown
+   * (except the currently editing field)
+   */
+  function updateFieldSelectOptions() {
+    const fieldSelect = document.getElementById('jt-cf-field-select');
+    if (!fieldSelect) return;
+
+    const usedFieldIds = new Set(filterFields.map(f => f.fieldId));
+
+    Array.from(fieldSelect.options).forEach(opt => {
+      if (!opt.value) return; // Skip placeholder
+      if (usedFieldIds.has(opt.value) && opt.value !== currentEditFieldId) {
+        opt.style.display = 'none';
+      } else {
+        opt.style.display = '';
+      }
+    });
   }
 
   /**
@@ -494,31 +689,32 @@ const CustomFieldFilterFeature = (() => {
   }
 
   /**
-   * Render saved filters as options in the status dropdown
+   * Render saved filters in the dedicated saved filters dropdown
    */
   function renderSavedFiltersInDropdown() {
-    const statusSelect = document.getElementById('jt-cf-status-select');
-    if (!statusSelect) return;
+    const savedRow = document.getElementById('jt-cf-saved-row');
+    const savedSelect = document.getElementById('jt-cf-saved-select');
+    if (!savedSelect || !savedRow) return;
 
-    // Remove existing saved filter optgroup if present
-    const existingGroup = statusSelect.querySelector('optgroup[label="Saved Filters"]');
-    if (existingGroup) existingGroup.remove();
+    // Clear existing options (keep placeholder)
+    savedSelect.innerHTML = '<option value="">Saved Filters...</option>';
 
-    if (savedFilters.length === 0) return;
+    // Hide row if no saved filters
+    if (savedFilters.length === 0) {
+      savedRow.style.display = 'none';
+      return;
+    }
 
-    // Create optgroup for saved filters
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = 'Saved Filters';
-
+    // Populate options
     savedFilters.forEach(filter => {
       const option = document.createElement('option');
-      option.value = `saved:${filter.id}`;
+      option.value = filter.id;
       option.textContent = filter.name;
-      option.dataset.filterId = filter.id;
-      optgroup.appendChild(option);
+      savedSelect.appendChild(option);
     });
 
-    statusSelect.appendChild(optgroup);
+    // Show the row
+    savedRow.style.display = 'flex';
   }
 
   /**
@@ -534,63 +730,90 @@ const CustomFieldFilterFeature = (() => {
     activeSavedFilterId = filter.id;
 
     // Set job status from saved filter
-    activeFilters.jobStatus = filter.jobStatus || 'all';
+    activeJobStatus = filter.jobStatus || 'all';
+    const statusSelect = document.getElementById('jt-cf-status-select');
+    if (statusSelect) statusSelect.value = activeJobStatus;
 
-    // Set field — find by field ID or name
-    let fieldOption = null;
-    for (const opt of fieldSelect.options) {
-      if (opt.value === filter.fieldId || opt.textContent === filter.fieldName) {
-        fieldOption = opt;
-        break;
-      }
-    }
-
-    if (!fieldOption) {
-      console.warn('CustomFieldFilter: Saved filter field not found:', filter.fieldName);
-      return;
-    }
-
-    fieldSelect.value = fieldOption.value;
-    activeFilters.fieldName = filter.fieldName;
-    activeFilters.fieldId = filter.fieldId;
-
-    // Show values row and load values
-    if (valuesRow) valuesRow.style.display = 'flex';
-
-    // Load values for this field
-    const fieldOptions = JSON.parse(fieldOption.dataset.options || '[]');
-    const fieldName = fieldOption.textContent;
-
-    if (fieldOptions && fieldOptions.length > 0) {
-      populateValueCheckboxes(fieldOptions);
-    } else {
-      try {
-        let values;
-        if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
-          values = await JobTreadProService.getCustomFieldValues(filter.fieldId, fieldName);
-        } else if (typeof JobTreadAPI !== 'undefined') {
-          values = await JobTreadAPI.getCustomFieldValues(filter.fieldId);
-        } else {
-          values = [];
-        }
-        populateValueCheckboxes(values);
-      } catch (error) {
-        console.error('CustomFieldFilter: Failed to load values for saved filter:', error);
-        populateValueCheckboxes([]);
-      }
-    }
-
-    // Check the saved values
+    // Detect format: multi-field vs legacy single-field
     const filterValues = filter.filterValues || [];
-    setCheckedValues(filterValues);
+    const isMultiField = filter.fieldName === '__multi__' ||
+      (filterValues.length > 0 && typeof filterValues[0] === 'object');
 
-    // Apply
-    activeFilters.values = filterValues;
+    if (isMultiField) {
+      // Multi-field format: filterValues is array of { fieldId, fieldName, values }
+      filterFields = filterValues.map(f => ({
+        fieldId: f.fieldId || '',
+        fieldName: f.fieldName,
+        values: f.values || []
+      }));
+    } else {
+      // Legacy single-field format
+      filterFields = [{
+        fieldId: filter.fieldId || '',
+        fieldName: filter.fieldName,
+        values: filterValues
+      }];
+    }
+
+    // Render chips and update dropdown visibility
+    renderChips();
+    updateFieldSelectOptions();
+
+    // Show the last field in the editor (or the only one for single-field)
+    const lastField = filterFields[filterFields.length - 1];
+    if (lastField) {
+      currentEditFieldId = lastField.fieldId;
+
+      // Find field option
+      let fieldOption = null;
+      for (const opt of fieldSelect.options) {
+        if (opt.value === lastField.fieldId || opt.textContent === lastField.fieldName) {
+          fieldOption = opt;
+          break;
+        }
+      }
+
+      if (fieldOption) {
+        // Temporarily show this option
+        fieldOption.style.display = '';
+        fieldSelect.value = fieldOption.value;
+        updateFieldSelectOptions();
+
+        if (valuesRow) valuesRow.style.display = 'flex';
+
+        // Load values for this field
+        const fieldOptions = JSON.parse(fieldOption.dataset.options || '[]');
+        const fieldName = fieldOption.textContent;
+
+        if (fieldOptions && fieldOptions.length > 0) {
+          populateValueCheckboxes(fieldOptions);
+        } else {
+          try {
+            let values;
+            if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
+              values = await JobTreadProService.getCustomFieldValues(lastField.fieldId, fieldName);
+            } else if (typeof JobTreadAPI !== 'undefined') {
+              values = await JobTreadAPI.getCustomFieldValues(lastField.fieldId);
+            } else {
+              values = [];
+            }
+            populateValueCheckboxes(values);
+          } catch (error) {
+            console.error('CustomFieldFilter: Failed to load values for saved filter:', error);
+            populateValueCheckboxes([]);
+          }
+        }
+
+        // Pre-check the saved values
+        setCheckedValues(lastField.values);
+      }
+    }
+
     const clearBtn = document.getElementById('jt-cf-clear-btn');
-    if (clearBtn) clearBtn.style.display = filterValues.length > 0 ? 'block' : 'none';
+    if (clearBtn) clearBtn.style.display = filterFields.length > 0 ? 'block' : 'none';
     updateSaveDeleteVisibility();
 
-    if (filterValues.length > 0) {
+    if (filterFields.length > 0) {
       await applyFilter();
     }
   }
@@ -599,20 +822,35 @@ const CustomFieldFilterFeature = (() => {
    * Save the current filter configuration
    */
   async function saveCurrentFilter(name) {
-    if (!name || !activeFilters.fieldName || !activeFilters.values || activeFilters.values.length === 0) {
+    if (!name || filterFields.length === 0) {
       return;
     }
 
     const isLoggedIn = typeof AccountService !== 'undefined' && AccountService.isLoggedIn();
     if (!isLoggedIn) return;
 
-    const filter = {
-      name: name.trim().substring(0, 50),
-      fieldId: activeFilters.fieldId || '',
-      fieldName: activeFilters.fieldName,
-      filterValues: activeFilters.values,
-      jobStatus: activeFilters.jobStatus || 'all'
-    };
+    let filter;
+
+    if (filterFields.length === 1) {
+      // Single-field: use legacy format for backward compatibility
+      const ff = filterFields[0];
+      filter = {
+        name: name.trim().substring(0, 50),
+        fieldId: ff.fieldId || '',
+        fieldName: ff.fieldName,
+        filterValues: ff.values,
+        jobStatus: activeJobStatus || 'all'
+      };
+    } else {
+      // Multi-field: store fields array in filterValues with __multi__ marker
+      filter = {
+        name: name.trim().substring(0, 50),
+        fieldId: '',
+        fieldName: '__multi__',
+        filterValues: filterFields.map(f => ({ fieldId: f.fieldId, fieldName: f.fieldName, values: f.values })),
+        jobStatus: activeJobStatus || 'all'
+      };
+    }
 
     try {
       const result = await AccountService.saveSavedFilter(filter);
@@ -620,11 +858,11 @@ const CustomFieldFilterFeature = (() => {
         console.log('CustomFieldFilter: Filter saved:', filter.name);
         await loadSavedFilters();
 
-        // Select the newly saved filter in the dropdown
+        // Select the newly saved filter in the dedicated dropdown
         if (result.data && result.data.id) {
           activeSavedFilterId = result.data.id;
-          const statusSelect = document.getElementById('jt-cf-status-select');
-          if (statusSelect) statusSelect.value = `saved:${result.data.id}`;
+          const savedSelect = document.getElementById('jt-cf-saved-select');
+          if (savedSelect) savedSelect.value = result.data.id;
           updateSaveDeleteVisibility();
         }
       } else {
@@ -664,7 +902,7 @@ const CustomFieldFilterFeature = (() => {
     const deleteBtn = document.getElementById('jt-cf-delete-filter-btn');
 
     const isLoggedIn = typeof AccountService !== 'undefined' && AccountService.isLoggedIn();
-    const hasFilter = activeFilters.fieldName && activeFilters.values && activeFilters.values.length > 0;
+    const hasFilter = filterFields.length > 0;
 
     // Show save button when there's an active filter and no saved filter is loaded
     if (saveBtn) {
@@ -695,27 +933,18 @@ const CustomFieldFilterFeature = (() => {
     const saveCancelBtn = document.getElementById('jt-cf-save-cancel');
     const saveNameInput = document.getElementById('jt-cf-save-name');
 
-    // Job status / saved filter select
+    // Job status select
     if (statusSelect) {
       statusSelect.addEventListener('change', async (e) => {
-        const value = e.target.value;
-
-        // Check if a saved filter was selected
-        if (value.startsWith('saved:')) {
-          const filterId = value.replace('saved:', '');
-          const filter = savedFilters.find(f => f.id === filterId);
-          if (filter) {
-            await loadSavedFilter(filter);
-          }
-          return;
-        }
-
-        // Regular status filter (all/open/closed)
         activeSavedFilterId = null;
-        activeFilters.jobStatus = value;
+        activeJobStatus = e.target.value;
 
-        // If we have a custom field filter active, re-apply with new status
-        if (activeFilters.fieldName && activeFilters.values && activeFilters.values.length > 0) {
+        // Reset saved filter dropdown when manually changing status
+        const savedSelect = document.getElementById('jt-cf-saved-select');
+        if (savedSelect) savedSelect.value = '';
+
+        // If we have custom field filters active, re-apply with new status
+        if (filterFields.length > 0) {
           await applyFilter();
         } else {
           // Just filter by status alone
@@ -723,6 +952,20 @@ const CustomFieldFilterFeature = (() => {
         }
 
         updateSaveDeleteVisibility();
+      });
+    }
+
+    // Saved filter select
+    const savedSelect = document.getElementById('jt-cf-saved-select');
+    if (savedSelect) {
+      savedSelect.addEventListener('change', async (e) => {
+        const filterId = e.target.value;
+        if (!filterId) return;
+
+        const filter = savedFilters.find(f => f.id === filterId);
+        if (filter) {
+          await loadSavedFilter(filter);
+        }
       });
     }
 
@@ -735,25 +978,26 @@ const CustomFieldFilterFeature = (() => {
 
         // Clear saved filter tracking when manually changing fields
         activeSavedFilterId = null;
+        const savedSel = document.getElementById('jt-cf-saved-select');
+        if (savedSel) savedSel.value = '';
 
         if (!fieldId) {
+          // Placeholder selected — hide editor but keep existing filters
+          currentEditFieldId = null;
           if (valuesRow) valuesRow.style.display = 'none';
-          if (clearBtn) clearBtn.style.display = 'none';
           closeValueDropdown();
-          clearFilter();
+          updateSaveDeleteVisibility();
           return;
         }
+
+        // Set the current edit field
+        currentEditFieldId = fieldId;
 
         // Show values row
         if (valuesRow) valuesRow.style.display = 'flex';
 
         const fieldOptions = JSON.parse(selectedOption.dataset.options || '[]');
         const fieldName = selectedOption.textContent;
-
-        // Store the selected field info
-        activeFilters.fieldName = fieldName;
-        activeFilters.fieldId = fieldId;
-        delete activeFilters.values;
 
         // Update label
         const label = document.getElementById('jt-cf-value-label');
@@ -765,7 +1009,6 @@ const CustomFieldFilterFeature = (() => {
         // Populate checkboxes
         if (fieldOptions && fieldOptions.length > 0) {
           populateValueCheckboxes(fieldOptions);
-          updateValueLabel([]);
         } else {
           try {
             let values;
@@ -778,7 +1021,6 @@ const CustomFieldFilterFeature = (() => {
             }
 
             populateValueCheckboxes(values);
-            updateValueLabel([]);
 
             if (values.length === 0) {
               const list = document.getElementById('jt-cf-value-list');
@@ -791,7 +1033,15 @@ const CustomFieldFilterFeature = (() => {
           }
         }
 
-        if (clearBtn) clearBtn.style.display = 'none';
+        // Pre-check values if this field already has a filter
+        const existingFF = filterFields.find(f => f.fieldId === fieldId);
+        if (existingFF) {
+          setCheckedValues(existingFF.values);
+        } else {
+          updateValueLabel([]);
+        }
+
+        if (clearBtn) clearBtn.style.display = filterFields.length > 0 ? 'block' : 'none';
         updateSaveDeleteVisibility();
       });
     }
@@ -822,9 +1072,13 @@ const CustomFieldFilterFeature = (() => {
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         activeSavedFilterId = null;
+        filterFields = [];
+        currentEditFieldId = null;
+        renderChips();
+        updateFieldSelectOptions();
         clearFilter();
         if (fieldSelect) fieldSelect.value = '';
-        if (statusSelect) statusSelect.value = activeFilters.jobStatus || 'all';
+        if (statusSelect) statusSelect.value = activeJobStatus;
         const valuesRow = document.getElementById('jt-cf-values-row');
         if (valuesRow) valuesRow.style.display = 'none';
         closeValueDropdown();
@@ -859,7 +1113,11 @@ const CustomFieldFilterFeature = (() => {
         // Reset status dropdown to 'all'
         if (statusSelect) statusSelect.value = 'all';
 
-        // Clear the filter UI
+        // Clear all field filters
+        filterFields = [];
+        currentEditFieldId = null;
+        renderChips();
+        updateFieldSelectOptions();
         clearFilter();
         if (fieldSelect) fieldSelect.value = '';
         const valuesRow = document.getElementById('jt-cf-values-row');
@@ -925,7 +1183,7 @@ const CustomFieldFilterFeature = (() => {
    */
   async function applyStatusFilter() {
     const statusDiv = document.getElementById('jt-cf-status');
-    const jobStatus = activeFilters.jobStatus || 'all';
+    const jobStatus = activeJobStatus || 'all';
 
     // If status is 'all' (default), just restore original display
     if (jobStatus === 'all') {
@@ -973,16 +1231,16 @@ const CustomFieldFilterFeature = (() => {
   }
 
   /**
-   * Apply the current filter (custom field multi-value + status)
+   * Apply the current filter (multi-field AND with multi-value OR per field + status)
    */
   async function applyFilter() {
     const statusDiv = document.getElementById('jt-cf-status');
 
-    if (!activeFilters.fieldName || !activeFilters.values || activeFilters.values.length === 0) {
+    if (filterFields.length === 0) {
       return;
     }
 
-    const jobStatus = activeFilters.jobStatus || 'all';
+    const jobStatus = activeJobStatus || 'all';
 
     if (statusDiv) {
       statusDiv.style.display = 'block';
@@ -993,24 +1251,35 @@ const CustomFieldFilterFeature = (() => {
     try {
       let jobs;
 
-      // Try Pro Service first (uses Cloudflare Worker)
+      // Build filters array from all active field filters
+      const filters = filterFields.map(f => ({
+        fieldName: f.fieldName,
+        values: f.values
+      }));
+
+      // Try Pro Service first (uses Cloudflare Worker — supports multi-field AND)
       if (window.JobTreadProService && await JobTreadProService.isConfigured()) {
-        const filters = [{
-          fieldName: activeFilters.fieldName,
-          values: activeFilters.values
-        }];
         const result = await JobTreadProService.getFilteredJobs(filters, jobStatus);
         jobs = result.jobs || [];
-      } else {
-        // Fall back to direct API — filter client-side for multi-value
-        const allJobs = await JobTreadAPI.fetchJobsByCustomField(
-          activeFilters.fieldName,
-          activeFilters.values[0]
-        );
-        // For direct API, we can only filter by one value at a time
-        // So fetch all and filter client-side
-        jobs = allJobs;
+      } else if (typeof JobTreadAPI !== 'undefined' && typeof JobTreadAPI.fetchJobsWithFilters === 'function') {
+        // Direct API fallback — fetchJobsWithFilters supports multi-field AND
+        const flatFilters = [];
+        filters.forEach(f => {
+          f.values.forEach(v => flatFilters.push({ fieldName: f.fieldName, value: v }));
+        });
+        jobs = await JobTreadAPI.fetchJobsWithFilters(flatFilters);
         // Client-side status filter for direct API
+        if (jobStatus !== 'all') {
+          const isClosed = jobStatus === 'closed';
+          jobs = jobs.filter(job => (job.status === 'Closed') === isClosed);
+        }
+      } else {
+        // Legacy single-field fallback
+        const allJobs = await JobTreadAPI.fetchJobsByCustomField(
+          filters[0].fieldName,
+          filters[0].values[0]
+        );
+        jobs = allJobs;
         if (jobStatus !== 'all') {
           const isClosed = jobStatus === 'closed';
           jobs = jobs.filter(job => (job.status === 'Closed') === isClosed);
@@ -1018,7 +1287,9 @@ const CustomFieldFilterFeature = (() => {
       }
 
       if (statusDiv) {
-        statusDiv.textContent = `Found ${jobs.length} matching job${jobs.length !== 1 ? 's' : ''}`;
+        const filterCount = filterFields.length;
+        const prefix = filterCount > 1 ? `${filterCount} filters: ` : '';
+        statusDiv.textContent = `${prefix}Found ${jobs.length} matching job${jobs.length !== 1 ? 's' : ''}`;
         statusDiv.style.color = '#10b981';
       }
 
@@ -1037,12 +1308,8 @@ const CustomFieldFilterFeature = (() => {
    * Clear the current filter (keeps status filter)
    */
   function clearFilter() {
-    // Preserve the job status filter when clearing custom field filter
-    const currentStatus = activeFilters.jobStatus;
-    activeFilters = {};
-    if (currentStatus) {
-      activeFilters.jobStatus = currentStatus;
-    }
+    // filterFields and currentEditFieldId should already be cleared by caller
+    // activeJobStatus is preserved
 
     const statusDiv = document.getElementById('jt-cf-status');
     if (statusDiv) {
@@ -1050,7 +1317,7 @@ const CustomFieldFilterFeature = (() => {
     }
 
     // If status is not 'all' (default), re-apply just the status filter
-    if (currentStatus && currentStatus !== 'all') {
+    if (activeJobStatus && activeJobStatus !== 'all') {
       applyStatusFilter();
       return;
     }
