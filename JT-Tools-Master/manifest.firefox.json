@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "JT Power Tools",
   "version": "3.6.80",
   "description": "Supercharge JobTread with task checkboxes, dark mode, text formatting, quick notes, and 16+ productivity features for contractors.",
@@ -8,16 +8,20 @@
     "48": "icons/icon48-light.png",
     "128": "icons/icon128-light.png"
   },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "jt-power-tools@king0light.ai",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": [
     "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
+    "activeTab",
     "https://*.jobtread.com/*",
     "https://api.jobtread.com/*",
     "https://*.workers.dev/*"
   ],
-  "action": {
+  "browser_action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16-light.png",
@@ -26,7 +30,11 @@
     }
   },
   "background": {
-    "service_worker": "background/service-worker.js"
+    "scripts": [
+      "utils/browser-polyfill.js",
+      "utils/defaults.js",
+      "background/background.js"
+    ]
   },
   "content_scripts": [
     {
@@ -94,17 +102,12 @@
     }
   ],
   "web_accessible_resources": [
-    {
-      "resources": [
-        "styles/formatter-toolbar.css",
-        "styles/dark-mode.css",
-        "styles/quick-notes.css",
-        "styles/preview-mode.css",
-        "styles/availability-filter.css",
-        "styles/gantt-lines.css",
-        "icons/*.png"
-      ],
-      "matches": ["https://app.jobtread.com/*"]
-    }
+    "styles/formatter-toolbar.css",
+    "styles/dark-mode.css",
+    "styles/quick-notes.css",
+    "styles/preview-mode.css",
+    "styles/availability-filter.css",
+    "styles/gantt-lines.css",
+    "icons/*.png"
   ]
 }
