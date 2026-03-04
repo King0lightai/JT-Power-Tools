@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### MCP Server — PDF Parsing
+- **Added `parse_pdf` tool** — AI assistants can now extract text content from PDF files stored in JobTread. Use after `get_job_files` to read bid documents, proposals, contracts, and spec sheets. Supports page-level extraction with configurable page limits. Enables workflows like multi-sub bid leveling, scope alignment checks, and contract review.
+- **Added PDF parsing spec** (`specs/pdf-parsing-spec.md`) — Full feature specification covering tool definition, implementation approach (unpdf for Cloudflare Workers), enabled workflows, limitations (scanned/image PDFs, table structure), and future enhancements (OCR, table extraction, caching).
+
 #### MCP Server
 - **Added OAuth 2.1 support** — ChatGPT and Claude.ai can now connect via OAuth auto-discovery (`.well-known/`). Users just paste the server URL; the AI client handles the full OAuth flow with PKCE. Authorization page lets users enter their License Key and Grant Key.
 - **Added `jobtread_knowledge_lookup` tool** — AI assistants can now query a built-in Pave API reference to learn the correct query format, available entity fields, filtering operators, and common pitfalls before writing raw queries. Organized into 8 categories: query syntax, entities, filtering, pagination/sorting, mutations, custom fields, aggregations, gotchas, and examples.

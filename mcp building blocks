@@ -1356,6 +1356,7 @@ These are the recommended MCP tools to implement based on verified queries:
 | `get_cost_item` | Direct costItem by ID |
 | `get_location` | Direct location by ID |
 | `get_file` | Direct file by ID |
+| `parse_pdf` | Fetch + extract text from PDF file |
 | `list_custom_fields` | Org → customFields |
 | `list_cost_codes` | Org → costCodes |
 | `list_memberships` | Org → memberships |
@@ -1951,6 +1952,7 @@ jobtread_code({
 | **Get** financial summary | `jobtread_query_api` (aggregations) | `jobtread_code` |
 | **Complex** multi-step logic | `jobtread_code` | Sequential `jobtread_query_api` calls |
 | **Search** by custom field | `jobtread_query_api` (with clause) | — |
+| **Read** PDF content | `parse_pdf` | — |
 | **Get** document PDF | `jobtread_query_api` (signQuery) | — |
 
 ---
@@ -1990,6 +1992,17 @@ Step 1: jobtread_find_a_job → get jobId
 Step 2: jobtread_query_api → get documents where type = vendorBill for this job
 Step 3: jobtread_query_api → get cost items to compare bids to budget
 Step 4: jobtread_update_task → update bid tracking task progress
+```
+
+### Workflow 4b: Bid PDF Comparison & Scope Alignment
+```
+Step 1: jobtread_find_a_job → get jobId
+Step 2: get_job_files → list all files, filter by "Bid" tag or name
+Step 3: parse_pdf (for each bid PDF) → extract text content
+Step 4: get_job_budget → get budget line items with costs
+Step 5: AI compares bid line items against budget scope and pricing
+Step 6: AI produces bid leveling matrix: sub name, total, scope coverage, exclusions
+Step 7: AI flags scope gaps — items in budget not covered by any bid
 ```
 
 ### Workflow 5: Close Out a Project
