@@ -1,6 +1,6 @@
 # Privacy Policy for JT Power Tools
 
-**Last Updated:** February 8, 2026
+**Last Updated:** March 4, 2026
 
 ## Overview
 
@@ -163,6 +163,19 @@ We may update this Privacy Policy from time to time. Changes will be reflected i
 |---------|---------|-------------|----------------|
 | Gumroad | License verification | License key | https://gumroad.com/privacy |
 | Cloudflare | Server infrastructure | Notes, account data | https://www.cloudflare.com/privacypolicy/ |
+| AI Platforms (via MCP) | AI-assisted JobTread access (Power User only) | JobTread query results (jobs, customers, vendors, tasks, budgets) | See platform-specific policies |
+
+## MCP Server (Power User Tier Only)
+
+Power User subscribers can connect AI assistants (such as Claude, ChatGPT, or Cursor) to their JobTread data through our Model Context Protocol (MCP) server:
+
+- **Authentication:** Requires both your license key and JobTread grant key
+- **Access type:** Read-only — AI assistants cannot modify your JobTread data
+- **Data accessible to AI:** Job names/IDs, customer/account info, vendor/subcontractor info, tasks/to-dos, job budgets, and schedule data
+- **Data NOT accessible:** Files, attachments, documents, or raw financial data beyond budget line items
+- **Data storage:** The MCP server does not persist your JobTread data. Query results are returned to the AI client in real-time
+- **Third-party AI platforms:** When you use MCP, your JobTread data is sent to the AI platform you choose (e.g., Anthropic for Claude, OpenAI for ChatGPT). These platforms have their own privacy policies
+- **Opt-in only:** MCP is entirely optional and requires manual setup
 
 ## Open Source
 

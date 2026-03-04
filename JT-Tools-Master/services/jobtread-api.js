@@ -12,15 +12,15 @@ const JobTreadAPI = (() => {
    */
   function needsProxy() {
     // Check if we're in a content script context
-    // Content scripts have access to chrome.runtime but not chrome.action
-    // Popup and service worker have access to chrome.action
+    // Content scripts have access to chrome.runtime but not chrome.action/browserAction
+    // Popup and service worker/background have access to chrome.action or chrome.browserAction
     try {
       // If we can't access chrome at all, we're in a web page context
       if (typeof chrome === 'undefined' || !chrome.runtime) {
         return false; // Can't use proxy anyway
       }
-      // If we have chrome.action, we're in popup or service worker (extension context)
-      if (chrome.action) {
+      // If we have chrome.action or chrome.browserAction, we're in popup or background (extension context)
+      if (chrome.action || chrome.browserAction) {
         return false; // Direct fetch will work
       }
       // Otherwise we're likely in a content script

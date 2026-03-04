@@ -31,48 +31,77 @@
     <div class="guide-container">
         <div class="guide-header">
             <h1>Privacy Policy</h1>
-            <p class="guide-meta">Last Updated: January 18, 2026</p>
+            <p class="guide-meta">Last Updated: March 4, 2026</p>
         </div>
 
         <div class="guide-content">
             <div class="info-box tip">
                 <strong>TL;DR</strong>
-                <p>Free users: All data stays local in your browser. Premium users: We store minimal data (license key, email, tier) on Cloudflare servers for license validation. Power Users who connect the API also have their JobTread org info stored. We never store your actual JobTread project data, financials, or client information.</p>
+                <p>Free users: All data stays local in your browser. Premium users who create an account can sync notes to our servers and collaborate with team members. We store minimal data (license key, email, tier, notes) on Cloudflare servers. Power Users who connect the API also have their JobTread org info stored. We never store your actual JobTread project data, financials, or client information.</p>
             </div>
 
             <h2>Overview</h2>
             <p>JT Power Tools ("the Extension") is committed to protecting your privacy. This Privacy Policy explains how the Extension handles information when you use it with JobTread.</p>
 
-            <h2>Information We Don't Collect</h2>
-            <p><strong>The Extension does NOT collect, store, or transmit any personal information, including:</strong></p>
-            <ul>
-                <li>Your name, email address, or contact information</li>
-                <li>JobTread account credentials</li>
-                <li>Project data or client information</li>
-                <li>Schedule information or task details</li>
-                <li>Budget data or financial information</li>
-                <li>Browsing history or usage patterns</li>
-                <li>Analytics or tracking data</li>
-            </ul>
+            <h2>Information We Collect</h2>
 
-            <h2>Data Storage</h2>
-            <p><strong>All Extension settings are stored locally in your browser using Chrome's sync storage:</strong></p>
+            <h3>Local Storage (All Users)</h3>
+            <p><strong>Feature settings stored locally in your browser using Chrome's sync storage:</strong></p>
             <ul>
                 <li>Feature toggle states (on/off)</li>
                 <li>License key (if you subscribe to premium features)</li>
                 <li>Dark mode preference</li>
-                <li>Custom theme colors (Premium)</li>
-                <li>Saved theme presets (Premium)</li>
-                <li>Message signature text (for quick insertion into messages)</li>
-                <li>Quick Notes content</li>
-                <li>User preferences</li>
+                <li>Theme color preferences</li>
+                <li>Message signature text</li>
+                <li>Quick Notes content and folder preferences</li>
+                <li>Message templates</li>
+                <li>Saved availability filter views</li>
+                <li>UI preferences (sidebar width, panel width, collapse states)</li>
             </ul>
-            <p><strong>This data:</strong></p>
+            <p><strong>This local data:</strong></p>
             <ul>
                 <li>Stays entirely within your browser</li>
                 <li>Syncs across your Chrome devices (via Chrome's built-in sync)</li>
-                <li>Is never sent to external servers (except license verification)</li>
                 <li>Is automatically deleted when you uninstall the Extension</li>
+            </ul>
+
+            <h3>Cloud Storage (Premium Users with Account)</h3>
+            <p><strong>If you create an account and enable cloud sync, the following data is stored on our servers:</strong></p>
+
+            <h4>Account Information</h4>
+            <ul>
+                <li>Email address (for login)</li>
+                <li>Display name (optional)</li>
+                <li>Hashed password (never stored in plain text)</li>
+                <li>License key association</li>
+            </ul>
+
+            <h4>Personal Notes (My Notes)</h4>
+            <ul>
+                <li>Note titles and content</li>
+                <li>Folder organization</li>
+                <li>Pin status</li>
+                <li>Creation and modification timestamps</li>
+                <li>Notes are associated with your account only</li>
+            </ul>
+
+            <h4>Team Notes (Shared with your organization)</h4>
+            <ul>
+                <li>Note titles and content</li>
+                <li>Folder organization</li>
+                <li>Pin status</li>
+                <li>Author information (your display name or email)</li>
+                <li>Creation and modification timestamps</li>
+                <li>Notes are shared with all team members in your JobTread organization</li>
+            </ul>
+
+            <h4>What We DON'T Collect</h4>
+            <ul>
+                <li>JobTread login credentials</li>
+                <li>Project data, client information, or budget data</li>
+                <li>Browsing history or usage patterns</li>
+                <li>Analytics or tracking data</li>
+                <li>Payment information (handled by Gumroad)</li>
             </ul>
 
             <h2>Premium License Verification</h2>
@@ -85,8 +114,13 @@
                 <li>License verification is entirely optional (only for premium features)</li>
             </ul>
 
-            <h2>Server-Side Data Storage (Premium Users)</h2>
-            <p><strong>For premium license holders, we store limited data on Cloudflare servers to enable license validation and API features:</strong></p>
+            <h2>Server-Side Data Storage</h2>
+            <p><strong>Our cloud services run on Cloudflare Workers with Cloudflare D1 database:</strong></p>
+            <ul>
+                <li>Data is encrypted in transit (HTTPS/TLS)</li>
+                <li>Hosted in Cloudflare's global network</li>
+                <li>Subject to Cloudflare's security practices: <a href="https://www.cloudflare.com/trust-hub/" target="_blank">cloudflare.com/trust-hub</a></li>
+            </ul>
 
             <h3>License Validation Service</h3>
             <ul>
@@ -94,6 +128,17 @@
                 <li><strong>Purpose:</strong> Verify license validity and determine feature access tier</li>
                 <li><strong>Retention:</strong> Stored while license is active; deleted upon request</li>
                 <li><strong>Security:</strong> Encrypted at rest, HTTPS-only transmission, rate-limited access</li>
+            </ul>
+
+            <h3>Account &amp; Notes Sync Service (Premium Users)</h3>
+            <p>Premium users who create an account can sync notes to our servers:</p>
+            <ul>
+                <li><strong>Account data stored:</strong> Email, display name, hashed password, license association</li>
+                <li><strong>Personal notes:</strong> Synced to your account only — titles, content, folders, timestamps</li>
+                <li><strong>Team notes:</strong> Shared with your organization — titles, content, folders, author info, timestamps</li>
+                <li><strong>Purpose:</strong> Cross-device note sync and team collaboration</li>
+                <li><strong>Security:</strong> Passwords hashed using industry-standard algorithms, access tokens expire and require refresh</li>
+                <li><strong>Retention:</strong> Retained while your account is active; permanently deleted when you delete your account or individual notes</li>
             </ul>
 
             <h3>API Proxy Service (Power User Tier Only)</h3>
@@ -106,13 +151,18 @@
                 <li><strong>Retention:</strong> Data deleted when you disconnect JobTread or upon request</li>
             </ul>
 
-            <h3>What We Do NOT Store</h3>
+            <h3>MCP Server (Power User Tier Only)</h3>
+            <p>Power User subscribers can connect AI assistants (such as Claude, ChatGPT, or Cursor) to their JobTread data through our Model Context Protocol (MCP) server:</p>
             <ul>
-                <li>Your JobTread password or login credentials</li>
-                <li>Your project details, budgets, or financial information</li>
-                <li>Your client or contact information</li>
-                <li>Your documents, files, or attachments</li>
-                <li>Any data beyond what's needed for license validation and API features</li>
+                <li><strong>Authentication:</strong> Requires both your license key and JobTread grant key (combined as a Bearer token)</li>
+                <li><strong>Access type:</strong> Read-only — AI assistants cannot modify your JobTread data</li>
+                <li><strong>Data accessible to AI:</strong> Job names/IDs, customer/account info, vendor/subcontractor info, tasks/to-dos, job budgets, and schedule data</li>
+                <li><strong>Data NOT accessible:</strong> Files, attachments, documents, or raw financial data beyond budget line items</li>
+                <li><strong>How it works:</strong> When you query an AI assistant, it sends requests to our MCP server, which proxies read-only API calls to JobTread on your behalf</li>
+                <li><strong>Data storage:</strong> The MCP server does not persist your JobTread data. Query results are returned to the AI client in real-time and not stored on our servers</li>
+                <li><strong>Third-party AI platforms:</strong> When you use MCP with an AI assistant, your JobTread data is sent to that AI platform (e.g., Anthropic for Claude, OpenAI for ChatGPT). These platforms have their own privacy policies governing how they handle your data</li>
+                <li><strong>Rate limits:</strong> 60 requests per minute, 5 concurrent connections</li>
+                <li><strong>Opt-in only:</strong> MCP is entirely optional and requires manual setup by the user</li>
             </ul>
 
             <h2>Permissions Explained</h2>
@@ -141,20 +191,20 @@
 
             <h3>Host Permission: https://*.workers.dev/*</h3>
             <ul>
-                <li><strong>Purpose:</strong> Communicate with our Cloudflare Workers for license validation and API proxy</li>
-                <li><strong>Access:</strong> Only when verifying license or using API features (Power User tier)</li>
-                <li><strong>Data:</strong> License key, device ID; for API features: JobTread grant key and organization info</li>
+                <li><strong>Purpose:</strong> Communicate with our Cloudflare Workers for license validation, notes sync, and API proxy</li>
+                <li><strong>Access:</strong> Only when verifying license, syncing notes, or using API features</li>
+                <li><strong>Data:</strong> License key, device ID; for sync: notes content, account credentials; for API features: JobTread grant key and organization info</li>
             </ul>
 
             <h2>Third-Party Services</h2>
 
-            <h3>Cloudflare (License Validation & API Proxy)</h3>
+            <h3>Cloudflare (License Validation, Notes Sync &amp; API Proxy)</h3>
             <ul>
-                <li><strong>Used for:</strong> Secure license validation proxy and API features</li>
-                <li><strong>Data stored:</strong> License key, email, tier, organization info (for API users)</li>
+                <li><strong>Used for:</strong> License validation, account management, notes sync, team collaboration, and API features</li>
+                <li><strong>Data stored:</strong> License key, email, tier, account info, notes content, organization info (for API users)</li>
                 <li><strong>Infrastructure:</strong> Cloudflare Workers (serverless), D1 Database (encrypted), KV Cache</li>
                 <li><strong>Privacy Policy:</strong> <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">https://www.cloudflare.com/privacypolicy/</a></li>
-                <li><strong>Note:</strong> Only used if you activate a premium license</li>
+                <li><strong>Note:</strong> Only used if you activate a premium license or create an account</li>
             </ul>
 
             <h3>Gumroad (Payment Processing)</h3>
@@ -167,18 +217,33 @@
 
             <h3>JobTread API (Power User Tier Only)</h3>
             <ul>
-                <li><strong>Used for:</strong> API features like custom field filtering</li>
+                <li><strong>Used for:</strong> API features like custom field filtering and MCP server</li>
                 <li><strong>Data shared:</strong> Your JobTread grant key (you provide this)</li>
-                <li><strong>Data accessed:</strong> Job names/IDs, custom fields (temporarily cached)</li>
+                <li><strong>Data accessed:</strong> Job names/IDs, custom fields (temporarily cached); via MCP: jobs, customers, vendors, tasks, budgets</li>
                 <li><strong>Note:</strong> Only used if you're a Power User subscriber who connects their API</li>
             </ul>
 
-            <h2>How We Use Permissions</h2>
-            <p>The Extension only uses its permissions to:</p>
+            <h3>AI Platforms (via MCP, Power User Tier Only)</h3>
+            <ul>
+                <li><strong>Used for:</strong> AI-assisted access to your JobTread data through the MCP server</li>
+                <li><strong>Data shared:</strong> JobTread data returned by MCP queries (jobs, customers, vendors, tasks, budgets) is sent to the AI platform you choose to use</li>
+                <li><strong>Supported platforms:</strong> Claude (Anthropic), ChatGPT (OpenAI), Cursor, and other MCP-compatible AI clients</li>
+                <li><strong>Privacy policies:</strong>
+                    <ul>
+                        <li>Anthropic (Claude): <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a></li>
+                        <li>OpenAI (ChatGPT): <a href="https://openai.com/privacy" target="_blank">openai.com/privacy</a></li>
+                    </ul>
+                </li>
+                <li><strong>Note:</strong> Entirely optional. You choose which AI platform to connect, and data is only shared when you actively query through that platform</li>
+            </ul>
+
+            <h2>How We Use Your Data</h2>
+            <p><strong>We use your data to:</strong></p>
             <ol>
                 <li>Apply visual styling (dark mode, custom themes, contrast fixes)</li>
-                <li>Enable drag-and-drop functionality on schedule pages</li>
-                <li>Provide rich text formatting in text fields</li>
+                <li>Enable productivity features (drag-and-drop, formatting, notes)</li>
+                <li>Sync your notes across devices (if enabled)</li>
+                <li>Share Team Notes with your organization members</li>
                 <li>Enable quick job switching with keyboard shortcuts</li>
                 <li>Apply budget hierarchy shading</li>
                 <li>Save your preferences locally</li>
@@ -187,23 +252,34 @@
 
             <p><strong>We do NOT:</strong></p>
             <ul>
-                <li>Read your JobTread data</li>
-                <li>Access client or project information</li>
-                <li>Monitor your activity</li>
-                <li>Send data to external servers (except Gumroad for license verification)</li>
+                <li>Sell your data to third parties</li>
+                <li>Use your data for advertising</li>
+                <li>Share your data outside your organization (except Team Notes with teammates)</li>
+                <li>Access your JobTread project or client data</li>
+                <li>Monitor your activity beyond what's needed for features</li>
                 <li>Use analytics or tracking</li>
                 <li>Display advertisements</li>
                 <li>Collect usage statistics</li>
             </ul>
 
+            <h2>Data Retention</h2>
+            <ul>
+                <li><strong>Local data:</strong> Retained until you uninstall the Extension or clear browser data</li>
+                <li><strong>Cloud notes:</strong> Retained while your account is active</li>
+                <li><strong>Account data:</strong> Retained until you delete your account</li>
+                <li><strong>Deleted notes:</strong> Permanently removed from our servers</li>
+                <li><strong>API data:</strong> Deleted when you disconnect JobTread or upon request</li>
+            </ul>
+
             <h2>Data Security</h2>
             <ul>
-                <li>All data is stored locally in your browser</li>
-                <li>Chrome's built-in encryption protects synced data</li>
-                <li>No external databases or servers (except Gumroad for licenses)</li>
-                <li>No data transmission except optional license verification</li>
+                <li>All network communication uses HTTPS/TLS encryption</li>
+                <li>Passwords are hashed using industry-standard algorithms</li>
+                <li>Access tokens expire and require refresh</li>
+                <li>Database access is authenticated and logged</li>
+                <li>Chrome's built-in encryption protects locally synced data</li>
+                <li>No plain-text sensitive data storage</li>
                 <li>Extension code is open source and auditable on GitHub</li>
-                <li>HTTPS encryption for all license verification communications</li>
             </ul>
 
             <h2>Children's Privacy</h2>
@@ -215,10 +291,12 @@
             <h2>Your Rights</h2>
             <p>You have the right to:</p>
             <ul>
-                <li>View all data stored by the Extension (Chrome DevTools → Application → Storage)</li>
-                <li>Delete all Extension data (uninstall the Extension or clear extension data)</li>
-                <li>Opt out of premium features (simply don't subscribe)</li>
-                <li>Request information about data practices (contact us)</li>
+                <li><strong>View</strong> all data stored by the Extension (Chrome DevTools → Application → Storage)</li>
+                <li><strong>Export</strong> your notes (copy content manually)</li>
+                <li><strong>Delete</strong> local data (uninstall the Extension or clear storage)</li>
+                <li><strong>Delete</strong> cloud data (delete individual notes or your account)</li>
+                <li><strong>Opt out</strong> of cloud sync (use local-only mode)</li>
+                <li><strong>Request</strong> information about your data (contact us)</li>
                 <li>Deactivate your premium license at any time</li>
             </ul>
 
@@ -252,34 +330,40 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Personal Information</td>
-                        <td>No</td>
-                        <td>N/A</td>
-                        <td>No one</td>
-                    </tr>
-                    <tr>
-                        <td>JobTread Data</td>
-                        <td>No</td>
-                        <td>N/A</td>
-                        <td>No one</td>
-                    </tr>
-                    <tr>
                         <td>Extension Settings</td>
                         <td>Yes</td>
                         <td>Local browser storage</td>
                         <td>Chrome sync only</td>
                     </tr>
                     <tr>
-                        <td>Message Signature</td>
+                        <td>Message Signature &amp; Templates</td>
                         <td>Yes (user-created)</td>
                         <td>Local browser storage</td>
                         <td>Chrome sync only</td>
                     </tr>
                     <tr>
-                        <td>Quick Notes</td>
+                        <td>Quick Notes (local mode)</td>
                         <td>Yes (user-created)</td>
                         <td>Local browser storage</td>
                         <td>Chrome sync only</td>
+                    </tr>
+                    <tr>
+                        <td>Personal Notes (sync enabled)</td>
+                        <td>Yes (if account created)</td>
+                        <td>Cloudflare D1</td>
+                        <td>Only you</td>
+                    </tr>
+                    <tr>
+                        <td>Team Notes</td>
+                        <td>Yes (if account created)</td>
+                        <td>Cloudflare D1</td>
+                        <td>Your organization's team members</td>
+                    </tr>
+                    <tr>
+                        <td>Account Info (email, name)</td>
+                        <td>Yes (if account created)</td>
+                        <td>Cloudflare D1</td>
+                        <td>No one</td>
                     </tr>
                     <tr>
                         <td>License Key</td>
@@ -310,6 +394,18 @@
                         <td>Yes (Power User API only)</td>
                         <td>Cloudflare KV (temporary)</td>
                         <td>No one</td>
+                    </tr>
+                    <tr>
+                        <td>MCP Query Results</td>
+                        <td>Yes (Power User MCP only)</td>
+                        <td>Not stored (real-time)</td>
+                        <td>Your chosen AI platform</td>
+                    </tr>
+                    <tr>
+                        <td>JobTread Project/Client Data</td>
+                        <td>No (not stored by us)</td>
+                        <td>N/A</td>
+                        <td>AI platform via MCP (if enabled)</td>
                     </tr>
                     <tr>
                         <td>Usage Analytics</td>
