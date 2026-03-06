@@ -238,6 +238,18 @@ const FormatterDetection = (() => {
       return false; // Skip fields that already have native formatter
     }
 
+    // Exclude fields inside sidebar forms with orange headers (Help, Add Time Entry, Time Clock, etc.)
+    // This MUST be checked before placeholder checks to prevent Message fields in Help sidebar
+    {
+      const sidebarForm = textarea.closest('form');
+      if (sidebarForm) {
+        const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
+        if (orangeHeader) {
+          return false;
+        }
+      }
+    }
+
     // Get placeholder for field checks
     const placeholder = textarea.getAttribute('placeholder');
 
@@ -291,15 +303,6 @@ const FormatterDetection = (() => {
         return false;
       }
       return true;
-    }
-
-    // Exclude fields inside sidebar forms with orange headers (Add Time Entry, Time Clock, etc.)
-    const sidebarForm = textarea.closest('form');
-    if (sidebarForm) {
-      const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
-      if (orangeHeader) {
-        return false;
-      }
     }
 
     // Exclude document metadata fields (signature, prepared by, terms, etc.)
