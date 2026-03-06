@@ -250,6 +250,11 @@ const FormatterDetection = (() => {
       }
     }
 
+    // Exclude fields inside document content blocks (signature/acceptance sections)
+    if (textarea.closest('div.border-2.break-inside-avoid')) {
+      return false;
+    }
+
     // Get placeholder for field checks
     const placeholder = textarea.getAttribute('placeholder');
 

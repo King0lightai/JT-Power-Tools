@@ -324,6 +324,11 @@ const FormatterFeature = (() => {
         }
       }
 
+      // Exclude fields inside document content blocks (signature/acceptance sections)
+      if (field.closest('div.border-2.break-inside-avoid')) {
+        return false;
+      }
+
       // CRITICAL: Exclude fields in the ADD / EDIT ITEMS table (Documents page only)
       // NOTE: Budget page has similar structure but SHOULD have the formatter
       // Use the Detection module for reliable detection
