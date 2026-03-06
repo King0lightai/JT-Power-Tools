@@ -302,10 +302,26 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude file description fields in file edit modals
-      // Budget Description fields are inline (not in .m-auto modals) so they're safe
+      // Exclude file description fields in file edit forms/modals
+      // File edit forms have both Name and Description textareas as siblings
+      // Budget Description fields are inline (not in file edit forms) so they're safe
       if (field.closest('.m-auto') && path.includes('/files')) {
         return false;
+      }
+      if (placeholder === 'Description') {
+        const parentContainer = field.closest('form') || field.closest('div.space-y-1') || field.closest('div.border-b');
+        if (parentContainer && parentContainer.querySelector('textarea[placeholder="Name"]')) {
+          return false; // This is a file edit form, not a budget description
+        }
+      }
+
+      // Exclude fields inside sidebar forms with orange headers (Add Time Entry, Time Clock, etc.)
+      const sidebarForm = field.closest('form');
+      if (sidebarForm) {
+        const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
+        if (orangeHeader) {
+          return false;
+        }
       }
 
       // CRITICAL: Exclude fields in the ADD / EDIT ITEMS table (Documents page only)

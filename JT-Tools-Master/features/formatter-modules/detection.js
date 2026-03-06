@@ -277,14 +277,29 @@ const FormatterDetection = (() => {
 
     // Check if it's a Budget Description field
     // Budget Description textareas are inline in the budget table (never inside modals)
-    // File description textareas also have placeholder="Description" but appear in modals
+    // File description textareas also have placeholder="Description" but appear in modals/file edit forms
     if (placeholder === 'Description') {
       // Exclude file description fields in file view/edit modals
       // These modals use .m-auto centering - budget fields are never in modals
       if (textarea.closest('.m-auto')) {
         return false;
       }
+      // Exclude file description fields in file edit forms
+      // File edit forms have both Name and Description textareas as siblings
+      const parentContainer = textarea.closest('form') || textarea.closest('div.space-y-1') || textarea.closest('div.border-b');
+      if (parentContainer && parentContainer.querySelector('textarea[placeholder="Name"]')) {
+        return false;
+      }
       return true;
+    }
+
+    // Exclude fields inside sidebar forms with orange headers (Add Time Entry, Time Clock, etc.)
+    const sidebarForm = textarea.closest('form');
+    if (sidebarForm) {
+      const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
+      if (orangeHeader) {
+        return false;
+      }
     }
 
     // Exclude document metadata fields (signature, prepared by, terms, etc.)
