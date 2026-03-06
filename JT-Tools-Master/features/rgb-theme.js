@@ -265,14 +265,16 @@ const CustomThemeFeature = (() => {
 
       /* === Task Cards === */
       /* Overlay on task cards to blend with theme while preserving selection state */
-      /* Covers both month view (td) and week/day view (div.select-none) */
+      /* Covers month view (td), week/day view (div.select-none), and direct cards (border-l-2) */
       td div.cursor-pointer[style*="background-color"],
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] {
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] {
         position: relative !important;
       }
 
       td div.cursor-pointer[style*="background-color"]::before,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before {
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::before {
         content: '' !important;
         position: absolute !important;
         inset: 0 !important;
@@ -284,7 +286,8 @@ const CustomThemeFeature = (() => {
 
       /* Ensure text and content stays above the overlay */
       td div.cursor-pointer[style*="background-color"] > *,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > * {
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > * {
         position: relative !important;
         z-index: 1 !important;
       }
@@ -293,13 +296,16 @@ const CustomThemeFeature = (() => {
       td div.cursor-pointer[style*="background-color"],
       td div.cursor-pointer[style*="background-color"] *,
       div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] * {
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] * {
         color: ${p.text.primary} !important;
       }
 
       /* Keep the left border visible (task type indicator) */
       td div.cursor-pointer[style*="border-left"],
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"] {
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"],
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
         border-left-width: 5px !important;
       }
 
