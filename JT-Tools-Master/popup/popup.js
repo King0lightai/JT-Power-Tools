@@ -290,6 +290,8 @@ async function checkLicenseStatus() {
   const freezeHeaderCheckbox = document.getElementById('freezeHeader');
   const pdfMarkupToolsFeature = document.getElementById('pdfMarkupToolsFeature');
   const pdfMarkupToolsCheckbox = document.getElementById('pdfMarkupTools');
+  const reverseThreadOrderFeature = document.getElementById('reverseThreadOrderFeature');
+  const reverseThreadOrderCheckbox = document.getElementById('reverseThreadOrder');
 
   // POWER USER tier features and UI elements
   const apiCategory = document.getElementById('apiCategory');
@@ -363,6 +365,8 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = false;
     pdfMarkupToolsFeature?.classList.remove('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = false;
+    reverseThreadOrderFeature?.classList.remove('locked');
+    if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = false;
 
     return { hasLicense: true, tier: tier };
   } else {
@@ -389,6 +393,8 @@ async function checkLicenseStatus() {
     if (freezeHeaderCheckbox) freezeHeaderCheckbox.disabled = true;
     pdfMarkupToolsFeature?.classList.add('locked');
     if (pdfMarkupToolsCheckbox) pdfMarkupToolsCheckbox.disabled = true;
+    reverseThreadOrderFeature?.classList.add('locked');
+    if (reverseThreadOrderCheckbox) reverseThreadOrderCheckbox.disabled = true;
 
     // Hide API category and grant key for free users
     apiCategory?.classList.add('hidden');

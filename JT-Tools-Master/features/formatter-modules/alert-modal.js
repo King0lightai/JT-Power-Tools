@@ -119,32 +119,23 @@ const AlertModal = (() => {
 
             <!-- Message Textarea with Embedded Toolbar -->
             <div class="jt-alert-message-container">
-              <div class="jt-alert-toolbar">
-                <!-- Text Formatting -->
-                <button type="button" class="jt-alert-format-btn jt-bold" data-format="bold" title="Bold (Ctrl+B)">B</button>
-                <button type="button" class="jt-alert-format-btn jt-italic" data-format="italic" title="Italic (Ctrl+I)">I</button>
-                <button type="button" class="jt-alert-format-btn jt-underline" data-format="underline" title="Underline (Ctrl+U)">U</button>
-                <button type="button" class="jt-alert-format-btn jt-strikethrough" data-format="strikethrough" title="Strikethrough">S</button>
-                <span class="jt-alert-toolbar-divider"></span>
-                <!-- Headings -->
-                <button type="button" class="jt-alert-format-btn" data-format="h1" title="Heading 1">H<sub>1</sub></button>
-                <button type="button" class="jt-alert-format-btn" data-format="h2" title="Heading 2">H<sub>2</sub></button>
-                <button type="button" class="jt-alert-format-btn" data-format="h3" title="Heading 3">H<sub>3</sub></button>
-                <span class="jt-alert-toolbar-divider"></span>
-                <!-- Lists -->
-                <button type="button" class="jt-alert-format-btn" data-format="bullet" title="Bullet List">•</button>
-                <button type="button" class="jt-alert-format-btn" data-format="numbered" title="Numbered List">1.</button>
-                <span class="jt-alert-toolbar-divider"></span>
-                <!-- Colors -->
-                <button type="button" class="jt-alert-format-btn jt-color-green" data-format="color" data-color="green" title="Green">A</button>
-                <button type="button" class="jt-alert-format-btn jt-color-yellow" data-format="color" data-color="yellow" title="Yellow">A</button>
-                <button type="button" class="jt-alert-format-btn jt-color-blue" data-format="color" data-color="blue" title="Blue">A</button>
-                <button type="button" class="jt-alert-format-btn jt-color-red" data-format="color" data-color="red" title="Red">A</button>
-                <span class="jt-alert-toolbar-divider"></span>
-                <!-- Other -->
-                <button type="button" class="jt-alert-format-btn" data-format="link" title="Insert Link">🔗</button>
-                <button type="button" class="jt-alert-format-btn" data-format="quote" title="Quote">"</button>
-                <button type="button" class="jt-alert-format-btn" data-format="hr" title="Horizontal Rule">―</button>
+              <div class="jt-alert-toolbar jt-responsive-toolbar">
+                <button type="button" class="jt-toolbar-item" data-format="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+                <button type="button" class="jt-toolbar-item" data-format="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+                <button type="button" class="jt-toolbar-item" data-format="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+                <button type="button" class="jt-toolbar-item" data-format="strikethrough" title="Strikethrough"><s>S</s></button>
+                <button type="button" class="jt-toolbar-item" data-format="h1" title="Heading 1">H<sub>1</sub></button>
+                <button type="button" class="jt-toolbar-item" data-format="h2" title="Heading 2">H<sub>2</sub></button>
+                <button type="button" class="jt-toolbar-item" data-format="h3" title="Heading 3">H<sub>3</sub></button>
+                <button type="button" class="jt-toolbar-item" data-format="bullet" title="Bullet List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="3" cy="6" r="1" fill="currentColor"></circle><circle cx="3" cy="12" r="1" fill="currentColor"></circle><circle cx="3" cy="18" r="1" fill="currentColor"></circle></svg></button>
+                <button type="button" class="jt-toolbar-item" data-format="numbered" title="Numbered List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><text x="3" y="7" font-size="6" fill="currentColor" stroke="none" font-weight="600">1</text><text x="3" y="13" font-size="6" fill="currentColor" stroke="none" font-weight="600">2</text><text x="3" y="19" font-size="6" fill="currentColor" stroke="none" font-weight="600">3</text></svg></button>
+                <button type="button" class="jt-toolbar-item jt-color-green" data-format="color" data-color="green" title="Green">A</button>
+                <button type="button" class="jt-toolbar-item jt-color-yellow" data-format="color" data-color="yellow" title="Yellow">A</button>
+                <button type="button" class="jt-toolbar-item jt-color-blue" data-format="color" data-color="blue" title="Blue">A</button>
+                <button type="button" class="jt-toolbar-item jt-color-red" data-format="color" data-color="red" title="Red">A</button>
+                <button type="button" class="jt-toolbar-item" data-format="link" title="Insert Link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></button>
+                <button type="button" class="jt-toolbar-item" data-format="quote" title="Quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"></path></svg></button>
+                <button type="button" class="jt-toolbar-item" data-format="hr" title="Horizontal Rule (---)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg></button>
               </div>
               <textarea class="jt-alert-message" placeholder="Message" data-jt-no-formatter="true"></textarea>
             </div>
@@ -374,7 +365,7 @@ const AlertModal = (() => {
       });
 
       // Handle embedded toolbar button clicks
-      const toolbarButtons = overlay.querySelectorAll('.jt-alert-format-btn');
+      const toolbarButtons = overlay.querySelectorAll('.jt-alert-toolbar .jt-toolbar-item');
       toolbarButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.preventDefault();
