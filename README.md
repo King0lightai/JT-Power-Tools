@@ -130,4 +130,4 @@ JT-Tools-Master/
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) file for details.
+GNU Affero General Public License v3.0 - See [LICENSE](LICENSE) for details.
