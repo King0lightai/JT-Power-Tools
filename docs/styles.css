@@ -1035,6 +1035,14 @@ footer {
     flex-wrap: wrap;
 }
 
+.cta-button.chrome-cta {
+    color: #fff;
+}
+
+.cta-button.chrome-cta:hover {
+    color: #fff;
+}
+
 .cta-button.edge-cta {
     background: linear-gradient(135deg, #0078D7, #00A4EF);
     color: #fff;
@@ -1042,6 +1050,16 @@ footer {
 
 .cta-button.edge-cta:hover {
     box-shadow: 0 8px 30px rgba(0, 120, 215, 0.3);
+    color: #fff;
+}
+
+.cta-button.firefox-cta {
+    background: linear-gradient(135deg, #FF9500, #E66000);
+    color: #fff;
+}
+
+.cta-button.firefox-cta:hover {
+    box-shadow: 0 8px 30px rgba(255, 149, 0, 0.3);
     color: #fff;
 }
 
