@@ -9,8 +9,8 @@ const JTDefaults = (() => {
    * All boolean values indicate whether a feature is enabled by default
    */
   const DEFAULT_SETTINGS = {
-    // Premium Features (require license)
-    dragDrop: true,
+    // Premium Features (require license) - default to false
+    dragDrop: false,
     previewMode: false,
     rgbTheme: false,
 

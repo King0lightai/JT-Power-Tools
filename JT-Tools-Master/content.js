@@ -143,7 +143,7 @@ let currentSettings = window.JTDefaults
   ? window.JTDefaults.getDefaultSettings()
   : {
       // Inline fallback if JTDefaults not loaded (should not happen)
-      dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
+      dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,

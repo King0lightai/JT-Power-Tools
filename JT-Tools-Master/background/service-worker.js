@@ -16,7 +16,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
   ? JTDefaults.getDefaultSettings()
   : {
       // Inline fallback - should rarely be used
-      dragDrop: true, contrastFix: true, formatter: true, previewMode: false,
+      dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
