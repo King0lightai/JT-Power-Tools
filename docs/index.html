@@ -39,6 +39,105 @@
     <!-- Phosphor Icons -->
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Gumroad Overlay Checkout -->
+    <script src="https://gumroad.com/js/gumroad.js"></script>
+    <style>
+        /* Tier-colored pricing buttons */
+        .pricing-card .tier-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s, background 0.3s, color 0.3s;
+            border: 2px solid transparent;
+        }
+        .tier-btn.tier-essential {
+            background: transparent;
+            border-color: #00c896;
+            color: #00c896;
+        }
+        .tier-btn.tier-essential:hover {
+            background: #00c896;
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 200, 150, 0.3);
+        }
+        .tier-btn.tier-pro {
+            background: transparent;
+            border-color: #ff8c42;
+            color: #ff8c42;
+        }
+        .tier-btn.tier-pro:hover {
+            background: linear-gradient(135deg, #FE4C0D 0%, #FF6B35 100%);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 140, 66, 0.3);
+        }
+        .tier-btn.tier-power {
+            background: transparent;
+            border-color: #c850ff;
+            color: #c850ff;
+        }
+        .tier-btn.tier-power:hover {
+            background: #c850ff;
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(200, 80, 255, 0.3);
+        }
+        /* Powered by Gumroad */
+        .powered-by-gumroad {
+            text-align: center;
+            margin-top: 24px;
+            margin-bottom: -8px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--gray);
+            letter-spacing: 0.3px;
+        }
+        .powered-by-gumroad a {
+            color: #ff90e8;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .powered-by-gumroad a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "JT Power Tools",
+        "operatingSystem": "Chrome, Edge",
+        "applicationCategory": "BrowserApplication",
+        "description": "Chrome extension toolkit that enhances JobTread construction management software with dark mode, text formatting, schedule tools, and AI integrations.",
+        "url": "https://jtpowertools.com/",
+        "downloadUrl": "https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn",
+        "offers": [
+            { "@type": "Offer", "price": "0", "priceCurrency": "USD", "name": "Free" },
+            { "@type": "Offer", "price": "10.00", "priceCurrency": "USD", "name": "Essential" },
+            { "@type": "Offer", "price": "20.00", "priceCurrency": "USD", "name": "Pro" },
+            { "@type": "Offer", "price": "30.00", "priceCurrency": "USD", "name": "Power User" }
+        ],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "ratingCount": "2",
+            "bestRating": "5"
+        },
+        "author": { "@type": "Organization", "name": "JT Power Tools" }
+    }
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -50,7 +149,7 @@
             <div class="nav-links">
                 <a href="index.html" class="active">Home</a>
                 <a href="documentation.html">Docs</a>
-                <a href="#pricing">Pricing</a>
+                <a href="index.html#pricing">Pricing</a>
                 <a href="changelog.html">Changelog</a>
                 <a href="roadmap.html">Roadmap</a>
                 <a href="about.html">About</a>
@@ -302,6 +401,75 @@
         </div>
     </section>
 
+    <!-- MCP / AI Integration -->
+    <section class="mcp-integration" id="mcp">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-label">AI INTEGRATION</p>
+                <h2 class="section-title">CONNECT JOBTREAD TO YOUR AI TOOLS</h2>
+                <p class="section-subtitle">Ask questions about your jobs, budgets, and tasks in plain English. JT Power Tools includes an MCP server that connects your JobTread data to popular AI platforms.</p>
+            </div>
+
+            <div class="mcp-grid">
+                <a href="mcp/chatgpt.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-chat-circle-dots"></i></div>
+                    <h3>CHATGPT</h3>
+                    <p>Connect via OAuth in seconds. Ask about jobs, budgets, and tasks from any ChatGPT conversation.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/chatgpt.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-globe"></i></div>
+                    <h3>CLAUDE WEB</h3>
+                    <p>One-click OAuth connector for Claude.ai. Query your JobTread data with Anthropic's AI assistant.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/claude-code.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-terminal"></i></div>
+                    <h3>CLAUDE CODE</h3>
+                    <p>Bearer token auth for CLI workflows. Access JobTread data from your development environment.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/cursor.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-code"></i></div>
+                    <h3>CURSOR &amp; MORE</h3>
+                    <p>Works with Cursor, Windsurf, and any MCP-compatible AI client via bearer token auth.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/grok.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-lightning"></i></div>
+                    <h3>GROK</h3>
+                    <p>Connect xAI's Grok to your JobTread data via remote MCP tools. Bearer token setup in minutes.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+
+                <a href="mcp/gemini.html" class="mcp-card">
+                    <div class="mcp-card-icon"><i class="ph ph-sparkle"></i></div>
+                    <h3>GEMINI</h3>
+                    <p>Use Google's Gemini CLI to query JobTread data. Native MCP support with httpUrl configuration.</p>
+                    <span class="mcp-card-link">Setup Guide &rarr;</span>
+                </a>
+            </div>
+
+            <div class="mcp-examples">
+                <p class="mcp-examples-label">EXAMPLE PROMPTS</p>
+                <div class="mcp-prompt-chips">
+                    <span class="mcp-chip">"Compare this bid request against the project scope"</span>
+                    <span class="mcp-chip">"Pull key metrics for my production meeting"</span>
+                    <span class="mcp-chip">"Forecast labor needs for the next 2 weeks"</span>
+                    <span class="mcp-chip">"Pull historical budget data to develop costs for a new project"</span>
+                </div>
+            </div>
+
+            <p class="mcp-tier-note">
+                MCP Server Access is included with the <a href="index.html#pricing">Power User</a> plan
+            </p>
+        </div>
+    </section>
+
     <!-- How It Works -->
     <section class="how-it-works" id="how-it-works">
         <div class="container">
@@ -409,9 +577,9 @@
                         <li><span class="check">✓</span> PDF Markup Tools</li>
                         <li><span class="check">✓</span> Reverse Thread Order</li>
                     </ul>
-                    <a href="https://premium.jtpowertools.com" class="cta-button secondary" target="_blank">Get Essential</a>
+                    <a class="tier-btn tier-essential" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Essential</a>
                 </div>
-                <div class="pricing-card featured">
+                <div class="pricing-card">
                     <div class="pricing-tier">PRO</div>
                     <div class="pricing-price">$20<span>/mo</span></div>
                     <p class="pricing-desc">Power users & customization</p>
@@ -421,11 +589,10 @@
                         <li><span class="check">✓</span> Custom Theme (3 slots)</li>
                         <li><span class="check">✓</span> Preview Mode</li>
                         <li><span class="check">✓</span> Availability Filter</li>
-                        <li class="highlight"><span class="check">✓</span> Most Popular</li>
                     </ul>
-                    <a href="https://premium.jtpowertools.com" class="cta-button" target="_blank">Get Pro</a>
+                    <a class="tier-btn tier-pro" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Pro</a>
                 </div>
-                <div class="pricing-card">
+                <div class="pricing-card featured">
                     <div class="pricing-tier">POWER USER</div>
                     <div class="pricing-price">$30<span>/mo</span></div>
                     <p class="pricing-desc">API-powered features</p>
@@ -435,9 +602,10 @@
                         <li><span class="check">✓</span> Budget Changelog</li>
                         <li class="highlight"><span class="check">✓</span> MCP Server Access</li>
                     </ul>
-                    <a href="https://premium.jtpowertools.com" class="cta-button secondary" target="_blank">Get Power User</a>
+                    <a class="tier-btn tier-power" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Power User</a>
                 </div>
             </div>
+            <p class="powered-by-gumroad">Powered by <a href="https://gumroad.com" target="_blank" rel="noopener">Gumroad</a></p>
             <div class="company-note">
                 <h4>💼 ONE SUBSCRIPTION, UNLIMITED USERS</h4>
                 <p>Your monthly subscription covers your entire organization. Share with all employees who need access — no per-user fees, no hidden costs. Cancel anytime.</p>

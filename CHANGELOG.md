@@ -5,13 +5,33 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.9] - 2026-03-06
 
 ### Added
 
 #### MCP Server — PDF Parsing
-- **Added `parse_pdf` tool** — AI assistants can now extract text content from PDF files stored in JobTread. Use after `get_job_files` to read bid documents, proposals, contracts, and spec sheets. Supports page-level extraction with configurable page limits. Enables workflows like multi-sub bid leveling, scope alignment checks, and contract review.
-- **Added PDF parsing spec** (`specs/pdf-parsing-spec.md`) — Full feature specification covering tool definition, implementation approach (unpdf for Cloudflare Workers), enabled workflows, limitations (scanned/image PDFs, table structure), and future enhancements (OCR, table extraction, caching).
+- **Added `jobtread_parse_pdf` tool** — AI assistants can now extract text content and metadata from PDF files attached to JobTread jobs or from direct URLs. Accepts a JobTread file ID (from `jobtread_get_job_files`) or a direct URL. Returns per-page text with page dimensions and document metadata (title, author, creation date, PDF version). Supports configurable page ranges (e.g., "1-5", "1,3,5"). Enables workflows like bid leveling, scope alignment, contract review, and spec analysis.
+  - **Safeguards**: 25 MB file size limit, 50-page max per request, 10s fetch timeout, 100 KB per-page text cap, PDF magic-byte validation, HTTPS-only URL enforcement
+- **Added scanned PDF image extraction** — Pages with little or no extractable text (< 50 chars) are automatically detected as scanned/image pages. Embedded images are extracted via `unpdf`'s `extractImages()`, downscaled to max 1600px, encoded as PNG using a pure-JS encoder (with `CompressionStream` for DEFLATE), and returned as base64 MCP image content blocks. AI clients with vision (Claude, ChatGPT) can now "read" scanned bid documents, hand-written notes, and image-based PDFs directly.
+  - **Limits**: 3 images per page, 2 MB per page, 5 MB total across all pages
+
+#### MCP Server — Custom Fields Enhancement
+- **Enhanced `jobtread_get_custom_fields` tool** — Now accepts an optional `targetType` parameter to filter custom fields by entity type: `job`, `location`, `account` (customer/vendor), `dailyLog`, or `costItem` (budget line items). Omit the parameter to return all custom fields across all types. Previously hardcoded to job fields only.
+
+#### MCP Server — Dashboards
+- **Added `jobtread_list_dashboards` tool** — List all dashboards in the organization with names, types, and IDs.
+- **Added `jobtread_get_dashboard` tool** — Get a specific dashboard with all its tiles (widgets), including tile position (x, y), size (width, height), and configuration options.
+
+#### MCP Server — Tool Naming Alignment
+- **Renamed `jobtread_search_contacts` → `jobtread_search_accounts`** — Now searches for customers, vendors, and subcontractors (accounts) by name, returning accounts with their nested contacts (people). Aligns with JobTread's terminology where accounts are the primary entity and contacts are people within them.
+- **Renamed `jobtread_get_financial_summary` → `jobtread_get_documents_summary`** — Matches JobTread's "Documents" terminology for estimates, invoices, purchase orders, bills, and change orders.
+- **Updated tool descriptions** across all tools to use JobTread-specific terminology (cost items, cost groups, schedule, tasks & to-dos, documents vs files, accounts vs contacts).
+- **Updated popup tool list** — Reflects all renames, adds Dashboards and Parse PDF sections, updates tool count to 24.
+
+#### MCP Server — Knowledge Base Expansion
+- **Added text formatting knowledge** — AI assistants can now look up JobTread's custom Markdown syntax (bold `*text*`, italic `^text^`, underline `_text_`, justification, colors, alerts, tables) via the `text_formatting` category.
+- **Added formulas & parameters knowledge** — Reference for building cost item formulas with job parameters, parent quantities, custom fields, and construction-specific examples (concrete, paint, drywall, roofing) via the `formulas_parameters` category.
+- **Added functions knowledge** — Complete reference for arithmetic operators, math functions, conditional logic (if/and/or), and utility functions (coalesce, cast, number) via the `functions` category.
 
 #### MCP Server
 - **Added OAuth 2.1 support** — ChatGPT and Claude.ai can now connect via OAuth auto-discovery (`.well-known/`). Users just paste the server URL; the AI client handles the full OAuth flow with PKCE. Authorization page lets users enter their License Key and Grant Key.

@@ -19,7 +19,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>Power Tools</h1>
-        <span class="version">v3.6.8</span>
+        <span class="version">v3.6.9</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <i class="ph ph-sun theme-icon light-icon"></i>
           <i class="ph ph-moon theme-icon dark-icon"></i>
@@ -523,7 +523,7 @@
             </div>
 
             <p class="license-link">
-              <a href="https://premium.jtpowertools.com" target="_blank">Subscribe to share a license with your team!</a>
+              <a href="https://jtpowertools.com/subscribe.html" target="_blank">Subscribe to share a license with your team!</a>
             </p>
           </div>
 
@@ -667,7 +667,7 @@
               <i class="ph ph-flask"></i>
               <div>
                 <strong>Beta &mdash; Read-Only Access</strong>
-                <p>MCP integration is in beta. All 22 tools are <strong>read-only</strong> &mdash; your JobTread data cannot be modified.</p>
+                <p>MCP integration is in beta. All 24 tools are <strong>read-only</strong> &mdash; your JobTread data cannot be modified.</p>
               </div>
             </div>
           </div>
@@ -675,7 +675,7 @@
           <!-- What is MCP -->
           <div class="mcp-info-card">
             <h3><i class="ph ph-info"></i> What is MCP?</h3>
-            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude Code</strong>, <strong>Cursor</strong>, and <strong>ChatGPT</strong> read your JobTread data directly. Ask questions, analyze budgets, review schedules, and get insights using natural language.</p>
+            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude</strong>, <strong>ChatGPT</strong>, <strong>Grok</strong>, <strong>Gemini</strong>, and <strong>Cursor</strong> read your JobTread data directly. Ask questions, analyze budgets, review schedules, and get insights using natural language.</p>
           </div>
 
           <!-- Upgrade CTA (shown to non-Power Users) -->
@@ -792,6 +792,10 @@
                   <i class="ph ph-sparkle"></i>
                   <span>Gemini</span>
                 </button>
+                <button class="platform-tab" data-provider="grok">
+                  <i class="ph ph-lightning"></i>
+                  <span>Grok</span>
+                </button>
               </div>
 
               <!-- Level 2: Variant (Claude only) -->
@@ -848,6 +852,12 @@
                     <p>Uses the <code>httpUrl</code> key per Gemini CLI docs.</p>
                   </div>
                 </div>
+                <div class="platform-note" data-platform="grok">
+                  <div class="platform-note-content">
+                    <p>Configure via xAI API settings or Grok client MCP configuration.</p>
+                    <p>Uses standard <code>url</code> + <code>Authorization</code> header.</p>
+                  </div>
+                </div>
               </div>
 
               <div class="mcp-config-actions">
@@ -865,7 +875,7 @@
 
           <!-- Available Tools -->
           <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (23 &mdash; Read-Only)</h3>
+            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (24 &mdash; Read-Only)</h3>
 
             <div class="mcp-tools-category">
               <h4 class="mcp-tools-category-title">Jobs &amp; Budget</h4>
@@ -873,13 +883,13 @@
                 <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Jobs</div>
                 <div class="mcp-tool"><i class="ph ph-briefcase"></i> Get Job</div>
                 <div class="mcp-tool"><i class="ph ph-clipboard-text"></i> Job Details</div>
-                <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budget</div>
-                <div class="mcp-tool"><i class="ph ph-currency-dollar"></i> Financial Summary</div>
+                <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budget (Cost Items)</div>
+                <div class="mcp-tool"><i class="ph ph-file-text"></i> Documents Summary</div>
               </div>
             </div>
 
             <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Tasks &amp; Schedule</h4>
+              <h4 class="mcp-tools-category-title">Schedule</h4>
               <div class="mcp-tools-list">
                 <div class="mcp-tool"><i class="ph ph-list-checks"></i> List Tasks</div>
                 <div class="mcp-tool"><i class="ph ph-calendar"></i> Get Schedule</div>
@@ -887,9 +897,9 @@
             </div>
 
             <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Contacts</h4>
+              <h4 class="mcp-tools-category-title">Customers &amp; Vendors</h4>
               <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-address-book"></i> Search Contacts</div>
+                <div class="mcp-tool"><i class="ph ph-address-book"></i> Search Accounts</div>
                 <div class="mcp-tool"><i class="ph ph-user"></i> Account Details</div>
               </div>
             </div>
@@ -901,6 +911,14 @@
                 <div class="mcp-tool"><i class="ph ph-note"></i> Single Log</div>
                 <div class="mcp-tool"><i class="ph ph-chat-circle"></i> Comments</div>
                 <div class="mcp-tool"><i class="ph ph-clock"></i> Time Entries</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Dashboards</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool"><i class="ph ph-chart-bar"></i> List Dashboards</div>
+                <div class="mcp-tool"><i class="ph ph-squares-four"></i> Get Dashboard</div>
               </div>
             </div>
 
@@ -926,7 +944,7 @@
               </div>
             </div>
 
-            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> All 23 tools are read-only &mdash; your JobTread data is safe.</p>
+            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> All 24 tools are read-only &mdash; your JobTread data is safe.</p>
           </div>
 
         </div>

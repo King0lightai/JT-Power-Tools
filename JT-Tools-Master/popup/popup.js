@@ -1953,7 +1953,8 @@ let selectedMcpPlatform = 'claude-code';
 const PROVIDER_DEFAULTS = {
   'claude': 'claude-code',
   'chatgpt': 'chatgpt',
-  'gemini': 'gemini'
+  'gemini': 'gemini',
+  'grok': 'grok'
 };
 
 /**
@@ -2118,6 +2119,19 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
         }
       }, null, 2);
 
+    case 'grok':
+      // Grok (xAI): Standard MCP config with url + headers
+      return JSON.stringify({
+        "mcpServers": {
+          "jobtread": {
+            "url": `${serverUrl}/mcp`,
+            "headers": {
+              "Authorization": `Bearer ${authToken}`
+            }
+          }
+        }
+      }, null, 2);
+
     default:
       return '';
   }
@@ -2169,7 +2183,8 @@ async function handleCopyMcpConfig() {
       'claude-desktop': 'Claude Desktop',
       'chatgpt': 'ChatGPT',
       'claude-web': 'Claude Web',
-      'gemini': 'Gemini'
+      'gemini': 'Gemini',
+      'grok': 'Grok'
     };
     const label = isUrl ? 'URL' : 'config';
     showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');

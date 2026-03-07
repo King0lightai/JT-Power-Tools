@@ -72,12 +72,9 @@ const ReverseThreadOrderFeature = (() => {
         order: 999 !important;
       }
 
-      /* Reply button overlays the header's right side via absolute positioning.
-         Removed from flex flow so messageList fills the wrapper naturally. */
+      /* Reply button stays in flex flow at visual top (column-reverse).
+         No absolute positioning — avoids overlapping the "..." menu. */
       .${CLS_WRAPPER} > :not(.${CLS_MSGLIST}) {
-        position: absolute !important;
-        top: 0 !important;
-        right: 0 !important;
         z-index: 2 !important;
       }
     `;

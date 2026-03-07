@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Changelog - JT Power Tools</title>
+    <meta name="description" content="Full version history for JT Power Tools. See every new feature, bug fix, and improvement across all releases.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://jtpowertools.com/changelog.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jtpowertools.com/changelog.html">
+    <meta property="og:title" content="Changelog - JT Power Tools">
+    <meta property="og:description" content="Full version history for JT Power Tools. See every new feature, bug fix, and improvement.">
+    <meta property="og:image" content="https://jtpowertools.com/og-image.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -40,11 +48,115 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.9 — MCP PDF/Image Reader, Dashboards, Custom Fields -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.9</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">March 6, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — PDF & Image Reader</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI assistants can now extract text from PDF files attached to jobs or from direct URLs via the new <code>jobtread_parse_pdf</code> tool</li>
+                            <li class="sub-item">Scanned PDFs and image-based pages are automatically detected — embedded images are extracted and sent to AI vision models for reading</li>
+                            <li class="sub-item">Enables bid leveling, scope alignment, contract review, and spec analysis directly through your AI assistant</li>
+                            <li class="sub-item">Supports configurable page ranges (e.g., "1-5", "1,3,5") with a 50-page max per request</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Dashboard Access</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">New <code>jobtread_list_dashboards</code> tool to list all dashboards in your organization</li>
+                            <li class="sub-item">New <code>jobtread_get_dashboard</code> tool to read dashboard tiles, positions, sizes, and configurations</li>
+                            <li class="sub-item">Pull key metrics for production meetings, reporting, and forecasting</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Custom Fields Enhancement</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Custom fields tool now supports filtering by entity type: jobs, locations, accounts, daily logs, and cost items</li>
+                            <li class="sub-item">Previously hardcoded to job fields only — now returns fields for any entity type or all types at once</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Knowledge Base Expansion</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">AI assistants can now look up JobTread's custom text formatting syntax (bold, italic, underline, colors, alerts, tables)</li>
+                            <li class="sub-item">New formulas & parameters reference for building cost item formulas with job parameters, quantities, and custom fields</li>
+                            <li class="sub-item">Complete functions reference with math, conditionals, and utility functions</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — Tool Naming Alignment</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Renamed tools to match JobTread terminology — <code>search_contacts</code> → <code>search_accounts</code>, <code>get_financial_summary</code> → <code>get_documents_summary</code></li>
+                            <li class="sub-item">Updated all tool descriptions to use JobTread-specific terms (cost items, cost groups, documents vs files)</li>
+                            <li class="sub-item">Tool count increased from 22 to 24</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header — Schedule Sidebar</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed long-standing bug where schedule sidebar panels (Update Task, Task Details) would go out of the viewport when Freeze Header was active</li>
+                            <li class="sub-item">JobTread's JavaScript continuously overwrites inline positioning — now uses a dedicated MutationObserver to re-correct sidebar placement below frozen tabs</li>
+                            <li class="sub-item">Also fixes the sidebar scrollbar being cut off at the bottom on Schedule pages</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Character Counter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Moved counter inline within the toolbar for a cleaner layout in both main and reply message forms</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Reverse Thread Order</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed Reply button positioning — now cleanly overlays the header bar instead of sitting too low</li>
+                            <li class="sub-item">Fixed feature not being properly tier-locked to Essential in the popup settings</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🌐</span> Website</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Homepage Updates</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added dedicated MCP / AI Integration section with cards linking to setup guides for ChatGPT, Claude, Cursor, Grok, Gemini, and more</li>
+                            <li class="sub-item">Gumroad checkout now opens directly from pricing buttons — no more redirect to a separate page</li>
+                            <li class="sub-item">New tier-colored pricing buttons (green Essential, orange Pro, purple Power User) with hover fill effects</li>
+                            <li class="sub-item">Power User tier now highlighted as "Most Powerful" with purple accent</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Documentation & SEO</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Added MCP / AI Integration cards to documentation page (Grok, Gemini CLI guides)</li>
+                            <li class="sub-item">Added SEO meta tags (description, canonical, Open Graph) across all 30+ docs pages</li>
+                            <li class="sub-item">Added structured data (JSON-LD) for SoftwareApplication on homepage</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.8 — OAuth & Multi-Field Filter -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.8</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">March 3, 2026</span>
             </div>
 
