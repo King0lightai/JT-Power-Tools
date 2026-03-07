@@ -3,11 +3,11 @@
  * Provides cross-browser compatibility between Chrome and Firefox
  *
  * Firefox uses the `browser.*` namespace with Promises
- * Chrome uses the `chrome.*` namespace with callbacks (and some Promise support in MV3)
+ * Chrome uses the `chrome.*` namespace with callbacks (and Promise support in MV3)
  *
- * This polyfill normalizes the API so all code can use `chrome.*` and it works
- * in both browsers. Firefox already aliases `chrome` to `browser` for most APIs,
- * but this polyfill ensures edge cases are handled.
+ * This polyfill wraps `browser.storage` so that `chrome.storage.*` works
+ * correctly in Firefox — supporting both Promise-based (await) and
+ * callback-based usage patterns used throughout the codebase.
  */
 
 (function () {
@@ -21,21 +21,92 @@
     return;
   }
 
-  // Firefox: Ensure chrome.* namespace works correctly
-  // Firefox already provides a `chrome` global that mirrors `browser` for most APIs,
-  // but some edge cases need patching.
-
-  // Ensure chrome.storage.sync callbacks work in Firefox
-  // Firefox's chrome.storage.sync returns Promises, but callback-style code
-  // expects the callback to be invoked. Firefox handles this natively in most cases.
-
-  // Patch chrome.runtime.lastError for Firefox compatibility
-  // Firefox uses Promise rejections instead of chrome.runtime.lastError
-  // The StorageWrapper already handles both patterns, so this is mostly safe.
-
-  // Ensure chrome.action exists (Firefox MV2 uses browser.browserAction)
+  // Firefox: Ensure chrome.action exists (Firefox MV2 uses browser.browserAction)
   if (!chrome.action && chrome.browserAction) {
     chrome.action = chrome.browserAction;
+  }
+
+  /**
+   * Wrap a Firefox browser.storage area (sync or local) so it works with both:
+   *   - Promise-based: `await chrome.storage.sync.get(keys)`
+   *   - Callback-based: `chrome.storage.sync.get(keys, callback)`
+   *
+   * Firefox's native `browser.storage.*` only returns Promises.
+   * Chrome's `chrome.storage.*` uses callbacks.
+   * Code in this extension uses BOTH patterns, so we need to support both.
+   */
+  function wrapStorageArea(browserArea) {
+    if (!browserArea) return browserArea;
+
+    return {
+      get: function (keys, callback) {
+        const promise = browserArea.get(keys);
+        if (typeof callback === 'function') {
+          promise.then(function (result) { callback(result); })
+                 .catch(function () { callback({}); });
+          return;
+        }
+        return promise;
+      },
+
+      set: function (data, callback) {
+        const promise = browserArea.set(data);
+        if (typeof callback === 'function') {
+          promise.then(function () { callback(); })
+                 .catch(function () { callback(); });
+          return;
+        }
+        return promise;
+      },
+
+      remove: function (keys, callback) {
+        const promise = browserArea.remove(keys);
+        if (typeof callback === 'function') {
+          promise.then(function () { callback(); })
+                 .catch(function () { callback(); });
+          return;
+        }
+        return promise;
+      },
+
+      clear: function (callback) {
+        const promise = browserArea.clear();
+        if (typeof callback === 'function') {
+          promise.then(function () { callback(); })
+                 .catch(function () { callback(); });
+          return;
+        }
+        return promise;
+      },
+
+      // getBytesInUse is not supported in Firefox — provide a safe no-op
+      getBytesInUse: function (keys, callback) {
+        if (typeof browserArea.getBytesInUse === 'function') {
+          var promise = browserArea.getBytesInUse(keys);
+          if (typeof callback === 'function') {
+            promise.then(function (bytes) { callback(bytes); })
+                   .catch(function () { callback(0); });
+            return;
+          }
+          return promise;
+        }
+        // Not available — return 0
+        if (typeof callback === 'function') {
+          callback(0);
+          return;
+        }
+        return Promise.resolve(0);
+      }
+    };
+  }
+
+  // Override chrome.storage with wrapped browser.storage areas
+  if (typeof browser.storage !== 'undefined') {
+    chrome.storage = {
+      sync: wrapStorageArea(browser.storage.sync),
+      local: wrapStorageArea(browser.storage.local),
+      onChanged: browser.storage.onChanged
+    };
   }
 
   // Export detection flag
