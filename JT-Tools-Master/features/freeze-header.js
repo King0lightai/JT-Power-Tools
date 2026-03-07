@@ -9,6 +9,7 @@ const FreezeHeaderFeature = (() => {
   let popupObserver = null;
   let jobContextObserver = null;
   let urlCheckInterval = null;
+  let sidebarStyleObservers = [];
 
   // CSS for sticky header - targets the specific JobTread structure
   const STICKY_STYLES = `
@@ -133,10 +134,11 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
-    /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary - fix z-index stacking */
-    /* These are job-specific sidebars (Update Task, Task Details, COST ITEM DETAILS) */
-    /* Do NOT modify top - let JobTread handle positioning */
-    /* EXCLUDE global sidebars (Notifications, Daily Log, etc.) which need higher z-index */
+    /* Sidebar scroll containers INSIDE data-is-drag-scroll-boundary are handled by JS */
+    /* (adjustDragBoundarySidebars + MutationObserver) because JobTread's JS continuously */
+    /* overwrites inline top/max-height on scroll. CSS !important cannot be used here as */
+    /* it would override the JS-computed values that account for actual viewport position. */
+    /* Only z-index is set via CSS since JT doesn't dynamically change it. */
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky:not(.jt-global-sidebar):not(.jt-edit-items-panel),
     .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky.overflow-y-auto.overscroll-contain:not(.jt-global-sidebar):not(.jt-edit-items-panel) {
       z-index: 1 !important;
@@ -194,10 +196,26 @@ const FreezeHeaderFeature = (() => {
       top: 0px !important;
     }
 
+    /* Nested edit-items-panels (e.g., Cost Item Details INSIDE the Add/Edit Items panel) */
+    /* These are inside the outer panel's scroll container, so top should be 0 (relative to */
+    /* the scroll container), NOT toolbarBottom. Higher specificity overrides line 173 rule. */
+    .jt-freeze-header-active .jt-edit-items-panel .jt-edit-items-panel,
+    .jt-freeze-header-active .jt-edit-items-panel [data-is-drag-scroll-boundary] .jt-edit-items-panel {
+      top: 0px !important;
+      max-height: none !important;
+    }
+
     /* Nested drag-boundary elements (Cost Item Details inside edit panel) keep natural positioning */
     .jt-freeze-header-active .jt-edit-items-panel [data-is-drag-scroll-boundary="true"] {
       top: 0px !important;
       z-index: auto !important;
+    }
+
+    /* Sticky bottom action bar inside edit panel (Item, Group, Discard, Save buttons) */
+    /* Give it a higher z-index so it appears above the Cost Item Details sidebar */
+    .jt-freeze-header-active .jt-edit-items-panel > .sticky[style*="bottom: 0"],
+    .jt-freeze-header-active .jt-edit-items-panel > .sticky[style*="bottom:0"] {
+      z-index: 36 !important;
     }
 
     /* Footer sticky elements inside edit panel should keep bottom positioning */
@@ -291,29 +309,27 @@ const FreezeHeaderFeature = (() => {
 
     /* Job context label - shows job name in top header bar when scrolled past job header */
     .jt-freeze-header-active .jt-job-context-label {
-      display: flex;
+      display: none;
       align-items: center;
       padding: 0 10px;
       font-size: 13px;
       font-weight: 600;
-      color: #6b7280;
+      color: #1f2937;
       white-space: nowrap;
       max-width: 200px;
       overflow: hidden;
       text-overflow: ellipsis;
       border-left: 1px solid #e5e7eb;
-      opacity: 0;
-      animation: jt-context-fade-in 0.2s ease forwards;
       flex-shrink: 0;
       cursor: pointer;
     }
 
-    .jt-freeze-header-active .jt-job-context-label:hover {
-      color: #374151;
+    .jt-freeze-header-active .jt-job-context-label.jt-visible {
+      display: flex;
     }
 
-    @keyframes jt-context-fade-in {
-      to { opacity: 1; }
+    .jt-freeze-header-active .jt-job-context-label:hover {
+      color: #111827;
     }
 
     /* Dark mode compatibility - uses body.jt-dark-mode class added by dark-mode.js */
@@ -351,12 +367,12 @@ const FreezeHeaderFeature = (() => {
 
     /* Job context label in dark mode */
     body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label {
-      color: #9ca3af;
+      color: #e0e0e0;
       border-left-color: #464646;
     }
 
     body.jt-dark-mode.jt-freeze-header-active .jt-job-context-label:hover {
-      color: #e5e7eb;
+      color: #ffffff;
     }
 
     /* Custom theme compatibility - uses body.jt-custom-theme class added by rgb-theme.js */
@@ -1170,6 +1186,124 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Adjust sidebar scroll containers inside data-is-drag-scroll-boundary.
+   * JobTread dynamically sets top and max-height via JS on scroll, so CSS !important
+   * alone cannot reliably override these values. We use JS + MutationObserver to
+   * continuously correct the positioning when freeze header pushes content down.
+   */
+  function adjustDragBoundarySidebars() {
+    // Clean up existing sidebar style observers
+    cleanupSidebarStyleObservers();
+
+    const toolbarBottomStr = getComputedStyle(document.documentElement)
+      .getPropertyValue('--jt-toolbar-bottom').trim();
+    const toolbarBottom = parseInt(toolbarBottomStr, 10) || 138;
+
+    // --- 1) Top-level sidebars: push below the frozen toolbar ---
+    // These are sidebars inside drag-scroll-boundary containers that are NOT
+    // nested inside an edit-items-panel scroll container (i.e., top-level page sidebars).
+    const dragBoundarySidebars = document.querySelectorAll(
+      '[data-is-drag-scroll-boundary="true"] .overflow-y-auto.overscroll-contain.sticky'
+    );
+
+    for (const sidebar of dragBoundarySidebars) {
+      if (sidebar.classList.contains('jt-global-sidebar')) continue;
+      // Skip sidebars nested inside an edit-items-panel — handled separately below
+      if (sidebar.closest('.jt-edit-items-panel')) continue;
+
+      applySidebarPosition(sidebar, toolbarBottom);
+      observeSidebarStyle(sidebar);
+    }
+
+    // --- 2) Top-level edit-items-panels (Documents page Add/Edit Items) ---
+    // These are the OUTER scroll containers that need top: toolbarBottom.
+    // CRITICAL: Only process top-level panels, NOT nested ones (Cost Item Details
+    // is inside the outer panel's scroll area and should keep top: 0).
+    const editPanels = document.querySelectorAll('.jt-edit-items-panel');
+
+    for (const panel of editPanels) {
+      if (panel.classList.contains('jt-global-sidebar')) continue;
+
+      // Skip if this panel is NESTED inside another .jt-edit-items-panel
+      const parentPanel = panel.parentElement?.closest('.jt-edit-items-panel');
+      if (parentPanel) continue;
+
+      // Skip if inside a drag boundary that's inside another edit panel
+      const parentDragBoundary = panel.closest('[data-is-drag-scroll-boundary="true"]');
+      if (parentDragBoundary && parentDragBoundary.closest('.jt-edit-items-panel')) continue;
+
+      // Detect sticky bottom action bar (Item, Group, Discard, Save)
+      // inside this panel and account for its height in max-height
+      const bottomBar = panel.querySelector('.sticky[style*="bottom: 0"], .sticky[style*="bottom:0"]');
+      const bottomBarHeight = bottomBar ? bottomBar.offsetHeight : 0;
+
+      applySidebarPosition(panel, toolbarBottom, bottomBarHeight);
+      observeSidebarStyle(panel, bottomBarHeight);
+    }
+  }
+
+  /**
+   * Set up a MutationObserver on a sidebar to re-apply positioning when JT resets styles.
+   * @param {HTMLElement} sidebar - The sidebar element to observe
+   * @param {number} [bottomBarHeight=0] - Height of bottom bar to subtract from max-height
+   */
+  function observeSidebarStyle(sidebar, bottomBarHeight = 0) {
+    const obs = new MutationObserver(() => {
+      const currentToolbarBottom = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--jt-toolbar-bottom').trim(), 10
+      ) || 138;
+      applySidebarPosition(sidebar, currentToolbarBottom, bottomBarHeight);
+    });
+
+    obs.observe(sidebar, { attributes: true, attributeFilter: ['style'] });
+    sidebarStyleObservers.push(obs);
+  }
+
+  /**
+   * Apply correct top and max-height to a sidebar scroll container.
+   * Uses getBoundingClientRect() to compute max-height based on the sidebar's
+   * ACTUAL viewport position, not just the sticky top value. This handles the case
+   * where the page isn't scrolled yet and the sidebar is at its natural position
+   * (below header+tabs+toolbar) rather than its sticky position.
+   * @param {HTMLElement} sidebar - The sidebar scroll container element
+   * @param {number} toolbarBottom - Bottom edge of the frozen toolbar (--jt-toolbar-bottom)
+   * @param {number} [bottomBarHeight=0] - Height of a sticky bottom bar to reserve space for
+   */
+  function applySidebarPosition(sidebar, toolbarBottom, bottomBarHeight = 0) {
+    const currentTop = parseInt(sidebar.style.top, 10);
+    const rect = sidebar.getBoundingClientRect();
+    // Use the larger of actual position vs sticky top — when not scrolled,
+    // the sidebar is at its natural position which is below toolbarBottom
+    const effectiveTop = Math.max(rect.top, toolbarBottom);
+    const maxHeight = Math.floor(window.innerHeight - effectiveTop - bottomBarHeight);
+    const currentMaxHeight = parseInt(sidebar.style.maxHeight, 10);
+
+    // Check if !important priority is present — JT's JS strips it by setting
+    // style.maxHeight = 'Xpx' directly, which removes the !important flag.
+    // Without !important, our value loses to the stylesheet !important rule.
+    const topPriority = sidebar.style.getPropertyPriority('top');
+    const maxHeightPriority = sidebar.style.getPropertyPriority('max-height');
+    const needsImportant = topPriority !== 'important' || maxHeightPriority !== 'important';
+
+    if (needsImportant || currentTop !== toolbarBottom || Math.abs(currentMaxHeight - maxHeight) > 2) {
+      // CRITICAL: Use setProperty with 'important' — there's a stylesheet rule
+      // that sets top/max-height with !important on sticky elements inside drag-scroll-boundary.
+      // Normal inline styles lose to stylesheet !important. Inline !important beats stylesheet !important.
+      sidebar.style.setProperty('top', `${toolbarBottom}px`, 'important');
+      sidebar.style.setProperty('max-height', `${maxHeight}px`, 'important');
+    }
+  }
+
+  /**
+   * Clean up sidebar style MutationObservers
+   */
+  function cleanupSidebarStyleObservers() {
+    sidebarStyleObservers.forEach(obs => obs.disconnect());
+    sidebarStyleObservers = [];
+  }
+
+  /**
    * Calculate and set the correct top positions based on actual element heights
    */
   function updatePositions() {
@@ -1351,31 +1485,32 @@ const FreezeHeaderFeature = (() => {
   // Shows job name/number in the frozen tab bar when scrolled past the native header
 
   /**
-   * Inject the job context label into the top header bar (between logo and search)
+   * Ensure the job context label element exists in the header.
+   * Creates it once; subsequent calls are no-ops. Returns the label element or null.
    */
-  function injectJobContextLabel() {
-    // Already injected?
-    if (document.querySelector('.jt-job-context-label')) return;
+  function ensureJobContextLabel() {
+    const existing = document.querySelector('.jt-job-context-label');
+    if (existing) return existing;
 
     // Get job name text
     const jobNameEl = document.querySelector('.font-bold.text-2xl div[role="button"]');
-    if (!jobNameEl) return;
+    if (!jobNameEl) return null;
 
     const jobText = jobNameEl.textContent.trim();
-    if (!jobText) return;
+    if (!jobText) return null;
 
     // Find the top header's inner flex container
     const topHeader = document.querySelector('.jt-top-header');
-    if (!topHeader) return;
+    if (!topHeader) return null;
 
     const headerRow = topHeader.querySelector('.flex.items-center');
-    if (!headerRow) return;
+    if (!headerRow) return null;
 
     // Find the search bar container (div.grow.min-w-0) to insert before it
     const searchBar = headerRow.querySelector(':scope > .grow.min-w-0');
-    if (!searchBar) return;
+    if (!searchBar) return null;
 
-    // Create the label
+    // Create the label (hidden by default — CSS starts with opacity:0, visibility:hidden)
     const label = document.createElement('span');
     label.className = 'jt-job-context-label';
     label.textContent = jobText;
@@ -1388,10 +1523,27 @@ const FreezeHeaderFeature = (() => {
     });
 
     headerRow.insertBefore(label, searchBar);
+    return label;
   }
 
   /**
-   * Remove the job context label from the tab bar
+   * Show the job context label (add .jt-visible class)
+   */
+  function showJobContextLabel() {
+    const label = ensureJobContextLabel();
+    if (label) label.classList.add('jt-visible');
+  }
+
+  /**
+   * Hide the job context label (remove .jt-visible class)
+   */
+  function hideJobContextLabel() {
+    const label = document.querySelector('.jt-job-context-label');
+    if (label) label.classList.remove('jt-visible');
+  }
+
+  /**
+   * Remove the job context label from the DOM entirely (for cleanup)
    */
   function removeJobContextLabel() {
     const label = document.querySelector('.jt-job-context-label');
@@ -1399,8 +1551,8 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Set up IntersectionObserver to detect when the job header scrolls out of view
-   * When hidden, injects job name into frozen tab bar; when visible, removes it
+   * Set up IntersectionObserver to detect when the job header scrolls out of view.
+   * Toggles visibility of the label via CSS class — no DOM creation/removal on scroll.
    */
   function setupJobContextObserver() {
     // Clean up any existing observer
@@ -1420,11 +1572,11 @@ const FreezeHeaderFeature = (() => {
     jobContextObserver = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) {
-          // Job header scrolled out of view — show label in tab bar
-          injectJobContextLabel();
+          // Job header scrolled out of view — show label
+          showJobContextLabel();
         } else {
-          // Job header visible — remove label
-          removeJobContextLabel();
+          // Job header visible — hide label
+          hideJobContextLabel();
         }
       }
     }, {
@@ -1465,6 +1617,7 @@ const FreezeHeaderFeature = (() => {
     // Small delay to ensure elements are rendered before measuring
     setTimeout(() => {
       updatePositions();
+      adjustDragBoundarySidebars();
       setupJobContextObserver();
     }, 100);
   }
@@ -1513,6 +1666,9 @@ const FreezeHeaderFeature = (() => {
 
     // Clean up job context observer
     cleanupJobContextObserver();
+
+    // Clean up sidebar style observers
+    cleanupSidebarStyleObservers();
 
     // Remove CSS custom properties
     document.documentElement.style.removeProperty('--jt-header-height');
@@ -1591,6 +1747,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkGlobalSidebars();
           findAndMarkEditItemsPanel();
           updatePositions();
+          adjustDragBoundarySidebars();
           setupJobContextObserver();
         }, 200);
       }
@@ -1633,6 +1790,7 @@ const FreezeHeaderFeature = (() => {
             findAndMarkGlobalSidebars();
             findAndMarkEditItemsPanel();
             updatePositions();
+            adjustDragBoundarySidebars();
             setupJobContextObserver();
           }, 300);
         } else if (wasOnJobPage) {
@@ -1647,7 +1805,10 @@ const FreezeHeaderFeature = (() => {
     // Update position on window resize
     window.addEventListener('resize', () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(updatePositions, 100);
+      debounceTimer = setTimeout(() => {
+        updatePositions();
+        adjustDragBoundarySidebars();
+      }, 100);
     });
   }
 
@@ -1685,6 +1846,9 @@ const FreezeHeaderFeature = (() => {
 
     // Clean up job context observer
     cleanupJobContextObserver();
+
+    // Clean up sidebar style observers
+    cleanupSidebarStyleObservers();
 
     // Remove styles and applied classes
     removeStyles();

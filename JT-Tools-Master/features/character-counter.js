@@ -182,17 +182,18 @@ const CharacterCounterFeature = (() => {
       font-weight: 700;
     }
 
-    /* Position counter for message dialogs - in toolbar next to writing assistant */
+    /* Position counter for message dialogs - inline next to template button */
     .jt-char-counter-message {
       display: inline-flex;
       align-items: center;
       font-size: 12px;
       color: #6b7280;
-      padding: 4px 8px;
-      margin-left: 8px;
+      padding: 4px 4px;
+      margin-right: 4px;
       opacity: 1;
       height: auto;
       overflow: visible;
+      white-space: nowrap;
     }
 
     /* Dark mode compatibility */
@@ -2507,23 +2508,18 @@ const CharacterCounterFeature = (() => {
               toolbar.insertBefore(templatesContainer, counterContainer.nextSibling);
             }
           } else {
-            // SPLIT positioning:
-            // 1. Templates go on RIGHT side, before Send button (inline)
-            // 2. Counter goes BELOW the toolbar as a new row
+            // INLINE positioning: counter sits just left of the template button
             const rightSide = toolbar.querySelector('div.shrink-0');
 
-            // Place templates on the right, before Send button
             if (rightSide) {
               const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
+              // Counter first, then templates — both inline before Send
               buttonWrapper.insertBefore(templatesContainer, buttonWrapper.firstChild);
+              buttonWrapper.insertBefore(counterContainer, templatesContainer);
             } else {
+              toolbar.appendChild(counterContainer);
               toolbar.appendChild(templatesContainer);
             }
-
-            // Place counter BELOW the toolbar as a new row
-            counterContainer.style.marginTop = '4px';
-            counterContainer.style.marginLeft = '0';
-            toolbar.parentElement.insertBefore(counterContainer, toolbar.nextSibling);
           }
         } else {
           // Fallback: add both in a row after the textarea's container

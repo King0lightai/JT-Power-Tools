@@ -69,6 +69,15 @@ const ReverseThreadOrderFeature = (() => {
       .${CLS_HEADER} {
         order: 999 !important;
       }
+
+      /* Reply button shares same row as header instead of its own row.
+         Negative margin collapses its height so the messageList slides up.
+         Header content is left-aligned, Reply is right-aligned — no overlap. */
+      .${CLS_WRAPPER} > :not(.${CLS_MSGLIST}) {
+        margin-bottom: -30px !important;
+        position: relative !important;
+        z-index: 2 !important;
+      }
     `;
     document.head.appendChild(styleEl);
   }

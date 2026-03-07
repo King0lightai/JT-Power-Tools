@@ -39,6 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Character Counter & Templates
+- **Fixed character counter pushing native JT buttons to wrap** — Moved the character counter inline, just to the left of the template button, instead of placing it on a separate row below the toolbar.
+
+#### Reverse Thread Order
+- **Fixed Reply button pushing the header down** — Reply button now sits inline with the participants header bar (right-aligned) instead of taking its own row above it.
+
+#### Freeze Header
+- **Fixed sidebar going behind frozen navigation on Documents and Schedule pages** — sidebars (Cost Group/Item Details, Update Task, Task Details) had their scroll containers stuck at `top: 48px`, overlapping the frozen tab navigation. CSS-only fixes couldn't work because JobTread's JavaScript continuously overwrites the inline `top` and `max-height` on scroll. Now uses a dedicated MutationObserver that watches for style attribute changes on sidebar scroll containers and immediately re-corrects the positioning below the frozen tabs. Also fixes the sidebar scrollbar being cut off at the bottom on Schedule pages.
+
 #### Custom Field Filter
 - **Added dedicated Saved Filters dropdown** — saved filters were previously hidden inside the job status dropdown as an optgroup, making them undiscoverable. Now appears as its own dropdown between the status and field selects, visible whenever saved filters exist.
 
@@ -555,10 +564,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-#### Freeze Header Sidebar Cutoff (Known Issue - Not Yet Fixed)
-- **Issue**: When freeze header is active and user is at the top of the page, opening a sidebar (Update Task, Task Details) causes the bottom portion to be cut off
-- **Root cause**: JobTread dynamically sets `max-height` and `top` on sidebar elements via JavaScript as the user scrolls
-- **Workaround**: User can scroll down slightly on the main page to bring the full sidebar into view
+#### Freeze Header Sidebar Cutoff (Resolved in [Unreleased])
+- ~~**Issue**: When freeze header is active and user is at the top of the page, opening a sidebar (Update Task, Task Details) causes the bottom portion to be cut off~~
+- **Fixed**: Now uses a MutationObserver to watch for JobTread's JavaScript resetting `top` and `max-height` on sidebar scroll containers, and immediately corrects them to position below frozen tabs
 
 #### Message Templates Dropdown Positioning
 - Fixed templates dropdown appearing off-screen in sidebar message forms
