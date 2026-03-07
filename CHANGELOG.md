@@ -5,6 +5,33 @@ All notable changes to JT Power Tools will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Added Safari Web Extension build framework (build-safari.sh + GitHub Actions CI)
+  - `build-safari.sh` — macOS build script using `xcrun safari-web-extension-converter`
+  - `.github/workflows/build-safari.yml` — CI workflow on macOS 15 with Xcode 16.2
+  - Unsigned debug builds run automatically on push to main
+  - Xcode project uploaded as artifact for local testing
+- Added Firefox install button to website alongside Chrome and Edge
+  - Links to Firefox Add-ons listing
+  - Updated mobile notes to mention Firefox & Android support
+- Added `moz-extension://` and `safari-web-extension://` origin support to license proxy
+  - Firefox and Safari use random per-install UUIDs, so all origins from these schemes are allowed
+
+### Fixed
+- Fixed Firefox "unauthorized origin" error when validating license keys
+  - License proxy now accepts `moz-extension://` origins (previously only `chrome-extension://`)
+- Fixed drag-drop checkboxes appearing on fresh installs without a license key
+  - Changed `dragDrop` default from `true` to `false` in all fallback locations
+- Fixed Freeze Header pushing down Daily Log and Notifications sidebars
+  - Root cause: CSS `text-transform: uppercase` doesn't affect `textContent`
+  - All sidebar detection now uses case-insensitive comparison
+
+### Improved
+- Firefox storage polyfill now wraps `browser.storage` to support both Promise and callback patterns
+- Bumped Firefox manifest version to 3.6.91
+
 ## [3.6.9] - 2026-03-06
 
 ### Added

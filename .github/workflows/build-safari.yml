@@ -1,0 +1,96 @@
+name: Build Safari Extension
+
+# Runs on push to main or manually via GitHub Actions UI
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'JT-Tools-Master/**'
+      - 'build-safari.sh'
+      - '.github/workflows/build-safari.yml'
+  workflow_dispatch:  # Manual trigger from GitHub Actions tab
+
+jobs:
+  build-safari:
+    name: Convert & Build Safari Extension
+    runs-on: macos-15  # macOS Sequoia with Xcode 16+
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.2'
+
+      - name: Verify environment
+        run: |
+          echo "macOS version:"
+          sw_vers
+          echo ""
+          echo "Xcode version:"
+          xcodebuild -version
+          echo ""
+          echo "Extension version:"
+          grep '"version"' JT-Tools-Master/manifest.json | head -1
+
+      - name: Convert to Safari Web Extension
+        run: |
+          mkdir -p build/safari
+
+          # Copy extension source
+          cp -r JT-Tools-Master build/safari/extension
+
+          # Remove Firefox-specific files
+          rm -f build/safari/extension/manifest.firefox.json
+          rm -f build/safari/extension/background/background.js
+
+          # Run Apple's converter
+          xcrun safari-web-extension-converter \
+            --app-name "JT Power Tools" \
+            --bundle-identifier "com.jtpowertools.safari" \
+            --copy-resources \
+            --no-open \
+            --force \
+            --macos-only \
+            --project-location build/safari/xcode \
+            build/safari/extension
+
+      - name: List generated project structure
+        run: |
+          echo "Generated Xcode project structure:"
+          find build/safari/xcode -maxdepth 4 -type f | head -50
+          echo ""
+          echo "Available schemes:"
+          xcodebuild -project "build/safari/xcode/JT Power Tools/JT Power Tools.xcodeproj" -list 2>/dev/null || true
+
+      - name: Build Safari Extension (unsigned)
+        run: |
+          # Discover the actual scheme name
+          SCHEME=$(xcodebuild \
+            -project "build/safari/xcode/JT Power Tools/JT Power Tools.xcodeproj" \
+            -list 2>/dev/null | grep -A 10 "Schemes:" | grep -v "Schemes:" | head -1 | xargs)
+
+          echo "Building with scheme: $SCHEME"
+
+          xcodebuild build \
+            -project "build/safari/xcode/JT Power Tools/JT Power Tools.xcodeproj" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            -quiet
+
+          echo "Build succeeded!"
+
+      - name: Upload Xcode project as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-xcode-project
+          path: build/safari/xcode/
+          retention-days: 30
+
+      # Conversion warnings are logged by the converter tool.
+      # Check the "Convert to Safari Web Extension" step output
+      # for any API compatibility warnings.
