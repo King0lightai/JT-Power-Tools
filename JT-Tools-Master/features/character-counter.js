@@ -2480,7 +2480,7 @@ const CharacterCounterFeature = (() => {
           }
 
           // SECOND: If no sticky footer found, look for flex.justify-between toolbars
-          // These are used in standard message dialogs
+          // These are used in standard message dialogs and reply forms
           if (!toolbar) {
             const toolbars = dialog.querySelectorAll('div.flex.justify-between');
             for (const t of toolbars) {
@@ -2488,6 +2488,11 @@ const CharacterCounterFeature = (() => {
               const sendButton = t.querySelector('button[type="submit"]') ||
                                  Array.from(t.querySelectorAll('button')).find(b => b.textContent.trim() === 'Send');
               if (sendButton) {
+                toolbar = t;
+                break;
+              }
+              // Also match toolbars with a right-side button container (reply forms)
+              if (t.querySelector('div.shrink-0')) {
                 toolbar = t;
                 break;
               }

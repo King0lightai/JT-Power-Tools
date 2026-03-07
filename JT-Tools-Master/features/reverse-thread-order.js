@@ -53,10 +53,12 @@ const ReverseThreadOrderFeature = (() => {
     styleEl = document.createElement('style');
     styleEl.id = 'jt-reverse-thread-order-styles';
     styleEl.textContent = `
-      /* containerWrapper: column-reverse puts reply button (DOM-last) at visual top */
+      /* containerWrapper: column-reverse puts reply button (DOM-last) at visual top.
+         position: relative provides positioning context for the Reply button. */
       .${CLS_WRAPPER} {
         display: flex !important;
         flex-direction: column-reverse !important;
+        position: relative !important;
       }
 
       /* messageList: column-reverse so last-child (editor) renders at visual top */
@@ -70,12 +72,12 @@ const ReverseThreadOrderFeature = (() => {
         order: 999 !important;
       }
 
-      /* Reply button shares same row as header instead of its own row.
-         Negative margin collapses its height so the messageList slides up.
-         Header content is left-aligned, Reply is right-aligned — no overlap. */
+      /* Reply button overlays the header's right side via absolute positioning.
+         Removed from flex flow so messageList fills the wrapper naturally. */
       .${CLS_WRAPPER} > :not(.${CLS_MSGLIST}) {
-        margin-bottom: -30px !important;
-        position: relative !important;
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
         z-index: 2 !important;
       }
     `;

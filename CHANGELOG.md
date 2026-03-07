@@ -40,10 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 #### Character Counter & Templates
-- **Fixed character counter pushing native JT buttons to wrap** — Moved the character counter inline, just to the left of the template button, instead of placing it on a separate row below the toolbar.
+- **Fixed character counter not moving inline in reply forms** — Broadened toolbar detection to recognize reply form toolbars (which lack a Send button but have a right-side button container). Counter and template button now appear inline in the toolbar instead of a separate wrapper row.
 
 #### Reverse Thread Order
-- **Fixed Reply button pushing the header down** — Reply button now sits inline with the participants header bar (right-aligned) instead of taking its own row above it.
+- **Fixed Reply button sitting too low** — Switched from negative margin to absolute positioning so the Reply button overlays the header bar's right side cleanly, aligned with the participants row.
 
 #### Freeze Header
 - **Fixed sidebar going behind frozen navigation on Documents and Schedule pages** — sidebars (Cost Group/Item Details, Update Task, Task Details) had their scroll containers stuck at `top: 48px`, overlapping the frozen tab navigation. CSS-only fixes couldn't work because JobTread's JavaScript continuously overwrites the inline `top` and `max-height` on scroll. Now uses a dedicated MutationObserver that watches for style attribute changes on sidebar scroll containers and immediately re-corrects the positioning below the frozen tabs. Also fixes the sidebar scrollbar being cut off at the bottom on Schedule pages.
