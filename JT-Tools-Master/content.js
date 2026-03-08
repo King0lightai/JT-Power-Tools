@@ -107,7 +107,7 @@ const featureModules = {
     instance: null
   },
   customFieldFilter: {
-    name: 'Custom Field Filter',
+    name: 'Job Switcher Filter',
     feature: () => window.CustomFieldFilterFeature,
     instance: null
   },
