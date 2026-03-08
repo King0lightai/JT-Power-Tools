@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Firefox and Safari use random per-install UUIDs, so all origins from these schemes are allowed
 
 ### Fixed
+- Fixed Text Formatter toolbar blocking Tab key navigation in message compose fields
+  - Toolbar buttons now set `tabindex="-1"` so Tab skips over them entirely
+  - Affects both embedded (message) and floating (budget) toolbar variants
+- Fixed Firefox `chrome.storage.local` not persisting (popup theme, grant key)
+  - Root cause: Firefox's `chrome` object may have non-writable `storage` property
+  - Polyfill now uses 3-tier override: direct assignment → `Object.defineProperty` → individual area patching
+  - Added verification flag (`_jt_polyfilled`) to confirm override took effect
 - Fixed Firefox "unauthorized origin" error when validating license keys
   - License proxy now accepts `moz-extension://` origins (previously only `chrome-extension://`)
 - Fixed drag-drop checkboxes appearing on fresh installs without a license key

@@ -436,6 +436,10 @@ const FormatterToolbar = (() => {
 
     toolbar.innerHTML = toolbarHTML;
 
+    // Remove all toolbar buttons from tab order so Tab key skips the toolbar
+    // (prevents Tab from getting trapped cycling through format buttons)
+    toolbar.querySelectorAll('button').forEach(btn => btn.setAttribute('tabindex', '-1'));
+
     // Setup handlers
     setupResponsiveToolbar(toolbar);
     setupFormatButtons(toolbar, field);
@@ -1768,6 +1772,9 @@ const FormatterToolbar = (() => {
     }
 
     toolbar.innerHTML = toolbarHTML;
+
+    // Remove all toolbar buttons from tab order so Tab key skips the toolbar
+    toolbar.querySelectorAll('button').forEach(btn => btn.setAttribute('tabindex', '-1'));
 
     // Setup handlers
     if (!expanded) {

@@ -39,6 +39,8 @@
     if (!browserArea) return browserArea;
 
     return {
+      _jt_polyfilled: true,
+
       get: function (keys, callback) {
         const promise = browserArea.get(keys);
         if (typeof callback === 'function') {
@@ -102,11 +104,48 @@
 
   // Override chrome.storage with wrapped browser.storage areas
   if (typeof browser.storage !== 'undefined') {
-    chrome.storage = {
+    var wrappedStorage = {
       sync: wrapStorageArea(browser.storage.sync),
       local: wrapStorageArea(browser.storage.local),
       onChanged: browser.storage.onChanged
     };
+
+    // Try direct assignment first
+    try {
+      chrome.storage = wrappedStorage;
+    } catch (e) {
+      // Direct assignment failed (chrome.storage may be non-writable)
+    }
+
+    // Verify the override took effect
+    if (!chrome.storage || !chrome.storage.local || !chrome.storage.local._jt_polyfilled) {
+      // Direct assignment was silently ignored — use Object.defineProperty
+      try {
+        Object.defineProperty(chrome, 'storage', {
+          value: wrappedStorage,
+          writable: true,
+          configurable: true
+        });
+      } catch (e2) {
+        // Object.defineProperty also failed — last resort: patch individual areas
+        try {
+          if (chrome.storage) {
+            chrome.storage.sync = wrappedStorage.sync;
+            chrome.storage.local = wrappedStorage.local;
+            chrome.storage.onChanged = wrappedStorage.onChanged;
+          }
+        } catch (e3) {
+          console.error('Browser polyfill: Could not override chrome.storage at all', e3);
+        }
+      }
+    }
+
+    // Final verification
+    if (chrome.storage && chrome.storage.local && chrome.storage.local._jt_polyfilled) {
+      console.log('Browser polyfill: chrome.storage successfully overridden (sync + local)');
+    } else {
+      console.warn('Browser polyfill: chrome.storage override may not have taken effect');
+    }
   }
 
   // Export detection flag
