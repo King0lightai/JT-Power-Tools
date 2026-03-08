@@ -1633,6 +1633,12 @@ a.feature-card h3 {
     color: #8b5cf6;
 }
 
+.mcp-card-icon .mcp-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
 .mcp-card h3 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 18px;
