@@ -81,6 +81,11 @@ const featureModules = {
     feature: () => window.HelpSidebarSupportFeature,
     instance: null
   },
+  keyboardShortcuts: {
+    name: 'Keyboard Shortcuts',
+    feature: () => window.KeyboardShortcutsFeature,
+    instance: null
+  },
   freezeHeader: {
     name: 'Freeze Header',
     feature: () => window.FreezeHeaderFeature,
@@ -145,7 +150,7 @@ let currentSettings = window.JTDefaults
       // Inline fallback if JTDefaults not loaded (should not happen)
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
-      quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
+      quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
       budgetChangelog: false, availabilityFilter: false,
@@ -273,6 +278,11 @@ async function initializeAllFeatures() {
     await initializeFeature('helpSidebarSupport');
   }
 
+  // Always enable Keyboard Shortcuts enhancement (not user-toggleable)
+  if (featureModules.keyboardShortcuts) {
+    await initializeFeature('keyboardShortcuts');
+  }
+
   console.log('JT-Tools: All enabled features initialized');
 }
 
@@ -294,8 +304,8 @@ async function handleSettingsChange(newSettings) {
       // Skip non-feature settings like rgbColors
       if (!featureModules[key]) continue;
 
-      // Skip helpSidebarSupport - it's always enabled and not user-toggleable
-      if (key === 'helpSidebarSupport') continue;
+      // Skip always-enabled features - not user-toggleable
+      if (key === 'helpSidebarSupport' || key === 'keyboardShortcuts') continue;
 
       const wasEnabled = currentSettings[key];
 

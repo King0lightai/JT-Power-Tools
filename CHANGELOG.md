@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated mobile notes to mention Firefox & Android support
 - Added `moz-extension://` and `safari-web-extension://` origin support to license proxy
   - Firefox and Safari use random per-install UUIDs, so all origins from these schemes are allowed
+- Added **Keyboard Shortcuts Enhancement** — always-on feature that enriches JT's native Shift+? modal
+  - Injects missing JT native shortcuts: Job Actions, Budget Actions, Catalog Actions, Schedule & To-Do Actions
+  - Appends missing items to existing Navigation and General Actions sections (Go to Messages, Save Changes, Redo, etc.)
+  - Adds JT Power Tools shortcuts section (Q+N, Ctrl+B/I/U)
+  - Dark mode support — automatically styles the entire modal when Dark Mode is active
+  - Uses MutationObserver to detect modal appearance; matches JT's exact HTML structure and classes
+
+### Changed
+- Renamed **Quick Job Switcher** to **Smart Resize** in popup and docs
+  - Updated description to "Resize any sidebar" to reflect the generic sidebar resize capability
 
 ### Fixed
 - Fixed Text Formatter toolbar blocking Tab key navigation in message compose fields
@@ -34,8 +44,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Freeze Header pushing down Daily Log and Notifications sidebars
   - Root cause: CSS `text-transform: uppercase` doesn't affect `textContent`
   - All sidebar detection now uses case-insensitive comparison
+- Fixed Freeze Header pushing down Time Entry and Add Time Entry sidebar headers
+  - Added `isTimeEntry` detection (TIME ENTRY, ADD TIME, TIME ENTRIES) to global sidebar marking
+  - Time Entry sidebars now stay at native header-level positioning like Time Clock
 
 ### Improved
+- Smart Job Switcher sidebar resize is now generic — resize handles appear on **any** JobTread sidebar (documents, task details, etc.), not just the Job Switcher
+  - Each sidebar type remembers its own width independently (detected from header text)
+  - Distinguishes "push" sidebars (Job Switcher, Notifications, Help, Daily Logs, Time Clock, Time Entry — adjusts main content padding) from "overlay" sidebars (Cost Item Details, Budget panels, Schedule Tasks — float on top without pushing content)
+  - Push classification now checks only header-level elements (h1-h3, bold/semibold text), not full sidebar body content, preventing false positives from body text references
+  - Explicit overlay exclusion list for Cost Item, Cost Group, Budget, Estimate, etc. prevents misclassification
+  - Daily Logs push now adjusts ALL sibling containers (navigation, headers, and content) — matching Job Switcher behavior
+  - Only applies a saved width if the user has previously resized that specific sidebar type; otherwise leaves it at its natural size
+  - Switched width storage from `chrome.storage.sync` to `localStorage` for synchronous reads and per-device preferences
+  - Existing users' saved Job Switcher width is automatically migrated on first run
+  - Uses `WeakSet` to track enhanced sidebars and prevent double-injection of resize handles
+  - Data attributes (`data-jt-push-padding`) track manually padded elements for precise cleanup on sidebar close
+  - Keyboard shortcuts (J+S, Alt+J) remain unchanged
 - Firefox storage polyfill now wraps `browser.storage` to support both Promise and callback patterns
 - Bumped Firefox manifest version to 3.6.91
 

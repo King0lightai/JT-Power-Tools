@@ -1,57 +1,79 @@
 // JobTread Smart Job Switcher Feature
 // Keyboard shortcuts: J+S or ALT+J to quickly search and switch jobs
-// Features: Quick job search, keyboard navigation, resizable sidebar
+// Features: Quick job search, keyboard navigation, resizable sidebars with per-sidebar width memory
 
 const SmartJobSwitcherFeature = (() => {
   let isActive = false;
   let isSearchOpen = false;
   let jKeyPressed = false;
   let sidebarObserver = null;
-  let lastMainContent = null; // Track the main content element for cleanup
+  let migrationDone = false;
   let resizeState = {
     isResizing: false,
     startX: 0,
-    startWidth: 0
+    startWidth: 0,
+    activeSidebar: null
   };
 
+  // WeakSet to track sidebars that already have resize handles injected
+  const enhancedSidebars = new WeakSet();
+
+  // Track which sidebars push content (have associated padding-right elements)
+  // vs overlay sidebars that just float on top
+  const pushSidebars = new WeakSet();
+
   // Constants for resize functionality
-  const STORAGE_KEY = 'jt-job-switcher-width';
+  const OLD_STORAGE_KEY = 'jt-job-switcher-width'; // Legacy chrome.storage.sync key
+  const STORAGE_PREFIX = 'jt-sidebar-';
   const MIN_WIDTH = 280;
   const MAX_WIDTH = 800;
   const DEFAULT_WIDTH = 400;
   const SIDEBAR_SELECTOR = 'div.z-30.absolute.top-0.bottom-0.right-0';
 
   /**
+   * Detect the sidebar type from its content for per-sidebar width storage.
+   * Looks at header text to identify the sidebar (e.g., "job-switcher", "documents", "task-details").
+   * Falls back to "default" if no identifiable header is found.
+   */
+  function getSidebarType(sidebarEl) {
+    if (!sidebarEl) return 'default';
+
+    // Look for header text in common patterns
+    const headerCandidates = sidebarEl.querySelectorAll('h1, h2, h3, [class*="font-bold"], [class*="font-semibold"]');
+    for (const header of headerCandidates) {
+      const text = (header.textContent || '').trim().toLowerCase();
+      // Skip very long text (not a header) or very short text (icons, etc.)
+      if (text.length < 2 || text.length > 60) continue;
+
+      // Normalize to kebab-case for storage key
+      const normalized = text
+        .replace(/[^a-z0-9\s]+/g, '')  // Remove non-alphanumeric
+        .trim()
+        .replace(/\s+/g, '-');          // Spaces to hyphens
+
+      if (normalized && normalized.length >= 2) {
+        return normalized;
+      }
+    }
+
+    return 'default';
+  }
+
+  /**
    * Check if a sidebar element is specifically the Job Switcher
-   * (not other sidebars like document viewers, etc.)
+   * Used only for keyboard shortcut features (Enter to select, Escape to close)
    */
   function isJobSwitcherSidebar(sidebar) {
     if (!sidebar) return false;
 
-    // Check for "JOB SWITCHER" text in the header
     const headerText = sidebar.textContent || '';
     if (headerText.includes('JOB SWITCHER') || headerText.includes('Job Switcher')) {
       return true;
     }
 
-    // Check for job search input placeholder
     const searchInput = sidebar.querySelector('input[placeholder*="Search Jobs"]') ||
                        sidebar.querySelector('input[placeholder*="Search jobs"]');
     if (searchInput) {
-      return true;
-    }
-
-    // Check for the job list structure (multiple job entries with addresses)
-    const jobEntries = sidebar.querySelectorAll('[role="button"]');
-    let jobLikeEntries = 0;
-    for (const entry of jobEntries) {
-      const text = entry.textContent || '';
-      // Job entries typically have address patterns or job numbers like "25-1001"
-      if (/\d{2}-\d{4}/.test(text) || /\d+\s+\w+\s+(st|street|ave|avenue|ln|lane|dr|drive|rd|road)/i.test(text)) {
-        jobLikeEntries++;
-      }
-    }
-    if (jobLikeEntries >= 3) {
       return true;
     }
 
@@ -59,7 +81,7 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
-   * Find the Job Switcher sidebar specifically
+   * Find the Job Switcher sidebar specifically (for keyboard shortcuts)
    */
   function findJobSwitcherSidebar() {
     const sidebars = document.querySelectorAll(SIDEBAR_SELECTOR);
@@ -72,12 +94,12 @@ const SmartJobSwitcherFeature = (() => {
   }
 
   /**
-   * Get saved sidebar width from chrome.storage.sync
+   * Get saved sidebar width from localStorage for a given sidebar type.
+   * Returns the saved width or null if no width was previously saved.
    */
-  async function getSavedWidth() {
+  function getSavedWidth(sidebarType) {
     try {
-      const data = await chrome.storage.sync.get(STORAGE_KEY);
-      const saved = data[STORAGE_KEY];
+      const saved = localStorage.getItem(STORAGE_PREFIX + sidebarType);
       if (saved) {
         const width = parseInt(saved, 10);
         if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
@@ -87,39 +109,125 @@ const SmartJobSwitcherFeature = (() => {
     } catch (e) {
       console.warn('SmartJobSwitcher: Could not read saved width', e);
     }
-    return DEFAULT_WIDTH;
+    return null;
   }
 
   /**
-   * Save sidebar width to chrome.storage.sync
+   * Save sidebar width to localStorage for a given sidebar type
    */
-  function saveWidth(width) {
+  function saveWidth(sidebarType, width) {
     try {
-      chrome.storage.sync.set({ [STORAGE_KEY]: String(width) });
+      localStorage.setItem(STORAGE_PREFIX + sidebarType, String(width));
     } catch (e) {
       console.warn('SmartJobSwitcher: Could not save width', e);
     }
   }
 
   /**
-   * Create and inject the resize handle into the sidebar
+   * Migrate saved width from old chrome.storage.sync to localStorage (one-time)
    */
-  async function injectResizeHandle(sidebar) {
-    // Safety check: only inject into Job Switcher sidebar
-    if (!isJobSwitcherSidebar(sidebar)) {
-      return;
+  async function migrateOldStorage() {
+    if (migrationDone) return;
+    migrationDone = true;
+
+    try {
+      // Check if we already have any localStorage sidebar widths
+      const hasLocalData = localStorage.getItem(STORAGE_PREFIX + 'job-switcher');
+      if (hasLocalData) return; // Already migrated
+
+      const data = await chrome.storage.sync.get(OLD_STORAGE_KEY);
+      const oldWidth = data[OLD_STORAGE_KEY];
+      if (oldWidth) {
+        const width = parseInt(oldWidth, 10);
+        if (width >= MIN_WIDTH && width <= MAX_WIDTH) {
+          localStorage.setItem(STORAGE_PREFIX + 'job-switcher', String(width));
+          console.log('SmartJobSwitcher: Migrated saved width from sync storage to localStorage');
+        }
+        // Clean up old key
+        chrome.storage.sync.remove(OLD_STORAGE_KEY);
+      }
+    } catch (e) {
+      console.warn('SmartJobSwitcher: Migration failed (non-critical)', e);
+    }
+  }
+
+  /**
+   * Determine whether a sidebar should push main content when resized.
+   * Uses header-level keyword detection — checks only h1-h3 and bold/semibold
+   * elements, NOT full textContent, to avoid false positives from body content
+   * (e.g., a Cost Item Details sidebar that mentions "daily log" in its body).
+   *
+   * Push sidebars: Job Switcher, Notifications, Help, Daily Logs
+   * Overlay sidebars: Everything else (Budget, Schedule Tasks, Todos, Cost Items, etc.)
+   */
+
+  // Overlay exclusions — if any header matches these, never push (checked first)
+  const OVERLAY_HEADER_PATTERNS = [
+    'COST ITEM', 'COST GROUP', 'ADD / EDIT', 'EDIT ITEMS',
+    'BUDGET', 'ESTIMATE', 'PURCHASE ORDER', 'INVOICE',
+  ];
+
+  // Push patterns — if any header matches these, push content
+  const PUSH_HEADER_PATTERNS = [
+    'JOB SWITCHER',
+    'NOTIFICATIONS',
+    'HELP',
+    'DAILY LOG',
+    'TIME CLOCK',
+    'TIME ENTRY',
+    'ADD TIME',
+    'CLOCK IN',
+    'CLOCK OUT',
+    'CLOCKED',
+  ];
+
+  function shouldPushContent(sidebar) {
+    // Collect text from header-level elements only (not full body content)
+    const headers = sidebar.querySelectorAll('h1, h2, h3, [class*="font-bold"], [class*="font-semibold"]');
+    let headerText = '';
+    for (const header of headers) {
+      const text = (header.textContent || '').trim();
+      if (text.length >= 2 && text.length <= 80) {
+        headerText += ' ' + text;
+      }
+    }
+    headerText = headerText.toUpperCase();
+
+    // Check overlay exclusions first (takes priority)
+    for (const pattern of OVERLAY_HEADER_PATTERNS) {
+      if (headerText.includes(pattern)) return false;
     }
 
-    // Check if resize handle already exists
-    if (sidebar.querySelector('.jt-resize-handle')) {
-      // Still apply saved width in case sidebar was recreated
-      await applySavedWidth(sidebar);
+    // Check push patterns
+    for (const pattern of PUSH_HEADER_PATTERNS) {
+      if (headerText.includes(pattern)) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Create and inject the resize handle into a sidebar
+   */
+  function injectResizeHandle(sidebar) {
+    // Skip if already enhanced (WeakSet prevents double-injection)
+    if (enhancedSidebars.has(sidebar)) {
       return;
     }
+    enhancedSidebars.add(sidebar);
+
+    // Classify push vs overlay by sidebar content keywords
+    if (shouldPushContent(sidebar)) {
+      pushSidebars.add(sidebar);
+    }
+
+    // Detect sidebar type for per-sidebar width storage
+    const sidebarType = getSidebarType(sidebar);
 
     // Create the resize handle element
     const resizeHandle = document.createElement('div');
     resizeHandle.className = 'jt-resize-handle';
+    resizeHandle.dataset.sidebarType = sidebarType;
     resizeHandle.style.cssText = `
       position: absolute;
       left: 0;
@@ -146,7 +254,7 @@ const SmartJobSwitcherFeature = (() => {
     resizeHandle.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      startResize(e, sidebar);
+      startResize(e, sidebar, sidebarType);
     });
 
     // Insert the resize handle into the inner container (the one with bg-white)
@@ -157,140 +265,139 @@ const SmartJobSwitcherFeature = (() => {
       sidebar.insertBefore(resizeHandle, sidebar.firstChild);
     }
 
-    // Apply saved width
-    await applySavedWidth(sidebar);
+    // Only apply a saved width if the user has previously resized this sidebar type
+    // Otherwise leave it at its natural size so we don't break overlay sidebars
+    const savedWidth = getSavedWidth(sidebarType);
+    if (savedWidth !== null) {
+      updateSidebarWidth(sidebar, savedWidth);
+    }
   }
 
   /**
-   * Apply saved width to sidebar and trigger reflow
-   */
-  async function applySavedWidth(sidebar) {
-    const savedWidth = await getSavedWidth();
-    updateSidebarWidth(sidebar, savedWidth);
-  }
-
-  /**
-   * Find the main content container that JobTread uses for padding adjustment
-   * JobTread uses a container with inline padding-right style matching sidebar width
-   */
-  function findMainContentContainer(sidebar) {
-    // Get the current sidebar width to help identify the right element
-    const sidebarWidth = sidebar.offsetWidth || DEFAULT_WIDTH;
-
-    // Strategy 1: Look for sidebar's sibling with inline padding-right style
-    // This is the most reliable because JobTread sets padding-right dynamically
-    const parent = sidebar.parentElement;
-    if (parent) {
-      for (const sibling of parent.children) {
-        if (sibling === sidebar) continue;
-
-        // Check if this sibling has padding-right in inline style
-        const inlinePaddingRight = sibling.style.paddingRight;
-        if (inlinePaddingRight) {
-          return sibling;
-        }
-      }
-    }
-
-    // Strategy 2: Look for siblings with grow class that have computed padding-right
-    if (parent) {
-      for (const sibling of parent.children) {
-        if (sibling === sidebar) continue;
-
-        if (sibling.classList.contains('grow') ||
-            sibling.classList.contains('flex-1') ||
-            sibling.classList.contains('flex-grow') ||
-            sibling.classList.contains('min-w-0')) {
-          // Check if it has significant padding-right (indicating sidebar awareness)
-          const computed = window.getComputedStyle(sibling);
-          const computedPadding = parseInt(computed.paddingRight, 10);
-          if (computedPadding > 100) {
-            return sibling;
-          }
-        }
-      }
-    }
-
-    // Strategy 3: Find any sibling with grow class (fallback)
-    if (parent) {
-      for (const sibling of parent.children) {
-        if (sibling === sidebar) continue;
-
-        if (sibling.classList.contains('grow') ||
-            sibling.classList.contains('flex-1') ||
-            sibling.classList.contains('flex-grow')) {
-          return sibling;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Update sidebar width and adjust main content area
+   * Update sidebar width and adjust main content area.
+   * Push sidebars: adjusts padding-right on content to match new width.
+   * Overlay sidebars: only changes sidebar width, never touches page layout.
    */
   function updateSidebarWidth(sidebar, newWidth) {
     // Remove max-width constraint that might interfere
     sidebar.style.maxWidth = 'none';
     sidebar.style.width = `${newWidth}px`;
 
-    // Find ALL elements with inline padding-right that might need updating
-    // JobTread sets padding-right on multiple elements when sidebar is open
-    const parent = sidebar.parentElement;
-    if (parent) {
-      // Update all siblings that have inline padding-right
-      for (const sibling of parent.children) {
-        if (sibling === sidebar) continue;
+    // Only adjust main content padding for push sidebars
+    if (pushSidebars.has(sidebar)) {
+      let foundPadding = false;
 
-        if (sibling.style.paddingRight) {
-          sibling.style.paddingRight = `${newWidth}px`;
+      // Strategy 1: Update existing inline padding-right on siblings
+      const parent = sidebar.parentElement;
+      if (parent) {
+        for (const sibling of parent.children) {
+          if (sibling === sidebar) continue;
+          if (sibling.style.paddingRight) {
+            sibling.style.paddingRight = `${newWidth}px`;
+            foundPadding = true;
+          }
+        }
+        if (parent.style.paddingRight) {
+          parent.style.paddingRight = `${newWidth}px`;
+          foundPadding = true;
         }
       }
 
-      // Also check if parent has padding-right
-      if (parent.style.paddingRight) {
-        parent.style.paddingRight = `${newWidth}px`;
+      // Strategy 2: If JT hasn't set padding yet (e.g., Daily Logs),
+      // apply padding to ALL visible sibling containers — this mimics how JT
+      // natively pushes content for the Job Switcher (nav, headers, AND content)
+      if (!foundPadding && parent) {
+        for (const sibling of parent.children) {
+          if (sibling === sidebar) continue;
+          // Skip tiny or hidden elements
+          if (sibling.offsetHeight < 10) continue;
+          sibling.style.paddingRight = `${newWidth}px`;
+          sibling.dataset.jtPushPadding = 'true';
+          foundPadding = true;
+        }
       }
-    }
 
-    // Also look for elements with padding-right set anywhere in the page
-    // that matches approximately the default sidebar width
-    const elementsWithPadding = document.querySelectorAll('[style*="padding-right"]');
-    for (const el of elementsWithPadding) {
-      if (el === sidebar || sidebar.contains(el)) continue;
-
-      const currentPadding = parseInt(el.style.paddingRight, 10);
-      // Update if padding is significant (likely set for sidebar)
-      if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
-        el.style.paddingRight = `${newWidth}px`;
+      // Strategy 3: Update page-wide padding that matches sidebar width range,
+      // plus any elements we manually padded via Strategy 2
+      const elementsWithPadding = document.querySelectorAll('[style*="padding-right"], [data-jt-push-padding]');
+      for (const el of elementsWithPadding) {
+        if (el === sidebar || sidebar.contains(el)) continue;
+        if (el.dataset.jtPushPadding) {
+          el.style.paddingRight = `${newWidth}px`;
+        } else {
+          const currentPadding = parseInt(el.style.paddingRight, 10);
+          if (currentPadding >= MIN_WIDTH && currentPadding <= MAX_WIDTH) {
+            el.style.paddingRight = `${newWidth}px`;
+          }
+        }
       }
+
+      // Notify JT's layout to reflow (only for push sidebars)
+      window.dispatchEvent(new Event('resize'));
     }
 
     // Force a reflow to ensure the width is applied
     void sidebar.offsetWidth;
-
-    // Dispatch resize event to notify any listeners
-    window.dispatchEvent(new Event('resize'));
   }
 
   /**
-   * Reset tracking when sidebar closes
-   * Note: JobTread handles resetting the main content padding itself when the sidebar closes
+   * Clean up padding after a resized sidebar is removed from the DOM.
+   * When JT closes a sidebar, it should reset padding itself — but if we changed
+   * the padding values (for push sidebars), JT's cleanup may not match. This
+   * ensures the page returns to its original boundaries.
    */
-  function resetMainContentMargin() {
-    if (lastMainContent) {
-      lastMainContent = null;
+  function resetPaddingAfterClose(parentEl) {
+    if (!parentEl) return;
+
+    // Remove our padding overrides from siblings — JT will handle its own state
+    for (const sibling of parentEl.children) {
+      if (sibling.dataset.jtPushPadding) {
+        sibling.style.paddingRight = '';
+        delete sibling.dataset.jtPushPadding;
+      } else {
+        const pr = parseInt(sibling.style.paddingRight, 10);
+        if (pr >= MIN_WIDTH && pr <= MAX_WIDTH) {
+          sibling.style.paddingRight = '';
+        }
+      }
+    }
+
+    // Clean up any elements we manually padded (Strategy 2 tracking)
+    const manuallyPadded = document.querySelectorAll('[data-jt-push-padding]');
+    for (const el of manuallyPadded) {
+      // Only clear if there's no longer an active sidebar that owns this padding
+      const activeSidebar = el.querySelector?.(SIDEBAR_SELECTOR) ||
+                           el.parentElement?.querySelector?.(SIDEBAR_SELECTOR);
+      if (!activeSidebar) {
+        el.style.paddingRight = '';
+        delete el.dataset.jtPushPadding;
+      }
+    }
+
+    // Also clean up page-wide padding that we may have set
+    const elementsWithPadding = document.querySelectorAll('[style*="padding-right"]');
+    for (const el of elementsWithPadding) {
+      if (el.dataset.jtPushPadding) continue; // Already handled above
+      const pr = parseInt(el.style.paddingRight, 10);
+      if (pr >= MIN_WIDTH && pr <= MAX_WIDTH) {
+        const activeSidebar = el.querySelector?.(SIDEBAR_SELECTOR) ||
+                             el.parentElement?.querySelector?.(SIDEBAR_SELECTOR);
+        if (!activeSidebar) {
+          el.style.paddingRight = '';
+        }
+      }
     }
   }
 
   /**
    * Start the resize operation
    */
-  function startResize(e, sidebar) {
+  function startResize(e, sidebar, sidebarType) {
     resizeState.isResizing = true;
     resizeState.startX = e.clientX;
     resizeState.startWidth = sidebar.offsetWidth;
+    resizeState.activeSidebar = sidebar;
+    resizeState.activeSidebarType = sidebarType;
 
     // Add global event listeners
     document.addEventListener('mousemove', handleResizeMove);
@@ -305,10 +412,12 @@ const SmartJobSwitcherFeature = (() => {
    * Handle mouse move during resize
    */
   function handleResizeMove(e) {
-    if (!resizeState.isResizing) return;
+    if (!resizeState.isResizing || !resizeState.activeSidebar) return;
 
-    const sidebar = findJobSwitcherSidebar();
-    if (!sidebar) {
+    const sidebar = resizeState.activeSidebar;
+
+    // Check if the sidebar is still in the DOM
+    if (!document.body.contains(sidebar)) {
       handleResizeEnd();
       return;
     }
@@ -330,7 +439,12 @@ const SmartJobSwitcherFeature = (() => {
   function handleResizeEnd() {
     if (!resizeState.isResizing) return;
 
+    const sidebar = resizeState.activeSidebar;
+    const sidebarType = resizeState.activeSidebarType;
+
     resizeState.isResizing = false;
+    resizeState.activeSidebar = null;
+    resizeState.activeSidebarType = null;
 
     // Remove global event listeners
     document.removeEventListener('mousemove', handleResizeMove);
@@ -340,11 +454,10 @@ const SmartJobSwitcherFeature = (() => {
     document.body.style.userSelect = '';
     document.body.style.cursor = '';
 
-    // Save the final width
-    const sidebar = findJobSwitcherSidebar();
-    if (sidebar) {
+    // Save the final width for this sidebar type
+    if (sidebar && document.body.contains(sidebar) && sidebarType) {
       const finalWidth = sidebar.offsetWidth;
-      saveWidth(finalWidth);
+      saveWidth(sidebarType, finalWidth);
 
       // Reset resize handle visual
       const resizeHandle = sidebar.querySelector('.jt-resize-handle');
@@ -373,26 +486,23 @@ const SmartJobSwitcherFeature = (() => {
               : node.querySelector?.(SIDEBAR_SELECTOR);
 
             if (sidebar) {
-              // Small delay to ensure sidebar is fully rendered, then check if it's the Job Switcher
-              setTimeout(async () => {
-                if (isJobSwitcherSidebar(sidebar)) {
-                  await injectResizeHandle(sidebar);
-                }
+              // Small delay to ensure sidebar is fully rendered with header text
+              setTimeout(() => {
+                injectResizeHandle(sidebar);
               }, 50);
             }
           }
         }
 
         // Check for removed nodes (sidebar closing)
+        // When a resized sidebar is removed, reset any padding we changed
+        // so the page returns to its original layout
         for (const node of mutation.removedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if the removed node had our resize handle (meaning it was a Job Switcher we modified)
             const hadResizeHandle = node.querySelector?.('.jt-resize-handle') ||
                                    node.classList?.contains('jt-resize-handle');
-
             if (hadResizeHandle) {
-              // Reset main content margin when Job Switcher sidebar is removed
-              resetMainContentMargin();
+              resetPaddingAfterClose(mutation.target);
             }
           }
         }
@@ -404,10 +514,10 @@ const SmartJobSwitcherFeature = (() => {
       subtree: true
     });
 
-    // Also check if Job Switcher sidebar is already present
-    const existingSidebar = findJobSwitcherSidebar();
-    if (existingSidebar) {
-      injectResizeHandle(existingSidebar); // async but fire-and-forget is fine here
+    // Also check for any existing sidebars on the page
+    const existingSidebars = document.querySelectorAll(SIDEBAR_SELECTOR);
+    for (const sidebar of existingSidebars) {
+      injectResizeHandle(sidebar);
     }
   }
 
@@ -445,11 +555,14 @@ const SmartJobSwitcherFeature = (() => {
 
     isActive = true;
 
+    // Migrate old storage (one-time, async, non-blocking)
+    migrateOldStorage();
+
     // Listen for keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
 
-    // Start observing for sidebar to add resize handle and filter UI
+    // Start observing for sidebars to add resize handles
     startSidebarObserver();
 
     console.log('SmartJobSwitcher: Activated');
@@ -475,9 +588,6 @@ const SmartJobSwitcherFeature = (() => {
     if (resizeState.isResizing) {
       handleResizeEnd();
     }
-
-    // Reset main content margin
-    resetMainContentMargin();
 
     closeSidebar();
 
@@ -706,7 +816,6 @@ const SmartJobSwitcherFeature = (() => {
     let selectedButton = null;
 
     // Strategy 1: Check for visually highlighted items (arrow key navigation uses visual highlighting)
-    // JobTread uses various highlight classes - check for common patterns
     const allJobButtons = sidebar.querySelectorAll('div[role="button"]');
 
     for (const button of allJobButtons) {
@@ -745,13 +854,11 @@ const SmartJobSwitcherFeature = (() => {
     if (!selectedButton) {
       const activeElement = document.activeElement;
 
-      // Check if the active element is a job button in the sidebar (not the search input)
       if (activeElement &&
           sidebar.contains(activeElement) &&
           activeElement.getAttribute('role') === 'button' &&
           activeElement.tagName !== 'INPUT') {
         const text = activeElement.textContent.trim();
-        // Make sure it's not the close button or header
         if (text !== 'Close' && text !== '×' && text !== 'X' &&
             !text.includes('Job Switcher') &&
             !activeElement.querySelector('path[d*="M18 6"]')) {
@@ -762,44 +869,33 @@ const SmartJobSwitcherFeature = (() => {
 
     // Strategy 3: Fall back to finding the top job in the list
     if (!selectedButton) {
-      // Find the scrollable job list container
       const jobList = sidebar.querySelector('.overflow-y-auto') || sidebar;
       const jobButtons = jobList.querySelectorAll('div[role="button"][tabindex="0"]');
 
-      // Find the first actual job (skip close button and header)
       for (const button of jobButtons) {
         const text = button.textContent.trim();
 
-        // Skip close button
         if (text === 'Close' || text === '×' || text === 'X' ||
             button.querySelector('path[d*="M18 6"]') ||
             button.querySelector('path[d*="M6 18"]')) {
           continue;
         }
 
-        // Skip header
         if (text.includes('Job Switcher')) {
           continue;
         }
 
-        // Skip if it's just whitespace or very short (likely an icon-only button)
         if (text.length < 3) {
           continue;
         }
 
-        // This is the first job in the list
         selectedButton = button;
         break;
       }
     }
 
     if (selectedButton) {
-      // Click the job button to navigate
       selectedButton.click();
-
-      // Close sidebar after clicking - use a slightly longer delay to let click process
-      // If navigation happens, sidebar will be removed anyway
-      // If it doesn't navigate (same job), we want it to close
       setTimeout(() => {
         closeSidebar();
       }, 100);

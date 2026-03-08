@@ -111,7 +111,7 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
-    /* Global sidebars (Time Clock, Daily Log, Notifications, Job Switcher, Help) */
+    /* Global sidebars (Time Clock, Time Entry, Daily Log, Notifications, Job Switcher, Help) */
     /* These are full-page overlays that sit just below the main header (~48px). */
     /* They are NOT inside [data-is-drag-scroll-boundary] so they are not affected */
     /* by the drag-boundary sidebar rules. No broad catch-all rule is needed here — */
@@ -1022,7 +1022,7 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
-   * Find and mark global sidebars (Time Clock, Daily Log, Notifications) that should NOT be affected by freeze header
+   * Find and mark global sidebars (Time Clock, Time Entry, Daily Log, Notifications) that should NOT be affected by freeze header
    * These sidebars are global overlays that appear on any page and should stay at their native
    * position just below the main header (~48px), not pushed down below frozen tabs/toolbar
    */
@@ -1044,7 +1044,7 @@ const FreezeHeaderFeature = (() => {
 
       // Check if inside a data-is-drag-scroll-boundary container
       // Most sidebars inside these are job-specific (Cost Item Details, Task Details)
-      // BUT global sidebars (Notifications, Daily Log, Time Clock) can also be inside them
+      // BUT global sidebars (Notifications, Daily Log, Time Clock, Time Entry) can also be inside them
       // We'll check content below and only skip non-global ones
       const isInsideDragBoundary = !!sidebar.closest('[data-is-drag-scroll-boundary="true"]');
 
@@ -1076,6 +1076,10 @@ const FreezeHeaderFeature = (() => {
                           textUpper.includes('CLOCKED IN') ||
                           textUpper.includes('CLOCK IN') ||
                           textUpper.includes('CLOCK OUT');
+
+      const isTimeEntry = textUpper.includes('TIME ENTRY') ||
+                          textUpper.includes('ADD TIME') ||
+                          textUpper.includes('TIME ENTRIES');
 
       const isDailyLog = textUpper.includes('NEW DAILY LOG') ||
                          textUpper.includes('DAILY LOG') ||
@@ -1119,7 +1123,7 @@ const FreezeHeaderFeature = (() => {
       }
 
       // Content-based detection is definitive - always mark as global
-      const isGlobalByContent = isTimeClock || isDailyLog || isNotifications || isJobSwitcher || isHelpSidebar;
+      const isGlobalByContent = isTimeClock || isTimeEntry || isDailyLog || isNotifications || isJobSwitcher || isHelpSidebar;
 
       if (isGlobalByContent || (!isInsideDragBoundary && isNearHeaderLevel)) {
         sidebar.classList.add('jt-global-sidebar');

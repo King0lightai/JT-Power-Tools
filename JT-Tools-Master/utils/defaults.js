@@ -35,6 +35,7 @@ const JTDefaults = (() => {
 
     // Internal Features (not user-toggleable)
     helpSidebarSupport: true,
+    keyboardShortcuts: true,
 
     // API (Experimental) Features
     customFieldFilter: false,
