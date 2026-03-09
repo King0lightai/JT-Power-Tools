@@ -136,6 +136,11 @@ const featureModules = {
     feature: () => window.ReverseThreadOrderFeature,
     instance: null
   },
+  taskTypeFilter: {
+    name: 'Task Type Filter',
+    feature: () => window.TaskTypeFilterFeature,
+    instance: null
+  },
   // fileDragToFolder: {
   //   name: 'Files Drag to Folder',
   //   feature: () => window.FileDragToFolderFeature,
@@ -153,7 +158,7 @@ let currentSettings = window.JTDefaults
       quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
       pdfMarkupTools: true, reverseThreadOrder: false, customFieldFilter: false,
-      budgetChangelog: false, availabilityFilter: false,
+      budgetChangelog: false, taskTypeFilter: false, availabilityFilter: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
