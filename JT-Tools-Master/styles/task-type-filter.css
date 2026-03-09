@@ -1,76 +1,157 @@
 /**
  * JT Power Tools - Task Type Filter Styles
- * Styles for the task type filter bar in Schedule Availability view
- * Positioned between the TASKS row and assignee rows
+ * Styles for the injected TASKS row and filter bar in Schedule Availability view
  */
 
 /* ========================================
-   Filter Container
+   Injected Rows (shared)
    ======================================== */
 
-.jt-task-type-filter-container {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  margin: 4px 8px;
-  padding: 0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+.jt-ttf-injected-row {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
-  z-index: 15;
-  position: relative;
 }
 
-/* When embedded in a table row */
-.jt-ttf-row {
-  border: none !important;
+/* ========================================
+   TASKS Label Cell (first column)
+   ======================================== */
+
+.jt-ttf-label-cell {
+  vertical-align: top;
+  padding: 8px !important;
+  background: #FFFBEB !important;
+  min-width: 120px;
 }
 
-.jt-ttf-cell {
+.jt-ttf-tasks-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #D97706;
+  padding: 2px 4px;
+  border-bottom: 1px solid #FDE68A;
+  margin-bottom: 4px;
+}
+
+.jt-ttf-task-count {
+  font-size: 10px;
+  color: #92400E;
+  padding: 0 4px;
+}
+
+/* ========================================
+   Day Cells (task card containers)
+   ======================================== */
+
+.jt-ttf-day-cell {
+  vertical-align: top;
+  padding: 4px !important;
+  min-height: 60px;
+}
+
+/* ========================================
+   Task Cards
+   ======================================== */
+
+.jt-ttf-task-card {
+  padding: 4px 6px;
+  margin-bottom: 3px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+}
+
+.jt-ttf-task-card:hover {
+  opacity: 0.85;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.jt-ttf-task-card:active {
+  opacity: 0.7;
+}
+
+.jt-ttf-task-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1F2937;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-ttf-task-job {
+  font-size: 10px;
+  color: #6B7280;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jt-ttf-add-link {
+  font-size: 10px;
+  color: #9CA3AF;
+  text-align: center;
+  padding: 2px 0;
+  margin-top: 2px;
+}
+
+/* ========================================
+   Loading & Error States
+   ======================================== */
+
+.jt-ttf-loading-msg,
+.jt-ttf-error-msg {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.jt-ttf-loading-msg {
+  color: #9CA3AF;
+}
+
+.jt-ttf-error-msg {
+  color: #EF4444;
+}
+
+/* ========================================
+   Filter Bar (inside table row)
+   ======================================== */
+
+.jt-ttf-filter-cell {
   padding: 0 !important;
   border: none !important;
   background: transparent !important;
 }
 
-/* ========================================
-   Header
-   ======================================== */
-
-.jt-ttf-header {
+.jt-ttf-filter-bar {
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
   padding: 0;
 }
 
-.jt-ttf-title-row {
+.jt-ttf-bar-header {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  border-radius: 6px 6px 0 0;
+  padding: 5px 10px;
   cursor: pointer;
   user-select: none;
 }
 
-.jt-task-type-filter-container.collapsed .jt-ttf-title-row {
-  border-radius: 6px;
-  border-bottom: none;
-}
-
-.jt-ttf-icon {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.jt-ttf-title {
+.jt-ttf-bar-title {
   font-weight: 600;
   color: #334155;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.02em;
 }
 
 .jt-ttf-badge {
-  background: #e2e8f0;
+  background: #E2E8F0;
   color: #475569;
   font-size: 10px;
   font-weight: 600;
@@ -79,65 +160,48 @@
   line-height: 1.4;
 }
 
-/* ========================================
-   Actions (All / None / Refresh)
-   ======================================== */
-
 .jt-ttf-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   margin-left: auto;
 }
 
 .jt-ttf-action {
   background: none;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  color: #64748b;
+  border: 1px solid #CBD5E1;
+  border-radius: 3px;
+  color: #64748B;
   font-size: 10px;
   font-weight: 500;
-  padding: 2px 6px;
+  padding: 1px 5px;
   cursor: pointer;
   transition: all 0.15s ease;
   line-height: 1.4;
 }
 
 .jt-ttf-action:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+  background: #F1F5F9;
+  border-color: #94A3B8;
   color: #334155;
 }
 
-.jt-ttf-action:active {
-  background: #e2e8f0;
-}
-
-.jt-ttf-refresh {
-  font-size: 13px;
-  padding: 1px 5px;
-}
-
-/* ========================================
-   Collapse Button
-   ======================================== */
-
-.jt-ttf-collapse {
+.jt-ttf-toggle {
   background: none;
   border: none;
-  color: #94a3b8;
-  font-size: 14px;
+  color: #94A3B8;
+  font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
   transition: transform 0.2s ease;
   line-height: 1;
 }
 
-.jt-ttf-collapse:hover {
-  color: #64748b;
+.jt-ttf-toggle:hover {
+  color: #64748B;
 }
 
-.jt-task-type-filter-container.collapsed .jt-ttf-collapse {
+.jt-ttf-filter-bar.collapsed .jt-ttf-toggle {
   transform: rotate(-90deg);
 }
 
@@ -145,36 +209,35 @@
    Chips Container
    ======================================== */
 
-.jt-ttf-chips {
+.jt-ttf-chips-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: 5px;
+  padding: 4px 10px 6px;
   transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
   max-height: 200px;
   overflow: hidden;
 }
 
-.jt-task-type-filter-container.collapsed .jt-ttf-chips {
+.jt-ttf-filter-bar.collapsed .jt-ttf-chips-wrap {
   max-height: 0;
   opacity: 0;
   padding: 0 10px;
-  overflow: hidden;
 }
 
 /* ========================================
-   Individual Chips
+   Chips
    ======================================== */
 
 .jt-ttf-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 16px;
-  background: #f8fafc;
-  color: #64748b;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid #CBD5E1;
+  border-radius: 14px;
+  background: #F8FAFC;
+  color: #64748B;
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -184,59 +247,56 @@
 }
 
 .jt-ttf-chip:hover {
-  border-color: #94a3b8;
-  background: #f1f5f9;
+  border-color: #94A3B8;
+  background: #F1F5F9;
   color: #475569;
 }
 
-.jt-ttf-chip:active {
-  background: #e2e8f0;
-}
-
-/* Active chip */
 .jt-ttf-chip.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #ffffff;
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+  background: #1E40AF;
+  border-color: #1E40AF;
+  color: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(30, 64, 175, 0.3);
 }
 
 .jt-ttf-chip.active:hover {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #ffffff;
+  background: #1D4ED8;
+  border-color: #1D4ED8;
 }
 
-.jt-ttf-chip.active:active {
-  background: #1d4ed8;
-}
-
-/* Untyped chip */
 .jt-ttf-chip.untyped {
   border-style: dashed;
 }
 
 .jt-ttf-chip.untyped.active {
-  background: #6b7280;
-  border-color: #6b7280;
+  background: #6B7280;
+  border-color: #6B7280;
   border-style: solid;
-  color: #ffffff;
 }
 
-/* Chip label */
+.jt-ttf-chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.jt-ttf-chip.active .jt-ttf-chip-dot {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
 .jt-ttf-chip-label {
   white-space: nowrap;
 }
 
-/* Chip count badge */
 .jt-ttf-chip-count {
   background: rgba(0, 0, 0, 0.1);
-  padding: 0 5px;
-  border-radius: 8px;
+  padding: 0 4px;
+  border-radius: 7px;
   font-size: 10px;
   font-weight: 600;
-  line-height: 1.6;
-  min-width: 16px;
+  line-height: 1.5;
+  min-width: 14px;
   text-align: center;
 }
 
@@ -244,160 +304,123 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* ========================================
-   Loading & Error States
-   ======================================== */
-
-.jt-ttf-loading {
-  padding: 4px 10px 6px;
-  color: #94a3b8;
-  font-size: 11px;
-  font-style: italic;
-}
-
-.jt-ttf-error {
-  padding: 4px 10px;
-  color: #ef4444;
-  font-size: 11px;
-  background: #fef2f2;
-  border-radius: 4px;
-  margin: 4px 10px 0;
-}
-
 .jt-ttf-empty {
-  color: #94a3b8;
+  color: #94A3B8;
   font-size: 11px;
   font-style: italic;
-  padding: 2px 0;
+}
+
+.jt-ttf-error-inline {
+  padding: 2px 10px 4px;
+  color: #EF4444;
+  font-size: 10px;
+}
+
+.jt-ttf-loading-inline {
+  padding: 2px 10px 4px;
+  color: #94A3B8;
+  font-size: 10px;
+  font-style: italic;
 }
 
 /* ========================================
-   Hidden Task Cards
+   Dark Mode
    ======================================== */
 
-.jt-ttf-hidden {
-  display: none !important;
+body.jt-dark-mode .jt-ttf-label-cell,
+.dark .jt-ttf-label-cell {
+  background: #292524 !important;
 }
 
-/* ========================================
-   Dark Mode Support
-   ======================================== */
-
-body.jt-dark-mode .jt-task-type-filter-container,
-.dark .jt-task-type-filter-container {
-  background: #1e293b;
-  border-color: #334155;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+body.jt-dark-mode .jt-ttf-tasks-label,
+.dark .jt-ttf-tasks-label {
+  color: #FBBF24;
+  border-bottom-color: #78350F;
 }
 
-body.jt-dark-mode .jt-ttf-title-row,
-.dark .jt-ttf-title-row {
-  background: #0f172a;
+body.jt-dark-mode .jt-ttf-task-count,
+.dark .jt-ttf-task-count {
+  color: #D97706;
+}
+
+body.jt-dark-mode .jt-ttf-task-name,
+.dark .jt-ttf-task-name {
+  color: #1F2937;
+}
+
+body.jt-dark-mode .jt-ttf-filter-bar,
+.dark .jt-ttf-filter-bar {
+  background: #0F172A;
   border-bottom-color: #334155;
 }
 
-body.jt-dark-mode .jt-ttf-title,
-.dark .jt-ttf-title {
-  color: #e2e8f0;
+body.jt-dark-mode .jt-ttf-bar-title,
+.dark .jt-ttf-bar-title {
+  color: #E2E8F0;
 }
 
 body.jt-dark-mode .jt-ttf-badge,
 .dark .jt-ttf-badge {
   background: #334155;
-  color: #94a3b8;
+  color: #94A3B8;
 }
 
 body.jt-dark-mode .jt-ttf-action,
 .dark .jt-ttf-action {
   border-color: #475569;
-  color: #94a3b8;
+  color: #94A3B8;
 }
 
 body.jt-dark-mode .jt-ttf-action:hover,
 .dark .jt-ttf-action:hover {
   background: #334155;
-  border-color: #64748b;
-  color: #e2e8f0;
-}
-
-body.jt-dark-mode .jt-ttf-collapse,
-.dark .jt-ttf-collapse {
-  color: #64748b;
-}
-
-body.jt-dark-mode .jt-ttf-collapse:hover,
-.dark .jt-ttf-collapse:hover {
-  color: #94a3b8;
+  color: #E2E8F0;
 }
 
 body.jt-dark-mode .jt-ttf-chip,
 .dark .jt-ttf-chip {
-  background: #1e293b;
+  background: #1E293B;
   border-color: #475569;
-  color: #94a3b8;
+  color: #94A3B8;
 }
 
 body.jt-dark-mode .jt-ttf-chip:hover,
 .dark .jt-ttf-chip:hover {
   background: #334155;
-  border-color: #64748b;
-  color: #e2e8f0;
+  color: #E2E8F0;
 }
 
 body.jt-dark-mode .jt-ttf-chip.active,
 .dark .jt-ttf-chip.active {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: #ffffff;
+  background: #1E40AF;
+  border-color: #1E40AF;
+  color: #FFFFFF;
 }
 
-body.jt-dark-mode .jt-ttf-chip.active:hover,
-.dark .jt-ttf-chip.active:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+body.jt-dark-mode .jt-ttf-loading-msg,
+.dark .jt-ttf-loading-msg {
+  color: #64748B;
 }
 
-body.jt-dark-mode .jt-ttf-chip.untyped.active,
-.dark .jt-ttf-chip.untyped.active {
-  background: #4b5563;
-  border-color: #4b5563;
-}
-
-body.jt-dark-mode .jt-ttf-loading,
-.dark .jt-ttf-loading {
-  color: #64748b;
-}
-
-body.jt-dark-mode .jt-ttf-error,
-.dark .jt-ttf-error {
-  background: #451a1a;
-  color: #fca5a5;
-}
-
-body.jt-dark-mode .jt-ttf-empty,
-.dark .jt-ttf-empty {
-  color: #64748b;
+body.jt-dark-mode .jt-ttf-toggle,
+.dark .jt-ttf-toggle {
+  color: #64748B;
 }
 
 /* ========================================
    RGB Theme Support
    ======================================== */
 
-.jt-custom-theme .jt-task-type-filter-container {
-  background: var(--jt-theme-background-elevated, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
+.jt-custom-theme .jt-ttf-filter-bar {
+  background: var(--jt-theme-background, #F8FAFC);
+  border-bottom-color: var(--jt-theme-border, #E2E8F0);
 }
 
-.jt-custom-theme .jt-ttf-title-row {
-  background: var(--jt-theme-background, #f8fafc);
-  border-bottom-color: var(--jt-theme-border, #e5e7eb);
-}
-
-.jt-custom-theme .jt-ttf-title {
+.jt-custom-theme .jt-ttf-bar-title {
   color: var(--jt-theme-text, #334155);
 }
 
 .jt-custom-theme .jt-ttf-chip.active {
-  background: var(--jt-theme-primary, #3b82f6);
-  border-color: var(--jt-theme-primary, #3b82f6);
+  background: var(--jt-theme-primary, #1E40AF);
+  border-color: var(--jt-theme-primary, #1E40AF);
 }
