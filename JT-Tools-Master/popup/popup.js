@@ -104,6 +104,8 @@ async function checkApiStatus() {
   const customFieldFilterFeature = document.getElementById('customFieldFilterFeature');
   const budgetChangelogToggle = document.getElementById('budgetChangelog');
   const budgetChangelogFeature = document.getElementById('budgetChangelogFeature');
+  const taskTypeFilterToggle = document.getElementById('taskTypeFilter');
+  const taskTypeFilterFeature = document.getElementById('taskTypeFilterFeature');
 
   // Check if Pro Service is configured (uses Worker)
   const isProConfigured = await JobTreadProService.isConfigured();
@@ -128,6 +130,12 @@ async function checkApiStatus() {
       budgetChangelogFeature.classList.remove('disabled');
       budgetChangelogFeature.title = '';
     }
+    // Enable Task Type Filter toggle
+    if (taskTypeFilterToggle) taskTypeFilterToggle.disabled = false;
+    if (taskTypeFilterFeature) {
+      taskTypeFilterFeature.classList.remove('disabled');
+      taskTypeFilterFeature.title = '';
+    }
   } else {
     // Fall back to check old direct API configuration
     const isDirectConfigured = await JobTreadAPI.isFullyConfigured();
@@ -150,6 +158,12 @@ async function checkApiStatus() {
       if (budgetChangelogFeature) {
         budgetChangelogFeature.classList.remove('disabled');
         budgetChangelogFeature.title = '';
+      }
+      // Enable Task Type Filter toggle
+      if (taskTypeFilterToggle) taskTypeFilterToggle.disabled = false;
+      if (taskTypeFilterFeature) {
+        taskTypeFilterFeature.classList.remove('disabled');
+        taskTypeFilterFeature.title = '';
       }
     } else {
       apiStatus.className = 'api-status inactive';
@@ -181,6 +195,15 @@ async function checkApiStatus() {
       if (budgetChangelogFeature) {
         budgetChangelogFeature.classList.add('disabled');
         budgetChangelogFeature.title = 'Connect your JobTread API first (enter Grant Key below)';
+      }
+      // Disable Task Type Filter toggle and uncheck it
+      if (taskTypeFilterToggle) {
+        taskTypeFilterToggle.disabled = true;
+        taskTypeFilterToggle.checked = false;
+      }
+      if (taskTypeFilterFeature) {
+        taskTypeFilterFeature.classList.add('disabled');
+        taskTypeFilterFeature.title = 'Connect your JobTread API first (enter Grant Key below)';
       }
     }
   }
@@ -300,6 +323,8 @@ async function checkLicenseStatus() {
   const customFieldFilterCheckbox = document.getElementById('customFieldFilter');
   const budgetChangelogFeature = document.getElementById('budgetChangelogFeature');
   const budgetChangelogCheckbox = document.getElementById('budgetChangelog');
+  const taskTypeFilterFeature = document.getElementById('taskTypeFilterFeature');
+  const taskTypeFilterCheckbox = document.getElementById('taskTypeFilter');
 
   if (licenseData && licenseData.valid && tier) {
     // Valid license - show tier name
@@ -346,6 +371,8 @@ async function checkLicenseStatus() {
       if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = false;
       budgetChangelogFeature?.classList.remove('locked');
       if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = false;
+      taskTypeFilterFeature?.classList.remove('locked');
+      if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = false;
     } else {
       // Hide API category and lock features for non-Power Users
       apiCategory?.classList.add('hidden');
@@ -354,6 +381,8 @@ async function checkLicenseStatus() {
       if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
       budgetChangelogFeature?.classList.add('locked');
       if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
+      taskTypeFilterFeature?.classList.add('locked');
+      if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
     }
 
     // ESSENTIAL features are available to all license holders
@@ -403,6 +432,8 @@ async function checkLicenseStatus() {
     if (customFieldFilterCheckbox) customFieldFilterCheckbox.disabled = true;
     budgetChangelogFeature?.classList.add('locked');
     if (budgetChangelogCheckbox) budgetChangelogCheckbox.disabled = true;
+    taskTypeFilterFeature?.classList.add('locked');
+    if (taskTypeFilterCheckbox) taskTypeFilterCheckbox.disabled = true;
 
     // FREE features remain unlocked (formatter, darkMode, contrastFix,
     // characterCounter, budgetHierarchy, kanbanTypeFilter, autoCollapseGroups)
@@ -501,6 +532,7 @@ async function loadSettings() {
     // POWER USER features - require Power User tier (API-powered)
     setCheckbox('customFieldFilter', settings.customFieldFilter !== undefined ? settings.customFieldFilter : false);
     setCheckbox('budgetChangelog', settings.budgetChangelog !== undefined ? settings.budgetChangelog : false);
+    setCheckbox('taskTypeFilter', settings.taskTypeFilter !== undefined ? settings.taskTypeFilter : false);
 
     // Load theme colors
     const themeColors = settings.themeColors || defaultSettings.themeColors;
@@ -678,6 +710,7 @@ async function getCurrentSettings() {
     availabilityFilter: getCheckboxValue('availabilityFilter', false),
     customFieldFilter: getCheckboxValue('customFieldFilter', defaultSettings.customFieldFilter),
     budgetChangelog: getCheckboxValue('budgetChangelog', defaultSettings.budgetChangelog),
+    taskTypeFilter: getCheckboxValue('taskTypeFilter', defaultSettings.taskTypeFilter),
     pdfMarkupTools: getCheckboxValue('pdfMarkupTools', defaultSettings.pdfMarkupTools),
     reverseThreadOrder: getCheckboxValue('reverseThreadOrder', defaultSettings.reverseThreadOrder),
     // fileDragToFolder: getCheckboxValue('fileDragToFolder', defaultSettings.fileDragToFolder), // Saved for a later version

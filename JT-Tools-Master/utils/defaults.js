@@ -42,6 +42,7 @@ const JTDefaults = (() => {
 
     // Power User Features (require API connection)
     budgetChangelog: false,
+    taskTypeFilter: false,
 
     // Pro Features - Schedule & Calendar
     availabilityFilter: false,
@@ -68,7 +69,7 @@ const JTDefaults = (() => {
     productivityTools: ['formatter', 'smartJobSwitcher', 'quickNotes', 'previewMode', 'freezeHeader', 'characterCounter', 'pdfMarkupTools', 'reverseThreadOrder'],
     appearanceThemes: ['contrastFix', 'budgetHierarchy', 'darkMode', 'rgbTheme'],
     apiExperimental: ['customFieldFilter'],
-    powerUser: ['budgetChangelog']
+    powerUser: ['budgetChangelog', 'taskTypeFilter']
   };
 
   /**
