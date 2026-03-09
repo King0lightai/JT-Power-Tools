@@ -703,16 +703,24 @@ const PreviewModeFeature = (() => {
     const header = preview.querySelector('.jt-preview-header');
     if (!header) return;
 
-    const handleMouseDown = (e) => {
+    // Extract clientX/clientY from mouse or touch event
+    const getPointer = (e) => {
+      if (e.touches && e.touches.length > 0) return e.touches[0];
+      if (e.changedTouches && e.changedTouches.length > 0) return e.changedTouches[0];
+      return e;
+    };
+
+    const handleDragStart = (e) => {
       // Don't drag from buttons inside header
       if (e.target.closest('.jt-preview-pin-btn') || e.target.closest('.jt-preview-close-btn')) {
         return;
       }
 
+      const pointer = getPointer(e);
       dragState = {
         isDragging: true,
-        startX: e.clientX,
-        startY: e.clientY,
+        startX: pointer.clientX,
+        startY: pointer.clientY,
         startLeft: parseInt(preview.style.left, 10) || 0,
         startTop: parseInt(preview.style.top, 10) || 0
       };
@@ -723,11 +731,12 @@ const PreviewModeFeature = (() => {
       e.preventDefault();
     };
 
-    const handleMouseMove = (e) => {
+    const handleDragMove = (e) => {
       if (!dragState || !dragState.isDragging) return;
 
-      const deltaX = e.clientX - dragState.startX;
-      const deltaY = e.clientY - dragState.startY;
+      const pointer = getPointer(e);
+      const deltaX = pointer.clientX - dragState.startX;
+      const deltaY = pointer.clientY - dragState.startY;
 
       let newLeft = dragState.startLeft + deltaX;
       let newTop = dragState.startTop + deltaY;
@@ -744,7 +753,7 @@ const PreviewModeFeature = (() => {
       preview.style.top = `${newTop}px`;
     };
 
-    const handleMouseUp = () => {
+    const handleDragEnd = () => {
       if (!dragState || !dragState.isDragging) return;
 
       dragState.isDragging = false;
@@ -756,20 +765,31 @@ const PreviewModeFeature = (() => {
       savePinnedState(preview);
     };
 
-    header.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    // Mouse events
+    header.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
 
-    pinnedDragHandlers = { handleMouseDown, handleMouseMove, handleMouseUp, header };
+    // Touch events — passive: false so preventDefault() stops page scrolling while dragging
+    header.addEventListener('touchstart', handleDragStart, { passive: false });
+    document.addEventListener('touchmove', handleDragMove, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
+
+    pinnedDragHandlers = { handleDragStart, handleDragMove, handleDragEnd, header };
   }
 
   function teardownDragBehavior(preview) {
     if (!pinnedDragHandlers) return;
 
-    const { handleMouseDown, handleMouseMove, handleMouseUp, header } = pinnedDragHandlers;
-    if (header) header.removeEventListener('mousedown', handleMouseDown);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    const { handleDragStart, handleDragMove, handleDragEnd, header } = pinnedDragHandlers;
+    if (header) {
+      header.removeEventListener('mousedown', handleDragStart);
+      header.removeEventListener('touchstart', handleDragStart);
+    }
+    document.removeEventListener('mousemove', handleDragMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchmove', handleDragMove);
+    document.removeEventListener('touchend', handleDragEnd);
     pinnedDragHandlers = null;
     dragState = null;
     document.body.style.cursor = '';
@@ -801,12 +821,20 @@ const PreviewModeFeature = (() => {
     cornerHandle.className = 'jt-preview-resize-handle jt-preview-resize-corner';
     preview.appendChild(cornerHandle);
 
-    // Single shared mousemove/mouseup for all handles
+    // Extract clientX/clientY from mouse or touch event
+    const getPointer = (e) => {
+      if (e.touches && e.touches.length > 0) return e.touches[0];
+      if (e.changedTouches && e.changedTouches.length > 0) return e.changedTouches[0];
+      return e;
+    };
+
+    // Single shared move/end handlers for all handles (mouse + touch)
     const handleResizeMove = (e) => {
       if (!resizeState || !resizeState.isResizing) return;
 
-      const deltaX = e.clientX - resizeState.startX;
-      const deltaY = e.clientY - resizeState.startY;
+      const pointer = getPointer(e);
+      const deltaX = pointer.clientX - resizeState.startX;
+      const deltaY = pointer.clientY - resizeState.startY;
 
       if (resizeState.handle === 'right' || resizeState.handle === 'corner') {
         const newWidth = Math.max(PREVIEW_MIN_WIDTH, Math.min(PREVIEW_MAX_WIDTH, resizeState.startWidth + deltaX));
@@ -827,7 +855,7 @@ const PreviewModeFeature = (() => {
       }
     };
 
-    const handleResizeUp = () => {
+    const handleResizeEnd = () => {
       if (!resizeState || !resizeState.isResizing) return;
 
       resizeState.isResizing = false;
@@ -839,17 +867,18 @@ const PreviewModeFeature = (() => {
       savePinnedState(preview);
     };
 
-    // Mousedown per handle
+    // Start resize from mouse or touch on each handle
     const startResize = (handle, direction) => {
-      handle.addEventListener('mousedown', (e) => {
+      const onStart = (e) => {
         e.preventDefault();
         e.stopPropagation();
 
+        const pointer = getPointer(e);
         resizeState = {
           isResizing: true,
           handle: direction,
-          startX: e.clientX,
-          startY: e.clientY,
+          startX: pointer.clientX,
+          startY: pointer.clientY,
           startWidth: preview.offsetWidth,
           startHeight: preview.offsetHeight
         };
@@ -859,17 +888,25 @@ const PreviewModeFeature = (() => {
         document.body.style.cursor = cursor;
         document.body.style.userSelect = 'none';
         preview.classList.add('jt-preview-resizing');
-      });
+      };
+
+      handle.addEventListener('mousedown', onStart);
+      handle.addEventListener('touchstart', onStart, { passive: false });
     };
 
     startResize(rightHandle, 'right');
     startResize(bottomHandle, 'bottom');
     startResize(cornerHandle, 'corner');
 
+    // Mouse events
     document.addEventListener('mousemove', handleResizeMove);
-    document.addEventListener('mouseup', handleResizeUp);
+    document.addEventListener('mouseup', handleResizeEnd);
 
-    pinnedResizeHandlers = { mousemove: handleResizeMove, mouseup: handleResizeUp };
+    // Touch events
+    document.addEventListener('touchmove', handleResizeMove, { passive: false });
+    document.addEventListener('touchend', handleResizeEnd);
+
+    pinnedResizeHandlers = { handleResizeMove, handleResizeEnd };
   }
 
   function removeResizeHandles(preview) {
@@ -877,8 +914,10 @@ const PreviewModeFeature = (() => {
     preview.querySelectorAll('.jt-preview-resize-handle').forEach(h => h.remove());
 
     if (pinnedResizeHandlers) {
-      document.removeEventListener('mousemove', pinnedResizeHandlers.mousemove);
-      document.removeEventListener('mouseup', pinnedResizeHandlers.mouseup);
+      document.removeEventListener('mousemove', pinnedResizeHandlers.handleResizeMove);
+      document.removeEventListener('mouseup', pinnedResizeHandlers.handleResizeEnd);
+      document.removeEventListener('touchmove', pinnedResizeHandlers.handleResizeMove);
+      document.removeEventListener('touchend', pinnedResizeHandlers.handleResizeEnd);
       pinnedResizeHandlers = null;
     }
     resizeState = null;
