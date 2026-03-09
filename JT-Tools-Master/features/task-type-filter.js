@@ -572,12 +572,10 @@ const TaskTypeFilterFeature = (() => {
       <div class="jt-ttf-task-job">${Sanitizer.escapeHTML(jobLabel)}</div>
     `;
 
-    // Click to navigate to the task in JobTread
-    card.addEventListener('click', () => {
-      if (task.job && task.job.id) {
-        // Navigate to the job's schedule which shows this task
-        window.location.href = `/${getOrgSlug()}/jobs/${task.job.id}/schedule`;
-      }
+    // Click to open task sidebar (stays on current page)
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openTaskSidebar(task.id);
     });
 
     return card;
@@ -590,6 +588,27 @@ const TaskTypeFilterFeature = (() => {
   function getOrgSlug() {
     const parts = window.location.pathname.split('/').filter(Boolean);
     return parts[0] || '';
+  }
+
+  /**
+   * Open the task sidebar by navigating to the current schedule URL with ?taskId=
+   * JT's SPA router picks up the taskId param and opens the sidebar automatically.
+   * We use a hidden <a> element to trigger JT's client-side navigation
+   * (pushState alone won't trigger the React router).
+   */
+  function openTaskSidebar(taskId) {
+    if (!taskId) return;
+
+    const orgSlug = getOrgSlug();
+    const sidebarUrl = `/${orgSlug}/schedule?taskId=${taskId}`;
+
+    // Create a temporary anchor and click it to trigger JT's SPA router
+    const link = document.createElement('a');
+    link.href = sidebarUrl;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   }
 
   /**
