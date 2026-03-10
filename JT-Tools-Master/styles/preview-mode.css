@@ -1047,9 +1047,10 @@
   border-color: #fecaca;
 }
 
-/* Draggable header cursor */
+/* Draggable header cursor + touch-action to prevent browser scroll during drag */
 .jt-preview-panel.jt-preview-pinned .jt-preview-header {
   cursor: grab;
+  touch-action: none;
 }
 
 .jt-preview-panel.jt-preview-dragging .jt-preview-header {
@@ -1068,6 +1069,7 @@
   position: absolute;
   z-index: 10;
   background: transparent;
+  touch-action: none; /* Prevent browser gestures on resize handles */
 }
 
 .jt-preview-resize-right {
@@ -1210,5 +1212,28 @@
 
   .jt-preview-content {
     font-size: 13px;
+  }
+
+  /* Larger touch targets for drag header on mobile */
+  .jt-preview-panel.jt-preview-pinned .jt-preview-header {
+    min-height: 44px;
+  }
+
+  /* Larger resize handles for touch — Apple recommends 44px minimum */
+  .jt-preview-resize-right {
+    width: 16px;
+    right: -8px;
+  }
+
+  .jt-preview-resize-bottom {
+    height: 16px;
+    bottom: -8px;
+  }
+
+  .jt-preview-resize-corner {
+    width: 28px;
+    height: 28px;
+    right: -8px;
+    bottom: -8px;
   }
 }

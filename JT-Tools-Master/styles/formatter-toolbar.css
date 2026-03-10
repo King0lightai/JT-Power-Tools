@@ -1315,6 +1315,18 @@
   /* position and z-index set inline by JS based on context */
 }
 
+/* Budget adaptive toolbar - compact toolbar that follows the active description field
+   and sticks below the budget header row during vertical scroll. Uses fixed positioning
+   to handle dual-axis scrolling (both vertical and horizontal). */
+.jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-budget-adaptive {
+  position: fixed;
+  margin-bottom: 0;
+  border-radius: 0 0 0.25rem 0.25rem;
+  border-top: 2px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 9;
+}
+
 /* Toolbar placed ABOVE the textarea in Message fields (between TO line and textarea) */
 .jt-formatter-toolbar.jt-formatter-toolbar-embedded.jt-toolbar-message {
   margin-bottom: 0;

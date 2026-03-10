@@ -238,12 +238,24 @@ const FormatterDetection = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // Exclude fields inside sidebar forms with orange headers (Help, Add Time Entry, Time Clock, etc.)
+    // Exclude fields inside sidebar forms/panels with orange headers
+    // (Help, Add Time Entry, Time Clock, Daily Log, etc.)
+    // These utility sidebars don't support rich text formatting.
     // This MUST be checked before placeholder checks to prevent Message fields in Help sidebar
     {
+      // Check inside a <form> with orange header (most common pattern)
       const sidebarForm = textarea.closest('form');
       if (sidebarForm) {
         const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
+        if (orangeHeader) {
+          return false;
+        }
+      }
+      // Also check the drag-scroll sidebar container directly — some sidebars
+      // like Time Clock don't wrap content in a <form> element
+      const sidebarContainer = textarea.closest('[data-is-drag-scroll-boundary="true"]');
+      if (sidebarContainer) {
+        const orangeHeader = sidebarContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
         if (orangeHeader) {
           return false;
         }
