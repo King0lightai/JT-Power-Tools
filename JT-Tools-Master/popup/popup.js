@@ -55,15 +55,21 @@ function applyPopupTheme(isDark) {
   }
 
   // Update toolbar icon via service worker
-  console.log('Sending UPDATE_TOOLBAR_ICON message, isDark:', isDark);
-  chrome.runtime.sendMessage({
-    type: 'UPDATE_TOOLBAR_ICON',
-    isDark: isDark
-  }).then((response) => {
-    console.log('Toolbar icon update response:', response);
-  }).catch((error) => {
-    console.error('Failed to update toolbar icon:', error);
-  });
+  // Wrapped in try/catch because Firefox can throw synchronously if the
+  // service worker is inactive or sendMessage doesn't return a thenable.
+  try {
+    const msgPromise = chrome.runtime.sendMessage({
+      type: 'UPDATE_TOOLBAR_ICON',
+      isDark: isDark
+    });
+    if (msgPromise && typeof msgPromise.then === 'function') {
+      msgPromise.catch((error) => {
+        console.warn('Failed to update toolbar icon:', error);
+      });
+    }
+  } catch (error) {
+    console.warn('Failed to send toolbar icon message:', error);
+  }
 }
 
 /**
@@ -71,14 +77,18 @@ function applyPopupTheme(isDark) {
  */
 async function togglePopupTheme() {
   const isDark = !document.body.classList.contains('dark-theme');
-  applyPopupTheme(isDark);
 
-  // Save preference
+  // Save preference FIRST — before anything that might fail.
+  // This prevents Firefox popup close or sendMessage errors from
+  // blocking the persist.
   try {
     await chrome.storage.local.set({ [POPUP_THEME_KEY]: isDark ? 'dark' : 'light' });
   } catch (error) {
     console.error('Error saving popup theme:', error);
   }
+
+  // Then apply visual changes and notify service worker
+  applyPopupTheme(isDark);
 }
 
 // Default settings - use shared JTDefaults (loaded from utils/defaults.js)
@@ -2593,9 +2603,13 @@ async function handleLogin() {
       // Clear form
       emailInput.value = '';
       passwordInput.value = '';
-      // Update UI
+      // Update UI — refresh account, API status, and MCP credentials
+      // (login auto-registers the grant key via JobTreadProService)
       await updateAccountUI();
       await checkApiStatus();
+      if (typeof updateMcpCredentialsDisplay === 'function') {
+        await updateMcpCredentialsDisplay();
+      }
       showStatus('Signed in successfully!', 'success');
     } else {
       showAccountError('login', result.error || 'Login failed');
@@ -2651,8 +2665,12 @@ async function handleRegister() {
       emailInput.value = '';
       passwordInput.value = '';
       currentSetupToken = null;
-      // Update UI
+      // Update UI — refresh account, API status, and MCP credentials
       await updateAccountUI();
+      await checkApiStatus();
+      if (typeof updateMcpCredentialsDisplay === 'function') {
+        await updateMcpCredentialsDisplay();
+      }
       showStatus('Account created successfully!', 'success');
     } else {
       showAccountError('register', result.error || 'Registration failed');
@@ -2681,6 +2699,9 @@ async function handleLogout() {
   try {
     await AccountService.logout();
     await updateAccountUI();
+    if (typeof updateMcpCredentialsDisplay === 'function') {
+      await updateMcpCredentialsDisplay();
+    }
     showStatus('Signed out', 'success');
   } catch (error) {
     console.error('Logout error:', error);
