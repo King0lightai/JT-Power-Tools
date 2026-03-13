@@ -246,7 +246,6 @@ async function testApiKey() {
 
   try {
     // Use Pro Service to verify org access through Worker
-    console.log('Testing API via Cloudflare Worker...');
     const result = await JobTreadProService.verifyOrgAccess(grantKey);
 
     if (result.success) {
@@ -258,14 +257,10 @@ async function testApiKey() {
       await checkApiStatus();
 
       // Try to fetch custom fields to verify full connectivity
-      console.log('JobTreadProService: Fetching custom fields...');
       try {
-        const fieldsResult = await JobTreadProService.getCustomFields();
-        if (fieldsResult.fields) {
-          console.log('JobTreadProService: Successfully fetched', fieldsResult.fields.length, 'custom fields');
-        }
+        await JobTreadProService.getCustomFields();
       } catch (cfError) {
-        console.log('JobTreadProService: Custom fields fetch warning:', cfError.message);
+        // Non-critical — fields will be fetched on demand
       }
     } else {
       // Handle specific error codes
@@ -276,11 +271,8 @@ async function testApiKey() {
       } else {
         showStatus(result.message || result.error || 'Connection failed', 'error');
       }
-
-      console.error('API connection failed:', result);
     }
   } catch (error) {
-    console.error('Error testing API:', error);
 
     // Check if it's a Worker configuration error
     if (error.message.includes('Worker not configured') || error.message.includes('WORKER_URL')) {
@@ -1454,18 +1446,18 @@ async function generateConfigJson(platform) {
   const licenseData = await LicenseService.getLicenseData();
   const licenseKey = licenseData?.key || 'YOUR_LICENSE_KEY';
 
-  // Get grant key from Pro Service (stored in local storage as jtpro_grant_key)
+  // Get grant key from Pro Service (obfuscated storage)
   let grantKey = 'YOUR_GRANT_KEY';
   try {
     const isConfigured = await JobTreadProService.isConfigured();
     if (isConfigured) {
-      const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-      if (stored.jtpro_grant_key) {
-        grantKey = stored.jtpro_grant_key;
+      const storedGrantKey = await JobTreadProService.getGrantKey();
+      if (storedGrantKey) {
+        grantKey = storedGrantKey;
       }
     }
   } catch (e) {
-    console.log('Could not retrieve grant key:', e);
+    // Grant key retrieval failed — config will show placeholder
   }
 
   const authToken = `${licenseKey}:${grantKey}`;
@@ -1578,7 +1570,6 @@ function setupCopyButton() {
         copyIcon.textContent = '📋';
       }, 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
       showStatus('Failed to copy to clipboard', 'error');
     }
   });
@@ -1633,19 +1624,18 @@ async function testMcpConnection() {
       setConnectionStatus(statusIndicator, statusText, 'error', 'Server unavailable');
     }
   } catch (error) {
-    console.error('MCP health check failed:', error);
     setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
   }
 }
 
 /**
  * Test MCP authentication with user's grant key
+ * Uses session token when available, falls back to raw credentials
  */
 async function testMcpAuth(statusIndicator, statusText) {
   try {
-    // Get grant key from local storage (stored by JobTreadProService as jtpro_grant_key)
-    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-    const grantKey = stored.jtpro_grant_key;
+    // Get grant key via obfuscated storage
+    const grantKey = await JobTreadProService.getGrantKey();
 
     if (!grantKey) {
       setConnectionStatus(statusIndicator, statusText, 'disconnected', 'Configure Grant Key above first');
@@ -1653,15 +1643,19 @@ async function testMcpAuth(statusIndicator, statusText) {
       return;
     }
 
-    // Get license key for the auth header
-    const licenseData = await LicenseService.getLicenseData();
-    const licenseKey = licenseData?.key;
+    // Prefer session token over raw credentials
+    const { token } = await JobTreadProService.getSessionToken();
+    if (!token) {
+      setConnectionStatus(statusIndicator, statusText, 'error', 'Could not authenticate');
+      showStatus('Authentication failed — check your license and grant key', 'error');
+      return;
+    }
 
     // Test the tools endpoint with auth
     const response = await fetch(`${MCP_SERVER_URL}/tools`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${licenseKey}:${grantKey}`,
+        'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       }
     });
@@ -1681,7 +1675,6 @@ async function testMcpAuth(statusIndicator, statusText) {
       setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
     }
   } catch (error) {
-    console.error('MCP auth test failed:', error);
     setConnectionStatus(statusIndicator, statusText, 'error', 'Connection failed');
   }
 }
@@ -1695,10 +1688,10 @@ async function checkAiConnectionStatus() {
 
   if (!statusIndicator || !statusText) return;
 
-  // Check if grant key is configured (stored by JobTreadProService in local storage)
-  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+  // Check if grant key is configured (via obfuscated storage)
+  const grantKey = await JobTreadProService.getGrantKey();
 
-  if (!stored.jtpro_grant_key) {
+  if (!grantKey) {
     setConnectionStatus(statusIndicator, statusText, 'disconnected', 'Configure Grant Key above');
     return;
   }
@@ -1744,7 +1737,7 @@ async function initMcpTab() {
           icon.className = 'ph ph-copy';
         }, 2000);
       } catch (err) {
-        console.error('Failed to copy MCP URL:', err);
+        // Clipboard write failed silently
       }
     });
   }
@@ -1796,13 +1789,13 @@ async function initMcpTab() {
   const copyGrantBtn = document.getElementById('copyGrantKey');
   if (copyGrantBtn) {
     copyGrantBtn.addEventListener('click', async () => {
-      const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-      if (!stored.jtpro_grant_key) {
+      const grantKey = await JobTreadProService.getGrantKey();
+      if (!grantKey) {
         showStatus('No Grant Key configured', 'error');
         return;
       }
       try {
-        await navigator.clipboard.writeText(stored.jtpro_grant_key);
+        await navigator.clipboard.writeText(grantKey);
         copyGrantBtn.classList.add('copied');
         copyGrantBtn.querySelector('i').className = 'ph ph-check';
         showStatus('Grant Key copied!', 'success');
@@ -1877,11 +1870,11 @@ async function updateMcpCredentialsDisplay() {
     licenseStatusEl.className = 'credential-status invalid';
   }
 
-  // Get grant key
-  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-  if (stored.jtpro_grant_key) {
+  // Get grant key (from obfuscated storage)
+  const grantKey = await JobTreadProService.getGrantKey();
+  if (grantKey) {
     // Show masked grant key
-    const maskedGrant = stored.jtpro_grant_key.substring(0, 8) + '••••••••';
+    const maskedGrant = grantKey.substring(0, 8) + '••••••••';
     grantKeyEl.textContent = maskedGrant;
     grantKeyEl.classList.remove('not-set');
     grantStatusEl.className = 'credential-status valid';
@@ -1898,11 +1891,15 @@ async function updateMcpCredentialsDisplay() {
       // OAuth platforms don't need keys — always enabled
       copyConfigBtn.disabled = false;
     } else {
-      const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
+      const hasCredentials = licenseData?.key && grantKey;
       copyConfigBtn.disabled = !hasCredentials;
     }
   }
 }
+
+// Grant key update rate limiting
+let grantKeyFailCount = 0;
+let grantKeyLockoutUntil = 0;
 
 /**
  * Handle updating the grant key
@@ -1911,6 +1908,13 @@ async function handleUpdateGrantKey() {
   const grantKeyInput = document.getElementById('mcpGrantKeyInput');
   const updateBtn = document.getElementById('updateGrantKeyBtn');
   const errorEl = document.getElementById('grantKeyError');
+
+  // Rate limit: lock out after 3 consecutive failures for 30 seconds
+  if (Date.now() < grantKeyLockoutUntil) {
+    const secondsLeft = Math.ceil((grantKeyLockoutUntil - Date.now()) / 1000);
+    showGrantKeyError(`Too many attempts. Please wait ${secondsLeft} seconds.`);
+    return;
+  }
 
   const newGrantKey = grantKeyInput.value.trim();
 
@@ -1929,17 +1933,30 @@ async function handleUpdateGrantKey() {
     const result = await JobTreadProService.verifyOrgAccess(newGrantKey);
 
     if (result.success) {
+      // Reset rate limit on success
+      grantKeyFailCount = 0;
+
       // Clear input
       grantKeyInput.value = '';
 
-      // Show success
-      showGrantKeySuccess(`Grant Key updated! Connected to ${result.organizationName || 'organization'}`);
+      // Show success with write-attribution reminder
+      showGrantKeySuccess(
+        `Grant Key updated! Connected to ${result.organizationName || 'organization'}. ` +
+        `Reminder: Write actions will appear as the grant key owner. We recommend using a dedicated "AI Assistant" account.`
+      );
 
       // Update displays
       await updateMcpCredentialsDisplay();
       await updateMcpPrerequisites();
       await checkApiStatus();
     } else {
+      // Increment rate limit counter
+      grantKeyFailCount++;
+      if (grantKeyFailCount >= 3) {
+        grantKeyLockoutUntil = Date.now() + 30000; // 30 second lockout
+        grantKeyFailCount = 0;
+      }
+
       // Show error
       if (result.code === 'ORG_MISMATCH') {
         showGrantKeyError('This Grant Key is from a different organization than your license');
@@ -1950,7 +1967,6 @@ async function handleUpdateGrantKey() {
       }
     }
   } catch (error) {
-    console.error('Error updating grant key:', error);
     showGrantKeyError('Error connecting to server. Please try again.');
   } finally {
     updateBtn.disabled = false;
@@ -2092,8 +2108,8 @@ async function updateCopyButtonForPlatform(platform) {
     }
     // Check if keys are available
     const licenseData = await LicenseService.getLicenseData();
-    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-    const hasCredentials = licenseData?.key && stored.jtpro_grant_key;
+    const grantKey = await JobTreadProService.getGrantKey();
+    const hasCredentials = licenseData?.key && grantKey;
     copyConfigBtn.disabled = !hasCredentials;
   }
 }
@@ -2106,7 +2122,8 @@ async function updateCopyButtonForPlatform(platform) {
  * @returns {string} The config as a formatted string
  */
 function generateMcpConfig(platform, licenseKey, grantKey) {
-  const authToken = `${licenseKey}:${grantKey}`;
+  // If grantKey is empty, licenseKey is already the full token (session token or OAuth URL)
+  const authToken = grantKey ? `${licenseKey}:${grantKey}` : licenseKey;
   const serverUrl = MCP_SERVER_URL;
 
   switch (platform) {
@@ -2193,16 +2210,23 @@ async function handleCopyMcpConfig() {
     // OAuth platforms just need the server URL — no keys needed
     config = generateMcpConfig(selectedMcpPlatform, '', '');
   } else {
-    // Legacy platforms need keys embedded
-    const licenseData = await LicenseService.getLicenseData();
-    const stored = await chrome.storage.local.get(['jtpro_grant_key']);
+    // Try session token first (opaque, short-lived) — falls back to raw keys
+    const { token, isSession } = await JobTreadProService.getSessionToken();
 
-    if (!licenseData?.key || !stored.jtpro_grant_key) {
+    if (!token) {
       showStatus('Please configure both License Key and Grant Key first', 'error');
       return;
     }
 
-    config = generateMcpConfig(selectedMcpPlatform, licenseData.key, stored.jtpro_grant_key);
+    if (isSession) {
+      // Session token: use as the full auth token (no raw keys exposed)
+      config = generateMcpConfig(selectedMcpPlatform, token, '');
+    } else {
+      // Fallback: server doesn't support sessions yet — use raw credentials
+      const licenseData = await LicenseService.getLicenseData();
+      const grantKey = await JobTreadProService.getGrantKey();
+      config = generateMcpConfig(selectedMcpPlatform, licenseData.key, grantKey);
+    }
   }
 
   try {
@@ -2230,9 +2254,14 @@ async function handleCopyMcpConfig() {
       'grok': 'Grok'
     };
     const label = isUrl ? 'URL' : 'config';
-    showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
+
+    // Security: warn users about credential exposure for non-OAuth platforms
+    if (!isUrl) {
+      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied! \u26A0 Contains credentials \u2014 do not commit to git or share publicly.`, 'success');
+    } else {
+      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
+    }
   } catch (err) {
-    console.error('Failed to copy MCP config:', err);
     showStatus('Failed to copy to clipboard', 'error');
   }
 }
@@ -2251,9 +2280,9 @@ async function updateMcpPrerequisites() {
   const hasPowerUser = tier && LicenseService.tierHasFeature(tier, 'customFieldFilter');
   setPrereqStatus(prereqLicense, hasPowerUser);
 
-  // Check grant key
-  const stored = await chrome.storage.local.get(['jtpro_grant_key']);
-  setPrereqStatus(prereqGrantKey, !!stored.jtpro_grant_key);
+  // Check grant key (via obfuscated storage)
+  const grantKey = await JobTreadProService.getGrantKey();
+  setPrereqStatus(prereqGrantKey, !!grantKey);
 
 }
 

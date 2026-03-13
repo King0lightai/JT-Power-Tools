@@ -3,6 +3,14 @@
 // v2.0 - Added tier support for Essential, Pro, and Power User subscription levels
 
 const LicenseService = (() => {
+  // Debug flag — set to false for production builds to suppress console output
+  const DEBUG = false;
+
+  // Safe logging — only outputs when DEBUG is true
+  function log(...args) { if (DEBUG) log('', ...args); }
+  function logError(...args) { if (DEBUG) logError('', ...args); }
+  function logWarn(...args) { if (DEBUG) logWarn('', ...args); }
+
   // ⚠️ IMPORTANT: Set this to your deployed license proxy URL
   // See server/DEPLOYMENT.md for setup instructions
   const LICENSE_PROXY_URL = 'https://jt-tools-license-proxy.king0light-ai.workers.dev/';
@@ -79,14 +87,14 @@ const LicenseService = (() => {
   async function verifyLicense(licenseKey) {
     try {
       if (LICENSE_PROXY_URL.includes('YOUR_WORKER_URL')) {
-        console.error('License: LICENSE_PROXY_URL not configured!');
+        logError('LICENSE_PROXY_URL not configured!');
         return {
           success: false,
           error: 'License validation not configured. Please deploy the license proxy server.'
         };
       }
 
-      console.log('License: Verifying license key via proxy...');
+      log('Verifying license key via proxy...');
 
       // Call our secure proxy server instead of Gumroad directly
       const response = await fetch(LICENSE_PROXY_URL, {
@@ -124,15 +132,15 @@ const LicenseService = (() => {
         // Encrypt and store license data
         await saveLicenseData(licenseData);
 
-        console.log('License: Valid license activated, tier:', licenseData.tier);
+        log('Valid license activated, tier:', licenseData.tier);
         return { success: true, data: licenseData };
       } else {
         // License is invalid
-        console.log('License: Invalid license key');
+        log('Invalid license key');
         return { success: false, error: result.error || 'Invalid license key' };
       }
     } catch (error) {
-      console.error('License: Error verifying license:', error);
+      logError('Error verifying license:', error);
       return {
         success: false,
         error: 'Unable to verify license. Please check your internet connection and try again.'
@@ -149,7 +157,7 @@ const LicenseService = (() => {
         return { success: false, error: 'No license to revalidate' };
       }
 
-      console.log('License: Re-validating existing license...');
+      log('Re-validating existing license...');
 
       const response = await fetch(LICENSE_PROXY_URL, {
         method: 'POST',
@@ -177,21 +185,21 @@ const LicenseService = (() => {
           const oldTier = licenseData.tier;
           licenseData.tier = result.data.tier;
           if (oldTier !== licenseData.tier) {
-            console.log('License: Tier changed from', oldTier, 'to', licenseData.tier);
+            log('Tier changed from', oldTier, 'to', licenseData.tier);
           }
         }
         await saveLicenseData(licenseData);
 
-        console.log('License: Re-validation successful, tier:', licenseData.tier);
+        log('Re-validation successful, tier:', licenseData.tier);
         return { success: true, data: licenseData };
       } else {
         // License no longer valid (refunded, revoked, etc.)
-        console.warn('License: Re-validation failed - license may be revoked');
+        logWarn('Re-validation failed - license may be revoked');
         await removeLicense();
         return { success: false, error: 'License is no longer valid' };
       }
     } catch (error) {
-      console.error('License: Error re-validating license:', error);
+      logError('Error re-validating license:', error);
       // Don't remove license on network errors, just skip re-validation
       return { success: false, error: 'Re-validation failed', silent: true };
     }
@@ -216,7 +224,7 @@ const LicenseService = (() => {
       // Convert to base64
       return btoa(String.fromCharCode(...obfuscated));
     } catch (error) {
-      console.error('License: Obfuscation error:', error);
+      logError('Obfuscation error:', error);
       return text; // Fallback to plaintext if obfuscation fails
     }
   }
@@ -240,7 +248,7 @@ const LicenseService = (() => {
 
       return new TextDecoder().decode(original);
     } catch (error) {
-      console.error('License: Deobfuscation error:', error);
+      logError('Deobfuscation error:', error);
       return null;
     }
   }
@@ -257,9 +265,9 @@ const LicenseService = (() => {
         jtToolsLicense: obfuscated,
         jtToolsLicenseVersion: 2 // Version flag for obfuscated format
       });
-      console.log('License: License data saved');
+      log('License data saved');
     } catch (error) {
-      console.error('License: Error saving license data:', error);
+      logError('Error saving license data:', error);
     }
   }
 
@@ -283,14 +291,14 @@ const LicenseService = (() => {
 
       // Handle legacy plaintext data (v1) - migrate it to obfuscated format
       if (typeof result.jtToolsLicense === 'object') {
-        console.log('License: Migrating legacy license data to obfuscated format');
+        log('Migrating legacy license data to obfuscated format');
         await saveLicenseData(result.jtToolsLicense);
         return result.jtToolsLicense;
       }
 
       return null;
     } catch (error) {
-      console.error('License: Error getting license data:', error);
+      logError('Error getting license data:', error);
       return null;
     }
   }
@@ -309,17 +317,17 @@ const LicenseService = (() => {
       const timeSinceRevalidation = Date.now() - lastRevalidated;
 
       if (timeSinceRevalidation > REVALIDATION_INTERVAL) {
-        console.log('License: Re-validation required (24 hours elapsed)');
+        log('Re-validation required (24 hours elapsed)');
 
         // If revalidation is already in progress, wait for it
         if (revalidationInProgress && revalidationPromise) {
-          console.log('License: Revalidation already in progress, waiting...');
+          log('Revalidation already in progress, waiting...');
           const result = await revalidationPromise;
 
           if (!result.success) {
             // If re-validation failed due to network, allow temporary access
             if (result.silent) {
-              console.warn('License: Re-validation failed (network), allowing temporary access');
+              logWarn('Re-validation failed (network), allowing temporary access');
               return true;
             }
             // If license was actually revoked, deny access
@@ -336,7 +344,7 @@ const LicenseService = (() => {
             if (!result.success) {
               // If re-validation failed due to network, allow temporary access
               if (result.silent) {
-                console.warn('License: Re-validation failed (network), allowing temporary access');
+                logWarn('Re-validation failed (network), allowing temporary access');
                 return true;
               }
               // If license was actually revoked, deny access
@@ -352,7 +360,7 @@ const LicenseService = (() => {
 
       return true;
     } catch (error) {
-      console.error('License: Error in hasValidLicense:', error);
+      logError('Error in hasValidLicense:', error);
       // On error, deny access to be safe
       return false;
     }
@@ -371,9 +379,9 @@ const LicenseService = (() => {
 
     // If more than 24 hours, trigger re-validation
     if (timeSinceRevalidation > REVALIDATION_INTERVAL) {
-      console.log('License: Triggering background re-validation on startup');
+      log('Triggering background re-validation on startup');
       revalidateLicense().catch(err => {
-        console.error('License: Background re-validation error:', err);
+        logError('Background re-validation error:', err);
       });
     }
   }
@@ -381,7 +389,7 @@ const LicenseService = (() => {
   // Remove license (for deactivation)
   async function removeLicense() {
     await chrome.storage.sync.remove(['jtToolsLicense', 'jtToolsLicenseVersion']);
-    console.log('License: License removed');
+    log('License removed');
   }
 
   /**
@@ -397,7 +405,7 @@ const LicenseService = (() => {
       // Default to PRO for backwards compatibility with existing users
       return licenseData.tier || TIERS.PRO;
     } catch (error) {
-      console.error('License: Error getting tier:', error);
+      logError('Error getting tier:', error);
       return null;
     }
   }
@@ -444,7 +452,7 @@ const LicenseService = (() => {
     }
 
     // Unknown feature - default to false for safety
-    console.warn('License: Unknown feature requested:', feature);
+    logWarn('Unknown feature requested:', feature);
     return false;
   }
 

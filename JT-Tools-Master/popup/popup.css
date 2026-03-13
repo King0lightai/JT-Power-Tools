@@ -2998,6 +2998,18 @@ body.dark-theme .variant-tab.active {
   line-height: 1.4;
 }
 
+.platform-note-security {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--brand-orange);
+  line-height: 1.4;
+}
+
+.platform-note-security i {
+  font-size: 11px;
+  vertical-align: -1px;
+}
+
 .platform-note a {
   color: var(--brand-orange);
   text-decoration: none;
