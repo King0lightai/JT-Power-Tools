@@ -72,6 +72,33 @@ div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
     border-left-width: 4px !important;
 }
 
+/* === Availability View Task Cards (Inline Styles) === */
+/* These cards use text-xs with inline background-color/color, not cursor-pointer */
+td div.h-full > div.text-xs[style*="background-color"] {
+    position: relative !important;
+}
+
+td div.h-full > div.text-xs[style*="background-color"]::before {
+    content: '' !important;
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    pointer-events: none !important;
+    z-index: 0 !important;
+}
+
+/* Ensure text stays above the dark overlay */
+td div.h-full > div.text-xs[style*="background-color"] > * {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Force white text on darkened availability cards */
+td div.h-full > div.text-xs[style*="background-color"],
+td div.h-full > div.text-xs[style*="background-color"] * {
+    color: white !important;
+}
+
 /* === Week/Day View Schedule Cards === */
 /* Week/day view uses grid-based layout instead of table cells */
 /* Target the grid column containers (calendar cell backgrounds, not task cards) */
@@ -479,7 +506,7 @@ div.border-l div.select-none.break-inside-avoid {
 .jt-formatter-toolbar {
     background: #353535 !important;
     border-color: #464646 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: none !important;
 }
 
 /* Toolbar dividers */
@@ -523,7 +550,7 @@ div.border-l div.select-none.break-inside-avoid {
 .jt-dropdown-menu {
     background: #353535 !important;
     border-color: #464646 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: none !important;
 }
 
 .jt-dropdown-menu button {
@@ -547,7 +574,7 @@ div.border-l div.select-none.break-inside-avoid {
 .jt-color-dropdown {
     background: #353535 !important;
     border-color: #464646 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: none !important;
 }
 
 /* Color options - darken hover backgrounds for better contrast */

@@ -19,7 +19,7 @@
       <div class="header-content">
         <img src="../icons/icon48-light.png" alt="JT" class="header-icon" id="headerIcon">
         <h1>Power Tools</h1>
-        <span class="version">v3.6.92</span>
+        <span class="version">v3.6.93</span>
         <button class="theme-toggle-btn" id="popupThemeToggle" title="Toggle popup theme">
           <i class="ph ph-sun theme-icon light-icon"></i>
           <i class="ph ph-moon theme-icon dark-icon"></i>
@@ -672,13 +672,13 @@
             </div>
           </div>
 
-          <!-- Beta + Read-Only Banner -->
+          <!-- Beta Banner -->
           <div class="mcp-beta-banner">
             <div class="mcp-beta-banner-row">
               <i class="ph ph-flask"></i>
               <div>
-                <strong>Beta &mdash; Read-Only Access</strong>
-                <p>MCP integration is in beta. All 24 tools are <strong>read-only</strong> &mdash; your JobTread data cannot be modified.</p>
+                <strong>Beta &mdash; 57 Tools Available</strong>
+                <p>MCP integration is in beta with <strong>36 read</strong> and <strong>21 write</strong> tools. AI assistants can search, analyze, and update your JobTread data.</p>
               </div>
             </div>
           </div>
@@ -686,7 +686,7 @@
           <!-- What is MCP -->
           <div class="mcp-info-card">
             <h3><i class="ph ph-info"></i> What is MCP?</h3>
-            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude</strong>, <strong>ChatGPT</strong>, <strong>Grok</strong>, <strong>Gemini</strong>, and <strong>Cursor</strong> read your JobTread data directly. Ask questions, analyze budgets, review schedules, and get insights using natural language.</p>
+            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude</strong>, <strong>ChatGPT</strong>, <strong>Grok</strong>, <strong>Gemini</strong>, and <strong>Cursor</strong> access your JobTread data directly. Search jobs, analyze budgets, review schedules, create tasks, update records, and more &mdash; all using natural language.</p>
           </div>
 
           <!-- Upgrade CTA (shown to non-Power Users) -->
@@ -743,7 +743,7 @@
                 <span class="step-number">3</span>
                 <div class="step-content">
                   <strong>Start Asking Questions</strong>
-                  <p>Search jobs, view budgets, check schedules, and more!</p>
+                  <p>Search jobs, analyze budgets, create tasks, update records, and more!</p>
                 </div>
               </div>
             </div>
@@ -886,15 +886,32 @@
 
           <!-- Available Tools -->
           <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (24 &mdash; Read-Only)</h3>
+            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (57)</h3>
+
+            <!-- READ TOOLS -->
+            <div class="mcp-tools-group-header">
+              <i class="ph ph-book-open-text"></i> Read Tools (36)
+            </div>
 
             <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Jobs &amp; Budget</h4>
+              <h4 class="mcp-tools-category-title">Jobs</h4>
               <div class="mcp-tools-list">
                 <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Jobs</div>
                 <div class="mcp-tool"><i class="ph ph-briefcase"></i> Get Job</div>
                 <div class="mcp-tool"><i class="ph ph-clipboard-text"></i> Job Details</div>
-                <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budget (Cost Items)</div>
+                <div class="mcp-tool"><i class="ph ph-activity"></i> Job Activity</div>
+                <div class="mcp-tool"><i class="ph ph-globe"></i> Global Search</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Budget</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budget</div>
+                <div class="mcp-tool"><i class="ph ph-list-numbers"></i> Full Budget</div>
+                <div class="mcp-tool"><i class="ph ph-tree-structure"></i> Budget Tree</div>
+                <div class="mcp-tool"><i class="ph ph-clock-counter-clockwise"></i> Budget Backups</div>
+                <div class="mcp-tool"><i class="ph ph-arrows-left-right"></i> Compare Budgets</div>
                 <div class="mcp-tool"><i class="ph ph-file-text"></i> Documents Summary</div>
               </div>
             </div>
@@ -908,7 +925,7 @@
             </div>
 
             <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Customers &amp; Vendors</h4>
+              <h4 class="mcp-tools-category-title">Accounts</h4>
               <div class="mcp-tools-list">
                 <div class="mcp-tool"><i class="ph ph-address-book"></i> Search Accounts</div>
                 <div class="mcp-tool"><i class="ph ph-user"></i> Account Details</div>
@@ -926,6 +943,15 @@
             </div>
 
             <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Files</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool"><i class="ph ph-files"></i> Job Files</div>
+                <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Files</div>
+                <div class="mcp-tool"><i class="ph ph-file-pdf"></i> Parse PDF</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
               <h4 class="mcp-tools-category-title">Dashboards</h4>
               <div class="mcp-tools-list">
                 <div class="mcp-tool"><i class="ph ph-chart-bar"></i> List Dashboards</div>
@@ -936,14 +962,11 @@
             <div class="mcp-tools-category">
               <h4 class="mcp-tools-category-title">Organization</h4>
               <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-files"></i> Job Files</div>
-                <div class="mcp-tool"><i class="ph ph-file-pdf"></i> Parse PDF</div>
                 <div class="mcp-tool"><i class="ph ph-map-pin"></i> Locations</div>
                 <div class="mcp-tool"><i class="ph ph-users"></i> Team Members</div>
                 <div class="mcp-tool"><i class="ph ph-tag"></i> Cost Codes</div>
                 <div class="mcp-tool"><i class="ph ph-sliders"></i> Custom Fields</div>
-                <div class="mcp-tool"><i class="ph ph-database"></i> Raw Query</div>
-                <div class="mcp-tool"><i class="ph ph-book-open"></i> Knowledge Lookup</div>
+                <div class="mcp-tool"><i class="ph ph-chart-pie"></i> Org Summary</div>
               </div>
             </div>
 
@@ -955,7 +978,90 @@
               </div>
             </div>
 
-            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> All 24 tools are read-only &mdash; your JobTread data is safe.</p>
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Templates &amp; Reference</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool"><i class="ph ph-copy"></i> Template Jobs</div>
+                <div class="mcp-tool"><i class="ph ph-list-plus"></i> Task Templates</div>
+                <div class="mcp-tool"><i class="ph ph-folder-open"></i> Cost Group Templates</div>
+                <div class="mcp-tool"><i class="ph ph-database"></i> Raw Query</div>
+                <div class="mcp-tool"><i class="ph ph-book-open"></i> Knowledge Lookup</div>
+              </div>
+            </div>
+
+            <!-- WRITE TOOLS -->
+            <div class="mcp-tools-group-header mcp-tools-group-write">
+              <i class="ph ph-pencil-simple-line"></i> Write Tools (21)
+            </div>
+            <div class="mcp-write-notice">
+              <i class="ph ph-warning"></i>
+              <span>Write actions are performed as the account that created the grant key. We recommend using a dedicated account (e.g. "AI Assistant") so your team can easily identify AI-created items.</span>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Jobs</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Job</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Job</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Budget</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Cost Item</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Cost Item</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Cost Group</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Cost Group</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Tasks</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Task</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Task</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-download-simple"></i> Import Task Template</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Accounts &amp; Contacts</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Account</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Account</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Contact</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Contact</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Locations</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Location</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Location</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Daily Logs &amp; Comments</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Daily Log</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Daily Log</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Comment</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Comment</div>
+              </div>
+            </div>
+
+            <div class="mcp-tools-category">
+              <h4 class="mcp-tools-category-title">Time Entries</h4>
+              <div class="mcp-tools-list">
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Time Entry</div>
+                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Time Entry</div>
+              </div>
+            </div>
+
+            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> Write tools let AI create and update records &mdash; always review changes before confirming. No delete operations available.</p>
           </div>
 
         </div>

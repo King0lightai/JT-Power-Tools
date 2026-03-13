@@ -265,16 +265,19 @@ const CustomThemeFeature = (() => {
 
       /* === Task Cards === */
       /* Overlay on task cards to blend with theme while preserving selection state */
-      /* Covers month view (td), week/day view (div.select-none), and direct cards (border-l-2) */
-      td div.cursor-pointer[style*="background-color"],
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] {
+      /* Covers all schedule task cards: month, week/day, availability, and task type filter row */
+      /* Exclude .rounded-full (assignee avatars) — they use background-image for photos */
+      td div[style*="background-color"]:not(.rounded-full),
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full),
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full),
+      .jt-ttf-task-card[style*="background-color"] {
         position: relative !important;
       }
 
-      td div.cursor-pointer[style*="background-color"]::before,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]::before,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]::before {
+      td div[style*="background-color"]:not(.rounded-full)::before,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full)::before,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full)::before,
+      .jt-ttf-task-card[style*="background-color"]::before {
         content: '' !important;
         position: absolute !important;
         inset: 0 !important;
@@ -285,25 +288,28 @@ const CustomThemeFeature = (() => {
       }
 
       /* Ensure text and content stays above the overlay */
-      td div.cursor-pointer[style*="background-color"] > *,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] > *,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] > * {
+      td div[style*="background-color"]:not(.rounded-full) > *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full) > *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full) > *,
+      .jt-ttf-task-card[style*="background-color"] > * {
         position: relative !important;
         z-index: 1 !important;
       }
 
       /* Force readable text on task cards */
-      td div.cursor-pointer[style*="background-color"],
-      td div.cursor-pointer[style*="background-color"] *,
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"],
-      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"] *,
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"],
-      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"] * {
+      td div[style*="background-color"]:not(.rounded-full),
+      td div[style*="background-color"]:not(.rounded-full) *,
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full),
+      div.select-none.break-inside-avoid div.cursor-pointer[style*="background-color"]:not(.rounded-full) *,
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full),
+      div.cursor-pointer.break-inside-avoid.border-l-2[style*="background-color"]:not(.rounded-full) *,
+      .jt-ttf-task-card[style*="background-color"],
+      .jt-ttf-task-card[style*="background-color"] * {
         color: ${p.text.primary} !important;
       }
 
       /* Keep the left border visible (task type indicator) */
-      td div.cursor-pointer[style*="border-left"],
+      td div[style*="border-left"],
       div.select-none.break-inside-avoid div.cursor-pointer[style*="border-left"],
       div.cursor-pointer.break-inside-avoid.border-l-2[style*="border-color"] {
         border-left-width: 5px !important;
@@ -331,7 +337,7 @@ const CustomThemeFeature = (() => {
       .jt-formatter-toolbar {
         background: ${p.background.elevated} !important;
         border-color: ${p.border.default} !important;
-        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
+        box-shadow: none !important;
       }
 
       .jt-formatter-toolbar button {
@@ -381,7 +387,7 @@ const CustomThemeFeature = (() => {
       .jt-dropdown-menu {
         background: ${p.background.elevated} !important;
         border-color: ${p.border.default} !important;
-        box-shadow: 0 4px 12px ${p.shadows.colorStrong} !important;
+        box-shadow: none !important;
       }
 
       .jt-dropdown-menu button {
@@ -401,7 +407,7 @@ const CustomThemeFeature = (() => {
       .jt-overflow-dropdown {
         background: ${p.background.elevated} !important;
         border-color: ${p.border.default} !important;
-        box-shadow: 0 10px 25px ${p.shadows.colorStrong} !important;
+        box-shadow: none !important;
       }
 
       .jt-overflow-dropdown .jt-toolbar-item {
@@ -651,6 +657,12 @@ const CustomThemeFeature = (() => {
       /* Keep .text-white as white - used on intentionally dark UI elements */
       /* .text-white is NOT themed */
 
+      /* Don't interfere with JT's yellow updated-cell highlighting */
+      /* Use a muted yellow that works with themed text (same approach as dark mode) */
+      .bg-yellow-100 {
+        background-color: #46442e !important;
+      }
+
       .hover\\:text-gray-800:hover,
       .hover\\:text-gray-900:hover {
         color: ${p.text.primary};
@@ -758,16 +770,6 @@ const CustomThemeFeature = (() => {
         background-color: inherit !important;
       }
 
-      /* === Budget Edited Field (Yellow Highlight) === */
-      /* Ensure text is dark/readable on yellow background when field is being edited */
-      .bg-yellow-100,
-      .bg-yellow-100 textarea,
-      .bg-yellow-100 input,
-      .bg-yellow-100 div {
-        color: #1f2937 !important;
-        caret-color: #1f2937 !important;
-      }
-
       /* === Column Resize Handles === */
       .absolute.z-10.cursor-col-resize {
         z-index: 1 !important;
@@ -801,7 +803,7 @@ const CustomThemeFeature = (() => {
         background: ${p.primary.base} !important;
         color: ${primaryText} !important;
         border-color: ${p.primary.base} !important;
-        box-shadow: 0 2px 8px ${p.shadows.colorStrong};
+        box-shadow: none;
       }
 
       .jt-preview-btn {

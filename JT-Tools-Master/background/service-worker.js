@@ -15,11 +15,14 @@ try {
 const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefaultSettings)
   ? JTDefaults.getDefaultSettings()
   : {
-      // Inline fallback - should rarely be used
+      // Inline fallback - should match defaults.js DEFAULT_SETTINGS
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
       quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
+      pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+      availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
+      taskTypeFilter: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };

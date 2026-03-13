@@ -251,6 +251,16 @@ const CharacterCounterFeature = (() => {
       margin-left: 0;
     }
 
+    /* Inline group for counter + templates inside the action bar */
+    .jt-counter-templates-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
     .jt-dark-mode .jt-signature-container,
     #jt-dark-mode-styles ~ * .jt-signature-container {
       border-color: rgba(255, 255, 255, 0.15);
@@ -2513,17 +2523,19 @@ const CharacterCounterFeature = (() => {
               toolbar.insertBefore(templatesContainer, counterContainer.nextSibling);
             }
           } else {
-            // INLINE positioning: counter sits just left of the template button
-            const rightSide = toolbar.querySelector('div.shrink-0');
+            // Insert counter + templates into the action bar as a group
+            // between the left buttons (upload/copy/gif) and the right side (Send)
+            // margin-left:auto pushes the group rightward without crowding Send
+            const group = document.createElement('div');
+            group.className = 'jt-counter-templates-group';
+            group.appendChild(counterContainer);
+            group.appendChild(templatesContainer);
 
+            const rightSide = toolbar.querySelector('div.shrink-0');
             if (rightSide) {
-              const buttonWrapper = rightSide.querySelector('.space-x-1') || rightSide;
-              // Counter first, then templates — both inline before Send
-              buttonWrapper.insertBefore(templatesContainer, buttonWrapper.firstChild);
-              buttonWrapper.insertBefore(counterContainer, templatesContainer);
+              toolbar.insertBefore(group, rightSide);
             } else {
-              toolbar.appendChild(counterContainer);
-              toolbar.appendChild(templatesContainer);
+              toolbar.appendChild(group);
             }
           }
         } else {
@@ -2564,6 +2576,9 @@ const CharacterCounterFeature = (() => {
       // Focus/blur listeners are anonymous so they'll be garbage collected
       // Cleanup dropdown
       dropdownCleanup();
+      // Remove the group wrapper if counter is inside one (inline toolbar layout)
+      const group = counterContainer.closest('.jt-counter-templates-group');
+      if (group) group.remove();
       // Remove containers - they may be placed separately for message fields
       counterContainer.remove();
       templatesContainer.remove();
@@ -2678,6 +2693,11 @@ const CharacterCounterFeature = (() => {
     // Remove all signature container rows (for sidebar layout)
     document.querySelectorAll('.jt-signature-container-row').forEach(row => {
       row.remove();
+    });
+
+    // Remove all counter+templates groups (for inline toolbar layout)
+    document.querySelectorAll('.jt-counter-templates-group').forEach(group => {
+      group.remove();
     });
 
     // Remove all signature containers (which include counters)

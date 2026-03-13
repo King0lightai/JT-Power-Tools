@@ -12,11 +12,14 @@
 const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefaultSettings)
   ? JTDefaults.getDefaultSettings()
   : {
-      // Inline fallback - should rarely be used
+      // Inline fallback - should match defaults.js DEFAULT_SETTINGS
       dragDrop: false, contrastFix: true, formatter: true, previewMode: false,
       darkMode: false, rgbTheme: false, smartJobSwitcher: true, budgetHierarchy: false,
-      quickNotes: true, helpSidebarSupport: true, freezeHeader: false,
+      quickNotes: true, helpSidebarSupport: true, keyboardShortcuts: true, freezeHeader: false,
       characterCounter: false, kanbanTypeFilter: false, autoCollapseGroups: false,
+      pdfMarkupTools: true, customFieldFilter: false, budgetChangelog: false,
+      availabilityFilter: false, ganttLines: true, reverseThreadOrder: false,
+      taskTypeFilter: false,
       themeColors: { primary: '#3B82F6', background: '#F3E8FF', text: '#1F1B29' },
       savedThemes: [null, null, null]
     };
@@ -369,13 +372,21 @@ function updateIconForTheme(isDark) {
   // chrome.action is polyfilled to chrome.browserAction on Firefox MV2
   const actionApi = chrome.action || chrome.browserAction;
   if (actionApi && actionApi.setIcon) {
-    actionApi.setIcon({ path: iconSet })
-      .then(() => {
+    try {
+      const result = actionApi.setIcon({ path: iconSet });
+      // MV3 returns a Promise, MV2 browserAction.setIcon returns undefined
+      if (result && typeof result.then === 'function') {
+        result.then(() => {
+          console.log('JT Power Tools: Icon updated for', isDark ? 'dark' : 'light', 'theme');
+        }).catch((error) => {
+          console.error('JT Power Tools: Failed to update icon:', error);
+        });
+      } else {
         console.log('JT Power Tools: Icon updated for', isDark ? 'dark' : 'light', 'theme');
-      })
-      .catch((error) => {
-        console.error('JT Power Tools: Failed to update icon:', error);
-      });
+      }
+    } catch (error) {
+      console.error('JT Power Tools: Failed to update icon:', error);
+    }
   }
 }
 

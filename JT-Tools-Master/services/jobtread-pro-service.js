@@ -475,6 +475,34 @@ const JobTreadProService = (() => {
     }
   }
 
+  /**
+   * Get task types for the organization (via Pro Worker)
+   */
+  async function getTaskTypes() {
+    try {
+      const result = await workerRequest('getTaskTypes');
+      return result.taskTypes || [];
+    } catch (error) {
+      console.error('JobTreadProService: getTaskTypes failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get unassigned tasks for a date range (via Pro Worker)
+   * @param {string} startDate - Start date YYYY-MM-DD
+   * @param {string} endDate - End date YYYY-MM-DD
+   */
+  async function getUnassignedTasks(startDate, endDate) {
+    try {
+      const result = await workerRequest('getUnassignedTasks', { startDate, endDate });
+      return result.tasks || [];
+    } catch (error) {
+      console.error('JobTreadProService: getUnassignedTasks failed:', error);
+      throw error;
+    }
+  }
+
   // Public API
   return {
     // Configuration
@@ -493,6 +521,10 @@ const JobTreadProService = (() => {
     getAllJobs,
     getFilteredJobs,
     getCustomFieldValues,
+
+    // Task Type Filter
+    getTaskTypes,
+    getUnassignedTasks,
 
     // Cache management
     clearCache,

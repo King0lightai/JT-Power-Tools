@@ -12,6 +12,7 @@ const FormatterToolbar = (() => {
   let activeToolbar = null;
   let activeField = null;
   let hideTimeout = null;
+  let budgetScrollCleanup = null; // cleanup function for budget toolbar scroll listener
 
   /**
    * Get the active toolbar
@@ -477,14 +478,16 @@ const FormatterToolbar = (() => {
     // Check if this is a budget Description field
     const isBudgetDesc = isBudgetDescriptionField(field);
 
-    // Insert toolbar ABOVE the field for all contexts
+    // Insert toolbar near the field for all contexts
     if (isBudgetDesc) {
-      // For budget Description fields, insert toolbar before the textarea inside its cell.
-      // The toolbar uses fixed positioning (managed by positionEmbeddedToolbar) so it
-      // doesn't affect the cell's layout flow. We insert it in the cell so it has a
-      // DOM association with the field for findEmbeddedToolbar lookups.
+      // Budget Description fields: append to document.body with position: fixed.
+      // This keeps the toolbar completely outside the cell DOM, so:
+      // 1) No cursor alignment issues (cell layout untouched)
+      // 2) No covering the row above (positioned below the header)
+      // 3) Pins below the budget header row on scroll (sidebar-like behavior)
+      // Scroll-aware repositioning handled by positionBudgetFixedToolbar().
       toolbar.classList.add('jt-toolbar-budget-adaptive');
-      field.parentElement.insertBefore(toolbar, field);
+      document.body.appendChild(toolbar);
     } else if (isMessageField) {
       // For Message fields, insert toolbar between the TO line and the textarea
       // scroll container. The TO line is a div.flex.border-t.rounded-t-sm.border-x
@@ -527,49 +530,47 @@ const FormatterToolbar = (() => {
    * @returns {HTMLElement|null}
    */
   function findBudgetHeaderRow(field) {
-    // Find the scroll container
     const scrollContainer = field.closest('.overflow-auto');
+
+    // Strategy 1 (most reliable): jt-budget-header-container from freeze-header feature.
+    // This wraps all header rows with sticky positioning and a known top offset.
+    // Check within the scroll container, then parent scroll container, then globally.
+    if (scrollContainer) {
+      let header = scrollContainer.querySelector('.jt-budget-header-container');
+      if (header) return header;
+
+      // Data rows might be in a nested overflow-auto — check parent too
+      const parentScroll = scrollContainer.parentElement?.closest('.overflow-auto');
+      if (parentScroll) {
+        header = parentScroll.querySelector('.jt-budget-header-container');
+        if (header) return header;
+      }
+    }
+
+    // Global fallback — only one budget table visible at a time in JobTread
+    const globalHeader = document.querySelector('.jt-budget-header-container');
+    if (globalHeader) return globalHeader;
+
     if (!scrollContainer) return null;
 
-    // Strategy 1: Look for sticky elements that contain header text
+    // Strategy 2: Look for sticky elements that contain header text
     const stickyElements = scrollContainer.querySelectorAll('.sticky');
     for (const sticky of stickyElements) {
       const text = sticky.textContent;
-      // Header should have column names like "Name" and "Description"
       if (text.includes('Name') && text.includes('Description')) {
-        // Return the sticky element's parent row if it's a flex container
-        const parent = sticky.parentElement;
-        if (parent && (parent.classList.contains('flex') || parent.style.display === 'flex')) {
-          return parent;
-        }
         return sticky;
       }
     }
 
-    // Strategy 2: Look through all flex rows for header-like rows
+    // Strategy 3: Look through all flex rows for header-like rows
     const allRows = scrollContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
     for (const row of allRows) {
-      // Skip rows that have textareas (those are data rows)
       if (row.querySelector('textarea')) continue;
-
-      // Skip footer rows (have "+ Item" or "Item" and "Group" buttons)
       const rowText = row.textContent;
       if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
-
-      // Check if this row contains both "Name" and "Description" text (header indicators)
-      const hasName = rowText.includes('Name');
-      const hasDescription = rowText.includes('Description');
-
-      if (hasName && hasDescription) {
-        // This is the header row
+      if (rowText.includes('Name') && rowText.includes('Description')) {
         return row;
       }
-    }
-
-    // Strategy 3: Look for the jt-budget-header-container if freeze-header created one
-    const budgetHeader = scrollContainer.querySelector('.jt-budget-header-container');
-    if (budgetHeader) {
-      return budgetHeader;
     }
 
     return null;
@@ -667,25 +668,161 @@ const FormatterToolbar = (() => {
   }
 
   /**
-   * Position embedded toolbar with sticky behavior
-   * The toolbar starts in document flow above the textarea, becomes sticky when
-   * it would scroll out of view, and stops at the bottom of the textarea.
-   * Note: Embedded toolbars are always visible
-   * For budget Description fields: uses fixed positioning to handle dual-axis scroll,
-   * sticks below the budget header row, and aligns with the Description column.
+   * Position budget toolbar with position: fixed, pinned below the header row.
+   * The toolbar lives in document.body (outside the cell entirely) to avoid
+   * cursor alignment issues. It tracks the Description column horizontally
+   * and pins below the budget header row vertically.
+   * @param {HTMLElement} toolbar
+   * @param {HTMLTextAreaElement} field
+   */
+  function positionBudgetFixedToolbar(toolbar, field) {
+    if (!toolbar || !field || !document.body.contains(field)) {
+      toolbar.style.visibility = 'hidden';
+      return;
+    }
+
+    const fieldRect = field.getBoundingClientRect();
+    const toolbarHeight = toolbar.offsetHeight || 30;
+
+    // Find the budget header row to get the pin point.
+    // The jt-budget-header-container is sticky with a top offset (e.g., top: 101px).
+    // Its getBoundingClientRect().bottom gives the header's visual bottom in viewport.
+    const headerRow = findBudgetHeaderRow(field);
+    const headerBottom = headerRow ? headerRow.getBoundingClientRect().bottom : 0;
+
+    // Find the description column cell for horizontal alignment
+    const descCell = field.closest('.shrink-0, [class*="shrink"]') || field.parentElement;
+    const cellRect = descCell ? descCell.getBoundingClientRect() : fieldRect;
+
+    // Detect if the field is in the first budget row by checking the row number cell.
+    // The first row has a cell with text "1" (the row number indicator).
+    const row = field.closest('tr, [class*="group/row"]');
+    let isFirstRow = false;
+    if (row) {
+      const rowNumBtn = row.querySelector('div[role="button"].cursor-pointer');
+      if (rowNumBtn && rowNumBtn.textContent.trim() === '1') {
+        isFirstRow = true;
+      }
+    }
+
+    // Default: position ABOVE the field (user's preferred initial position)
+    let top = fieldRect.top - toolbarHeight - 2;
+
+    if (isFirstRow) {
+      // First row: always place toolbar BELOW the field (no room above the header)
+      top = fieldRect.bottom + 2;
+    } else if (top < headerBottom) {
+      // Other rows: pin at header bottom when toolbar would go behind header
+      top = headerBottom;
+    }
+
+    // Don't extend past the field's bottom — slide up with the field.
+    // (Only applies when toolbar is ABOVE the field, not for below-placement)
+    if (!isFirstRow && top < fieldRect.top) {
+      const maxTop = fieldRect.bottom - toolbarHeight;
+      if (maxTop < top) {
+        top = maxTop;
+      }
+    }
+
+    // Determine visibility and clip-path based on toolbar vs header position.
+    // Never reset clipPath to 'none' while hiding — that causes a 1-frame pop.
+    let isVisible = true;
+    let clipPath = 'none';
+
+    if (fieldRect.top > window.innerHeight) {
+      // Field is below viewport
+      isVisible = false;
+    } else if (top < headerBottom) {
+      const clipTop = headerBottom - top;
+      if (clipTop >= toolbarHeight) {
+        // Fully behind the header — keep it clipped so no flash
+        clipPath = 'inset(100% 0 0 0)';
+        isVisible = false;
+      } else {
+        // Partially behind — clip the top for smooth slide-behind
+        clipPath = `inset(${clipTop}px 0 0 0)`;
+      }
+    }
+
+    // Horizontal: match the description cell
+    const left = cellRect.left;
+    const width = cellRect.width;
+
+    // Always set ALL styles in one batch — no early returns that leave stale values.
+    toolbar.style.position = 'fixed';
+    toolbar.style.top = `${top}px`;
+    toolbar.style.left = `${left}px`;
+    toolbar.style.width = `${width}px`;
+    toolbar.style.zIndex = '35'; // Above budget header (z-30) but below modals
+    toolbar.style.clipPath = clipPath;
+    toolbar.style.visibility = isVisible ? 'visible' : 'hidden';
+    toolbar.style.pointerEvents = isVisible ? 'auto' : 'none';
+    toolbar.classList.add('jt-toolbar-sticky-active');
+  }
+
+  /**
+   * Set up scroll/resize listeners for the budget fixed toolbar.
+   * Returns a cleanup function to remove listeners.
+   * @param {HTMLElement} toolbar
+   * @param {HTMLTextAreaElement} field
+   * @returns {Function} cleanup function
+   */
+  function setupBudgetScrollListeners(toolbar, field) {
+    const reposition = () => {
+      positionBudgetFixedToolbar(toolbar, field);
+    };
+
+    // Collect ALL scrollable ancestors — budget tables can have nested scroll containers.
+    // The main scroll container AND any outer scrollable wrapper (page-level) must be tracked.
+    const scrollTargets = [];
+    let el = field.parentElement;
+    while (el && el !== document.documentElement) {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      const overflowX = style.overflowX;
+      if (overflowY === 'auto' || overflowY === 'scroll' ||
+          overflowX === 'auto' || overflowX === 'scroll') {
+        scrollTargets.push(el);
+      }
+      el = el.parentElement;
+    }
+
+    scrollTargets.forEach(target => {
+      target.addEventListener('scroll', reposition, { passive: true });
+    });
+    window.addEventListener('scroll', reposition, { passive: true });
+    window.addEventListener('resize', reposition, { passive: true });
+
+    return () => {
+      scrollTargets.forEach(target => {
+        target.removeEventListener('scroll', reposition);
+      });
+      window.removeEventListener('scroll', reposition);
+      window.removeEventListener('resize', reposition);
+    };
+  }
+
+  /**
+   * Position embedded toolbar with sticky behavior for sidebar/modal fields.
+   * Budget fields use positionBudgetFixedToolbar instead.
    * @param {HTMLElement} toolbar
    * @param {HTMLTextAreaElement} field
    */
   function positionEmbeddedToolbar(toolbar, field) {
     if (!toolbar || !field) return;
 
-    // Budget adaptive toolbar uses fixed positioning for dual-axis scroll handling
+    // Budget adaptive toolbars use fixed positioning (handled separately)
     if (toolbar.classList.contains('jt-toolbar-budget-adaptive')) {
-      positionBudgetAdaptiveToolbar(toolbar, field);
+      positionBudgetFixedToolbar(toolbar, field);
+      // Set up scroll listeners (only once)
+      if (!budgetScrollCleanup) {
+        budgetScrollCleanup = setupBudgetScrollListeners(toolbar, field);
+      }
       return;
     }
 
-    // Find scrollable ancestor — any context (sidebar, modal, job overview, etc.)
+    // Find scrollable ancestor — sidebar, modal, etc.
     const scrollContainer = field.closest('.overflow-y-auto, .overflow-auto, .overflow-y-scroll, .overflow-scroll');
 
     if (!scrollContainer) {
@@ -698,121 +835,18 @@ const FormatterToolbar = (() => {
       return;
     }
 
-    // Find sticky header offset (sidebar header, modal header, etc.)
-    // The toolbar should stick just below any existing sticky header
+    // Sidebar/modal: find the direct-child sticky header
+    let stickyOffset = 0;
     const stickyHeader = scrollContainer.querySelector(':scope > .sticky.z-10') ||
                           scrollContainer.querySelector(':scope > .sticky');
-    let stickyOffset = 0;
     if (stickyHeader && !stickyHeader.classList.contains('jt-formatter-toolbar-embedded')) {
       stickyOffset = stickyHeader.offsetHeight;
     }
 
-    // Apply sticky positioning — browser handles scroll clamping automatically.
-    // The toolbar stays in its stacking context so it slides behind any
-    // sticky headers (z-10) without creating phantom hover issues.
     toolbar.style.position = 'sticky';
     toolbar.style.top = `${stickyOffset}px`;
     toolbar.style.left = 'auto';
     toolbar.style.width = '100%';
-    toolbar.style.zIndex = '9'; // Below sticky headers (z-10)
-    toolbar.classList.add('jt-toolbar-sticky-active');
-  }
-
-  /**
-   * Position the adaptive compact toolbar for budget Description fields.
-   * Uses fixed positioning to handle the budget table's dual-axis scrolling.
-   * The toolbar sticks just below the budget header row and aligns horizontally
-   * with the Description column. Hides when the field scrolls completely out of view.
-   * @param {HTMLElement} toolbar
-   * @param {HTMLTextAreaElement} field
-   */
-  function positionBudgetAdaptiveToolbar(toolbar, field) {
-    const scrollContainer = field.closest('.overflow-auto');
-    if (!scrollContainer) return;
-
-    const containerRect = scrollContainer.getBoundingClientRect();
-    const fieldRect = field.getBoundingClientRect();
-    const toolbarHeight = toolbar.offsetHeight || 28;
-
-    // Find the Description column cell for horizontal alignment
-    let cell = field.parentElement;
-    while (cell && !cell.style.width && cell.parentElement) {
-      cell = cell.parentElement;
-      if (cell.classList.contains('overflow-auto')) { cell = null; break; }
-    }
-    if (!cell) cell = field.parentElement;
-    const cellRect = cell.getBoundingClientRect();
-
-    // Find the budget header row to determine the sticky offset
-    const headerRow = findBudgetHeaderRow(field);
-    let headerBottom = containerRect.top; // fallback: top of scroll container
-    if (headerRow) {
-      const headerRect = headerRow.getBoundingClientRect();
-      // Header is sticky so its rect reflects its stuck position
-      headerBottom = headerRect.bottom;
-    }
-
-    // Check if the field is visible within the budget scroll area
-    const fieldVisibleTop = Math.max(fieldRect.top, headerBottom);
-    const fieldVisibleBottom = Math.min(fieldRect.bottom, containerRect.bottom);
-    const fieldIsVisible = fieldVisibleBottom - fieldVisibleTop > 10;
-
-    if (!fieldIsVisible) {
-      // Field has scrolled completely out of the visible budget area — hide toolbar
-      toolbar.style.position = 'fixed';
-      toolbar.style.visibility = 'hidden';
-      toolbar.style.opacity = '0';
-      toolbar.style.pointerEvents = 'none';
-      return;
-    }
-
-    // Determine vertical position:
-    // The toolbar's natural position is just above the field (fieldRect.top - toolbarHeight).
-    // When the field scrolls up so the toolbar would go behind the header,
-    // pin the toolbar just below the header row (sticky behavior).
-    let top;
-    const naturalTop = fieldRect.top - toolbarHeight - 2;
-
-    if (naturalTop < headerBottom) {
-      // Field has scrolled up — stick toolbar below the header
-      top = headerBottom + 2;
-    } else {
-      // Field is fully visible — toolbar sits naturally above it
-      top = naturalTop;
-    }
-
-    // Don't let toolbar extend below the visible container area
-    if (top + toolbarHeight > containerRect.bottom) {
-      toolbar.style.visibility = 'hidden';
-      toolbar.style.opacity = '0';
-      toolbar.style.pointerEvents = 'none';
-      return;
-    }
-
-    // Horizontal position: align with the Description cell, clamped to container bounds
-    let left = cellRect.left;
-    let width = cellRect.width;
-
-    // Clamp horizontal bounds to the visible area of the scroll container
-    const visibleLeft = Math.max(left, containerRect.left);
-    const visibleRight = Math.min(left + width, containerRect.right);
-    const visibleWidth = visibleRight - visibleLeft;
-
-    if (visibleWidth < 60) {
-      // Description column has scrolled mostly out of view horizontally — hide
-      toolbar.style.visibility = 'hidden';
-      toolbar.style.opacity = '0';
-      toolbar.style.pointerEvents = 'none';
-      return;
-    }
-
-    toolbar.style.position = 'fixed';
-    toolbar.style.top = `${top}px`;
-    toolbar.style.left = `${visibleLeft}px`;
-    toolbar.style.width = `${visibleWidth}px`;
-    toolbar.style.visibility = 'visible';
-    toolbar.style.opacity = '1';
-    toolbar.style.pointerEvents = '';
     toolbar.style.zIndex = '9';
     toolbar.classList.add('jt-toolbar-sticky-active');
   }
@@ -1570,8 +1604,13 @@ const FormatterToolbar = (() => {
           overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
         }
         // Budget adaptive toolbars from other fields should be removed entirely
-        // since they use fixed positioning and would look broken if reset to relative
+        // since they use fixed positioning and would look broken if reset to relative.
+        // Also clean up the scroll listeners.
         if (toolbar.classList.contains('jt-toolbar-budget-adaptive')) {
+          if (budgetScrollCleanup) {
+            budgetScrollCleanup();
+            budgetScrollCleanup = null;
+          }
           toolbar.remove();
           return;
         }
@@ -1625,6 +1664,10 @@ const FormatterToolbar = (() => {
       updateToolbarState(field, embeddedToolbar);
     } else {
       // No toolbar created (e.g., non-Description budget table fields like Name)
+      // Actively hide the previous toolbar — otherwise it stays visible
+      // and the deferred positionToolbar() call in handleFieldFocus repositions
+      // the old budget toolbar over the newly-focused non-Description field.
+      hideToolbar();
       activeField = field;
     }
   }
@@ -1645,14 +1688,18 @@ const FormatterToolbar = (() => {
         overflowDropdown.classList.remove('jt-overflow-dropdown-visible');
       }
 
-      // Embedded toolbars stay in the DOM but reset to their natural position;
-      // Budget adaptive toolbars and floating toolbars are removed entirely.
+      // Budget toolbars: remove from DOM + clean up scroll listeners.
+      // Sidebar/modal toolbars: reset to normal flow.
+      // Floating toolbars: remove from DOM.
       if (activeToolbar.classList.contains('jt-toolbar-budget-adaptive')) {
-        // Budget adaptive toolbars use fixed positioning inside a cell —
-        // remove from DOM rather than resetting to relative (which would break layout)
+        // Budget toolbars live in document.body — remove and clean up listeners
+        if (budgetScrollCleanup) {
+          budgetScrollCleanup();
+          budgetScrollCleanup = null;
+        }
         activeToolbar.remove();
       } else if (activeToolbar.classList.contains('jt-formatter-toolbar-embedded')) {
-        // Reset from sticky/fixed back to normal document flow
+        // Reset from sticky back to normal document flow
         activeToolbar.style.position = 'relative';
         activeToolbar.style.top = 'auto';
         activeToolbar.style.left = 'auto';

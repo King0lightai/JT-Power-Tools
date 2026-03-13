@@ -1,99 +1,305 @@
 /**
  * JT Power Tools - Availability Filter Styles
- * Styles for the assignee filter feature in Schedule Availability view
+ * Compact single-row layout matching the Task Type Filter pattern
  */
 
 /* ========================================
-   Filter Container
+   Filter Container (outer wrapper)
    ======================================== */
 
 .jt-availability-filter-container {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin: 8px 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 13px;
-  z-index: 20;
+  font-size: 12px;
+  z-index: 5;
   position: relative;
 }
 
-.jt-availability-filter-container.floating {
-  position: fixed;
-  top: 120px;
-  left: 16px;
-  max-width: 320px;
-  z-index: 20;
+/* ========================================
+   Filter Bar (main compact bar)
+   ======================================== */
+
+.jt-avail-filter-bar {
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  padding: 0;
 }
 
 /* ========================================
-   Filter Header
+   Bar Row (single inline row)
    ======================================== */
 
-.jt-avail-filter-header {
+.jt-avail-bar-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  border-radius: 8px 8px 0 0;
-  cursor: pointer;
+  gap: 6px;
+  padding: 5px 10px;
   user-select: none;
+  cursor: pointer;
 }
 
-.jt-availability-filter-container.collapsed .jt-avail-filter-header {
-  border-radius: 8px;
-  border-bottom: none;
+.jt-avail-bar-title {
+  font-weight: 600;
+  color: #334155;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
-.jt-avail-filter-icon {
+/* ========================================
+   Badge
+   ======================================== */
+
+.jt-avail-filter-badge {
+  background: #E2E8F0;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* ========================================
+   Separator
+   ======================================== */
+
+.jt-avail-bar-separator {
+  color: #CBD5E1;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   Chips Container (inline category chips)
+   ======================================== */
+
+.jt-avail-bar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jt-avail-bar-empty {
+  color: #94A3B8;
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* ========================================
+   Filter Chips (shared)
+   ======================================== */
+
+.jt-avail-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: 1px solid #CBD5E1;
+  border-radius: 14px;
+  background: #F8FAFC;
+  color: #64748B;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.jt-avail-filter-chip:hover {
+  border-color: #94A3B8;
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.jt-avail-filter-chip.active {
+  background: #1E40AF;
+  border-color: #1E40AF;
+  color: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(30, 64, 175, 0.3);
+}
+
+.jt-avail-filter-chip.active:hover {
+  background: #1D4ED8;
+  border-color: #1D4ED8;
+}
+
+/* Category chips — uppercase with special active style */
+.jt-avail-filter-chip.category-chip {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+
+.jt-avail-filter-chip.category-chip.active {
+  background: #D97706;
+  border-color: #D97706;
+  color: #FFFFFF;
+}
+
+.jt-avail-filter-chip.category-chip.active:hover {
+  background: #B45309;
+  border-color: #B45309;
+}
+
+/* Partial state — some but not all children selected */
+.jt-avail-filter-chip.category-chip.partial {
+  border-style: dashed;
+  border-color: #F59E0B;
+  background: #FFFBEB;
+  color: #92400E;
+}
+
+/* Assignee chips — slightly smaller */
+.jt-avail-filter-chip.assignee-chip {
+  font-size: 11px;
+}
+
+/* ========================================
+   Expand Arrow (inside category chips)
+   ======================================== */
+
+.jt-avail-filter-expand-arrow {
+  font-size: 9px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.jt-avail-filter-expand-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+/* ========================================
+   Role Count Badge (inside category chips)
+   ======================================== */
+
+.jt-avail-role-count {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 0 4px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  min-width: 14px;
+  text-align: center;
+}
+
+.jt-avail-filter-chip.category-chip.active .jt-avail-role-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ========================================
+   Actions (All / None / Views)
+   ======================================== */
+
+.jt-avail-bar-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #64748b;
+  gap: 3px;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
-.jt-avail-filter-title {
-  flex: 1;
-  font-weight: 600;
+.jt-avail-filter-action {
+  background: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 3px;
+  color: #64748B;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.jt-avail-filter-action:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
   color: #334155;
 }
 
+/* ========================================
+   Collapse Toggle
+   ======================================== */
+
 .jt-avail-filter-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+  background: none;
   border: none;
-  background: transparent;
-  color: #64748b;
+  color: #94A3B8;
+  font-size: 13px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+  padding: 0 2px;
+  transition: transform 0.2s ease;
+  line-height: 1;
 }
 
 .jt-avail-filter-toggle:hover {
-  background: #e2e8f0;
-  color: #334155;
+  color: #64748B;
 }
 
-.jt-availability-filter-container.collapsed .jt-avail-filter-toggle svg {
+.jt-avail-filter-bar.collapsed .jt-avail-filter-toggle {
   transform: rotate(-90deg);
 }
 
-.jt-avail-filter-toggle svg {
-  transition: transform 0.2s ease;
+/* ========================================
+   Drawer (expandable assignee sub-chips)
+   ======================================== */
+
+.jt-avail-bar-drawer {
+  transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
+  max-height: 400px;
+  overflow: hidden;
 }
 
-/* Header actions container */
-.jt-avail-filter-header-actions {
+.jt-avail-filter-bar.collapsed .jt-avail-bar-drawer {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+}
+
+/* Per-category assignee row inside the drawer */
+.jt-avail-filter-roles {
   display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px 10px 6px;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
+  transition: max-height 0.2s ease, opacity 0.15s ease, padding 0.2s ease;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.jt-avail-filter-roles.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding: 0 10px;
+}
+
+.jt-avail-drawer-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94A3B8;
+  margin-right: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.jt-avail-drawer-label:hover {
+  background: #E2E8F0;
+  color: #475569;
 }
 
 /* ========================================
@@ -108,35 +314,33 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 10px;
-  font-size: 11px;
+  background: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 3px;
+  color: #64748B;
+  font-size: 10px;
   font-weight: 500;
-  color: #4b5563; /* text-gray-600 */
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 2px; /* rounded-sm */
+  padding: 1px 5px;
   cursor: pointer;
-  transition: all 0.1s ease;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
+  transition: all 0.15s ease;
+  line-height: 1.4;
 }
 
 .jt-avail-saved-views-btn:hover {
-  background: #f9fafb; /* hover:bg-gray-50 */
-}
-
-.jt-avail-saved-views-btn:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* active:shadow-inner */
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #334155;
 }
 
 .jt-avail-saved-views-dropdown {
-  position: fixed; /* Fixed positioning to escape parent stacking context */
+  position: fixed;
   min-width: 200px;
   max-width: 280px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #E2E8F0;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 25; /* Above filter panel (20) but below header (30+) */
+  z-index: 25;
   display: none;
 }
 
@@ -162,9 +366,9 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  color: #64748B;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
   border-radius: 6px 6px 0 0;
 }
 
@@ -176,7 +380,7 @@
 .jt-avail-saved-views-empty {
   padding: 16px 12px;
   text-align: center;
-  color: #94a3b8;
+  color: #94A3B8;
   font-size: 12px;
   font-style: italic;
 }
@@ -186,7 +390,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #F1F5F9;
   cursor: pointer;
   transition: background 0.1s ease;
 }
@@ -196,7 +400,7 @@
 }
 
 .jt-avail-saved-view-item:hover {
-  background: #f8fafc;
+  background: #F8FAFC;
 }
 
 .jt-avail-saved-view-name {
@@ -216,7 +420,7 @@
   height: 20px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #94A3B8;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.1s ease;
@@ -225,14 +429,14 @@
 }
 
 .jt-avail-saved-view-delete:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  background: #FEE2E2;
+  color: #EF4444;
 }
 
 .jt-avail-saved-views-actions {
   padding: 8px;
-  border-top: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-top: 1px solid #E2E8F0;
+  background: #F8FAFC;
   border-radius: 0 0 6px 6px;
 }
 
@@ -245,231 +449,24 @@
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: #3b82f6;
-  background: #ffffff;
-  border: 1px dashed #93c5fd;
+  color: #3B82F6;
+  background: #FFFFFF;
+  border: 1px dashed #93C5FD;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .jt-avail-save-view-btn:hover {
-  background: #eff6ff;
-  border-color: #60a5fa;
-  color: #2563eb;
+  background: #EFF6FF;
+  border-color: #60A5FA;
+  color: #2563EB;
 }
-
-/* ========================================
-   Filter Content
-   ======================================== */
-
-.jt-avail-filter-content {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.jt-availability-filter-container.collapsed .jt-avail-filter-content {
-  display: none;
-}
-
-/* ========================================
-   Hierarchical Category Structure
-   ======================================== */
-
-.jt-avail-filter-category {
-  margin-bottom: 8px;
-}
-
-.jt-avail-filter-category:last-child {
-  margin-bottom: 0;
-}
-
-.jt-avail-filter-category-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.jt-avail-filter-expand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: transparent;
-  color: #64748b;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-}
-
-.jt-avail-filter-expand:hover {
-  background: #e2e8f0;
-  color: #334155;
-}
-
-.jt-avail-filter-expand svg {
-  transition: transform 0.2s ease;
-}
-
-.jt-avail-filter-expand.expanded svg {
-  transform: rotate(90deg);
-}
-
-.jt-avail-filter-expand-spacer {
-  width: 20px;
-  flex-shrink: 0;
-}
-
-/* Roles dropdown container */
-.jt-avail-filter-roles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 0 0 24px;
-  max-height: 500px;
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.jt-avail-filter-roles.collapsed {
-  max-height: 0;
-  padding-top: 0;
-  opacity: 0;
-}
-
-/* ========================================
-   Filter Chips - JobTread Style
-   ======================================== */
-
-.jt-avail-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #4b5563; /* text-gray-600 */
-  background: #ffffff;
-  border: 1px solid #e5e7eb; /* border-gray-200 */
-  border-radius: 2px; /* rounded-sm */
-  cursor: pointer;
-  transition: all 0.1s ease;
-  white-space: nowrap;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
-}
-
-.jt-avail-filter-chip:hover {
-  background: #f9fafb; /* hover:bg-gray-50 */
-}
-
-.jt-avail-filter-chip:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* active:shadow-inner */
-}
-
-.jt-avail-filter-chip.active {
-  background: #dbeafe;
-  border-color: #3b82f6;
-  color: #1d4ed8;
-}
-
-.jt-avail-filter-chip.active:hover {
-  background: #bfdbfe;
-}
-
-/* Category chips - slightly different style */
-.jt-avail-filter-chip.category-chip {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 0.3px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.jt-avail-filter-chip.category-chip.active {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  color: #92400e;
-}
-
-.jt-avail-filter-chip.category-chip.active:hover {
-  background: #fde68a;
-}
-
-/* Partial state - some but not all children selected */
-.jt-avail-filter-chip.category-chip.partial {
-  background: #fef9c3;
-  border-color: #fde047;
-  border-style: dashed;
-}
-
-/* Role count badge */
-.jt-avail-role-count {
-  font-size: 10px;
-  font-weight: 500;
-  color: #78716c;
-  background: rgba(0, 0, 0, 0.08);
-  padding: 1px 5px;
-  border-radius: 8px;
-}
-
-.jt-avail-filter-chip.category-chip.active .jt-avail-role-count {
-  background: rgba(0, 0, 0, 0.12);
-  color: #78350f;
-}
-
-/* Assignee/Role chips */
-.jt-avail-filter-chip.assignee-chip,
-.jt-avail-filter-chip.role-chip {
-  font-size: 11px;
-}
-
-/* ========================================
-   Quick Actions - JobTread Style
-   ======================================== */
-
-.jt-avail-filter-actions {
-  display: flex;
-  gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.jt-avail-filter-action {
-  flex: 1;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #4b5563; /* text-gray-600 */
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 2px; /* rounded-sm */
-  cursor: pointer;
-  transition: all 0.1s ease;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-xs */
-  text-align: center;
-}
-
-.jt-avail-filter-action:hover {
-  background: #f9fafb; /* hover:bg-gray-50 */
-}
-
-.jt-avail-filter-action:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); /* active:shadow-inner */
-}
-
 
 /* ========================================
    Collapsed/Visible Rows (Applied to table rows)
-   Uses collapse animation instead of display:none
    ======================================== */
 
-/* Collapsed rows - shrink to minimal height with smooth animation */
 tr.jt-avail-collapsed {
   height: 0 !important;
   max-height: 0 !important;
@@ -499,19 +496,16 @@ tr.jt-avail-collapsed > td > * {
   opacity: 0;
 }
 
-/* Visible rows - full height with smooth animation */
 tr.jt-avail-visible {
   opacity: 1;
   visibility: visible;
   transition: all 0.2s ease-out;
 }
 
-/* Highlighted visible rows when filters are active */
 tr.jt-avail-visible > td:first-child {
   position: relative;
 }
 
-/* Subtle left border highlight on filtered visible rows */
 tr.jt-avail-visible > td:first-child::before {
   content: '';
   position: absolute;
@@ -519,47 +513,34 @@ tr.jt-avail-visible > td:first-child::before {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #3b82f6;
+  background: #3B82F6;
   opacity: 0.6;
 }
 
 /* ========================================
-   Dark Mode Support
+   Dark Mode (neutral greys — NOT dark blues)
    ======================================== */
 
-body.jt-dark-mode .jt-availability-filter-container,
-.dark .jt-availability-filter-container {
-  background: #2c2c2c;
-  border-color: #404040;
-}
-
-body.jt-dark-mode .jt-avail-filter-header,
-.dark .jt-avail-filter-header {
+body.jt-dark-mode .jt-avail-filter-bar,
+.dark .jt-avail-filter-bar {
   background: #252525;
-  border-color: #404040;
+  border-bottom-color: #404040;
 }
 
-body.jt-dark-mode .jt-avail-filter-title,
-.dark .jt-avail-filter-title {
+body.jt-dark-mode .jt-avail-bar-title,
+.dark .jt-avail-bar-title {
   color: #e0e0e0;
 }
 
-body.jt-dark-mode .jt-avail-filter-icon,
-body.jt-dark-mode .jt-avail-filter-toggle,
-.dark .jt-avail-filter-icon,
-.dark .jt-avail-filter-toggle {
-  color: #a0a0a0;
+body.jt-dark-mode .jt-avail-filter-badge,
+.dark .jt-avail-filter-badge {
+  background: #404040;
+  color: #b0b0b0;
 }
 
-body.jt-dark-mode .jt-avail-filter-toggle:hover,
-.dark .jt-avail-filter-toggle:hover {
-  background: #3a3a3a;
-  color: #e0e0e0;
-}
-
-body.jt-dark-mode .jt-avail-filter-section-title,
-.dark .jt-avail-filter-section-title {
-  color: #808080;
+body.jt-dark-mode .jt-avail-bar-separator,
+.dark .jt-avail-bar-separator {
+  color: #505050;
 }
 
 body.jt-dark-mode .jt-avail-filter-chip,
@@ -567,108 +548,101 @@ body.jt-dark-mode .jt-avail-filter-chip,
   background: #333333;
   border-color: #505050;
   color: #b0b0b0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 body.jt-dark-mode .jt-avail-filter-chip:hover,
 .dark .jt-avail-filter-chip:hover {
   background: #3a3a3a;
-}
-
-body.jt-dark-mode .jt-avail-filter-chip:active,
-.dark .jt-avail-filter-chip:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  color: #e0e0e0;
 }
 
 body.jt-dark-mode .jt-avail-filter-chip.active,
 .dark .jt-avail-filter-chip.active {
-  background: #2a4a6a;
-  border-color: #3b82f6;
-  color: #93c5fd;
+  background: #1E40AF;
+  border-color: #1E40AF;
+  color: #FFFFFF;
 }
 
 body.jt-dark-mode .jt-avail-filter-chip.category-chip.active,
 .dark .jt-avail-filter-chip.category-chip.active {
-  background: #4a3520;
-  border-color: #f59e0b;
-  color: #fcd34d;
+  background: #B45309;
+  border-color: #B45309;
+  color: #FFFFFF;
 }
 
 body.jt-dark-mode .jt-avail-filter-chip.category-chip.partial,
 .dark .jt-avail-filter-chip.category-chip.partial {
   background: #3d3520;
   border-color: #ca8a04;
-}
-
-body.jt-dark-mode .jt-avail-filter-expand,
-.dark .jt-avail-filter-expand {
-  color: #a0a0a0;
-}
-
-body.jt-dark-mode .jt-avail-filter-expand:hover,
-.dark .jt-avail-filter-expand:hover {
-  background: #3a3a3a;
-  color: #e0e0e0;
+  color: #FCD34D;
 }
 
 body.jt-dark-mode .jt-avail-role-count,
 .dark .jt-avail-role-count {
   background: rgba(255, 255, 255, 0.1);
-  color: #a8a29e;
+  color: #a0a0a0;
 }
 
 body.jt-dark-mode .jt-avail-filter-chip.category-chip.active .jt-avail-role-count,
 .dark .jt-avail-filter-chip.category-chip.active .jt-avail-role-count {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fcd34d;
-}
-
-body.jt-dark-mode .jt-avail-filter-actions,
-.dark .jt-avail-filter-actions {
-  border-color: #404040;
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 body.jt-dark-mode .jt-avail-filter-action,
 .dark .jt-avail-filter-action {
-  background: #333333;
   border-color: #505050;
   color: #b0b0b0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 body.jt-dark-mode .jt-avail-filter-action:hover,
 .dark .jt-avail-filter-action:hover {
   background: #3a3a3a;
+  color: #e0e0e0;
 }
 
-body.jt-dark-mode .jt-avail-filter-action:active,
-.dark .jt-avail-filter-action:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+body.jt-dark-mode .jt-avail-filter-toggle,
+.dark .jt-avail-filter-toggle {
+  color: #707070;
 }
 
-/* Dark mode highlight for visible rows */
-body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
-.dark tr.jt-avail-visible > td:first-child::before {
-  background: #60a5fa;
+body.jt-dark-mode .jt-avail-filter-toggle:hover,
+.dark .jt-avail-filter-toggle:hover {
+  color: #b0b0b0;
 }
 
-/* Dark mode saved views */
+body.jt-dark-mode .jt-avail-bar-empty,
+.dark .jt-avail-bar-empty {
+  color: #707070;
+}
+
+body.jt-dark-mode .jt-avail-drawer-label,
+.dark .jt-avail-drawer-label {
+  color: #707070;
+}
+
+body.jt-dark-mode .jt-avail-drawer-label:hover,
+.dark .jt-avail-drawer-label:hover {
+  background: #3a3a3a;
+  color: #e0e0e0;
+}
+
+body.jt-dark-mode .jt-avail-filter-expand-arrow,
+.dark .jt-avail-filter-expand-arrow {
+  color: inherit;
+}
+
+/* Dark mode — Saved Views */
 body.jt-dark-mode .jt-avail-saved-views-btn,
 .dark .jt-avail-saved-views-btn {
-  background: #333333;
   border-color: #505050;
   color: #b0b0b0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 body.jt-dark-mode .jt-avail-saved-views-btn:hover,
 .dark .jt-avail-saved-views-btn:hover {
   background: #3a3a3a;
-}
-
-body.jt-dark-mode .jt-avail-saved-views-btn:active,
-.dark .jt-avail-saved-views-btn:active {
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  color: #e0e0e0;
 }
 
 body.jt-dark-mode .jt-avail-saved-views-dropdown,
@@ -713,7 +687,7 @@ body.jt-dark-mode .jt-avail-saved-view-delete,
 body.jt-dark-mode .jt-avail-saved-view-delete:hover,
 .dark .jt-avail-saved-view-delete:hover {
   background: #5a2020;
-  color: #fca5a5;
+  color: #FCA5A5;
 }
 
 body.jt-dark-mode .jt-avail-saved-views-actions,
@@ -725,244 +699,55 @@ body.jt-dark-mode .jt-avail-saved-views-actions,
 body.jt-dark-mode .jt-avail-save-view-btn,
 .dark .jt-avail-save-view-btn {
   background: #333333;
-  border-color: #3b82f6;
-  color: #60a5fa;
+  border-color: #3B82F6;
+  color: #60A5FA;
 }
 
 body.jt-dark-mode .jt-avail-save-view-btn:hover,
 .dark .jt-avail-save-view-btn:hover {
   background: #2a4a6a;
-  border-color: #60a5fa;
+  border-color: #60A5FA;
+}
+
+/* Dark mode highlight for visible rows */
+body.jt-dark-mode tr.jt-avail-visible > td:first-child::before,
+.dark tr.jt-avail-visible > td:first-child::before {
+  background: #60A5FA;
 }
 
 /* ========================================
-   Responsive Adjustments
+   RGB Theme Support
    ======================================== */
 
-@media (max-width: 768px) {
-  .jt-availability-filter-container {
-    margin: 8px;
-  }
-
-  .jt-availability-filter-container.floating {
-    left: 8px;
-    right: 8px;
-    max-width: none;
-  }
-
-  .jt-avail-filter-chip {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
+.jt-custom-theme .jt-avail-filter-bar {
+  background: var(--jt-theme-background, #F8FAFC);
+  border-bottom-color: var(--jt-theme-border, #E2E8F0);
 }
 
-/* ========================================
-   Animation
-   ======================================== */
-
-.jt-avail-filter-content {
-  animation: jt-avail-fade-in 0.2s ease;
+.jt-custom-theme .jt-avail-bar-title {
+  color: var(--jt-theme-text, #334155);
 }
 
-@keyframes jt-avail-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Badge for hidden count (future enhancement) */
-.jt-avail-filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  font-size: 10px;
-  font-weight: 600;
-  color: #ffffff;
-  background: #ef4444;
-  border-radius: 9px;
-  margin-left: 6px;
-}
-
-/* ========================================
-   RGB THEME (Custom Theme) Support
-   Uses CSS custom properties from rgb-theme.js
-   Body has .jt-custom-theme class when active
-   ======================================== */
-
-/* Main container - RGB Theme */
-.jt-custom-theme .jt-availability-filter-container {
-  background: var(--jt-theme-background-elevated, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
-}
-
-/* Header - RGB Theme */
-.jt-custom-theme .jt-avail-filter-header {
-  background: var(--jt-theme-background-muted, #f8fafc);
-  border-color: var(--jt-theme-border, #e5e7eb);
-}
-
-.jt-custom-theme .jt-avail-filter-title {
-  color: var(--jt-theme-text, #1f2937);
-}
-
-.jt-custom-theme .jt-avail-filter-icon,
-.jt-custom-theme .jt-avail-filter-toggle {
-  color: var(--jt-theme-text-secondary, #6b7280);
-}
-
-.jt-custom-theme .jt-avail-filter-toggle:hover {
-  background: var(--jt-theme-background, #ffffff);
-  color: var(--jt-theme-text, #1f2937);
-}
-
-/* Filter Chips - RGB Theme */
 .jt-custom-theme .jt-avail-filter-chip {
-  background: var(--jt-theme-background, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
-  color: var(--jt-theme-text-secondary, #6b7280);
+  background: var(--jt-theme-background, #F8FAFC);
+  border-color: var(--jt-theme-border, #CBD5E1);
+  color: var(--jt-theme-text-secondary, #64748B);
 }
 
 .jt-custom-theme .jt-avail-filter-chip:hover {
-  background: var(--jt-theme-background-muted, #f9fafb);
+  background: var(--jt-theme-background-muted, #F1F5F9);
 }
 
 .jt-custom-theme .jt-avail-filter-chip.active {
-  background: var(--jt-theme-primary-light, #dbeafe);
-  border-color: var(--jt-theme-primary, #3b82f6);
-  color: var(--jt-theme-primary-dark, #1d4ed8);
+  background: var(--jt-theme-primary, #1E40AF);
+  border-color: var(--jt-theme-primary, #1E40AF);
 }
 
-.jt-custom-theme .jt-avail-filter-chip.active:hover {
-  background: var(--jt-theme-primary-lighter, #bfdbfe);
-}
-
-/* Category chips - RGB Theme */
 .jt-custom-theme .jt-avail-filter-chip.category-chip.active {
-  background: var(--jt-theme-warning-light, #fef3c7);
-  border-color: var(--jt-theme-warning, #f59e0b);
-  color: var(--jt-theme-warning-dark, #92400e);
+  background: var(--jt-theme-warning, #D97706);
+  border-color: var(--jt-theme-warning, #D97706);
 }
 
-.jt-custom-theme .jt-avail-filter-chip.category-chip.active:hover {
-  background: var(--jt-theme-warning-lighter, #fde68a);
-}
-
-.jt-custom-theme .jt-avail-filter-chip.category-chip.partial {
-  background: var(--jt-theme-warning-lighter, #fef9c3);
-  border-color: var(--jt-theme-warning, #fde047);
-  border-style: dashed;
-}
-
-/* Expand button - RGB Theme */
-.jt-custom-theme .jt-avail-filter-expand {
-  color: var(--jt-theme-text-secondary, #6b7280);
-}
-
-.jt-custom-theme .jt-avail-filter-expand:hover {
-  background: var(--jt-theme-background-muted, #f3f4f6);
-  color: var(--jt-theme-text, #1f2937);
-}
-
-/* Role count badge - RGB Theme */
-.jt-custom-theme .jt-avail-role-count {
-  background: var(--jt-theme-background-muted, rgba(0, 0, 0, 0.08));
-  color: var(--jt-theme-text-muted, #78716c);
-}
-
-.jt-custom-theme .jt-avail-filter-chip.category-chip.active .jt-avail-role-count {
-  background: var(--jt-theme-warning-dark, rgba(0, 0, 0, 0.12));
-  color: var(--jt-theme-warning-dark, #78350f);
-}
-
-/* Actions - RGB Theme */
-.jt-custom-theme .jt-avail-filter-actions {
-  border-color: var(--jt-theme-border, #e5e7eb);
-}
-
-.jt-custom-theme .jt-avail-filter-action {
-  background: var(--jt-theme-background, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
-  color: var(--jt-theme-text-secondary, #6b7280);
-}
-
-.jt-custom-theme .jt-avail-filter-action:hover {
-  background: var(--jt-theme-background-muted, #f9fafb);
-}
-
-/* Saved Views Button - RGB Theme */
-.jt-custom-theme .jt-avail-saved-views-btn {
-  background: var(--jt-theme-background, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
-  color: var(--jt-theme-text-secondary, #6b7280);
-}
-
-.jt-custom-theme .jt-avail-saved-views-btn:hover {
-  background: var(--jt-theme-background-muted, #f9fafb);
-}
-
-/* Saved Views Dropdown - RGB Theme */
-.jt-custom-theme .jt-avail-saved-views-dropdown {
-  background: var(--jt-theme-background-elevated, #ffffff);
-  border-color: var(--jt-theme-border, #e5e7eb);
-}
-
-.jt-custom-theme .jt-avail-saved-views-header {
-  background: var(--jt-theme-background-muted, #f8fafc);
-  border-color: var(--jt-theme-border, #e5e7eb);
-  color: var(--jt-theme-text-secondary, #6b7280);
-}
-
-.jt-custom-theme .jt-avail-saved-views-empty {
-  color: var(--jt-theme-text-muted, #94a3b8);
-}
-
-.jt-custom-theme .jt-avail-saved-view-item {
-  border-color: var(--jt-theme-border-light, #f1f5f9);
-}
-
-.jt-custom-theme .jt-avail-saved-view-item:hover {
-  background: var(--jt-theme-background-muted, #f8fafc);
-}
-
-.jt-custom-theme .jt-avail-saved-view-name {
-  color: var(--jt-theme-text, #1f2937);
-}
-
-.jt-custom-theme .jt-avail-saved-view-delete {
-  color: var(--jt-theme-text-muted, #94a3b8);
-}
-
-.jt-custom-theme .jt-avail-saved-view-delete:hover {
-  background: var(--jt-theme-error-light, #fee2e2);
-  color: var(--jt-theme-error, #ef4444);
-}
-
-.jt-custom-theme .jt-avail-saved-views-actions {
-  background: var(--jt-theme-background-muted, #f8fafc);
-  border-color: var(--jt-theme-border, #e5e7eb);
-}
-
-.jt-custom-theme .jt-avail-save-view-btn {
-  background: var(--jt-theme-background, #ffffff);
-  border-color: var(--jt-theme-primary, #3b82f6);
-  color: var(--jt-theme-primary, #3b82f6);
-}
-
-.jt-custom-theme .jt-avail-save-view-btn:hover {
-  background: var(--jt-theme-primary-light, #eff6ff);
-  border-color: var(--jt-theme-primary-dark, #2563eb);
-  color: var(--jt-theme-primary-dark, #2563eb);
-}
-
-/* Visible row highlight - RGB Theme */
 .jt-custom-theme tr.jt-avail-visible > td:first-child::before {
-  background: var(--jt-theme-primary, #3b82f6);
+  background: var(--jt-theme-primary, #3B82F6);
 }

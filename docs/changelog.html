@@ -48,11 +48,85 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.6.93 — MCP Upload Tools, Firefox Compatibility, Freeze Header Fix -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.6.93</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">March 12, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Server — File Upload Tools</span>
+                        <ul class="sub-list">
+                            <li class="sub-item"><code>jobtread_upload_file</code> — uploads a file from a URL to a JobTread job as a comment attachment</li>
+                            <li class="sub-item"><code>jobtread_upload_file_to_cost_item</code> — uploads a file from a URL and attaches it directly to a budget line item</li>
+                            <li class="sub-item">Supports images (JPG, PNG, GIF, WebP), PDFs, and documents up to 25MB</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🐛</span> Bug Fixes</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Firefox Extension — Browser Polyfill & Compatibility</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed popup not refreshing the JT page when toggling settings — <code>chrome.tabs</code> methods were not polyfilled for Firefox MV2</li>
+                            <li class="sub-item">Fixed popup dark mode toggle not persisting — <code>chrome.runtime.sendMessage</code> was not returning Promises in Firefox</li>
+                            <li class="sub-item">Fixed <code>setIcon</code> crash in Firefox MV2 background script — <code>browserAction.setIcon()</code> returns <code>undefined</code> (not a Promise), now handled gracefully</li>
+                            <li class="sub-item">Expanded <code>browser-polyfill.js</code> to cover <code>chrome.tabs</code> and <code>chrome.runtime.sendMessage</code></li>
+                            <li class="sub-item">Synced <code>manifest.firefox.json</code> content scripts and web_accessible_resources with current Chrome manifest</li>
+                        </ul>
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Firefox — License Proxy Origin Fix</span> — Fixed "Unauthorized origin" error on Firefox sync requests; proxy now allows requests with valid JWT tokens even without an Origin header
+                    </li>
+                    <li class="change-item">
+                        <span class="feature-name">Freeze Header</span> — Fixed full-page overlay sidebars (History, Selection Details) being pushed down by frozen headers; sidebars inside overlay containers are now excluded from positioning adjustments
+                    </li>
+                    <li class="change-item"><span class="feature-name">Custom Theme</span> — Fixed task card overlay covering assignee avatar icons; rounded avatar elements are now excluded from the overlay</li>
+                    <li class="change-item"><span class="feature-name">Character Counter</span> — Fixed counter and message template buttons pushing the Send button off-screen in narrow sidebars</li>
+                    <li class="change-item"><span class="feature-name">Availability Filter</span> — Fixed positioning at the job level; filter now inserts directly above the availability grid</li>
+                    <li class="change-item"><span class="feature-name">Dark Mode</span> — Fixed schedule availability task cards not being styled in dark mode</li>
+                    <li class="change-item">
+                        <span class="feature-name">Text Formatter</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Fixed toolbar not appearing in Daily Log and Cost Item Details sidebars</li>
+                            <li class="sub-item">Fixed toolbar following focus to non-Description fields in budget table</li>
+                            <li class="sub-item">Fixed budget description toolbar covering the line item row above</li>
+                            <li class="sub-item">Fixed toolbar not following the textarea when scrolling</li>
+                        </ul>
+                    </li>
+                    <li class="change-item"><span class="feature-name">Task Type Filter</span> — Refactored to route API calls through Pro Worker instead of direct Pave calls</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">MCP Popup</span> — Updated MCP tab to list all 57 tools (was 24 read-only), with write tools visually distinguished with green icons</li>
+                    <li class="change-item"><span class="feature-name">Availability Filter</span> — Redesigned to compact single-row layout matching the Task Type Filter style</li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">⚡</span> Improvements</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">MCP Server — Token Efficiency</span> — Reduced token consumption across all 57 tools by trimming descriptions, shortening parameter strings, removing redundant response fields, and compressing knowledge sections</li>
+                    <li class="change-item"><span class="feature-name">Firefox Defaults</span> — Synced inline fallback defaults in both <code>background.js</code> and <code>service-worker.js</code> to match <code>defaults.js</code></li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.92 — Keyboard Shortcuts Enhancement, Smart Resize Rename, Bug Fixes -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.92</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">March 8, 2026</span>
             </div>
 

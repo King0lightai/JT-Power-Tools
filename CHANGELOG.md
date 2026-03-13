@@ -8,6 +8,144 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+#### MCP Server — File Upload Tools
+- Added `jobtread_upload_file` tool — uploads a file from a URL to a JobTread job as a comment attachment
+- Added `jobtread_upload_file_to_cost_item` tool — uploads a file from a URL and attaches it directly to a budget line item
+  - Both tools fetch the file, create a signed upload request via Pave, upload the binary, and attach to the target entity
+  - Supports images (JPG, PNG, GIF, WebP), PDFs, and documents up to 25MB
+
+### Fixed
+#### Firefox Extension — Browser Polyfill & Compatibility
+- Fixed Firefox extension popup not refreshing the JT page when toggling settings — `chrome.tabs.query/reload/create` were not polyfilled for Firefox MV2
+- Fixed Firefox popup dark mode toggle not persisting — `chrome.runtime.sendMessage` was not returning Promises in Firefox
+- Fixed `setIcon` crash in Firefox MV2 background script — `browserAction.setIcon()` returns `undefined` (not a Promise), now handled gracefully
+- Expanded `browser-polyfill.js` to cover `chrome.tabs` (query, reload, create, sendMessage) and `chrome.runtime.sendMessage` in addition to existing storage and action/browserAction polyfills
+- Synced `manifest.firefox.json` content scripts and web_accessible_resources with current Chrome manifest (added task-type-filter)
+- Synced inline fallback defaults in both `background.js` and `service-worker.js` to match `defaults.js` (added 8 missing feature keys)
+
+### Changed
+#### MCP Popup — Full Tool Reference
+- Updated MCP tab to list all 57 tools (was 24 read-only)
+  - Added 12 missing read tools: Full Budget, Budget Tree, Budget Backups, Compare Budgets, Job Activity, Global Search, Org Summary, Search Files, Template Jobs, Task Templates, Cost Group Templates
+  - Added all 21 write tools organized by category: Jobs, Budget, Tasks, Accounts & Contacts, Locations, Daily Logs & Comments, Time Entries
+  - Write tools visually distinguished with green icons; read tools keep orange icons
+  - Updated beta banner, "What is MCP" description, and safety hint to reflect read + write access
+
+### Improved
+#### MCP Server — Token Efficiency
+- Reduced token consumption for AI clients across all 57 MCP tools
+  - Trimmed all tool descriptions — removed verbose "BEFORE CREATING/UPDATING" guidance from write tools, condensed read tool descriptions
+  - Shortened all parameter `.describe()` strings (e.g., `'The JobTread job ID'` → `'Job ID'`)
+  - Removed redundant `_tip` and `_note` instructional fields from response payloads
+  - Removed `sizeFormatted` from file responses (kept `sizeBytes`)
+  - Switched MCP responses from pretty-printed JSON to compact JSON (removed whitespace tokens)
+  - Compressed 7 PAVE_KNOWLEDGE sections (query_syntax, filtering, pagination_sorting, custom_fields, aggregations, data_accuracy, mutations) — kept information-dense sections like examples, text_formatting, and functions intact
+
+### Fixed
+#### Character Counter
+- Fixed character counter and message template buttons pushing the Send button off-screen in narrow/resizable task and to-do sidebars
+  - Counter and template buttons now render in their own compact row above the action bar instead of injecting into JT's button wrapper
+  - Send button remains fully visible and accessible at any sidebar width
+
+#### Availability Filter
+- Fixed availability filter positioning at the job level — filter now inserts directly above the availability grid instead of at the top of the page above the task list
+
+#### Dark Mode
+- Fixed schedule availability task cards not being styled in dark mode — cards with inline background colors now get a dark overlay and white text, matching existing schedule card behavior
+
+#### Text Formatter
+- Fixed formatter toolbar not appearing in Daily Log and Cost Item Details sidebars — orange-header sidebar exclusion was too broad; now only excludes utility panels (Help, Time Entry, Time Clock, Files) that don't support markdown
+- Fixed formatter toolbar following focus to non-Description fields in the budget table — toolbar now only appears on Description fields and is actively hidden when focus moves to Name or other budget cells
+- Fixed budget description toolbar covering the line item row above the active field — toolbar now renders in `document.body` with `position: fixed`, positioned above the active Description cell
+- Fixed toolbar not following the textarea when scrolling — toolbar pins just below the budget header row on scroll (sidebar-like behavior)
+  - Toolbar width and horizontal position track the Description column automatically
+  - Cell DOM is completely untouched — no cursor alignment issues
+  - Toolbar slides smoothly behind the budget header when the field's bottom edge scrolls past (clip-path transition)
+  - Correct z-index layering ensures toolbar renders above the sticky header when pinned
+
+#### Freeze Header
+- Added Files sidebar to global sidebar detection — prevents the Files detail panel from being pushed down by frozen headers
+- Fixed full-page overlay sidebars (History, Selection Details) being pushed down by frozen headers — sidebars inside `absolute inset-0` containers are now excluded from positioning adjustments
+
+#### Custom Theme (RGB)
+- Fixed Custom Theme task card overlay covering assignee avatar icons — `.rounded-full` elements with `background-image` are now excluded from the `::before` overlay
+
+#### Firefox Compatibility — License Proxy
+- Fixed "Unauthorized origin" error on Firefox sync requests — Firefox content scripts may strip the `Origin` header on cross-origin fetches; license proxy now allows requests with valid JWT tokens even without an Origin header
+
+### Changed
+#### Availability Filter
+- Redesigned availability assignee filter to compact single-row layout matching the Task Type Filter style
+  - Replaced card-style panel with inline bar: title | badge | category chips | actions | collapse toggle
+  - Category chips now display inline with expand arrows (▸) to reveal assignee sub-chips in a drawer below
+  - All/None buttons and Saved Views moved inline with the bar for a more compact footprint
+  - Lowered z-index so JT's task sidebar renders above the filter bar
+  - Rewrote CSS for new compact HTML structure with dark mode and RGB theme support
+
+### Fixed
+#### Task Type Filter
+- Refactored Task Type Filter to route API calls through Pro Worker instead of direct Pave calls
+  - Added `getTaskTypes` and `getUnassignedTasks` action handlers to Pro Worker with KV caching
+  - Added corresponding `getTaskTypes()` and `getUnassignedTasks()` methods to `JobTreadProService`
+  - Removed direct Pave query functions (`executePaveQuery`, `getGrantKey`, `getOrgId`) from the feature
+  - Feature now uses authenticated Pro Worker pipeline (license + device auth) like Custom Field Filter
+- Fixed Pave 413 "Request Entity Too Large" error — reduced page size from 100 to 50 for tasks query (nested connections exceeded Pave response limit) and trimmed unused fields (`endDate`, `progress`, `completed`, `user` details from assignedMemberships)
+- Fixed task groups/phases appearing as tasks — added `parentTask != null` filter to Pave query (server-side) and `taskType != null` check (client-side) to exclude group headers
+- Fixed week switching not refreshing data — `scanAndBuild` now tracks last-fetched date range and forces a fresh API call when the visible dates change
+- Fixed task click opening JT 404 — `openTaskSidebar` was prepending an incorrect org slug (e.g. `/schedule/schedule?taskId=...`), now uses the current pathname to build the correct URL
+- Fixed filter bar positioning — uses `<div>` above table instead of `<tr>` for proper rendering
+- Fixed dark mode colors — replaced dark blues with neutral grey palette per project standards
+
+### Added
+- Added 20 write tools to MCP server — create and update operations for all major entities
+  - **Comments**: Create/update comments on jobs, tasks, daily logs, documents, files
+  - **Daily Logs**: Create/update daily log entries with notes and custom fields
+  - **Tasks**: Create/update schedule tasks and to-do items with dates, assignees, progress
+  - **Jobs**: Create/update jobs with custom fields, clone budget/schedule from templates
+  - **Accounts**: Create/update customer and vendor accounts
+  - **Contacts**: Create/update contact people under accounts
+  - **Locations**: Create/update job sites with auto-address parsing
+  - **Budget**: Create/update cost items (line items) and cost groups (categories)
+  - **Time Entries**: Create/update time tracking with running timer support
+  - Updated knowledge base mutations section with comprehensive schema reference
+  - Design decision: NO delete operations (safety boundary)
+- Added 8 advanced read tools to MCP server for deeper insights
+  - **Full Budget**: Auto-paginating budget retrieval (up to 2000 items) with accurate totals
+  - **Budget Tree**: Hierarchical budget view with cost groups, nested items, and subtotals
+  - **Job Activity**: Unified timeline combining comments, daily logs, and tasks
+  - **Global Search**: Cross-entity search across jobs, accounts, contacts, tasks, and locations
+  - **Budget Comparison**: Diff current budget vs backup snapshot (added/removed/changed items)
+  - **Org Summary**: Organization-level metrics (job counts, customer/vendor counts, invoice totals)
+  - **File Search**: Search files by name, folder, or tags across jobs or the entire organization
+  - **Template Jobs**: List jobs with budgets/schedules available for cloning into new jobs
+- Added pre-flight guidance to all 20 write tool descriptions
+  - Create tools instruct AI to research team notes, existing data, custom fields, and duplicates before creating
+  - Update tools instruct AI to read current values before modifying
+  - Reduces hallucinations and bad data entry from AI assistants
+- Added budget backup history tool (`jobtread_get_budget_backups`) to MCP server
+- Added 3 template/catalog tools to MCP server for schedule and budget templates
+  - **List Task Templates** (`jobtread_list_task_templates`): Browse org schedule templates with task previews
+  - **Import Task Template** (`jobtread_import_task_template`): Import a template's tasks into a job schedule
+  - **List Cost Group Templates** (`jobtread_list_cost_group_templates`): Browse budget catalog with cost item previews
+  - Added taskTemplate and costGroup (org-level) entities to knowledge base
+
+### Fixed
+- Fixed MCP time entry type auto-detection to query per-membership types instead of org-level
+  - `organization.timeEntryTypeNames` returns all org types, but not all are valid for every user
+  - Now queries `membership.timeEntryTypes` to get the current user's valid types
+- Fixed MCP task progress conversion — Pave API uses 0-1 scale, tool accepts 0-100 and converts automatically
+- Fixed MCP cost item creation requiring `costCodeId` (now properly required by Pave API)
+- Fixed MCP cost item `costTypeId` parameter — auto-detects "Other" cost type if not provided
+
+### Added
+- Added data accuracy knowledge section to MCP knowledge base
+  - 7 rules for accurate reading/reporting: partial data disclosure, financial amounts (dollars vs cents), selection groups, computed vs stored fields, never infer missing data, cross-referencing, number formatting
+  - Added gotchas for partial data totals and selection group budget items
+  - Updated read tool descriptions with accuracy warnings
+- Added JT Power Tools knowledge to MCP knowledge base
+  - AI assistants can now look up extension features, keyboard shortcuts, and tips
+  - Includes contextual suggestions (e.g., suggest Freeze Header for large budgets)
+  - Available via `jobtread_knowledge_lookup` with keyword search or `jt_power_tools` category
 - Added Safari Web Extension build framework (build-safari.sh + GitHub Actions CI)
   - `build-safari.sh` — macOS build script using `xcrun safari-web-extension-converter`
   - `.github/workflows/build-safari.yml` — CI workflow on macOS 15 with Xcode 16.2

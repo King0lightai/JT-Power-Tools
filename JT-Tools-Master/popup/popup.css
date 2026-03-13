@@ -2516,6 +2516,51 @@ body.dark-theme .mcp-prereq {
 }
 
 /* MCP Tools List */
+/* Read/Write group headers */
+.mcp-tools-group-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brand-orange);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mcp-tools-group-header i {
+  font-size: 14px;
+}
+
+.mcp-tools-group-header.mcp-tools-group-write {
+  color: #10b981;
+  margin-top: 14px;
+}
+
+.mcp-write-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.mcp-write-notice i {
+  color: #10b981;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 .mcp-tools-list {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2541,7 +2586,29 @@ body.dark-theme .mcp-prereq {
   font-size: 14px;
 }
 
+/* Write tool variant */
+.mcp-tool.mcp-tool-write i {
+  color: #10b981;
+}
+
 /* MCP Dark Theme Overrides */
+body.dark-theme .mcp-tools-group-header {
+  border-color: var(--steel-700);
+}
+
+body.dark-theme .mcp-tools-group-header.mcp-tools-group-write {
+  color: #34d399;
+}
+
+body.dark-theme .mcp-tool.mcp-tool-write i {
+  color: #34d399;
+}
+
+body.dark-theme .mcp-write-notice {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(52, 211, 153, 0.2);
+}
+
 body.dark-theme .mcp-info-card {
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(99, 102, 241, 0.06) 100%);
   border-color: rgba(139, 92, 246, 0.3);

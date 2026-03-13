@@ -238,27 +238,29 @@ const FormatterDetection = (() => {
       return false; // Skip fields that already have native formatter
     }
 
-    // Exclude fields inside sidebar forms/panels with orange headers
-    // (Help, Add Time Entry, Time Clock, Daily Log, etc.)
-    // These utility sidebars don't support rich text formatting.
+    // Exclude fields inside UTILITY sidebar panels that don't support rich text.
+    // Only exclude specific panels (Help, Time Entry, Time Clock, Files).
+    // Allow: Daily Log, Cost Item Details, Task, To-Do (they support markdown).
     // This MUST be checked before placeholder checks to prevent Message fields in Help sidebar
     {
+      const NON_FORMATTING_PANELS = ['help', 'time entry', 'time clock', 'files'];
+
+      function isNonFormattingPanel(container) {
+        if (!container) return false;
+        const orangeHeader = container.querySelector('div.font-bold.text-jtOrange.uppercase');
+        if (!orangeHeader) return false;
+        const headerText = orangeHeader.textContent.trim().toLowerCase();
+        return NON_FORMATTING_PANELS.some(panel => headerText.includes(panel));
+      }
+
       // Check inside a <form> with orange header (most common pattern)
-      const sidebarForm = textarea.closest('form');
-      if (sidebarForm) {
-        const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
-        if (orangeHeader) {
-          return false;
-        }
+      if (isNonFormattingPanel(textarea.closest('form'))) {
+        return false;
       }
       // Also check the drag-scroll sidebar container directly — some sidebars
       // like Time Clock don't wrap content in a <form> element
-      const sidebarContainer = textarea.closest('[data-is-drag-scroll-boundary="true"]');
-      if (sidebarContainer) {
-        const orangeHeader = sidebarContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
-        if (orangeHeader) {
-          return false;
-        }
+      if (isNonFormattingPanel(textarea.closest('[data-is-drag-scroll-boundary="true"]'))) {
+        return false;
       }
     }
 

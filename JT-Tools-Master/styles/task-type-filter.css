@@ -10,6 +10,8 @@
 .jt-ttf-injected-row {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 12px;
+  background: #FFFBEB !important;
+  border-bottom: 2px solid #F59E0B !important;
 }
 
 /* ========================================
@@ -48,6 +50,7 @@
   vertical-align: top;
   padding: 4px !important;
   min-height: 60px;
+  background: #FFFBEB !important;
 }
 
 /* ========================================
@@ -59,13 +62,13 @@
   margin-bottom: 3px;
   border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s ease, box-shadow 0.15s ease;
+  transition: opacity 0.15s ease;
   overflow: hidden;
 }
 
 .jt-ttf-task-card:hover {
   opacity: 0.85;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 .jt-ttf-task-card:active {
@@ -121,6 +124,11 @@
 /* ========================================
    Filter Bar (inside table row)
    ======================================== */
+
+/* Filter bar container (above table) */
+#jt-ttf-filter-bar-container {
+  width: 100%;
+}
 
 .jt-ttf-filter-cell {
   padding: 0 !important;
@@ -324,18 +332,24 @@
 }
 
 /* ========================================
-   Dark Mode
+   Dark Mode (neutral greys — NOT dark blues)
    ======================================== */
+
+body.jt-dark-mode .jt-ttf-injected-row,
+.dark .jt-ttf-injected-row {
+  background: #302a1a !important;
+  border-bottom-color: #D97706 !important;
+}
 
 body.jt-dark-mode .jt-ttf-label-cell,
 .dark .jt-ttf-label-cell {
-  background: #292524 !important;
+  background: #302a1a !important;
 }
 
 body.jt-dark-mode .jt-ttf-tasks-label,
 .dark .jt-ttf-tasks-label {
   color: #FBBF24;
-  border-bottom-color: #78350F;
+  border-bottom-color: #505050;
 }
 
 body.jt-dark-mode .jt-ttf-task-count,
@@ -350,44 +364,44 @@ body.jt-dark-mode .jt-ttf-task-name,
 
 body.jt-dark-mode .jt-ttf-filter-bar,
 .dark .jt-ttf-filter-bar {
-  background: #0F172A;
-  border-bottom-color: #334155;
+  background: #252525;
+  border-bottom-color: #404040;
 }
 
 body.jt-dark-mode .jt-ttf-bar-title,
 .dark .jt-ttf-bar-title {
-  color: #E2E8F0;
+  color: #e0e0e0;
 }
 
 body.jt-dark-mode .jt-ttf-badge,
 .dark .jt-ttf-badge {
-  background: #334155;
-  color: #94A3B8;
+  background: #404040;
+  color: #b0b0b0;
 }
 
 body.jt-dark-mode .jt-ttf-action,
 .dark .jt-ttf-action {
-  border-color: #475569;
-  color: #94A3B8;
+  border-color: #505050;
+  color: #b0b0b0;
 }
 
 body.jt-dark-mode .jt-ttf-action:hover,
 .dark .jt-ttf-action:hover {
-  background: #334155;
-  color: #E2E8F0;
+  background: #3a3a3a;
+  color: #e0e0e0;
 }
 
 body.jt-dark-mode .jt-ttf-chip,
 .dark .jt-ttf-chip {
-  background: #1E293B;
-  border-color: #475569;
-  color: #94A3B8;
+  background: #333333;
+  border-color: #505050;
+  color: #b0b0b0;
 }
 
 body.jt-dark-mode .jt-ttf-chip:hover,
 .dark .jt-ttf-chip:hover {
-  background: #334155;
-  color: #E2E8F0;
+  background: #3a3a3a;
+  color: #e0e0e0;
 }
 
 body.jt-dark-mode .jt-ttf-chip.active,
@@ -399,12 +413,42 @@ body.jt-dark-mode .jt-ttf-chip.active,
 
 body.jt-dark-mode .jt-ttf-loading-msg,
 .dark .jt-ttf-loading-msg {
-  color: #64748B;
+  color: #707070;
 }
 
 body.jt-dark-mode .jt-ttf-toggle,
 .dark .jt-ttf-toggle {
-  color: #64748B;
+  color: #707070;
+}
+
+body.jt-dark-mode .jt-ttf-empty,
+.dark .jt-ttf-empty {
+  color: #707070;
+}
+
+body.jt-dark-mode .jt-ttf-error-msg,
+.dark .jt-ttf-error-msg {
+  color: #EF4444;
+}
+
+body.jt-dark-mode .jt-ttf-error-inline,
+.dark .jt-ttf-error-inline {
+  color: #EF4444;
+}
+
+body.jt-dark-mode .jt-ttf-day-cell,
+.dark .jt-ttf-day-cell {
+  background: #302a1a !important;
+}
+
+body.jt-dark-mode .jt-ttf-add-link,
+.dark .jt-ttf-add-link {
+  color: #707070;
+}
+
+body.jt-dark-mode #jt-ttf-filter-bar-container,
+.dark #jt-ttf-filter-bar-container {
+  background: #252525;
 }
 
 /* ========================================

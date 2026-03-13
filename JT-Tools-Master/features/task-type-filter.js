@@ -8,13 +8,13 @@
  *   [TASKS row: "TASKS" label + filter chips | task cards per day column] ← WE BUILD THIS
  *   [Assignee rows: Warren, Tommy, Ben, Ethan, Jose...] ← already in JobTread
  *
- * API calls (Pave):
- *   1. organization.taskTypes.nodes { id, name }
- *   2. organization.tasks (unassigned, by date range) with taskType, job info
+ * API calls (via Pro Worker → Pave):
+ *   1. getTaskTypes → organization.taskTypes.nodes { id, name }
+ *   2. getUnassignedTasks → organization.tasks (by date range) with taskType, job info
  *
  * @module TaskTypeFilterFeature
- * @version 2.0.0
- * @requires JobTreadAPI, TimingUtils, Sanitizer
+ * @version 2.1.0
+ * @requires JobTreadProService, TimingUtils, Sanitizer
  */
 
 const TaskTypeFilterFeature = (() => {
@@ -36,15 +36,16 @@ const TaskTypeFilterFeature = (() => {
   let unassignedTasks = [];      // Filtered to unassigned only
   let isLoading = false;
   let lastError = null;
-  let _isCollapsed = false;
+  let _isCollapsed = true;
 
   // Injected DOM elements
   let tasksRow = null;           // The <tr> we inject
-  let filterBarRow = null;       // The filter bar <tr>
+  let filterBarDiv = null;       // The filter bar <div> above the table
 
   // Date range + column mapping
   let visibleDates = [];         // Array of 'YYYY-MM-DD' strings matching table columns
   let colCount = 0;
+  let lastFetchedDateRange = ''; // Track last fetched range to detect week changes
 
   // ─── VIEW DETECTION ───────────────────────────────────────
 
@@ -168,129 +169,37 @@ const TaskTypeFilterFeature = (() => {
     return `${y}-${m}-${d}`;
   }
 
-  // ─── API CALLS ──────────────────────────────────────────────
+  // ─── API CALLS (via Pro Worker) ─────────────────────────────
 
   async function fetchTaskTypes() {
-    const orgId = await getOrgId();
-    if (!orgId) throw new Error('Organization ID not found');
-
-    const query = {
-      organization: {
-        $: { id: orgId },
-        taskTypes: {
-          nodes: {
-            id: {},
-            name: {}
-          }
-        }
-      }
-    };
-
-    const result = await executePaveQuery(query);
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(result.errors[0].message);
+    if (typeof JobTreadProService === 'undefined') {
+      throw new Error('Pro Service not available. Please ensure JT Power Tools is properly configured.');
     }
-    return result.organization.taskTypes.nodes || [];
+
+    const configured = await JobTreadProService.isConfigured();
+    if (!configured) {
+      throw new Error('Pro Service not configured. Please connect your Grant Key in the extension popup.');
+    }
+
+    return await JobTreadProService.getTaskTypes();
   }
 
   /**
-   * Fetch tasks for a date range — we get ALL tasks, then filter to unassigned client-side
+   * Fetch tasks for a date range via Pro Worker
+   * Returns ALL tasks — we filter to unassigned client-side
    * (Pave doesn't support filtering by empty assignedMemberships)
    */
   async function fetchTasksForDateRange(startDate, endDate) {
-    const orgId = await getOrgId();
-    if (!orgId) throw new Error('Organization ID not found');
-
-    const query = {
-      organization: {
-        $: { id: orgId },
-        tasks: {
-          $: {
-            size: 500,
-            where: {
-              and: [
-                ['isToDo', '=', false],
-                ['startDate', '>=', startDate],
-                ['startDate', '<=', endDate]
-              ]
-            },
-            sortBy: [{ field: 'startDate' }]
-          },
-          nextPage: {},
-          nodes: {
-            id: {},
-            name: {},
-            startDate: {},
-            endDate: {},
-            progress: {},
-            completed: {},
-            taskType: { id: {}, name: {} },
-            assignedMemberships: {
-              nodes: {
-                id: {},
-                user: { id: {}, name: {} }
-              }
-            },
-            job: { id: {}, name: {}, number: {} }
-          }
-        }
-      }
-    };
-
-    const result = await executePaveQuery(query);
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(result.errors[0].message);
-    }
-    return result.organization.tasks.nodes || [];
-  }
-
-  async function getOrgId() {
-    try {
-      const local = await chrome.storage.local.get(['jtpro_org_id']);
-      if (local.jtpro_org_id) return local.jtpro_org_id;
-      const sync = await chrome.storage.sync.get(['jtToolsOrgId']);
-      return sync.jtToolsOrgId || null;
-    } catch (e) {
-      console.error('TaskTypeFilter: Error getting org ID:', e);
-      return null;
-    }
-  }
-
-  async function executePaveQuery(query) {
-    if (typeof window.JobTreadAPI !== 'undefined' && window.JobTreadAPI.paveQuery) {
-      return await window.JobTreadAPI.paveQuery(query);
+    if (typeof JobTreadProService === 'undefined') {
+      throw new Error('Pro Service not available. Please ensure JT Power Tools is properly configured.');
     }
 
-    const apiKey = await getGrantKey();
-    if (!apiKey) throw new Error('No API key available');
-
-    const wrappedQuery = {
-      query: { $: { grantKey: apiKey }, ...query }
-    };
-
-    const result = await chrome.runtime.sendMessage({
-      type: 'JOBTREAD_API_REQUEST',
-      url: 'https://api.jobtread.com/pave',
-      options: {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(wrappedQuery)
-      }
-    });
-
-    if (!result.success) throw new Error(result.error || 'API request failed');
-    return result.data;
-  }
-
-  async function getGrantKey() {
-    try {
-      const local = await chrome.storage.local.get(['jtpro_grant_key']);
-      if (local.jtpro_grant_key) return local.jtpro_grant_key;
-      const sync = await chrome.storage.sync.get(['jtToolsApiKey']);
-      return sync.jtToolsApiKey || null;
-    } catch (e) {
-      return null;
+    const configured = await JobTreadProService.isConfigured();
+    if (!configured) {
+      throw new Error('Pro Service not configured. Please connect your Grant Key in the extension popup.');
     }
+
+    return await JobTreadProService.getUnassignedTasks(startDate, endDate);
   }
 
   // ─── DATA MANAGEMENT ───────────────────────────────────────
@@ -310,6 +219,9 @@ const TaskTypeFilterFeature = (() => {
 
       const startDate = visibleDates[0];
       const endDate = visibleDates[visibleDates.length - 1];
+
+      // Track the fetched date range so scanAndBuild can detect week changes
+      lastFetchedDateRange = `${startDate}:${endDate}`;
 
       // Check cache
       const cached = await getCachedData();
@@ -332,10 +244,14 @@ const TaskTypeFilterFeature = (() => {
         console.log(`TaskTypeFilter: Loaded ${types.length} task types, ${tasks.length} tasks`);
       }
 
-      // Filter to unassigned tasks only
+      // Filter to unassigned, non-group tasks only
+      // Groups/phases have no assignees AND no taskType — exclude them
       unassignedTasks = allTasks.filter(task => {
         const assignees = task.assignedMemberships?.nodes || [];
-        return assignees.length === 0;
+        if (assignees.length > 0) return false; // Has assignees — not unassigned
+        // Exclude task groups: no taskType means it's a phase/group header
+        if (!task.taskType) return false;
+        return true;
       });
 
       console.log(`TaskTypeFilter: ${unassignedTasks.length} unassigned tasks out of ${allTasks.length} total`);
@@ -439,30 +355,25 @@ const TaskTypeFilterFeature = (() => {
   }
 
   /**
-   * Build and render the injected TASKS row and filter bar row
+   * Build and render the filter bar (above the table) and TASKS row (inside tbody)
    */
   function renderInjectedRows() {
     const info = getTableInfo();
     if (!info) return;
 
     colCount = info.colCount;
-    const { tbody } = info;
+    const { table, tbody } = info;
 
-    // Remove old rows if they exist
+    // Remove old elements if they exist
     removeInjectedRows();
 
-    // === FILTER BAR ROW ===
-    filterBarRow = document.createElement('tr');
-    filterBarRow.id = 'jt-ttf-filter-row';
-    filterBarRow.className = 'jt-ttf-injected-row';
+    // === FILTER BAR DIV (above table) ===
+    filterBarDiv = document.createElement('div');
+    filterBarDiv.id = 'jt-ttf-filter-bar-container';
+    filterBarDiv.innerHTML = buildFilterBarHTML();
+    table.parentNode.insertBefore(filterBarDiv, table);
 
-    const filterTd = document.createElement('td');
-    filterTd.setAttribute('colspan', colCount);
-    filterTd.className = 'jt-ttf-filter-cell';
-    filterTd.innerHTML = buildFilterBarHTML();
-    filterBarRow.appendChild(filterTd);
-
-    // === TASKS ROW ===
+    // === TASKS ROW (inside tbody) ===
     tasksRow = document.createElement('tr');
     tasksRow.id = 'jt-ttf-tasks-row';
     tasksRow.className = 'jt-ttf-injected-row';
@@ -534,20 +445,18 @@ const TaskTypeFilterFeature = (() => {
       }
     }
 
-    // Insert into tbody — filter bar first, then tasks row, both before all other rows
+    // Insert TASKS row as the first row in tbody
     const firstRow = tbody.querySelector('tr');
     if (firstRow) {
       tbody.insertBefore(tasksRow, firstRow);
-      tbody.insertBefore(filterBarRow, tasksRow);
     } else {
-      tbody.appendChild(filterBarRow);
       tbody.appendChild(tasksRow);
     }
 
     // Attach filter event listeners
-    attachFilterListeners(filterBarRow);
+    attachFilterListeners(filterBarDiv);
 
-    console.log('TaskTypeFilter: Injected TASKS row and filter bar');
+    console.log('TaskTypeFilter: Injected filter bar above table and TASKS row');
   }
 
   /**
@@ -582,33 +491,29 @@ const TaskTypeFilterFeature = (() => {
   }
 
   /**
-   * Get the org slug from the current URL path
-   * URL pattern: /ORG_SLUG/schedule
-   */
-  function getOrgSlug() {
-    const parts = window.location.pathname.split('/').filter(Boolean);
-    return parts[0] || '';
-  }
-
-  /**
    * Open the task sidebar by navigating to the current schedule URL with ?taskId=
    * JT's SPA router picks up the taskId param and opens the sidebar automatically.
-   * We use a hidden <a> element to trigger JT's client-side navigation
-   * (pushState alone won't trigger the React router).
+   *
+   * React Router doesn't remount a component when only query params change on the
+   * same route path. JT's sidebar reads taskId on mount only, so we force a remount
+   * by briefly navigating to a different path, then to the target URL.
    */
   function openTaskSidebar(taskId) {
     if (!taskId) return;
 
-    const orgSlug = getOrgSlug();
-    const sidebarUrl = `/${orgSlug}/schedule?taskId=${taskId}`;
+    const currentPath = window.location.pathname;
+    const sidebarUrl = `${currentPath}?taskId=${taskId}`;
 
-    // Create a temporary anchor and click it to trigger JT's SPA router
-    const link = document.createElement('a');
-    link.href = sidebarUrl;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    // Step 1: Navigate away from /schedule to unmount the schedule component
+    window.history.pushState(null, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    // Step 2: After React processes the unmount, navigate to target URL
+    // replaceState so history stays clean: /schedule → /schedule?taskId=xxx
+    setTimeout(() => {
+      window.history.replaceState(null, '', sidebarUrl);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }, 60);
   }
 
   /**
@@ -625,11 +530,11 @@ const TaskTypeFilterFeature = (() => {
    * Remove our injected rows from the DOM
    */
   function removeInjectedRows() {
-    const existing1 = document.getElementById('jt-ttf-filter-row');
+    const existing1 = document.getElementById('jt-ttf-filter-bar-container');
     const existing2 = document.getElementById('jt-ttf-tasks-row');
     if (existing1) existing1.remove();
     if (existing2) existing2.remove();
-    filterBarRow = null;
+    filterBarDiv = null;
     tasksRow = null;
   }
 
@@ -787,9 +692,27 @@ const TaskTypeFilterFeature = (() => {
       return;
     }
 
-    // Check if our rows are still in the DOM (JT may have re-rendered)
+    // Check if the visible date range changed (user switched weeks)
+    const currentDates = parseVisibleDates();
+    const currentDateRange = currentDates.length > 0
+      ? `${currentDates[0]}:${currentDates[currentDates.length - 1]}`
+      : '';
+
+    if (currentDateRange && currentDateRange !== lastFetchedDateRange) {
+      // Dates changed — force fresh load
+      console.log('TaskTypeFilter: Date range changed, refreshing data...');
+      removeInjectedRows();
+      unassignedTasks = [];
+      tasksByType = {};
+      // Keep taskTypes (they don't change per week) but reload tasks
+      loadData();
+      return;
+    }
+
+    // Check if our elements are still in the DOM (JT may have re-rendered the table)
     const existingTasksRow = document.getElementById('jt-ttf-tasks-row');
-    if (existingTasksRow) return; // Already injected and present
+    const existingFilterBar = document.getElementById('jt-ttf-filter-bar-container');
+    if (existingTasksRow && existingFilterBar) return; // Already injected and present
 
     // If we have data, just re-render; otherwise load fresh
     if (unassignedTasks.length > 0 || taskTypes.length > 0) {
@@ -841,6 +764,7 @@ const TaskTypeFilterFeature = (() => {
         unassignedTasks = [];
         tasksByType = {};
         taskTypes = [];
+        lastFetchedDateRange = '';
         scanAndBuild();
       }
     }, 1000);
@@ -862,6 +786,7 @@ const TaskTypeFilterFeature = (() => {
     taskTypes = [];
     unassignedTasks = [];
     tasksByType = {};
+    lastFetchedDateRange = '';
     selectedTypes = {};
     lastError = null;
 

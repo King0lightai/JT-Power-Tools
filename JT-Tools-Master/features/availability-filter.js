@@ -461,7 +461,7 @@ const AvailabilityFilterFeature = (() => {
   }
 
   /**
-   * Create the filter UI container
+   * Create the filter UI container — compact single-row layout
    */
   function createFilterUI(categories, assigneesByCategory) {
     // Preserve collapsed state from existing container before removing
@@ -474,126 +474,108 @@ const AvailabilityFilterFeature = (() => {
     filterContainer.id = 'jt-availability-filter';
     filterContainer.className = 'jt-availability-filter-container' + (_isCollapsed ? ' collapsed' : '');
 
-    // Build the filter HTML
-    let html = `
-      <div class="jt-avail-filter-header" title="Click to collapse/expand">
-        <span class="jt-avail-filter-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-          </svg>
-        </span>
-        <span class="jt-avail-filter-title">Filter Assignees</span>
-        <span class="jt-avail-filter-badge" style="display:none"></span>
-        <div class="jt-avail-filter-header-actions">
-          <div class="jt-avail-saved-views-container">
-            <button class="jt-avail-saved-views-btn" title="Saved filter views">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              <span>Views</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            <div class="jt-avail-saved-views-dropdown">
-              <div class="jt-avail-saved-views-header">Saved Views</div>
-              <div class="jt-avail-saved-views-list"></div>
-              <div class="jt-avail-saved-views-actions">
-                <button class="jt-avail-save-view-btn" title="Save current filter as a view">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Save Current View
-                </button>
-              </div>
-            </div>
-          </div>
-          <span class="jt-avail-filter-toggle" title="Toggle filter panel">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </span>
-        </div>
-      </div>
-      <div class="jt-avail-filter-content">
-    `;
+    // Count total active vs total assignees
+    let totalAssignees = 0;
+    let activeAssignees = 0;
+    categories.forEach(cat => {
+      const catAssignees = assigneesByCategory[cat] || [];
+      const catFilters = currentFilters.assignees[cat] || {};
+      totalAssignees += catAssignees.length;
+      activeAssignees += catAssignees.filter(a => catFilters[a] !== false).length;
+    });
 
-    // Build hierarchical category structure
+    // Build compact inline chips — category chips with counts, inline
+    let chipsHtml = '';
     categories.forEach(cat => {
       const isCatActive = currentFilters.categories[cat] !== false;
       const categoryAssignees = assigneesByCategory[cat] || [];
-      const hasChildren = categoryAssignees.length > 0;
-
-      // Count active children
       const catAssigneeFilters = currentFilters.assignees[cat] || {};
-      const activeChildCount = categoryAssignees.filter(assignee =>
-        catAssigneeFilters[assignee] !== false
-      ).length;
+      const activeChildCount = categoryAssignees.filter(a => catAssigneeFilters[a] !== false).length;
       const someChildrenActive = activeChildCount > 0 && activeChildCount < categoryAssignees.length;
 
-      html += `
-        <div class="jt-avail-filter-category ${hasChildren ? 'has-children' : ''}">
-          <div class="jt-avail-filter-category-header">
-            ${hasChildren ? `
-              <button class="jt-avail-filter-expand" data-category="${escapeHtml(cat)}" title="Expand/collapse">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            ` : '<span class="jt-avail-filter-expand-spacer"></span>'}
-            <button class="jt-avail-filter-chip category-chip ${isCatActive ? 'active' : ''} ${someChildrenActive ? 'partial' : ''}"
-                    data-type="category"
-                    data-value="${escapeHtml(cat)}"
-                    title="Toggle all ${escapeHtml(cat)}">
-              ${escapeHtml(cat)}
-              ${hasChildren ? `<span class="jt-avail-role-count">${activeChildCount}/${categoryAssignees.length}</span>` : ''}
-            </button>
-          </div>
-      `;
-
-      // Add children dropdown
-      if (hasChildren) {
-        html += `
-          <div class="jt-avail-filter-roles collapsed" data-category="${escapeHtml(cat)}">
-        `;
-
-        categoryAssignees.forEach(assignee => {
-          const isChildActive = catAssigneeFilters[assignee] !== false;
-          html += `
-            <button class="jt-avail-filter-chip assignee-chip ${isChildActive ? 'active' : ''}"
-                    data-type="assignee"
-                    data-category="${escapeHtml(cat)}"
-                    data-value="${escapeHtml(assignee)}"
-                    title="Toggle ${escapeHtml(assignee)}">
-              ${escapeHtml(assignee)}
-            </button>
-          `;
-        });
-
-        html += `
-          </div>
-        `;
-      }
-
-      html += `</div>`;
+      chipsHtml += `
+        <button class="jt-avail-filter-chip category-chip ${isCatActive ? 'active' : ''} ${someChildrenActive ? 'partial' : ''}"
+                data-type="category"
+                data-value="${escapeHtml(cat)}"
+                title="Toggle all ${escapeHtml(cat)}">
+          ${categoryAssignees.length > 0 ? `
+            <span class="jt-avail-filter-expand-arrow" data-category="${escapeHtml(cat)}">▸</span>
+          ` : ''}
+          ${escapeHtml(cat)}
+          ${categoryAssignees.length > 0 ? `<span class="jt-avail-role-count">${activeChildCount}/${categoryAssignees.length}</span>` : ''}
+        </button>`;
     });
 
-    // Quick actions
-    html += `
-      <div class="jt-avail-filter-actions">
-        <button class="jt-avail-filter-action" data-action="all" title="Show all assignees">
-          Show All
-        </button>
-        <button class="jt-avail-filter-action" data-action="none" title="Hide all assignees">
-          Hide All
-        </button>
-      </div>
+    // Build the compact filter HTML — single row
+    let html = `
+      <div class="jt-avail-filter-bar ${_isCollapsed ? 'collapsed' : ''}">
+        <div class="jt-avail-bar-row">
+          <span class="jt-avail-bar-title">Assignees</span>
+          <span class="jt-avail-filter-badge">${activeAssignees}/${totalAssignees}</span>
+          <span class="jt-avail-bar-separator">│</span>
+          <div class="jt-avail-bar-chips">
+            ${chipsHtml || '<span class="jt-avail-bar-empty">No assignees found</span>'}
+          </div>
+          <div class="jt-avail-bar-actions">
+            <button class="jt-avail-filter-action" data-action="all" title="Show all">All</button>
+            <button class="jt-avail-filter-action" data-action="none" title="Hide all">None</button>
+            <div class="jt-avail-saved-views-container">
+              <button class="jt-avail-saved-views-btn" title="Saved filter views">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+              </button>
+              <div class="jt-avail-saved-views-dropdown">
+                <div class="jt-avail-saved-views-header">Saved Views</div>
+                <div class="jt-avail-saved-views-list"></div>
+                <div class="jt-avail-saved-views-actions">
+                  <button class="jt-avail-save-view-btn" title="Save current filter as a view">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Save Current View
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="jt-avail-bar-drawer">
     `;
 
-    html += `</div>`; // Close content
+    // Drawer: per-category expandable assignee rows
+    categories.forEach(cat => {
+      const categoryAssignees = assigneesByCategory[cat] || [];
+      if (categoryAssignees.length === 0) return;
+
+      const catAssigneeFilters = currentFilters.assignees[cat] || {};
+      let assigneeChipsHtml = '';
+      categoryAssignees.forEach(assignee => {
+        const isChildActive = catAssigneeFilters[assignee] !== false;
+        assigneeChipsHtml += `
+          <button class="jt-avail-filter-chip assignee-chip ${isChildActive ? 'active' : ''}"
+                  data-type="assignee"
+                  data-category="${escapeHtml(cat)}"
+                  data-value="${escapeHtml(assignee)}"
+                  title="Toggle ${escapeHtml(assignee)}">
+            ${escapeHtml(assignee)}
+          </button>`;
+      });
+
+      html += `
+        <div class="jt-avail-filter-roles collapsed" data-category="${escapeHtml(cat)}">
+          <span class="jt-avail-drawer-label" data-category="${escapeHtml(cat)}" title="Select/deselect all ${escapeHtml(cat)}">${escapeHtml(cat)}</span>
+          ${assigneeChipsHtml}
+        </div>`;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
 
     filterContainer.innerHTML = html;
 
@@ -617,53 +599,72 @@ const AvailabilityFilterFeature = (() => {
   function setupFilterEventListeners() {
     if (!filterContainer) return;
 
-    // Click anywhere on header to toggle collapse (except on buttons)
-    const header = filterContainer.querySelector('.jt-avail-filter-header');
-    if (header) {
-      header.addEventListener('click', (e) => {
-        // Don't toggle if clicking on the saved views button/dropdown
-        if (e.target.closest('.jt-avail-saved-views-container')) {
+    // Toggle collapse via clicking anywhere on the bar row (title, badge, separator, arrow)
+    // Clicks on chips, actions, and saved views are excluded (they have their own handlers)
+    const barRow = filterContainer.querySelector('.jt-avail-bar-row');
+    if (barRow) {
+      barRow.addEventListener('click', (e) => {
+        // Don't toggle if the click is on an actual chip or action button
+        if (e.target.closest('.jt-avail-filter-chip') ||
+            e.target.closest('.jt-avail-bar-actions')) {
           return;
         }
-        filterContainer.classList.toggle('collapsed');
+        const bar = filterContainer.querySelector('.jt-avail-filter-bar');
+        if (bar) { bar.classList.toggle('collapsed'); _isCollapsed = bar.classList.contains('collapsed'); }
       });
     }
 
     // Setup saved views functionality
     setupSavedViewsListeners();
 
-    // Expand/collapse button clicks
-    const expandBtns = filterContainer.querySelectorAll('.jt-avail-filter-expand');
-    expandBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const category = btn.dataset.category;
+    // Expand arrows inside category chips — toggle assignee drawer
+    const expandArrows = filterContainer.querySelectorAll('.jt-avail-filter-expand-arrow');
+    expandArrows.forEach(arrow => {
+      arrow.addEventListener('click', (e) => {
+        e.stopPropagation(); // Don't trigger chip toggle
+        const category = arrow.dataset.category;
         const rolesContainer = filterContainer.querySelector(`.jt-avail-filter-roles[data-category="${category}"]`);
         if (rolesContainer) {
           rolesContainer.classList.toggle('collapsed');
-          btn.classList.toggle('expanded');
+          arrow.classList.toggle('expanded');
         }
       });
     });
 
-    // Category chip clicks - toggle all children in that category
+    // Category chip clicks — ONLY toggle the assignee drawer open/closed
     const categoryChips = filterContainer.querySelectorAll('.jt-avail-filter-chip.category-chip');
     categoryChips.forEach(chip => {
       chip.addEventListener('click', () => {
         const category = chip.dataset.value;
+        const rolesContainer = filterContainer.querySelector(`.jt-avail-filter-roles[data-category="${category}"]`);
+        const arrow = chip.querySelector('.jt-avail-filter-expand-arrow');
+        if (rolesContainer) {
+          // If the main bar is collapsed, expand it first so the drawer is visible
+          const bar = filterContainer.querySelector('.jt-avail-filter-bar');
+          if (bar && bar.classList.contains('collapsed')) {
+            bar.classList.remove('collapsed');
+            _isCollapsed = false;
+          }
+          rolesContainer.classList.toggle('collapsed');
+          if (arrow) arrow.classList.toggle('expanded');
+        }
+      });
+    });
 
-        // Toggle category state
+    // Drawer label clicks — select/deselect ALL assignees in that category
+    const drawerLabels = filterContainer.querySelectorAll('.jt-avail-drawer-label[data-category]');
+    drawerLabels.forEach(label => {
+      label.addEventListener('click', () => {
+        const category = label.dataset.category;
         const newState = !currentFilters.categories[category];
         currentFilters.categories[category] = newState;
 
-        // Also toggle all children to match
         if (currentFilters.assignees[category]) {
           Object.keys(currentFilters.assignees[category]).forEach(assignee => {
             currentFilters.assignees[category][assignee] = newState;
           });
         }
 
-        // Update all chip visuals
         updateChipStates();
         applyFilters();
         saveFilterSelections();
@@ -699,37 +700,26 @@ const AvailabilityFilterFeature = (() => {
     // Quick action buttons
     const actionBtns = filterContainer.querySelectorAll('.jt-avail-filter-action');
     actionBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const action = btn.dataset.action;
 
         if (action === 'all') {
-          // Show all
-          Object.keys(currentFilters.categories).forEach(key => {
-            currentFilters.categories[key] = true;
-          });
+          Object.keys(currentFilters.categories).forEach(key => { currentFilters.categories[key] = true; });
           Object.keys(currentFilters.assignees).forEach(category => {
             Object.keys(currentFilters.assignees[category]).forEach(assignee => {
               currentFilters.assignees[category][assignee] = true;
             });
           });
-          // Update UI
-          updateChipStates();
-          applyFilters();
-          saveFilterSelections();
+          updateChipStates(); applyFilters(); saveFilterSelections();
         } else if (action === 'none') {
-          // Hide all
-          Object.keys(currentFilters.categories).forEach(key => {
-            currentFilters.categories[key] = false;
-          });
+          Object.keys(currentFilters.categories).forEach(key => { currentFilters.categories[key] = false; });
           Object.keys(currentFilters.assignees).forEach(category => {
             Object.keys(currentFilters.assignees[category]).forEach(assignee => {
               currentFilters.assignees[category][assignee] = false;
             });
           });
-          // Update UI
-          updateChipStates();
-          applyFilters();
-          saveFilterSelections();
+          updateChipStates(); applyFilters(); saveFilterSelections();
         }
       });
     });
@@ -817,7 +807,23 @@ const AvailabilityFilterFeature = (() => {
     }
 
     // Try to find the best insertion point
-    // Option 1: After the schedule header/toolbar area (below "My Incomplete Tasks" dropdown row)
+    // Priority 1 (job-level only): Insert right after the sticky "Availability" header bar.
+    // At the job level, there's a sticky bar with the text "Availability", week nav, and Close.
+    // We must verify the text content says "Availability" to avoid matching category headers
+    // (INTERNAL, VENDOR, etc.) that also use text-jtOrange in the table or sidebar.
+    const stickyOrangeHeaders = document.querySelectorAll('div.sticky div.font-bold.text-jtOrange.uppercase');
+    for (const header of stickyOrangeHeaders) {
+      if (header.textContent.trim().toLowerCase() === 'availability') {
+        const stickyBar = header.closest('div.sticky');
+        if (stickyBar && stickyBar.parentElement) {
+          stickyBar.parentElement.insertBefore(filterContainer, stickyBar.nextSibling);
+          console.log('AvailabilityFilter: Inserted after sticky Availability header');
+          return;
+        }
+      }
+    }
+
+    // Priority 2: After the schedule header/toolbar area (below "My Incomplete Tasks" dropdown row)
     // Look for the filter bar that contains "My Incomplete Tasks", gear icon, "Availability", etc.
     const filterBar = document.querySelector('div.flex.items-center.space-x-2.p-2') ||
                       document.querySelector('div.flex.items-center.gap-2');
@@ -832,7 +838,7 @@ const AvailabilityFilterFeature = (() => {
       }
     }
 
-    // Option 2: Before the table that contains the availability grid
+    // Priority 3: Before the table that contains the availability grid
     const availabilityTable = document.querySelector('table');
     if (availabilityTable) {
       // Find a parent div that's a good container

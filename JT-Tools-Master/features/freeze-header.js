@@ -111,7 +111,7 @@ const FreezeHeaderFeature = (() => {
       z-index: 42 !important;
     }
 
-    /* Global sidebars (Time Clock, Time Entry, Daily Log, Notifications, Job Switcher, Help) */
+    /* Global sidebars (Time Clock, Time Entry, Daily Log, Notifications, Job Switcher, Help, Files) */
     /* These are full-page overlays that sit just below the main header (~48px). */
     /* They are NOT inside [data-is-drag-scroll-boundary] so they are not affected */
     /* by the drag-boundary sidebar rules. No broad catch-all rule is needed here — */
@@ -236,7 +236,7 @@ const FreezeHeaderFeature = (() => {
     /* We also exclude popups/modals (identified by shadow-lg, max-w-lg, m-auto, rounded-sm patterns) */
     /* We also exclude thead elements and z-10 elements (internal table headers like Availability view) */
     /* These excluded elements keep their native JobTread positioning */
-    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not(.jt-global-sidebar):not(.jt-global-sidebar *):not([style*="top: 0"]):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="bottom"]):not(.jt-popup-sticky):not(thead):not(.z-10) {
+    .jt-freeze-header-active [data-is-drag-scroll-boundary="true"] .sticky:not(.jt-global-sidebar):not(.jt-global-sidebar *):not([style*="top: 0"]):not([style*="top: 45"]):not([style*="top: 46"]):not([style*="top: 47"]):not([style*="top: 48"]):not([style*="top: 49"]):not([style*="top: 50"]):not([style*="bottom"]):not(.jt-popup-sticky):not(thead):not(.z-10):not(.jt-fullpage-sidebar):not(.jt-fullpage-sidebar *) {
       top: var(--jt-toolbar-bottom, 138px) !important;
       /* Also fix max-height so sidebar scrollbar reaches viewport bottom */
       max-height: calc(100vh - var(--jt-toolbar-bottom, 138px)) !important;
@@ -1022,6 +1022,24 @@ const FreezeHeaderFeature = (() => {
   }
 
   /**
+   * Find and mark full-page overlay sidebars (History, Selection Details, etc.)
+   * These are inside absolute inset-0 containers and should keep native positioning.
+   */
+  function findAndMarkFullpageSidebars() {
+    const overlays = document.querySelectorAll('.absolute.inset-0 .overflow-y-auto.overscroll-contain.sticky');
+    for (const el of overlays) {
+      if (!el.classList.contains('jt-fullpage-sidebar')) {
+        el.classList.add('jt-fullpage-sidebar');
+        // Clear any freeze-header positioning that may have been applied
+        if (el.style.getPropertyPriority('top') === 'important') {
+          el.style.removeProperty('top');
+          el.style.removeProperty('max-height');
+        }
+      }
+    }
+  }
+
+  /**
    * Find and mark global sidebars (Time Clock, Time Entry, Daily Log, Notifications) that should NOT be affected by freeze header
    * These sidebars are global overlays that appear on any page and should stay at their native
    * position just below the main header (~48px), not pushed down below frozen tabs/toolbar
@@ -1095,6 +1113,9 @@ const FreezeHeaderFeature = (() => {
                             textUpper.includes('KNOWLEDGE BASE') ||
                             textUpper.includes('SUBMIT A TICKET');
 
+      const isFilesSidebar = (textUpper.includes('FILES') && textUpper.includes('CLOSE')) &&
+                             (textUpper.includes('DELETE') || textUpper.includes('DOWNLOAD') || textUpper.includes('FOLDER'));
+
       // Also check computed top position - global sidebars have top ~48-52px
       const computedStyle = window.getComputedStyle(sidebar);
       const topValue = parseInt(computedStyle.top, 10);
@@ -1123,7 +1144,7 @@ const FreezeHeaderFeature = (() => {
       }
 
       // Content-based detection is definitive - always mark as global
-      const isGlobalByContent = isTimeClock || isTimeEntry || isDailyLog || isNotifications || isJobSwitcher || isHelpSidebar;
+      const isGlobalByContent = isTimeClock || isTimeEntry || isDailyLog || isNotifications || isJobSwitcher || isHelpSidebar || isFilesSidebar;
 
       if (isGlobalByContent || (!isInsideDragBoundary && isNearHeaderLevel)) {
         sidebar.classList.add('jt-global-sidebar');
@@ -1212,6 +1233,9 @@ const FreezeHeaderFeature = (() => {
       if (sidebar.classList.contains('jt-global-sidebar')) continue;
       // Skip sidebars nested inside an edit-items-panel — handled separately below
       if (sidebar.closest('.jt-edit-items-panel')) continue;
+      // Skip full-page overlay sidebars (History, Selection Details, etc.)
+      // These are inside absolute inset-0 containers and should keep native positioning
+      if (sidebar.closest('.absolute.inset-0')) continue;
 
       applySidebarPosition(sidebar, toolbarBottom);
       observeSidebarStyle(sidebar);
@@ -1620,6 +1644,7 @@ const FreezeHeaderFeature = (() => {
     findAndMarkFilesListHeader();
     findAndMarkFilesSidebar();
     findAndMarkGlobalSidebars();
+    findAndMarkFullpageSidebars();
     findAndMarkEditItemsPanel();
     // Small delay to ensure elements are rendered before measuring
     setTimeout(() => {
@@ -1662,6 +1687,9 @@ const FreezeHeaderFeature = (() => {
     });
     document.querySelectorAll('.jt-global-sidebar').forEach(el => {
       el.classList.remove('jt-global-sidebar');
+    });
+    document.querySelectorAll('.jt-fullpage-sidebar').forEach(el => {
+      el.classList.remove('jt-fullpage-sidebar');
     });
     document.querySelectorAll('.jt-edit-items-panel').forEach(el => {
       el.classList.remove('jt-edit-items-panel');
@@ -1743,6 +1771,7 @@ const FreezeHeaderFeature = (() => {
         // exclusions are in place before the browser applies broad positioning rules.
         // This prevents the flash where global sidebars get pushed down by freeze header CSS.
         findAndMarkGlobalSidebars();
+    findAndMarkFullpageSidebars();
 
         // Debounce the rest of the updates (heavier operations)
         if (debounceTimer) clearTimeout(debounceTimer);
@@ -1757,6 +1786,7 @@ const FreezeHeaderFeature = (() => {
           findAndMarkFilesListHeader();
           findAndMarkFilesSidebar();
           findAndMarkGlobalSidebars();
+    findAndMarkFullpageSidebars();
           findAndMarkEditItemsPanel();
           updatePositions();
           adjustDragBoundarySidebars();
@@ -1780,8 +1810,8 @@ const FreezeHeaderFeature = (() => {
         const nowOnJobPage = isJobPage();
 
         // Remove old markings
-        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar').forEach(el => {
-          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar');
+        document.querySelectorAll('.jt-top-header, .jt-job-tabs-container, .jt-action-toolbar, .jt-budget-header-container, .jt-schedule-header-container, .jt-files-folder-bar, .jt-files-list-header, .jt-files-sidebar, .jt-global-sidebar, .jt-fullpage-sidebar').forEach(el => {
+          el.classList.remove('jt-top-header', 'jt-job-tabs-container', 'jt-action-toolbar', 'jt-budget-header-container', 'jt-schedule-header-container', 'jt-files-folder-bar', 'jt-files-list-header', 'jt-files-sidebar', 'jt-global-sidebar', 'jt-fullpage-sidebar');
         });
 
         if (nowOnJobPage) {
@@ -1800,6 +1830,7 @@ const FreezeHeaderFeature = (() => {
             findAndMarkFilesListHeader();
             findAndMarkFilesSidebar();
             findAndMarkGlobalSidebars();
+    findAndMarkFullpageSidebars();
             findAndMarkEditItemsPanel();
             updatePositions();
             adjustDragBoundarySidebars();

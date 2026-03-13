@@ -5,9 +5,11 @@
  * Firefox uses the `browser.*` namespace with Promises
  * Chrome uses the `chrome.*` namespace with callbacks (and Promise support in MV3)
  *
- * This polyfill wraps `browser.storage` so that `chrome.storage.*` works
- * correctly in Firefox — supporting both Promise-based (await) and
- * callback-based usage patterns used throughout the codebase.
+ * This polyfill wraps Firefox's `browser.*` APIs so that `chrome.*` calls
+ * work correctly — supporting both Promise-based (await) and callback-based
+ * usage patterns used throughout the codebase.
+ *
+ * Covers: storage, tabs, runtime.sendMessage, action/browserAction
  */
 
 (function () {
@@ -102,7 +104,8 @@
     };
   }
 
-  // Override chrome.storage with wrapped browser.storage areas
+  // ─── Override chrome.storage ───────────────────────────────────────────
+
   if (typeof browser.storage !== 'undefined') {
     var wrappedStorage = {
       sync: wrapStorageArea(browser.storage.sync),
@@ -148,7 +151,152 @@
     }
   }
 
-  // Export detection flag
+  // ─── Override chrome.tabs ─────────────────────────────────────────────
+  // Firefox MV2: chrome.tabs.* uses callbacks, but codebase uses await.
+  // browser.tabs.* returns Promises. Wrap so chrome.tabs.* returns Promises too.
+
+  if (typeof browser.tabs !== 'undefined') {
+    var wrappedTabs = {
+      _jt_polyfilled: true,
+
+      query: function (queryInfo, callback) {
+        var promise = browser.tabs.query(queryInfo);
+        if (typeof callback === 'function') {
+          promise.then(function (tabs) { callback(tabs); })
+                 .catch(function () { callback([]); });
+          return;
+        }
+        return promise;
+      },
+
+      reload: function (tabId, reloadProperties, callback) {
+        // Handle overloads: reload(tabId), reload(tabId, props), reload(tabId, callback)
+        if (typeof reloadProperties === 'function') {
+          callback = reloadProperties;
+          reloadProperties = undefined;
+        }
+        var promise = reloadProperties
+          ? browser.tabs.reload(tabId, reloadProperties)
+          : browser.tabs.reload(tabId);
+        if (typeof callback === 'function') {
+          promise.then(function () { callback(); })
+                 .catch(function () { callback(); });
+          return;
+        }
+        return promise;
+      },
+
+      create: function (createProperties, callback) {
+        var promise = browser.tabs.create(createProperties);
+        if (typeof callback === 'function') {
+          promise.then(function (tab) { callback(tab); })
+                 .catch(function () { callback(null); });
+          return;
+        }
+        return promise;
+      },
+
+      sendMessage: function (tabId, message, options, callback) {
+        // Handle overloads: sendMessage(tabId, msg, cb) or sendMessage(tabId, msg, opts, cb)
+        if (typeof options === 'function') {
+          callback = options;
+          options = undefined;
+        }
+        var promise = options
+          ? browser.tabs.sendMessage(tabId, message, options)
+          : browser.tabs.sendMessage(tabId, message);
+        if (typeof callback === 'function') {
+          promise.then(function (response) { callback(response); })
+                 .catch(function () { callback(undefined); });
+          return;
+        }
+        return promise;
+      },
+
+      // Proxy onUpdated, onRemoved etc. for any future usage
+      onUpdated: browser.tabs.onUpdated,
+      onRemoved: browser.tabs.onRemoved,
+      onActivated: browser.tabs.onActivated
+    };
+
+    // Apply the override
+    try {
+      chrome.tabs = wrappedTabs;
+    } catch (e) {
+      // Try Object.defineProperty
+      try {
+        Object.defineProperty(chrome, 'tabs', {
+          value: wrappedTabs,
+          writable: true,
+          configurable: true
+        });
+      } catch (e2) {
+        console.error('Browser polyfill: Could not override chrome.tabs', e2);
+      }
+    }
+
+    // Verify
+    if (chrome.tabs && chrome.tabs._jt_polyfilled) {
+      console.log('Browser polyfill: chrome.tabs successfully overridden');
+    } else {
+      console.warn('Browser polyfill: chrome.tabs override may not have taken effect');
+    }
+  }
+
+  // ─── Override chrome.runtime.sendMessage ───────────────────────────────
+  // Firefox MV2: chrome.runtime.sendMessage uses callbacks.
+  // browser.runtime.sendMessage returns a Promise.
+  // Codebase uses both patterns: fire-and-forget AND await.
+
+  if (typeof browser.runtime !== 'undefined' && typeof browser.runtime.sendMessage === 'function') {
+    var originalSendMessage = chrome.runtime.sendMessage;
+
+    var wrappedSendMessage = function (message, options, callback) {
+      // Handle overloads:
+      //   sendMessage(msg)
+      //   sendMessage(msg, callback)
+      //   sendMessage(msg, options, callback)
+      if (typeof options === 'function') {
+        callback = options;
+        options = undefined;
+      }
+
+      var promise = options
+        ? browser.runtime.sendMessage(message, options)
+        : browser.runtime.sendMessage(message);
+
+      if (typeof callback === 'function') {
+        promise.then(function (response) { callback(response); })
+               .catch(function (err) {
+                 console.warn('Browser polyfill: runtime.sendMessage callback error:', err);
+                 callback(undefined);
+               });
+        return; // No return value when using callbacks
+      }
+
+      return promise;
+    };
+
+    // Bind to chrome.runtime - try direct assignment
+    try {
+      chrome.runtime.sendMessage = wrappedSendMessage;
+    } catch (e) {
+      try {
+        Object.defineProperty(chrome.runtime, 'sendMessage', {
+          value: wrappedSendMessage,
+          writable: true,
+          configurable: true
+        });
+      } catch (e2) {
+        console.error('Browser polyfill: Could not override chrome.runtime.sendMessage', e2);
+      }
+    }
+
+    console.log('Browser polyfill: chrome.runtime.sendMessage wrapped for Promise support');
+  }
+
+  // ─── Export detection flag ─────────────────────────────────────────────
+
   if (typeof window !== 'undefined') {
     window.__JT_IS_FIREFOX = true;
   }
