@@ -569,26 +569,32 @@ const TaskTypeFilterFeature = (() => {
    * Open the task sidebar by navigating to the current schedule URL with ?taskId=
    * JT's SPA router picks up the taskId param and opens the sidebar automatically.
    *
-   * React Router doesn't remount a component when only query params change on the
-   * same route path. JT's sidebar reads taskId on mount only, so we force a remount
-   * by briefly navigating to a different path, then to the target URL.
+   * We push the target URL directly (staying on /schedule the entire time) so the
+   * schedule grid never unmounts — no flash or full-page re-render.  If a sidebar
+   * is already open for a different task, we clear the old taskId first so React
+   * detects the param change.
    */
   function openTaskSidebar(taskId) {
     if (!taskId) return;
 
     const currentPath = window.location.pathname;
-    const sidebarUrl = `${currentPath}?taskId=${taskId}`;
+    const targetUrl = `${currentPath}?taskId=${taskId}`;
+    const scrollY = window.scrollY;
 
-    // Step 1: Navigate away from /schedule to unmount the schedule component
-    window.history.pushState(null, '', '/');
-    window.dispatchEvent(new PopStateEvent('popstate'));
-
-    // Step 2: After React processes the unmount, navigate to target URL
-    // replaceState so history stays clean: /schedule → /schedule?taskId=xxx
-    setTimeout(() => {
-      window.history.replaceState(null, '', sidebarUrl);
+    // If there's already a taskId in the URL, clear it first so React sees a change
+    if (window.location.search.includes('taskId=')) {
+      window.history.replaceState(null, '', currentPath);
       window.dispatchEvent(new PopStateEvent('popstate'));
-    }, 60);
+    }
+
+    // Push the target URL — React Router picks up the popstate and opens the sidebar
+    // without unmounting the schedule grid (no navigate-to-home flash)
+    requestAnimationFrame(() => {
+      window.history.pushState(null, '', targetUrl);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      // Restore scroll in case of any jump
+      requestAnimationFrame(() => window.scrollTo(0, scrollY));
+    });
   }
 
   /**
