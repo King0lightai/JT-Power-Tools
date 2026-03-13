@@ -455,6 +455,48 @@ body.jt-dark-mode #jt-ttf-filter-bar-container,
    RGB Theme Support
    ======================================== */
 
+/* Row and cell backgrounds */
+.jt-custom-theme .jt-ttf-injected-row {
+  background: var(--jt-theme-background-muted, #F8FAFC) !important;
+  border-bottom-color: var(--jt-theme-primary, #D97706) !important;
+}
+
+.jt-custom-theme .jt-ttf-label-cell {
+  background: var(--jt-theme-background-muted, #F8FAFC) !important;
+}
+
+.jt-custom-theme .jt-ttf-day-cell {
+  background: var(--jt-theme-background-muted, #F8FAFC) !important;
+}
+
+/* Label and count */
+.jt-custom-theme .jt-ttf-tasks-label {
+  color: var(--jt-theme-primary, #D97706);
+  border-bottom-color: var(--jt-theme-border, #FDE68A);
+}
+
+.jt-custom-theme .jt-ttf-task-count {
+  color: var(--jt-theme-text-secondary, #92400E);
+}
+
+/* Task cards — use muted backgrounds instead of bright pastels */
+.jt-custom-theme .jt-ttf-task-card {
+  opacity: 0.9;
+}
+
+.jt-custom-theme .jt-ttf-task-name {
+  color: var(--jt-theme-text, #1F2937);
+}
+
+.jt-custom-theme .jt-ttf-task-job {
+  color: var(--jt-theme-text-secondary, #6B7280);
+}
+
+.jt-custom-theme .jt-ttf-add-link {
+  color: var(--jt-theme-text-secondary, #9CA3AF);
+}
+
+/* Filter bar */
 .jt-custom-theme .jt-ttf-filter-bar {
   background: var(--jt-theme-background, #F8FAFC);
   border-bottom-color: var(--jt-theme-border, #E2E8F0);
@@ -464,7 +506,48 @@ body.jt-dark-mode #jt-ttf-filter-bar-container,
   color: var(--jt-theme-text, #334155);
 }
 
+.jt-custom-theme .jt-ttf-badge {
+  background: var(--jt-theme-background-emphasis, #E2E8F0);
+  color: var(--jt-theme-text-secondary, #475569);
+}
+
+.jt-custom-theme .jt-ttf-action {
+  border-color: var(--jt-theme-border, #CBD5E1);
+  color: var(--jt-theme-text-secondary, #64748B);
+}
+
+.jt-custom-theme .jt-ttf-action:hover {
+  background: var(--jt-theme-background-subtle, #F1F5F9);
+  color: var(--jt-theme-text, #334155);
+}
+
+.jt-custom-theme .jt-ttf-toggle {
+  color: var(--jt-theme-text-secondary, #94A3B8);
+}
+
+/* Chips */
+.jt-custom-theme .jt-ttf-chip {
+  background: var(--jt-theme-background-subtle, #F8FAFC);
+  border-color: var(--jt-theme-border, #CBD5E1);
+  color: var(--jt-theme-text-secondary, #64748B);
+}
+
+.jt-custom-theme .jt-ttf-chip:hover {
+  background: var(--jt-theme-background-muted, #F1F5F9);
+  color: var(--jt-theme-text, #475569);
+}
+
 .jt-custom-theme .jt-ttf-chip.active {
   background: var(--jt-theme-primary, #1E40AF);
   border-color: var(--jt-theme-primary, #1E40AF);
+}
+
+/* Filter bar container */
+.jt-custom-theme #jt-ttf-filter-bar-container {
+  background: var(--jt-theme-background, #F8FAFC);
+}
+
+/* Loading and error */
+.jt-custom-theme .jt-ttf-loading-msg {
+  color: var(--jt-theme-text-secondary, #9CA3AF);
 }

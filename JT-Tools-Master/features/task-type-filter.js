@@ -61,6 +61,35 @@ const TaskTypeFilterFeature = (() => {
     return false;
   }
 
+  // ─── TABLE DETECTION ─────────────────────────────────────
+
+  /**
+   * Find the availability table (not the main calendar table).
+   * In job-level month view, there are two tables — the month calendar first,
+   * then the availability table. We want the availability table.
+   */
+  function findAvailabilityTable() {
+    const tables = document.querySelectorAll('table');
+    if (tables.length === 0) return null;
+    if (tables.length === 1) return tables[0];
+
+    // Multiple tables — find the one in the availability section.
+    // The availability table is near the assignee sidebar (text-jtOrange labels)
+    // or near the "AVAILABILITY" heading. Use the last table as a reliable fallback
+    // since availability always renders after the main calendar.
+    for (const t of tables) {
+      const parent = t.parentElement;
+      if (!parent) continue;
+      // Check if this table's container has assignee-style elements nearby
+      if (parent.querySelector('.text-jtOrange, [class*="text-jtOrange"]')) {
+        return t;
+      }
+    }
+
+    // Fallback: last table (availability comes after main calendar)
+    return tables[tables.length - 1];
+  }
+
   // ─── DATE PARSING ─────────────────────────────────────────
 
   /**
@@ -74,7 +103,7 @@ const TaskTypeFilterFeature = (() => {
    * We also extract the date from "2-Mar" style headers (e.g. "2-Mar\nMonday")
    */
   function parseVisibleDates() {
-    const table = document.querySelector('table');
+    const table = findAvailabilityTable();
     if (!table) return [];
 
     const thead = table.querySelector('thead');
@@ -331,7 +360,7 @@ const TaskTypeFilterFeature = (() => {
    * Get the column count and tbody reference from the schedule table
    */
   function getTableInfo() {
-    const table = document.querySelector('table');
+    const table = findAvailabilityTable();
     if (!table) return null;
 
     const thead = table.querySelector('thead');
