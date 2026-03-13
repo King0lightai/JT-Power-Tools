@@ -330,28 +330,25 @@ const BudgetChangelogFeature = (() => {
 
   /**
    * Get Grant Key from any available source
-   * Checks Pro Service storage first, then JobTreadAPI storage
+   * Checks Pro Service (obfuscated) first, then JobTreadAPI storage
    * @returns {Promise<string|null>} Grant key or null
    */
   async function getGrantKey() {
     try {
-      // First try Pro Service storage (jtpro_grant_key in local storage)
-      const proResult = await chrome.storage.local.get('jtpro_grant_key');
-      if (proResult.jtpro_grant_key) {
-        console.log('BudgetChangelog: Using Grant Key from Pro Service');
-        return proResult.jtpro_grant_key;
+      // First try Pro Service (obfuscated storage)
+      if (typeof JobTreadProService !== 'undefined') {
+        const proKey = await JobTreadProService.getGrantKey();
+        if (proKey) return proKey;
       }
 
       // Fall back to JobTreadAPI storage (jtToolsApiKey in sync storage)
       const apiResult = await chrome.storage.sync.get('jtToolsApiKey');
       if (apiResult.jtToolsApiKey) {
-        console.log('BudgetChangelog: Using Grant Key from Direct API');
         return apiResult.jtToolsApiKey;
       }
 
       return null;
     } catch (error) {
-      console.error('BudgetChangelog: Error getting Grant Key:', error);
       return null;
     }
   }

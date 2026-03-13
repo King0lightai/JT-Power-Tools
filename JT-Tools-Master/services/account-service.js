@@ -7,6 +7,13 @@
  */
 
 const AccountService = (() => {
+  // Debug flag — set to false for production builds to suppress console output
+  const DEBUG = false;
+
+  // Safe logging — only outputs when DEBUG is true
+  function log(...args) { if (DEBUG) log('', ...args); }
+  function logError(...args) { if (DEBUG) logError('', ...args); }
+
   // API endpoint (same as license proxy)
   const API_URL = 'https://jt-tools-license-proxy.king0light-ai.workers.dev';
 
@@ -49,14 +56,14 @@ const AccountService = (() => {
 
       // Check if token needs refresh
       if (accessToken && isTokenExpiringSoon()) {
-        console.log('AccountService: Token expiring soon, refreshing...');
+        log('Token expiring soon, refreshing...');
         await refreshAccessToken();
       }
 
-      console.log('AccountService: Initialized', { hasUser: !!currentUser });
+      log('Initialized', { hasUser: !!currentUser });
       return { success: true };
     } catch (error) {
-      console.error('AccountService: Init error', error);
+      logError('Init error', error);
       return { success: false, error: error.message };
     }
   }
@@ -113,14 +120,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Setup token received');
+        log('Setup token received');
         return { success: true, data: result.data };
       } else {
-        console.error('AccountService: Setup token failed', result.error);
+        logError('Setup token failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Setup token error', error);
+      logError('Setup token error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -145,14 +152,14 @@ const AccountService = (() => {
       if (result.success) {
         // Store tokens and user data
         await storeAuthData(result.data);
-        console.log('AccountService: Registration successful');
+        log('Registration successful');
         return { success: true, data: result.data };
       } else {
-        console.error('AccountService: Registration failed', result.error);
+        logError('Registration failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Registration error', error);
+      logError('Registration error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -175,14 +182,14 @@ const AccountService = (() => {
       if (result.success) {
         // Store tokens and user data
         await storeAuthData(result.data);
-        console.log('AccountService: Login successful');
+        log('Login successful');
         return { success: true, data: result.data };
       } else {
-        console.error('AccountService: Login failed', result.error);
+        logError('Login failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Login error', error);
+      logError('Login error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -227,16 +234,16 @@ const AccountService = (() => {
             [STORAGE_KEYS.USER_DATA]: currentUser
           });
 
-          console.log('AccountService: Token refreshed');
+          log('Token refreshed');
           return { success: true };
         } else {
           // Refresh failed - clear auth data
-          console.error('AccountService: Token refresh failed', result.error);
+          logError('Token refresh failed', result.error);
           await clearAuthData();
           return { success: false, error: result.error };
         }
       } catch (error) {
-        console.error('AccountService: Token refresh error', error);
+        logError('Token refresh error', error);
         return { success: false, error: 'Network error' };
       } finally {
         refreshPromise = null;
@@ -262,10 +269,10 @@ const AccountService = (() => {
 
       // Clear local data
       await clearAuthData();
-      console.log('AccountService: Logged out');
+      log('Logged out');
       return { success: true };
     } catch (error) {
-      console.error('AccountService: Logout error', error);
+      logError('Logout error', error);
       // Still clear local data even if server request fails
       await clearAuthData();
       return { success: true };
@@ -297,19 +304,19 @@ const AccountService = (() => {
         try {
           const proResult = await window.JobTreadProService.verifyOrgAccess(data.grantKey);
           if (proResult.success) {
-            console.log('AccountService: Auto-registered device with Pro Worker');
+            log('Auto-registered device with Pro Worker');
           } else {
-            console.warn('AccountService: Pro Worker auto-registration failed:', proResult.error);
+            logError('Pro Worker auto-registration failed:', proResult.error);
           }
         } catch (err) {
-          console.warn('AccountService: Pro Worker auto-registration error:', err);
+          logError('Pro Worker auto-registration error:', err);
         }
       }
     }
 
     // Store license key if provided (syncs license across devices)
     if (data.licenseKey && window.LicenseService) {
-      console.log('AccountService: Syncing license key from server');
+      log('Syncing license key from server');
       // Verify and store the license using LicenseService
       await window.LicenseService.verifyLicense(data.licenseKey);
     }
@@ -401,14 +408,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Grant key updated successfully');
+        log('Grant key updated successfully');
         return { success: true };
       } else {
-        console.error('AccountService: Grant key update failed', result.error);
+        logError('Grant key update failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Grant key update error', error);
+      logError('Grant key update error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -422,7 +429,7 @@ const AccountService = (() => {
       const stored = await chrome.storage.local.get(['jtAccountGrantKey']);
       return stored.jtAccountGrantKey || null;
     } catch (error) {
-      console.error('AccountService: Error getting grant key', error);
+      logError('Error getting grant key', error);
       return null;
     }
   }
@@ -452,7 +459,7 @@ const AccountService = (() => {
         deletedNoteIds = await window.QuickNotesStorage.getDeletedNoteIds();
       }
 
-      console.log('AccountService: Syncing notes...', {
+      log('Syncing notes...', {
         localNotesCount: localNotes.length,
         deletedCount: deletedNoteIds.length,
         lastSyncTimestamp
@@ -489,18 +496,18 @@ const AccountService = (() => {
           await window.QuickNotesStorage.clearDeletedNotes();
         }
 
-        console.log('AccountService: Notes synced successfully', result.data.stats);
+        log('Notes synced successfully', result.data.stats);
         return {
           success: true,
           notes: result.data.notes,
           stats: result.data.stats
         };
       } else {
-        console.error('AccountService: Sync failed', result.error);
+        logError('Sync failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Sync error', error);
+      logError('Sync error', error);
       return { success: false, error: 'Network error during sync' };
     }
   }
@@ -545,7 +552,7 @@ const AccountService = (() => {
         deletedTemplateIds = await window.QuickNotesStorage.getDeletedTemplateIds();
       }
 
-      console.log('AccountService: Syncing templates...', {
+      log('Syncing templates...', {
         localTemplatesCount: localData.templates?.length || 0,
         deletedCount: deletedTemplateIds.length,
         defaultTemplateId: localData.defaultTemplateId,
@@ -582,7 +589,7 @@ const AccountService = (() => {
           await window.QuickNotesStorage.clearDeletedTemplates();
         }
 
-        console.log('AccountService: Templates synced successfully', result.data.stats);
+        log('Templates synced successfully', result.data.stats);
         return {
           success: true,
           templates: result.data.templates,
@@ -590,11 +597,11 @@ const AccountService = (() => {
           stats: result.data.stats
         };
       } else {
-        console.error('AccountService: Template sync failed', result.error);
+        logError('Template sync failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Template sync error', error);
+      logError('Template sync error', error);
       return { success: false, error: 'Network error during sync' };
     }
   }
@@ -613,7 +620,7 @@ const AccountService = (() => {
    */
   async function syncSettings() {
     // TODO: Implement when settings sync is needed
-    console.log('AccountService: syncSettings - Not yet implemented');
+    log('syncSettings - Not yet implemented');
     return { success: false, error: 'Not yet implemented' };
   }
 
@@ -631,7 +638,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Fetching team notes...');
+      log('Fetching team notes...');
 
       const response = await authenticatedFetch('/sync/team-notes', {
         method: 'POST',
@@ -641,7 +648,7 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team notes fetched', {
+        log('Team notes fetched', {
           count: result.data.notes?.length || 0
         });
         return {
@@ -650,11 +657,11 @@ const AccountService = (() => {
           serverTimestamp: result.data.serverTimestamp
         };
       } else {
-        console.error('AccountService: Failed to fetch team notes', result.error);
+        logError('Failed to fetch team notes', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team notes fetch error', error);
+      logError('Team notes fetch error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -674,7 +681,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Saving team note...', { id: note.id || 'new', folder: note.folder });
+      log('Saving team note...', { id: note.id || 'new', folder: note.folder });
 
       const response = await authenticatedFetch('/sync/team-notes/push', {
         method: 'POST',
@@ -690,17 +697,17 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team note saved', result.data);
+        log('Team note saved', result.data);
         return {
           success: true,
           data: result.data
         };
       } else {
-        console.error('AccountService: Failed to save team note', result.error);
+        logError('Failed to save team note', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team note save error', error);
+      logError('Team note save error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -720,7 +727,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Deleting team note...', { id: noteId });
+      log('Deleting team note...', { id: noteId });
 
       const response = await authenticatedFetch('/sync/team-notes/delete', {
         method: 'POST',
@@ -730,14 +737,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team note deleted');
+        log('Team note deleted');
         return { success: true };
       } else {
-        console.error('AccountService: Failed to delete team note', result.error);
+        logError('Failed to delete team note', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team note delete error', error);
+      logError('Team note delete error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -756,7 +763,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Fetching team templates...');
+      log('Fetching team templates...');
 
       const response = await authenticatedFetch('/sync/team-templates', {
         method: 'POST',
@@ -766,7 +773,7 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team templates fetched', {
+        log('Team templates fetched', {
           count: result.data.templates?.length || 0
         });
         return {
@@ -775,11 +782,11 @@ const AccountService = (() => {
           serverTimestamp: result.data.serverTimestamp
         };
       } else {
-        console.error('AccountService: Failed to fetch team templates', result.error);
+        logError('Failed to fetch team templates', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team templates fetch error', error);
+      logError('Team templates fetch error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -799,7 +806,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Saving team template...', { id: template.id || 'new' });
+      log('Saving team template...', { id: template.id || 'new' });
 
       const response = await authenticatedFetch('/sync/team-templates/push', {
         method: 'POST',
@@ -813,14 +820,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team template saved', result.data);
+        log('Team template saved', result.data);
         return { success: true, data: result.data };
       } else {
-        console.error('AccountService: Failed to save team template', result.error);
+        logError('Failed to save team template', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team template save error', error);
+      logError('Team template save error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -840,7 +847,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Deleting team template...', { id: templateId });
+      log('Deleting team template...', { id: templateId });
 
       const response = await authenticatedFetch('/sync/team-templates/delete', {
         method: 'POST',
@@ -850,14 +857,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Team template deleted');
+        log('Team template deleted');
         return { success: true };
       } else {
-        console.error('AccountService: Failed to delete team template', result.error);
+        logError('Failed to delete team template', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Team template delete error', error);
+      logError('Team template delete error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -876,7 +883,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Fetching saved filters...');
+      log('Fetching saved filters...');
 
       const response = await authenticatedFetch('/sync/saved-filters', {
         method: 'POST',
@@ -886,7 +893,7 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Saved filters fetched', {
+        log('Saved filters fetched', {
           count: result.data.filters?.length || 0
         });
         return {
@@ -895,11 +902,11 @@ const AccountService = (() => {
           serverTimestamp: result.data.serverTimestamp
         };
       } else {
-        console.error('AccountService: Failed to fetch saved filters', result.error);
+        logError('Failed to fetch saved filters', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Saved filters fetch error', error);
+      logError('Saved filters fetch error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -927,7 +934,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Saving filter...', { id: filter.id || 'new', name: filter.name });
+      log('Saving filter...', { id: filter.id || 'new', name: filter.name });
 
       const response = await authenticatedFetch('/sync/saved-filters/push', {
         method: 'POST',
@@ -944,17 +951,17 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Saved filter saved', result.data);
+        log('Saved filter saved', result.data);
         return {
           success: true,
           data: result.data
         };
       } else {
-        console.error('AccountService: Failed to save filter', result.error);
+        logError('Failed to save filter', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Saved filter save error', error);
+      logError('Saved filter save error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -974,7 +981,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Deleting saved filter...', { id: filterId });
+      log('Deleting saved filter...', { id: filterId });
 
       const response = await authenticatedFetch('/sync/saved-filters/delete', {
         method: 'POST',
@@ -984,14 +991,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Saved filter deleted');
+        log('Saved filter deleted');
         return { success: true };
       } else {
-        console.error('AccountService: Failed to delete saved filter', result.error);
+        logError('Failed to delete saved filter', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Saved filter delete error', error);
+      logError('Saved filter delete error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -1011,7 +1018,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Requesting password reset for:', email);
+      log('Requesting password reset for:', email);
 
       const response = await fetch(`${API_URL}/auth/forgot-password`, {
         method: 'POST',
@@ -1024,14 +1031,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Password reset email requested');
+        log('Password reset email requested');
         return { success: true, message: result.message };
       } else {
-        console.error('AccountService: Password reset request failed', result.error);
+        logError('Password reset request failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Password reset request error', error);
+      logError('Password reset request error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -1052,7 +1059,7 @@ const AccountService = (() => {
     }
 
     try {
-      console.log('AccountService: Resetting password...');
+      log('Resetting password...');
 
       const response = await fetch(`${API_URL}/auth/reset-password`, {
         method: 'POST',
@@ -1065,14 +1072,14 @@ const AccountService = (() => {
       const result = await response.json();
 
       if (result.success) {
-        console.log('AccountService: Password reset successful');
+        log('Password reset successful');
         return { success: true, message: result.message };
       } else {
-        console.error('AccountService: Password reset failed', result.error);
+        logError('Password reset failed', result.error);
         return { success: false, error: result.error };
       }
     } catch (error) {
-      console.error('AccountService: Password reset error', error);
+      logError('Password reset error', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }

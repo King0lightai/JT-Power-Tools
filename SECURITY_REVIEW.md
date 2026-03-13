@@ -168,16 +168,16 @@ These are things done well:
 
 ## PRIORITY ACTION ITEMS
 
-| Priority | Finding | Effort |
-|----------|---------|--------|
-| P0 | #2 Strip console.log from production | Small |
-| P0 | #5 Add credential-in-clipboard warning | Small |
-| P1 | #1 Obfuscate grant key in storage | Small |
-| P1 | #3 Move to server-issued session tokens | Medium |
-| P1 | #6 Surface write attribution warning during setup | Small |
-| P2 | #4 Implement Resend MFA for MCP access | Large |
-| P2 | #7 Verify server-side OAuth has PKCE + state | Medium |
-| P2 | #9 Client-side rate limit on grant key attempts | Small |
+| Priority | Finding | Effort | Status |
+|----------|---------|--------|--------|
+| P0 | #2 Strip console.log from production | Small | **DONE** |
+| P0 | #5 Add credential-in-clipboard warning | Small | **DONE** |
+| P1 | #1 Obfuscate grant key in storage | Small | **DONE** |
+| P1 | #3 Move to server-issued session tokens (client infra) | Medium | **DONE** (needs server `/auth/session` endpoint) |
+| P1 | #6 Surface write attribution warning during setup | Small | **DONE** |
+| P2 | #4 Implement Resend MFA for MCP access | Large | Roadmap below |
+| P2 | #7 Verify server-side OAuth has PKCE + state | Medium | Pending server audit |
+| P2 | #9 Client-side rate limit on grant key attempts | Small | **DONE** |
 
 ---
 

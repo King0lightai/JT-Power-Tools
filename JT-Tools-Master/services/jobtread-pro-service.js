@@ -5,18 +5,175 @@
  */
 
 const JobTreadProService = (() => {
+  // Debug flag — set to false for production builds to suppress console output
+  const DEBUG = false;
+
+  // Safe logging — only outputs when DEBUG is true
+  function log(...args) { if (DEBUG) log('', ...args); }
+  function logError(...args) { if (DEBUG) logError('', ...args); }
+
   // Storage keys
   const STORAGE_KEYS = {
     DEVICE_ID: 'jtpro_device_id',
     GRANT_KEY: 'jtpro_grant_key',
+    GRANT_KEY_VERSION: 'jtpro_grant_key_version',
     ORG_ID: 'jtpro_org_id',
     ORG_NAME: 'jtpro_org_name',
     DEVICE_AUTHORIZED: 'jtpro_device_authorized',
     JOBS_CACHE: 'jtpro_jobs_cache',
     JOBS_CACHE_TIME: 'jtpro_jobs_cache_time',
     CUSTOM_FIELDS_CACHE: 'jtpro_custom_fields_cache',
-    CUSTOM_FIELDS_CACHE_TIME: 'jtpro_custom_fields_cache_time'
+    CUSTOM_FIELDS_CACHE_TIME: 'jtpro_custom_fields_cache_time',
+    SESSION_TOKEN: 'jtpro_session_token',
+    SESSION_TOKEN_EXPIRY: 'jtpro_session_token_expiry'
   };
+
+  // Obfuscation key for grant key storage (matches license.js pattern)
+  const OBFUSCATION_KEY = 'jt-power-tools-gk-v1';
+
+  /**
+   * Obfuscate a string using XOR + Base64 (same pattern as LicenseService)
+   * NOT cryptographic — prevents casual inspection in Chrome storage
+   */
+  function obfuscateValue(text) {
+    try {
+      const textBytes = new TextEncoder().encode(text);
+      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
+      const obfuscated = new Uint8Array(textBytes.length);
+      for (let i = 0; i < textBytes.length; i++) {
+        obfuscated[i] = textBytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return btoa(String.fromCharCode(...obfuscated));
+    } catch (error) {
+      logError('Obfuscation error:', error);
+      return text;
+    }
+  }
+
+  /**
+   * Deobfuscate a string from XOR + Base64
+   */
+  function deobfuscateValue(obfuscatedText) {
+    try {
+      const obfuscated = Uint8Array.from(atob(obfuscatedText), c => c.charCodeAt(0));
+      const keyBytes = new TextEncoder().encode(OBFUSCATION_KEY);
+      const original = new Uint8Array(obfuscated.length);
+      for (let i = 0; i < obfuscated.length; i++) {
+        original[i] = obfuscated[i] ^ keyBytes[i % keyBytes.length];
+      }
+      return new TextDecoder().decode(original);
+    } catch (error) {
+      logError('Deobfuscation error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Save grant key to storage (obfuscated)
+   */
+  async function saveGrantKey(grantKey) {
+    const obfuscated = obfuscateValue(grantKey);
+    await chrome.storage.local.set({
+      [STORAGE_KEYS.GRANT_KEY]: obfuscated,
+      [STORAGE_KEYS.GRANT_KEY_VERSION]: 2
+    });
+  }
+
+  /**
+   * Read grant key from storage (deobfuscate, with legacy migration)
+   * @returns {Promise<string|null>} The plaintext grant key or null
+   */
+  async function getGrantKey() {
+    try {
+      const result = await chrome.storage.local.get([
+        STORAGE_KEYS.GRANT_KEY,
+        STORAGE_KEYS.GRANT_KEY_VERSION
+      ]);
+      if (!result[STORAGE_KEYS.GRANT_KEY]) return null;
+
+      // v2: obfuscated format
+      if (result[STORAGE_KEYS.GRANT_KEY_VERSION] === 2) {
+        return deobfuscateValue(result[STORAGE_KEYS.GRANT_KEY]);
+      }
+
+      // Legacy v1: plaintext — migrate to obfuscated
+      const plainKey = result[STORAGE_KEYS.GRANT_KEY];
+      log('Migrating legacy grant key to obfuscated format');
+      await saveGrantKey(plainKey);
+      return plainKey;
+    } catch (error) {
+      logError('Error reading grant key:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Request a short-lived session token from the server.
+   * Replaces sending raw licenseKey:grantKey in every request header.
+   * Falls back to raw credentials if the server doesn't support session tokens yet.
+   * @returns {Promise<{token: string, isSession: boolean}>}
+   */
+  async function getSessionToken() {
+    try {
+      // Check for a cached, unexpired session token
+      const cached = await chrome.storage.local.get([
+        STORAGE_KEYS.SESSION_TOKEN,
+        STORAGE_KEYS.SESSION_TOKEN_EXPIRY
+      ]);
+
+      if (cached[STORAGE_KEYS.SESSION_TOKEN] && cached[STORAGE_KEYS.SESSION_TOKEN_EXPIRY]) {
+        const timeLeft = cached[STORAGE_KEYS.SESSION_TOKEN_EXPIRY] - Date.now();
+        if (timeLeft > 2 * 60 * 1000) { // more than 2 min remaining
+          return { token: cached[STORAGE_KEYS.SESSION_TOKEN], isSession: true };
+        }
+      }
+
+      // Get raw credentials to exchange for a session token
+      const licenseData = await getLicenseKey();
+      const grantKey = await getGrantKey();
+      if (!licenseData || !grantKey) {
+        return { token: null, isSession: false };
+      }
+
+      // Try the session token endpoint
+      const mcpServerUrl = window.WORKER_CONFIG?.MCP_SERVER_URL
+        || 'https://jobtread-mcp-server.king0light-ai.workers.dev';
+
+      const response = await fetch(`${mcpServerUrl}/auth/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          licenseKey: licenseData.licenseKey,
+          grantKey
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sessionToken && data.expiresAt) {
+          // Cache the session token
+          await chrome.storage.local.set({
+            [STORAGE_KEYS.SESSION_TOKEN]: data.sessionToken,
+            [STORAGE_KEYS.SESSION_TOKEN_EXPIRY]: data.expiresAt
+          });
+          return { token: data.sessionToken, isSession: true };
+        }
+      }
+
+      // Server doesn't support session tokens yet — fall back to raw credentials
+      log('Session token endpoint not available, falling back to raw credentials');
+      return { token: `${licenseData.licenseKey}:${grantKey}`, isSession: false };
+    } catch (error) {
+      // Network error — fall back to raw credentials
+      logError('Session token exchange failed:', error);
+      const licenseData = await getLicenseKey();
+      const grantKey = await getGrantKey();
+      if (licenseData && grantKey) {
+        return { token: `${licenseData.licenseKey}:${grantKey}`, isSession: false };
+      }
+      return { token: null, isSession: false };
+    }
+  }
 
   // Cache duration (2 minutes for jobs, 1 hour for custom fields)
   const JOBS_CACHE_DURATION = 2 * 60 * 1000;
@@ -36,10 +193,10 @@ const JobTreadProService = (() => {
       // Generate new device ID
       const deviceId = await generateDeviceId();
       await chrome.storage.local.set({ [STORAGE_KEYS.DEVICE_ID]: deviceId });
-      console.log('JobTreadProService: Generated new device ID');
+      log('Generated new device ID');
       return deviceId;
     } catch (error) {
-      console.error('JobTreadProService: Error getting device ID:', error);
+      logError('Error getting device ID:', error);
       return null;
     }
   }
@@ -95,7 +252,7 @@ const JobTreadProService = (() => {
     try {
       // Get Gumroad license key from existing license system
       const licenseData = await getLicenseKey();
-      console.log('JobTreadProService: License data:', licenseData ? 'Found' : 'Missing');
+      log('License data:', licenseData ? 'Found' : 'Missing');
 
       if (!licenseData) {
         throw new Error('No Gumroad license found. Please activate your license first.');
@@ -103,7 +260,7 @@ const JobTreadProService = (() => {
 
       // Get device ID
       const deviceId = await getDeviceId();
-      console.log('JobTreadProService: Device ID:', deviceId ? 'Generated' : 'Missing');
+      log('Device ID:', deviceId ? 'Generated' : 'Missing');
 
       const requestBody = {
         action,
@@ -112,7 +269,7 @@ const JobTreadProService = (() => {
         ...params
       };
 
-      console.log('JobTreadProService: Sending request to Worker:', {
+      log('Sending request to Worker:', {
         action,
         hasLicenseKey: !!licenseData.licenseKey,
         hasDeviceId: !!deviceId,
@@ -130,7 +287,7 @@ const JobTreadProService = (() => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('JobTreadProService: Worker error:', response.status, errorText);
+        logError('Worker error:', response.status, errorText);
         throw new Error(`Worker error ${response.status}: ${errorText}`);
       }
 
@@ -138,13 +295,13 @@ const JobTreadProService = (() => {
 
       // Handle error responses
       if (data.error) {
-        console.error('JobTreadProService: API error:', data);
+        logError('API error:', data);
         return data;
       }
 
       return data;
     } catch (error) {
-      console.error('JobTreadProService: Request failed:', error);
+      logError('Request failed:', error);
       throw error;
     }
   }
@@ -157,7 +314,7 @@ const JobTreadProService = (() => {
       // Check if LicenseService is available
       if (typeof LicenseService !== 'undefined') {
         const licenseData = await LicenseService.getLicenseData();
-        console.log('JobTreadProService: License data from LicenseService:', licenseData ? {
+        log('License data from LicenseService:', licenseData ? {
           valid: licenseData.valid,
           hasKey: !!licenseData.key,
           email: licenseData.purchaseEmail
@@ -171,10 +328,10 @@ const JobTreadProService = (() => {
         }
       }
 
-      console.log('JobTreadProService: No valid license found');
+      log('No valid license found');
       return null;
     } catch (error) {
-      console.error('JobTreadProService: Error getting license:', error);
+      logError('Error getting license:', error);
       return null;
     }
   }
@@ -184,15 +341,15 @@ const JobTreadProService = (() => {
    */
   async function registerUser() {
     try {
-      console.log('JobTreadProService: Registering user with Worker...');
+      log('Registering user with Worker...');
       const result = await workerRequest('registerUser', {
         deviceName: getDeviceName()
       });
 
-      console.log('JobTreadProService: Registration result:', result);
+      log('Registration result:', result);
       return result;
     } catch (error) {
-      console.error('JobTreadProService: registerUser failed:', error);
+      logError('registerUser failed:', error);
       return {
         success: false,
         error: error.message
@@ -207,11 +364,11 @@ const JobTreadProService = (() => {
   async function verifyOrgAccess(grantKey) {
     try {
       // First, ensure user is registered in Worker's database
-      console.log('JobTreadProService: Ensuring user is registered...');
+      log('Ensuring user is registered...');
       const registerResult = await registerUser();
 
       if (!registerResult.success && registerResult.code !== 'DEVICE_NOT_AUTHORIZED') {
-        console.error('JobTreadProService: Registration failed:', registerResult);
+        logError('Registration failed:', registerResult);
         return {
           success: false,
           error: registerResult.error || 'Failed to register with Worker',
@@ -220,7 +377,7 @@ const JobTreadProService = (() => {
       }
 
       // Now verify org access
-      console.log('JobTreadProService: Verifying org access...');
+      log('Verifying org access...');
       const result = await workerRequest('verifyOrgAccess', {
         grantKey: grantKey.trim(),
         deviceName: getDeviceName()
@@ -237,12 +394,19 @@ const JobTreadProService = (() => {
 
       // Save org info
       if (result.success) {
+        // Store grant key obfuscated (not plaintext)
+        await saveGrantKey(grantKey.trim());
         await chrome.storage.local.set({
-          [STORAGE_KEYS.GRANT_KEY]: grantKey.trim(),
           [STORAGE_KEYS.ORG_ID]: result.orgId,
           [STORAGE_KEYS.ORG_NAME]: result.organizationName,
           [STORAGE_KEYS.DEVICE_AUTHORIZED]: true
         });
+
+        // Invalidate any cached session token when grant key changes
+        await chrome.storage.local.remove([
+          STORAGE_KEYS.SESSION_TOKEN,
+          STORAGE_KEYS.SESSION_TOKEN_EXPIRY
+        ]);
 
         // Clear cache when new org is connected
         await clearCache();
@@ -250,7 +414,7 @@ const JobTreadProService = (() => {
 
       return result;
     } catch (error) {
-      console.error('JobTreadProService: verifyOrgAccess failed:', error);
+      logError('verifyOrgAccess failed:', error);
       return {
         success: false,
         error: error.message
@@ -265,7 +429,7 @@ const JobTreadProService = (() => {
     try {
       return await workerRequest('getStatus');
     } catch (error) {
-      console.error('JobTreadProService: getStatus failed:', error);
+      logError('getStatus failed:', error);
       return { error: error.message };
     }
   }
@@ -322,7 +486,7 @@ const JobTreadProService = (() => {
       const cacheAge = Date.now() - (cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE_TIME] || 0);
 
       if (cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE] && cacheAge < CUSTOM_FIELDS_CACHE_DURATION) {
-        console.log('JobTreadProService: Using cached custom fields');
+        log('Using cached custom fields');
         return { fields: cached[STORAGE_KEYS.CUSTOM_FIELDS_CACHE], _cached: true };
       }
     } catch (e) {
@@ -342,7 +506,7 @@ const JobTreadProService = (() => {
 
       return result;
     } catch (error) {
-      console.error('JobTreadProService: getCustomFields failed:', error);
+      logError('getCustomFields failed:', error);
       throw error;
     }
   }
@@ -361,7 +525,7 @@ const JobTreadProService = (() => {
       const cacheAge = Date.now() - (cached[STORAGE_KEYS.JOBS_CACHE_TIME] || 0);
 
       if (cached[STORAGE_KEYS.JOBS_CACHE] && cacheAge < JOBS_CACHE_DURATION) {
-        console.log('JobTreadProService: Using cached jobs');
+        log('Using cached jobs');
         return { jobs: cached[STORAGE_KEYS.JOBS_CACHE], _cached: true };
       }
     } catch (e) {
@@ -381,7 +545,7 @@ const JobTreadProService = (() => {
 
       return result;
     } catch (error) {
-      console.error('JobTreadProService: getAllJobs failed:', error);
+      logError('getAllJobs failed:', error);
       throw error;
     }
   }
@@ -395,7 +559,7 @@ const JobTreadProService = (() => {
     try {
       return await workerRequest('getFilteredJobs', { filters, jobStatus });
     } catch (error) {
-      console.error('JobTreadProService: getFilteredJobs failed:', error);
+      logError('getFilteredJobs failed:', error);
       throw error;
     }
   }
@@ -411,7 +575,7 @@ const JobTreadProService = (() => {
       const result = await workerRequest('getCustomFieldValues', { fieldId, fieldName });
       return result.values || [];
     } catch (error) {
-      console.error('JobTreadProService: getCustomFieldValues failed:', error);
+      logError('getCustomFieldValues failed:', error);
       throw error;
     }
   }
@@ -435,9 +599,9 @@ const JobTreadProService = (() => {
         // Worker cache clear failed, local cache is cleared at least
       }
 
-      console.log('JobTreadProService: Cache cleared');
+      log('Cache cleared');
     } catch (error) {
-      console.error('JobTreadProService: Error clearing cache:', error);
+      logError('Error clearing cache:', error);
     }
   }
 
@@ -458,7 +622,7 @@ const JobTreadProService = (() => {
 
       return result;
     } catch (error) {
-      console.error('JobTreadProService: disconnect failed:', error);
+      logError('disconnect failed:', error);
       return { error: error.message };
     }
   }
@@ -469,9 +633,9 @@ const JobTreadProService = (() => {
   async function clearConfig() {
     try {
       await chrome.storage.local.remove(Object.values(STORAGE_KEYS));
-      console.log('JobTreadProService: Configuration cleared');
+      log('Configuration cleared');
     } catch (error) {
-      console.error('JobTreadProService: Error clearing config:', error);
+      logError('Error clearing config:', error);
     }
   }
 
@@ -483,7 +647,7 @@ const JobTreadProService = (() => {
       const result = await workerRequest('getTaskTypes');
       return result.taskTypes || [];
     } catch (error) {
-      console.error('JobTreadProService: getTaskTypes failed:', error);
+      logError('getTaskTypes failed:', error);
       throw error;
     }
   }
@@ -498,7 +662,7 @@ const JobTreadProService = (() => {
       const result = await workerRequest('getUnassignedTasks', { startDate, endDate });
       return result.tasks || [];
     } catch (error) {
-      console.error('JobTreadProService: getUnassignedTasks failed:', error);
+      logError('getUnassignedTasks failed:', error);
       throw error;
     }
   }
@@ -513,6 +677,8 @@ const JobTreadProService = (() => {
     // Authentication
     verifyOrgAccess,
     getStatus,
+    getGrantKey,
+    getSessionToken,
     disconnect,
     clearConfig,
 
