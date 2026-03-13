@@ -61,6 +61,15 @@ const TaskTypeFilterFeature = (() => {
     return false;
   }
 
+  /**
+   * Check if we're on a job-level schedule (e.g. /jobs/{id}/schedule)
+   * vs. the global org schedule (/schedule).
+   * On job-level, task cards from other jobs can't be opened in the sidebar.
+   */
+  function isJobLevelSchedule() {
+    return /\/jobs\/[^/]+\/schedule/.test(window.location.pathname);
+  }
+
   // ─── TABLE DETECTION ─────────────────────────────────────
 
   /**
@@ -498,25 +507,62 @@ const TaskTypeFilterFeature = (() => {
     const jobName = task.job ? (task.job.name || '') : '';
     const jobNumber = task.job ? (task.job.number || '') : '';
     const jobLabel = jobNumber ? `${jobName} ${jobNumber}` : jobName;
+    const onJobSchedule = isJobLevelSchedule();
 
     const card = document.createElement('div');
-    card.className = 'jt-ttf-task-card cursor-pointer';
+    card.className = `jt-ttf-task-card${onJobSchedule ? ' jt-ttf-readonly' : ' cursor-pointer'}`;
     card.style.backgroundColor = bgColor;
     card.setAttribute('data-task-id', task.id);
-    card.setAttribute('title', `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}`);
+    card.setAttribute('title', onJobSchedule
+      ? `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}\n\nGo to the global Schedule to interact with unassigned tasks`
+      : `${task.name}\n${jobLabel}${typeName ? '\nType: ' + typeName : ''}`);
 
     card.innerHTML = `
       <div class="jt-ttf-task-name">${Sanitizer.escapeHTML(task.name)}</div>
       <div class="jt-ttf-task-job">${Sanitizer.escapeHTML(jobLabel)}</div>
     `;
 
-    // Click to open task sidebar (stays on current page)
-    card.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openTaskSidebar(task.id);
-    });
+    if (onJobSchedule) {
+      // On job-level schedule, show a message instead of navigating
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showJobLevelMessage();
+      });
+    } else {
+      // On global schedule, open task sidebar
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openTaskSidebar(task.id);
+      });
+    }
 
     return card;
+  }
+
+  /**
+   * Show a brief toast message telling the user to use the global schedule
+   */
+  let _toastTimeout = null;
+  function showJobLevelMessage() {
+    // Remove existing toast if any
+    const existing = document.getElementById('jt-ttf-toast');
+    if (existing) existing.remove();
+    if (_toastTimeout) clearTimeout(_toastTimeout);
+
+    const toast = document.createElement('div');
+    toast.id = 'jt-ttf-toast';
+    toast.className = 'jt-ttf-toast';
+    toast.textContent = 'Go to the global Schedule → Availability to interact with unassigned tasks';
+    document.body.appendChild(toast);
+
+    // Fade in
+    requestAnimationFrame(() => toast.classList.add('visible'));
+
+    // Auto-dismiss after 3 seconds
+    _toastTimeout = setTimeout(() => {
+      toast.classList.remove('visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
   }
 
   /**
