@@ -1904,6 +1904,10 @@ async function updateMcpCredentialsDisplay() {
   }
 }
 
+// Grant key update rate limiting
+let grantKeyFailCount = 0;
+let grantKeyLockoutUntil = 0;
+
 /**
  * Handle updating the grant key
  */
@@ -1911,6 +1915,13 @@ async function handleUpdateGrantKey() {
   const grantKeyInput = document.getElementById('mcpGrantKeyInput');
   const updateBtn = document.getElementById('updateGrantKeyBtn');
   const errorEl = document.getElementById('grantKeyError');
+
+  // Rate limit: lock out after 3 consecutive failures for 30 seconds
+  if (Date.now() < grantKeyLockoutUntil) {
+    const secondsLeft = Math.ceil((grantKeyLockoutUntil - Date.now()) / 1000);
+    showGrantKeyError(`Too many attempts. Please wait ${secondsLeft} seconds.`);
+    return;
+  }
 
   const newGrantKey = grantKeyInput.value.trim();
 
@@ -1929,17 +1940,30 @@ async function handleUpdateGrantKey() {
     const result = await JobTreadProService.verifyOrgAccess(newGrantKey);
 
     if (result.success) {
+      // Reset rate limit on success
+      grantKeyFailCount = 0;
+
       // Clear input
       grantKeyInput.value = '';
 
-      // Show success
-      showGrantKeySuccess(`Grant Key updated! Connected to ${result.organizationName || 'organization'}`);
+      // Show success with write-attribution reminder
+      showGrantKeySuccess(
+        `Grant Key updated! Connected to ${result.organizationName || 'organization'}. ` +
+        `Reminder: Write actions will appear as the grant key owner. We recommend using a dedicated "AI Assistant" account.`
+      );
 
       // Update displays
       await updateMcpCredentialsDisplay();
       await updateMcpPrerequisites();
       await checkApiStatus();
     } else {
+      // Increment rate limit counter
+      grantKeyFailCount++;
+      if (grantKeyFailCount >= 3) {
+        grantKeyLockoutUntil = Date.now() + 30000; // 30 second lockout
+        grantKeyFailCount = 0;
+      }
+
       // Show error
       if (result.code === 'ORG_MISMATCH') {
         showGrantKeyError('This Grant Key is from a different organization than your license');
@@ -2230,7 +2254,13 @@ async function handleCopyMcpConfig() {
       'grok': 'Grok'
     };
     const label = isUrl ? 'URL' : 'config';
-    showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
+
+    // Security: warn users about credential exposure for non-OAuth platforms
+    if (!isUrl) {
+      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied! \u26A0 Contains credentials \u2014 do not commit to git or share publicly.`, 'success');
+    } else {
+      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
+    }
   } catch (err) {
     console.error('Failed to copy MCP config:', err);
     showStatus('Failed to copy to clipboard', 'error');
