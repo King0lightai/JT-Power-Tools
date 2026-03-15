@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+#### MCP Server Tool Quality Fixes
+- Fixed `search_jobs` status filter returning too few results — now over-fetches (100) before client-side filtering by computed status, then applies user's requested limit
+- Fixed `list_tasks` and `get_schedule` returning 413 Request Entity Too Large on jobs with many tasks — reduced default limit from 50 to 25, capped max at 50, removed `description` field from bulk queries, and limited nested `assignedMemberships` size
+- Fixed `get_org_summary` and `get_documents_summary` amount labels — renamed `totalCents` to `total` and updated descriptions from "cents" to "dollars" to match actual Pave API values
+
+### Improved
+- Added `hasMore` and `count` fields to `list_tasks` and `get_schedule` responses for pagination awareness
+- Improved `list_tasks` tool description to clarify it returns names/dates/assignees and to use `get_schedule` for more detail
+- Improved `get_schedule` tool description to differentiate from `list_tasks` (includes task types and parent hierarchy)
+
+## [3.7.0] - 2026-03-14
+
+### Added
+#### Budget — Expand/Collapse All Groups Button
+- Added Expand/Collapse All Groups button to budget table Name header
+  - Single smart toggle button auto-detects current group state
+  - Shows Phosphor ArrowsOut/ArrowsIn icons matching detected state
+  - Clicks native expand/collapse buttons 5 times to cover all nesting levels
+  - Updates icon when native expand/collapse buttons or group chevrons are clicked
+  - Styled to match native JobTread header buttons exactly
+
+### Changed
+- Renamed **Task Type Filter** to **Unassigned Availability** in popup and docs
+  - Updated description to "See unassigned tasks in schedule availability, filtered by type"
+  - Added docs guide page for the feature
+
+### Security
+#### MCP Config & Grant Key Hardening
+- Removed grant key copy button from popup — grant keys are sensitive and should not be re-exposed after initial creation
+- Changed grant key display from masked value to simple "Configured" / "Not configured" status
+- Removed credential embedding from generated MCP configs — configs now use `<YOUR_LICENSE_KEY>:<YOUR_GRANT_KEY>` placeholders
+- Status message guides users to replace placeholders with their credentials
+
+## [3.6.93] - 2026-03-12
+
 ### Added
 #### MCP Server — File Upload Tools
 - Added `jobtread_upload_file` tool — uploads a file from a URL to a JobTread job as a comment attachment
