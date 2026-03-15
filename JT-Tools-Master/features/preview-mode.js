@@ -510,6 +510,12 @@ const PreviewModeFeature = (() => {
     const pinBtn = header.querySelector('.jt-preview-pin-btn');
     const closeBtn = header.querySelector('.jt-preview-close-btn');
 
+    // Stop mousedown/touchstart on buttons from reaching header drag handler (Safari fix)
+    [pinBtn, closeBtn].forEach(btn => {
+      btn.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+      btn.addEventListener('touchstart', (e) => { e.stopPropagation(); }, { passive: true });
+    });
+
     pinBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();

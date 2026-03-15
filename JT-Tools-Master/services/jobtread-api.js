@@ -4,6 +4,7 @@
 const JobTreadAPI = (() => {
   // API Configuration - JobTread uses Pave query language
   const API_URL = 'https://api.jobtread.com/pave';
+  const DEBUG = false; // Set to true for development debugging only — NEVER ship as true
 
   /**
    * Detect if we're running in a context that needs the background proxy
@@ -180,7 +181,7 @@ const JobTreadAPI = (() => {
         }
       };
 
-      console.log('JobTreadAPI: Wrapped query:', JSON.stringify(wrappedQuery, null, 2));
+      if (DEBUG) console.log('JobTreadAPI: Query keys:', Object.keys(query));
 
       const bodyString = JSON.stringify(wrappedQuery);
 
@@ -192,16 +193,16 @@ const JobTreadAPI = (() => {
         body: bodyString
       });
 
-      console.log('JobTreadAPI: Response status:', response.status);
+      if (DEBUG) console.log('JobTreadAPI: Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('JobTreadAPI: API Error:', response.status, errorText);
+        console.error('JobTreadAPI: API Error:', response.status);
         throw new Error(`API Error ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('JobTreadAPI: Query result:', result);
+      if (DEBUG) console.log('JobTreadAPI: Query result keys:', Object.keys(result));
 
       // Check for errors in the response
       if (result.errors && result.errors.length > 0) {
@@ -240,11 +241,11 @@ const JobTreadAPI = (() => {
     };
 
     const result = await paveQuery(query);
-    console.log('JobTreadAPI: discoverOrganization full result:', JSON.stringify(result, null, 2));
+    if (DEBUG) console.log('JobTreadAPI: discoverOrganization result keys:', Object.keys(result));
 
     // Response comes back WITHOUT the "query" wrapper - data is at root level
     const memberships = result.currentGrant?.user?.memberships?.nodes || [];
-    console.log('JobTreadAPI: memberships found:', memberships.length, memberships);
+    if (DEBUG) console.log('JobTreadAPI: memberships found:', memberships.length);
 
     if (memberships.length > 0) {
       const org = memberships[0].organization;
@@ -678,9 +679,8 @@ const JobTreadAPI = (() => {
       }
     };
 
-    console.log('JobTreadAPI: Direct test with correct format...');
-    console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
-    console.log('JobTreadAPI: Wrapped query:', JSON.stringify(wrappedQuery, null, 2));
+    if (DEBUG) console.log('JobTreadAPI: Direct test with correct format...');
+    if (DEBUG) console.log('JobTreadAPI: Using API key:', apiKey.substring(0, 10) + '...');
 
     try {
       const response = await proxyFetch(API_URL, {
@@ -691,9 +691,9 @@ const JobTreadAPI = (() => {
         body: JSON.stringify(wrappedQuery)
       });
 
-      console.log('JobTreadAPI: Response status:', response.status);
+      if (DEBUG) console.log('JobTreadAPI: Response status:', response.status);
       const responseText = await response.text();
-      console.log('JobTreadAPI: Response body:', responseText);
+      if (DEBUG) console.log('JobTreadAPI: Response length:', responseText.length);
 
       let parsedResponse;
       try {
@@ -703,7 +703,7 @@ const JobTreadAPI = (() => {
       }
 
       if (response.ok) {
-        console.log('SUCCESS! API connection works!');
+        if (DEBUG) console.log('JobTreadAPI: API connection test passed');
         return {
           success: true,
           data: parsedResponse
