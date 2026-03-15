@@ -91,6 +91,83 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(200, 80, 255, 0.3);
         }
+        /* Billing Toggle */
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            margin-top: 16px;
+        }
+        .billing-label {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray);
+            transition: color 0.3s;
+            user-select: none;
+        }
+        .billing-label.active {
+            color: #fff;
+        }
+        .save-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00c896, #00a87a);
+            color: #000;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.3px;
+        }
+        .billing-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+            flex-shrink: 0;
+        }
+        .billing-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .billing-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #333;
+            border-radius: 28px;
+            transition: background 0.3s;
+            border: 2px solid #555;
+        }
+        .billing-slider::before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        .billing-switch input:checked + .billing-slider {
+            background: #00c896;
+            border-color: #00c896;
+        }
+        .billing-switch input:checked + .billing-slider::before {
+            transform: translateX(24px);
+        }
+        /* Price transition */
+        .pricing-price {
+            transition: opacity 0.2s;
+        }
+        .pricing-price.switching {
+            opacity: 0.3;
+        }
         /* Powered by Gumroad */
         .powered-by-gumroad {
             text-align: center;
@@ -554,7 +631,16 @@
             <div class="section-header">
                 <p class="section-label">PRICING</p>
                 <h2 class="section-title">CHOOSE YOUR PLAN</h2>
-                <p class="section-subtitle">Monthly subscriptions — One subscription covers your entire organization</p>
+                <p class="section-subtitle">One subscription covers your entire organization</p>
+                <!-- Billing Toggle -->
+                <div class="billing-toggle">
+                    <span class="billing-label" id="monthlyLabel">Monthly</span>
+                    <label class="billing-switch">
+                        <input type="checkbox" id="billingToggle">
+                        <span class="billing-slider"></span>
+                    </label>
+                    <span class="billing-label" id="yearlyLabel">Yearly <span class="save-badge">Save 17%</span></span>
+                </div>
             </div>
             <div class="pricing-cards four-tier">
                 <div class="pricing-card">
@@ -572,9 +658,9 @@
                     </ul>
                     <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" class="cta-button secondary" target="_blank">Install Free</a>
                 </div>
-                <div class="pricing-card">
+                <div class="pricing-card" data-monthly="10" data-yearly="100">
                     <div class="pricing-tier">ESSENTIAL</div>
-                    <div class="pricing-price">$10<span>/mo</span></div>
+                    <div class="pricing-price"><span class="price-amount">$10</span><span class="price-period">/mo</span></div>
                     <p class="pricing-desc">Productivity tools for teams</p>
                     <ul class="pricing-features">
                         <li><span class="check">✓</span> Everything in Free</li>
@@ -586,9 +672,9 @@
                     </ul>
                     <a class="tier-btn tier-essential" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Essential</a>
                 </div>
-                <div class="pricing-card">
+                <div class="pricing-card" data-monthly="20" data-yearly="200">
                     <div class="pricing-tier">PRO</div>
-                    <div class="pricing-price">$20<span>/mo</span></div>
+                    <div class="pricing-price"><span class="price-amount">$20</span><span class="price-period">/mo</span></div>
                     <p class="pricing-desc">Power users & customization</p>
                     <ul class="pricing-features">
                         <li><span class="check">✓</span> Everything in Essential</li>
@@ -599,9 +685,9 @@
                     </ul>
                     <a class="tier-btn tier-pro" href="https://premium.jtpowertools.com/" data-gumroad-overlay-checkout="true">Get Pro</a>
                 </div>
-                <div class="pricing-card featured">
+                <div class="pricing-card featured" data-monthly="30" data-yearly="300">
                     <div class="pricing-tier">POWER USER</div>
-                    <div class="pricing-price">$30<span>/mo</span></div>
+                    <div class="pricing-price"><span class="price-amount">$30</span><span class="price-period">/mo</span></div>
                     <p class="pricing-desc">API-powered features</p>
                     <ul class="pricing-features">
                         <li><span class="check">✓</span> Everything in Pro</li>
@@ -667,6 +753,44 @@
         document.getElementById('popupThemeToggle').addEventListener('click', function() {
             document.querySelector('.popup-mockup').classList.toggle('popup-light');
         });
+
+        // Billing toggle — monthly/yearly
+        (function() {
+            const toggle = document.getElementById('billingToggle');
+            const monthlyLabel = document.getElementById('monthlyLabel');
+            const yearlyLabel = document.getElementById('yearlyLabel');
+            const cards = document.querySelectorAll('.pricing-card[data-monthly]');
+
+            function updatePricing(isYearly) {
+                monthlyLabel.classList.toggle('active', !isYearly);
+                yearlyLabel.classList.toggle('active', isYearly);
+
+                cards.forEach(card => {
+                    const priceEl = card.querySelector('.pricing-price');
+                    const amountEl = card.querySelector('.price-amount');
+                    const periodEl = card.querySelector('.price-period');
+
+                    priceEl.classList.add('switching');
+                    setTimeout(() => {
+                        if (isYearly) {
+                            amountEl.textContent = '$' + card.dataset.yearly;
+                            periodEl.textContent = '/yr';
+                        } else {
+                            amountEl.textContent = '$' + card.dataset.monthly;
+                            periodEl.textContent = '/mo';
+                        }
+                        priceEl.classList.remove('switching');
+                    }, 150);
+                });
+            }
+
+            // Set initial state
+            monthlyLabel.classList.add('active');
+
+            toggle.addEventListener('change', function() {
+                updatePricing(this.checked);
+            });
+        })();
     </script>
 </body>
 </html>
