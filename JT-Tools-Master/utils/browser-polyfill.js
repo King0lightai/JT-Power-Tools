@@ -15,11 +15,13 @@
 (function () {
   'use strict';
 
-  // Detect Firefox
-  const isFirefox = typeof browser !== 'undefined' && browser.runtime && browser.runtime.id;
+  // Detect Firefox (NOT Safari — Safari also exposes browser.runtime but
+  // its browser.* and chrome.* are aliased, so wrapping causes infinite recursion)
+  const isSafari = typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  const isFirefox = typeof browser !== 'undefined' && browser.runtime && browser.runtime.id && !isSafari;
 
   if (!isFirefox) {
-    // Chrome: nothing to do, chrome.* APIs are native
+    // Chrome/Safari: nothing to do, chrome.* APIs are native
     return;
   }
 
