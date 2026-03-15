@@ -48,11 +48,57 @@
             <p class="subtitle">Track all changes, improvements, and new features</p>
         </header>
 
+        <!-- Version 3.7.0 — Expand/Collapse All, MCP Config Security -->
+        <div class="version-section">
+            <div class="version-header">
+                <span class="version-number">v3.7.0</span>
+                <span class="version-badge">Current</span>
+                <span class="version-date">March 14, 2026</span>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">✨</span> New Features</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">Budget — Expand/Collapse All Groups Button</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Single smart toggle button added to budget table Name header</li>
+                            <li class="sub-item">Auto-detects current group state (expanded vs collapsed)</li>
+                            <li class="sub-item">Shows Phosphor ArrowsOut/ArrowsIn icons matching detected state</li>
+                            <li class="sub-item">Clicks native expand/collapse buttons 5 times to cover all nesting levels</li>
+                            <li class="sub-item">Updates icon when native buttons or individual group chevrons are clicked</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔄</span> Changes</h3>
+                <ul class="change-list">
+                    <li class="change-item"><span class="feature-name">Unassigned Availability</span> — Renamed from "Task Type Filter" with updated description and new <a href="guides/unassigned-availability.html">docs guide</a></li>
+                </ul>
+            </div>
+
+            <div class="change-category">
+                <h3 class="category-title"><span class="category-icon">🔒</span> Security</h3>
+                <ul class="change-list">
+                    <li class="change-item">
+                        <span class="feature-name">MCP Config & Grant Key Hardening</span>
+                        <ul class="sub-list">
+                            <li class="sub-item">Removed grant key copy button from popup — keys should not be re-exposed after creation</li>
+                            <li class="sub-item">Changed grant key display from masked value to simple "Configured" / "Not configured" status</li>
+                            <li class="sub-item">Generated MCP configs now use placeholders instead of embedding real credentials</li>
+                            <li class="sub-item">Status message guides users to replace placeholders with their own keys</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
         <!-- Version 3.6.93 — MCP Upload Tools, Firefox Compatibility, Freeze Header Fix -->
         <div class="version-section">
             <div class="version-header">
                 <span class="version-number">v3.6.93</span>
-                <span class="version-badge">Current</span>
                 <span class="version-date">March 12, 2026</span>
             </div>
 

@@ -13,6 +13,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `list_tasks` and `get_schedule` returning 413 Request Entity Too Large on jobs with many tasks — reduced default limit from 50 to 25, capped max at 50, removed `description` field from bulk queries, and limited nested `assignedMemberships` size
 - Fixed `get_org_summary` and `get_documents_summary` amount labels — renamed `totalCents` to `total` and updated descriptions from "cents" to "dollars" to match actual Pave API values
 
+### Added
+#### MCP Server — Dashboard Management Tools
+- Added `jobtread_create_dashboard` tool — create dashboards from 7 predefined templates or custom tile arrays
+  - Templates: `project-overview`, `accounts-payable`, `accounts-receivable`, `schedule-overview`, `field-kpis`, `sales-tracking`, `vendor-tracking`
+  - Each template uses F-pattern layout with KPI tiles, charts, and data tables
+  - Supports `visibleTo` parameter for role-based access control ("all", "internal", or specific role names)
+- Added `jobtread_update_dashboard` tool — rename, add tiles, remove tiles, or replace all tiles
+  - Automatically fetches existing tiles before merging to prevent the "tiles replace all" API gotcha
+  - Auto-positions new tiles below existing content
+- Added delete mutation guard to `raw_query` — blocks any query key starting with `delete` and directs users to the JobTread UI
+
+#### MCP Server — Team Notes Write Tools
+- Added `jobtread_create_team_note` tool — save notes to org's shared knowledge base with folder categorization (default: "AI Notes")
+  - AI-created notes tagged with user name + "(via AI)" for attribution
+- Added `jobtread_update_team_note` tool — update existing team note title, content, folder, or pin status
+
+#### MCP Server — Workflow Read Tools
+- Added `jobtread_list_workflows` tool — list all automation workflows with trigger type, active status, and 10-workflow org limit
+- Added `jobtread_get_workflow` tool — get full workflow detail with nested action tree and trigger configuration
+- Added `jobtread_list_workflow_runs` tool — list recent workflow execution history with status filtering
+
+#### MCP Server — Workflow Builder Tools
+- Added `jobtread_create_workflow` tool — create automation workflows with nested action trees
+  - Supports all 66 trigger types and 41 action types
+  - Auto-generates action IDs for the nested action tree
+  - Creates workflows as inactive by default for safety review
+  - Tool description guides AI to check existing workflows first before creating new ones
+- Added `jobtread_update_workflow` tool — update workflow name, trigger, active status, or action tree
+  - Actions array replaces the entire tree (same pattern as dashboard tiles)
+  - Preserves existing action IDs when provided, generates new ones for additions
+
 ### Improved
 - Added `hasMore` and `count` fields to `list_tasks` and `get_schedule` responses for pagination awareness
 - Improved `list_tasks` tool description to clarify it returns names/dates/assignees and to use `get_schedule` for more detail

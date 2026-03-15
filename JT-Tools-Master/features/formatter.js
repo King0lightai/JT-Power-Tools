@@ -38,10 +38,15 @@ const FormatterFeature = (() => {
       // Initialize fields
       initializeFields();
 
+      // Inject expand/collapse all button on budget pages
+      Toolbar().injectExpandCollapseAllButton();
+
       // Watch for budget textareas (with error handling)
       observer = new MutationObserver(() => {
         try {
           initializeFields();
+          // Re-inject expand/collapse all button if budget header re-renders
+          Toolbar().injectExpandCollapseAllButton();
         } catch (error) {
           console.error('Formatter: Error in MutationObserver callback:', error);
         }
@@ -77,6 +82,9 @@ const FormatterFeature = (() => {
 
     // Remove toolbar if exists (using module)
     Toolbar().hideToolbar();
+
+    // Remove expand/collapse all button
+    Toolbar().removeExpandCollapseAllButton();
 
     // Disconnect observer
     if (observer) {

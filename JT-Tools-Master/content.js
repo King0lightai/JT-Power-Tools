@@ -137,7 +137,7 @@ const featureModules = {
     instance: null
   },
   taskTypeFilter: {
-    name: 'Task Type Filter',
+    name: 'Unassigned Availability',
     feature: () => window.TaskTypeFilterFeature,
     instance: null
   },

@@ -13,6 +13,8 @@ const FormatterToolbar = (() => {
   let activeField = null;
   let hideTimeout = null;
   let budgetScrollCleanup = null; // cleanup function for budget toolbar scroll listener
+  let expandCollapseAllBtn = null;       // The injected button element
+  let expandCollapseAllCleanup = null;   // Cleanup function for button listeners
 
   /**
    * Get the active toolbar
@@ -712,34 +714,34 @@ const FormatterToolbar = (() => {
       // First row: always place toolbar BELOW the field (no room above the header)
       top = fieldRect.bottom + 2;
     } else if (top < headerBottom) {
-      // Other rows: pin at header bottom when toolbar would go behind header
-      top = headerBottom;
-    }
-
-    // Don't extend past the field's bottom — slide up with the field.
-    // (Only applies when toolbar is ABOVE the field, not for below-placement)
-    if (!isFirstRow && top < fieldRect.top) {
-      const maxTop = fieldRect.bottom - toolbarHeight;
-      if (maxTop < top) {
-        top = maxTop;
-      }
+      // Other rows: pin just below the header, BUT also track the field's bottom
+      // edge so the toolbar slides up under the header as the field scrolls away.
+      // +1px gap prevents visual overlap with the header's bottom border.
+      const pinnedTop = headerBottom + 1;
+      const fieldBottomConstrained = fieldRect.bottom - toolbarHeight - 2;
+      top = Math.min(pinnedTop, fieldBottomConstrained);
     }
 
     // Determine visibility and clip-path based on toolbar vs header position.
-    // Never reset clipPath to 'none' while hiding — that causes a 1-frame pop.
+    // IMPORTANT: position:fixed paints ON TOP of position:sticky regardless of
+    // z-index (different stacking contexts). clip-path is the ONLY reliable way
+    // to make the toolbar visually disappear behind the sticky header.
     let isVisible = true;
     let clipPath = 'none';
 
     if (fieldRect.top > window.innerHeight) {
       // Field is below viewport
       isVisible = false;
-    } else if (top < headerBottom) {
+    } else if (top <= headerBottom) {
+      // Toolbar is at or above the header bottom — clip the overlapping portion.
+      // Uses <= (not <) because even at headerBottom the fixed toolbar renders
+      // on top of the sticky header due to stacking context rules.
       const clipTop = headerBottom - top;
       if (clipTop >= toolbarHeight) {
         // Fully behind the header — keep it clipped so no flash
         clipPath = 'inset(100% 0 0 0)';
         isVisible = false;
-      } else {
+      } else if (clipTop > 0) {
         // Partially behind — clip the top for smooth slide-behind
         clipPath = `inset(${clipTop}px 0 0 0)`;
       }
@@ -749,12 +751,53 @@ const FormatterToolbar = (() => {
     const left = cellRect.left;
     const width = cellRect.width;
 
+    // ─── Frozen column clipping (horizontal scroll) ───────────────
+    // The budget table has frozen columns (row number + Name) that are
+    // position:sticky with z-10. Like the header, position:fixed paints
+    // on top of position:sticky, so we must clip the left side too.
+    let clipLeft = 0;
+    if (row) {
+      const stickyCells = row.querySelectorAll('.sticky');
+      let frozenRight = 0;
+      stickyCells.forEach(cell => {
+        // Only count frozen COLUMN cells (not the row itself if it's sticky).
+        // Frozen columns are narrow cells at the left edge (row#, Name).
+        const r = cell.getBoundingClientRect();
+        if (r.right > frozenRight && r.width < 400) {
+          frozenRight = r.right;
+        }
+      });
+      if (frozenRight > 0 && left < frozenRight) {
+        clipLeft = frozenRight - left;
+      }
+    }
+
+    // Parse existing top clip value into a combined inset()
+    // clip-path: inset(top right bottom left)
+    let clipTop = 0;
+    if (clipPath === 'inset(100% 0 0 0)') {
+      // Fully clipped from top — keep it fully hidden
+      clipTop = toolbarHeight; // will exceed height → fully clipped
+    } else if (clipPath !== 'none') {
+      const m = clipPath.match(/inset\((\d+(?:\.\d+)?)px/);
+      if (m) clipTop = parseFloat(m[1]);
+    }
+
+    // Build final clip-path combining top + left clipping
+    if (clipTop >= toolbarHeight || !isVisible) {
+      clipPath = 'inset(100% 0 0 0)';
+    } else if (clipTop > 0 || clipLeft > 0) {
+      clipPath = `inset(${clipTop}px 0 0 ${clipLeft}px)`;
+    } else {
+      clipPath = 'none';
+    }
+
     // Always set ALL styles in one batch — no early returns that leave stale values.
     toolbar.style.position = 'fixed';
     toolbar.style.top = `${top}px`;
     toolbar.style.left = `${left}px`;
     toolbar.style.width = `${width}px`;
-    toolbar.style.zIndex = '35'; // Above budget header (z-30) but below modals
+    toolbar.style.zIndex = '9'; // Below budget header (z-10) so it slides under
     toolbar.style.clipPath = clipPath;
     toolbar.style.visibility = isVisible ? 'visible' : 'hidden';
     toolbar.style.pointerEvents = isVisible ? 'auto' : 'none';
@@ -1736,6 +1779,233 @@ const FormatterToolbar = (() => {
     }, delay);
   }
 
+  // ─── Expand/Collapse All Button ─────────────────────────────────────
+
+  // Phosphor ArrowsOut (regular) — expand all groups
+  const EXPAND_ALL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 256 256"><path d="M216,48V96a8,8,0,0,1-16,0V67.31l-42.34,42.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM98.34,146.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l42.35-42.34a8,8,0,0,0-11.32-11.32ZM208,152a8,8,0,0,0-8,8v28.69l-42.34-42.35a8,8,0,0,0-11.32,11.32L188.69,200H160a8,8,0,0,0,0,16h48a8,8,0,0,0,8-8V160A8,8,0,0,0,208,152ZM67.31,56H96a8,8,0,0,0,0-16H48a8,8,0,0,0-8,8V96a8,8,0,0,0,16,0V67.31l42.34,42.35a8,8,0,0,0,11.32-11.32Z"/></svg>`;
+
+  // Phosphor ArrowsIn (regular) — collapse all groups
+  const COLLAPSE_ALL_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="inline-block overflow-visible h-[1em] w-[1em] align-[-0.125em]" viewBox="0 0 256 256"><path d="M144,104V64a8,8,0,0,1,16,0V84.69l42.34-42.35a8,8,0,0,1,11.32,11.32L171.31,96H192a8,8,0,0,1,0,16H152A8,8,0,0,1,144,104Zm-40,40H64a8,8,0,0,0,0,16H84.69L42.34,202.34a8,8,0,0,0,11.32,11.32L96,171.31V192a8,8,0,0,0,16,0V152A8,8,0,0,0,104,144Zm67.31,16H192a8,8,0,0,0,0-16H152a8,8,0,0,0-8,8v40a8,8,0,0,0,16,0V171.31l42.34,42.35a8,8,0,0,0,11.32-11.32ZM104,56a8,8,0,0,0-8,8V84.69L53.66,42.34A8,8,0,0,0,42.34,53.66L84.69,96H64a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V64A8,8,0,0,0,104,56Z"/></svg>`;
+
+  /**
+   * Detect whether budget groups are mostly expanded or collapsed.
+   * Looks at group row chevrons — expanded groups have a rotated SVG.
+   * @returns {'expanded'|'collapsed'|'none'} Current majority state, or 'none' if no groups
+   */
+  function detectGroupState() {
+    // Find all group chevron SVGs in the budget table.
+    // Group rows have a unique chevron with path "m9 18 6-6-6-6" (right-pointing triangle).
+    // When expanded, the SVG has the rotate-90 class.
+    // This avoids scoping to a specific scroll container (header vs data are separate).
+    const chevronPaths = document.querySelectorAll('svg path[d="m9 18 6-6-6-6"]');
+    if (chevronPaths.length === 0) return 'none';
+
+    let expanded = 0;
+    let collapsed = 0;
+
+    chevronPaths.forEach(path => {
+      const svg = path.closest('svg');
+      if (!svg) return;
+
+      if (svg.classList.contains('rotate-90')) {
+        expanded++;
+      } else {
+        collapsed++;
+      }
+    });
+
+    if (expanded === 0 && collapsed === 0) return 'none';
+    return expanded > collapsed ? 'expanded' : 'collapsed';
+  }
+
+  /**
+   * Find the native expand-one-level and collapse-one-level buttons in the Name header.
+   * Identifies them by their SVG path data.
+   * @returns {{ expandBtn: HTMLElement|null, collapseBtn: HTMLElement|null }}
+   */
+  function findHeaderExpandCollapseButtons() {
+    const headerCells = document.querySelectorAll('div.sticky.font-bold[style*="width: 300px"]');
+    let nameHeader = null;
+
+    for (const cell of headerCells) {
+      const textDiv = cell.querySelector(':scope > div.p-2.grow');
+      if (textDiv && textDiv.textContent.trim() === 'Name') {
+        nameHeader = cell;
+        break;
+      }
+    }
+
+    if (!nameHeader) return { expandBtn: null, collapseBtn: null };
+
+    let expandBtn = null;
+    let collapseBtn = null;
+
+    const buttons = nameHeader.querySelectorAll('div[role="button"]');
+    buttons.forEach(btn => {
+      const paths = btn.querySelectorAll('svg path');
+      const pathData = Array.from(paths).map(p => p.getAttribute('d')).join(' ');
+
+      // Lucide minimize-2: arrows pointing inward (toward center) = COLLAPSE one level
+      if (pathData.includes('M3 21') && pathData.includes('m14 10')) {
+        collapseBtn = btn;
+      }
+      // Lucide maximize-2: arrows pointing outward (toward corners) = EXPAND one level
+      if (pathData.includes('M15 3h6v6') && pathData.includes('M9 21H3v-6')) {
+        expandBtn = btn;
+      }
+    });
+
+    return { expandBtn, collapseBtn };
+  }
+
+  /**
+   * Click the native expand or collapse button repeatedly to expand/collapse all levels.
+   * @param {'expand'|'collapse'} action - Which action to perform
+   */
+  async function performExpandCollapseAll(action) {
+    if (!expandCollapseAllBtn) return;
+
+    const { expandBtn, collapseBtn } = findHeaderExpandCollapseButtons();
+    const targetBtn = action === 'expand' ? expandBtn : collapseBtn;
+
+    if (!targetBtn) {
+      console.log('Formatter: Could not find native ' + action + ' button');
+      return;
+    }
+
+    expandCollapseAllBtn.style.opacity = '0.5';
+    expandCollapseAllBtn.style.pointerEvents = 'none';
+
+    for (let i = 0; i < 5; i++) {
+      if (!expandCollapseAllBtn) return; // feature was cleaned up mid-flight
+      targetBtn.click();
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    setTimeout(() => {
+      if (expandCollapseAllBtn) {
+        updateExpandCollapseAllIcon();
+        expandCollapseAllBtn.style.opacity = '';
+        expandCollapseAllBtn.style.pointerEvents = '';
+      }
+    }, 300);
+  }
+
+  /**
+   * Update the expand/collapse all button icon based on current group state.
+   */
+  function updateExpandCollapseAllIcon() {
+    if (!expandCollapseAllBtn) return;
+
+    const state = detectGroupState();
+
+    if (state === 'none') {
+      if (expandCollapseAllBtn.dataset.jtState !== 'none') {
+        expandCollapseAllBtn.dataset.jtState = 'none';
+        expandCollapseAllBtn.style.display = 'none';
+      }
+      return;
+    }
+
+    // Only update innerHTML if state actually changed — prevents MutationObserver
+    // infinite loop (innerHTML change → mutation → updateIcon → innerHTML change…)
+    if (expandCollapseAllBtn.dataset.jtState === state) return;
+    expandCollapseAllBtn.dataset.jtState = state;
+
+    expandCollapseAllBtn.style.display = '';
+
+    if (state === 'expanded') {
+      expandCollapseAllBtn.innerHTML = COLLAPSE_ALL_SVG;
+      expandCollapseAllBtn.title = 'Collapse All Groups';
+    } else {
+      expandCollapseAllBtn.innerHTML = EXPAND_ALL_SVG;
+      expandCollapseAllBtn.title = 'Expand All Groups';
+    }
+  }
+
+  /**
+   * Inject the Expand/Collapse All button into the budget Name header cell.
+   */
+  function injectExpandCollapseAllButton() {
+    // If already injected, just re-check the icon state (groups may have loaded since injection)
+    if (expandCollapseAllBtn && document.body.contains(expandCollapseAllBtn)) {
+      updateExpandCollapseAllIcon();
+      return;
+    }
+
+    if (!window.location.pathname.endsWith('/budget')) return;
+
+    const { expandBtn, collapseBtn } = findHeaderExpandCollapseButtons();
+    if (!expandBtn || !collapseBtn) return;
+
+    const nameHeader = expandBtn.closest('div.sticky.font-bold[style*="width: 300px"]');
+    if (!nameHeader) return;
+
+    const btn = document.createElement('div');
+    btn.setAttribute('role', 'button');
+    btn.setAttribute('tabindex', '0');
+    btn.className = 'inline-block align-bottom relative cursor-pointer p-2 hover:backdrop-brightness-95';
+    btn.dataset.jtExpandCollapseAll = 'true';
+
+    expandCollapseAllBtn = btn;
+    updateExpandCollapseAllIcon();
+
+    const handleClick = () => {
+      const state = detectGroupState();
+      if (state === 'expanded') {
+        performExpandCollapseAll('collapse');
+      } else {
+        performExpandCollapseAll('expand');
+      }
+    };
+
+    btn.addEventListener('click', handleClick);
+
+    const handleNativeClick = (e) => {
+      const target = e.target.closest('div[role="button"]');
+      if (target && target !== btn && nameHeader.contains(target)) {
+        setTimeout(updateExpandCollapseAllIcon, 300);
+      }
+    };
+    nameHeader.addEventListener('click', handleNativeClick);
+
+    const scrollContainer = document.querySelector('.overflow-auto .flex.min-w-max')?.closest('.overflow-auto');
+    const handleGroupChevronClick = (e) => {
+      const target = e.target.closest('div[role="button"]');
+      if (target) {
+        setTimeout(updateExpandCollapseAllIcon, 300);
+      }
+    };
+    if (scrollContainer) {
+      scrollContainer.addEventListener('click', handleGroupChevronClick);
+    }
+
+    // Insert after expand button (second native button), before the eye/visibility button
+    expandBtn.after(btn);
+
+    expandCollapseAllCleanup = () => {
+      btn.removeEventListener('click', handleClick);
+      nameHeader.removeEventListener('click', handleNativeClick);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener('click', handleGroupChevronClick);
+      }
+      btn.remove();
+      expandCollapseAllBtn = null;
+      expandCollapseAllCleanup = null;
+    };
+
+    console.log('Formatter: Expand/Collapse All button injected');
+  }
+
+  /**
+   * Remove the Expand/Collapse All button and clean up listeners.
+   */
+  function removeExpandCollapseAllButton() {
+    if (expandCollapseAllCleanup) {
+      expandCollapseAllCleanup();
+    }
+  }
+
   // Public API
   return {
     getActiveToolbar,
@@ -1748,7 +2018,9 @@ const FormatterToolbar = (() => {
     showToolbar,
     hideToolbar,
     scheduleHide,
-    embedToolbarForField
+    embedToolbarForField,
+    injectExpandCollapseAllButton,
+    removeExpandCollapseAllButton
   };
 })();
 

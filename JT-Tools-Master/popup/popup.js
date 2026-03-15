@@ -1786,29 +1786,6 @@ async function initMcpTab() {
     });
   }
 
-  const copyGrantBtn = document.getElementById('copyGrantKey');
-  if (copyGrantBtn) {
-    copyGrantBtn.addEventListener('click', async () => {
-      const grantKey = await JobTreadProService.getGrantKey();
-      if (!grantKey) {
-        showStatus('No Grant Key configured', 'error');
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(grantKey);
-        copyGrantBtn.classList.add('copied');
-        copyGrantBtn.querySelector('i').className = 'ph ph-check';
-        showStatus('Grant Key copied!', 'success');
-        setTimeout(() => {
-          copyGrantBtn.classList.remove('copied');
-          copyGrantBtn.querySelector('i').className = 'ph ph-copy';
-        }, 2000);
-      } catch (err) {
-        showStatus('Failed to copy', 'error');
-      }
-    });
-  }
-
   // Setup platform tabs
   initPlatformTabs();
 
@@ -1870,12 +1847,10 @@ async function updateMcpCredentialsDisplay() {
     licenseStatusEl.className = 'credential-status invalid';
   }
 
-  // Get grant key (from obfuscated storage)
+  // Get grant key status (never display the key itself — JT only shows it once)
   const grantKey = await JobTreadProService.getGrantKey();
   if (grantKey) {
-    // Show masked grant key
-    const maskedGrant = grantKey.substring(0, 8) + '••••••••';
-    grantKeyEl.textContent = maskedGrant;
+    grantKeyEl.textContent = 'Configured';
     grantKeyEl.classList.remove('not-set');
     grantStatusEl.className = 'credential-status valid';
   } else {
@@ -2115,16 +2090,14 @@ async function updateCopyButtonForPlatform(platform) {
 }
 
 /**
- * Generate MCP config for the selected platform
+ * Generate MCP config for the selected platform.
+ * Uses placeholder credentials — users must replace with their own keys.
  * @param {string} platform - The platform to generate config for
- * @param {string} licenseKey - The license key
- * @param {string} grantKey - The grant key
  * @returns {string} The config as a formatted string
  */
-function generateMcpConfig(platform, licenseKey, grantKey) {
-  // If grantKey is empty, licenseKey is already the full token (session token or OAuth URL)
-  const authToken = grantKey ? `${licenseKey}:${grantKey}` : licenseKey;
+function generateMcpConfig(platform) {
   const serverUrl = MCP_SERVER_URL;
+  const placeholder = '<YOUR_LICENSE_KEY>:<YOUR_GRANT_KEY>';
 
   switch (platform) {
     case 'claude-code':
@@ -2135,7 +2108,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
             "type": "http",
             "url": `${serverUrl}/mcp`,
             "headers": {
-              "Authorization": `Bearer ${authToken}`
+              "Authorization": `Bearer ${placeholder}`
             }
           }
         }
@@ -2152,7 +2125,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
               "mcp-remote",
               `${serverUrl}/mcp`,
               "--header",
-              `Authorization:Bearer ${authToken}`
+              `Authorization:Bearer ${placeholder}`
             ]
           }
         }
@@ -2173,7 +2146,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
           "jobtread": {
             "httpUrl": `${serverUrl}/mcp`,
             "headers": {
-              "Authorization": `Bearer ${authToken}`
+              "Authorization": `Bearer ${placeholder}`
             }
           }
         }
@@ -2186,7 +2159,7 @@ function generateMcpConfig(platform, licenseKey, grantKey) {
           "jobtread": {
             "url": `${serverUrl}/mcp`,
             "headers": {
-              "Authorization": `Bearer ${authToken}`
+              "Authorization": `Bearer ${placeholder}`
             }
           }
         }
@@ -2204,30 +2177,8 @@ async function handleCopyMcpConfig() {
   const copyConfigBtn = document.getElementById('copyMcpConfigBtn');
   const isOAuthPlatform = ['chatgpt', 'claude-web'].includes(selectedMcpPlatform);
 
-  let config;
-
-  if (isOAuthPlatform) {
-    // OAuth platforms just need the server URL — no keys needed
-    config = generateMcpConfig(selectedMcpPlatform, '', '');
-  } else {
-    // Try session token first (opaque, short-lived) — falls back to raw keys
-    const { token, isSession } = await JobTreadProService.getSessionToken();
-
-    if (!token) {
-      showStatus('Please configure both License Key and Grant Key first', 'error');
-      return;
-    }
-
-    if (isSession) {
-      // Session token: use as the full auth token (no raw keys exposed)
-      config = generateMcpConfig(selectedMcpPlatform, token, '');
-    } else {
-      // Fallback: server doesn't support sessions yet — use raw credentials
-      const licenseData = await LicenseService.getLicenseData();
-      const grantKey = await JobTreadProService.getGrantKey();
-      config = generateMcpConfig(selectedMcpPlatform, licenseData.key, grantKey);
-    }
-  }
+  // Generate config with placeholders (no real credentials embedded)
+  const config = generateMcpConfig(selectedMcpPlatform);
 
   try {
     await navigator.clipboard.writeText(config);
@@ -2255,9 +2206,9 @@ async function handleCopyMcpConfig() {
     };
     const label = isUrl ? 'URL' : 'config';
 
-    // Security: warn users about credential exposure for non-OAuth platforms
+    // Guide users to replace placeholders with their credentials
     if (!isUrl) {
-      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied! \u26A0 Contains credentials \u2014 do not commit to git or share publicly.`, 'success');
+      showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied! Replace <YOUR_LICENSE_KEY> and <YOUR_GRANT_KEY> with your credentials.`, 'success');
     } else {
       showStatus(`${platformNames[selectedMcpPlatform]} ${label} copied!`, 'success');
     }
