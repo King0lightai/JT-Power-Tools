@@ -205,7 +205,9 @@ function isAllowedApiSender(sender) {
 
   // Safari may not provide sender.tab.url due to privacy restrictions
   // Allow if the message comes from our own extension's content script
-  if (sender.id === (chrome.runtime.id || browser?.runtime?.id) && sender.tab) {
+  // Note: Only use chrome.runtime.id here — referencing browser?.runtime?.id
+  // triggers Safari's WebExtension polyfill (wrappedSendMessage) recursion
+  if (sender.id === chrome.runtime.id && sender.tab) {
     return true;
   }
 

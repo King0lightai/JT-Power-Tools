@@ -413,11 +413,11 @@ const BudgetChangelogFeature = (() => {
       }
     };
 
-    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Pave query keys:', Object.keys(innerQuery));
+    if (DEBUG) console.log('BudgetChangelog: Pave query keys:', Object.keys(innerQuery));
 
     // Make direct API call (route through background if needed)
     const response = await makePaveRequest(wrappedQuery);
-    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Pave result keys:', Object.keys(response || {}));
+    if (DEBUG) console.log('BudgetChangelog: Pave result keys:', Object.keys(response || {}));
 
     // Check for errors
     if (response.errors && response.errors.length > 0) {
