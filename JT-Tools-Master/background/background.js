@@ -203,6 +203,12 @@ function isAllowedApiSender(sender) {
     }
   }
 
+  // Safari may not provide sender.tab.url due to privacy restrictions
+  // Allow if the message comes from our own extension's content script
+  if (sender.id === (chrome.runtime.id || browser?.runtime?.id) && sender.tab) {
+    return true;
+  }
+
   return false;
 }
 
@@ -232,15 +238,9 @@ function isAllowedApiUrl(url) {
  */
 async function handleApiRequest(url, options) {
   try {
-    console.log('JT-Tools API Proxy: Request to', url);
-    console.log('JT-Tools API Proxy: Options:', JSON.stringify(options, null, 2));
-
     const response = await fetch(url, options);
 
-    console.log('JT-Tools API Proxy: Response status:', response.status);
-
     const responseText = await response.text();
-    console.log('JT-Tools API Proxy: Response body (first 500 chars):', responseText.substring(0, 500));
 
     // Try to parse as JSON, fall back to text
     let data;
