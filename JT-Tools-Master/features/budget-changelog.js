@@ -458,13 +458,18 @@ const BudgetChangelogFeature = (() => {
         }
       });
 
+      // Safari may return undefined if async sendResponse doesn't resolve
+      if (!result) {
+        throw new Error('No response from background script (possible Safari async issue)');
+      }
+
       if (!result.success) {
         throw new Error(result.error || `API Error: ${result.status}`);
       }
 
       return result.data;
     } catch (error) {
-      console.error('BudgetChangelog: Pave request failed:', error);
+      console.error('BudgetChangelog: Pave request failed:', error.message);
       throw error;
     }
   }
