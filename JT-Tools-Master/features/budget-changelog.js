@@ -3,6 +3,7 @@
 // Power User tier feature
 
 const BudgetChangelogFeature = (() => {
+  const DEBUG = false; // Set to true for development debugging only — NEVER ship as true
   let isActive = false;
   let sidebarObserver = null;
   let currentJobId = null;
@@ -71,24 +72,24 @@ const BudgetChangelogFeature = (() => {
    */
   function init() {
     if (isActive) {
-      console.log('BudgetChangelog: Already active, skipping init');
+      if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Already active, skipping init');
       return;
     }
 
     isActive = true;
-    console.log('BudgetChangelog: Initializing...');
+    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Initializing...');
 
     // Start observing for Budget Backups sidebar
     startSidebarObserver();
 
     // Check if sidebar is already present
     const existingSidebar = findBudgetBackupsSidebar();
-    console.log('BudgetChangelog: Existing sidebar check:', existingSidebar ? 'FOUND' : 'not found');
+    if (DEBUG) console.log('BudgetChangelog: Existing sidebar check:', existingSidebar ? 'FOUND' : 'not found');
     if (existingSidebar) {
       handleSidebarAppeared(existingSidebar);
     }
 
-    console.log('BudgetChangelog: Activated');
+    if (DEBUG) console.log('BudgetChangelog: Activated');
   }
 
   /**
@@ -110,7 +111,7 @@ const BudgetChangelogFeature = (() => {
     // Reset state
     currentJobId = null;
 
-    console.log('BudgetChangelog: Deactivated');
+    if (DEBUG) console.log('BudgetChangelog: Deactivated');
   }
 
   /**
@@ -118,11 +119,11 @@ const BudgetChangelogFeature = (() => {
    */
   function startSidebarObserver() {
     if (sidebarObserver) {
-      console.log('BudgetChangelog: Observer already running');
+      if (DEBUG) console.log('BudgetChangelog: Observer already running');
       return;
     }
 
-    console.log('BudgetChangelog: Starting sidebar observer with selector:', SIDEBAR_SELECTOR);
+    if (DEBUG) console.log('BudgetChangelog: Starting sidebar observer with selector:', SIDEBAR_SELECTOR);
 
     sidebarObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
@@ -134,11 +135,11 @@ const BudgetChangelogFeature = (() => {
               : node.querySelector?.(SIDEBAR_SELECTOR);
 
             if (sidebar) {
-              console.log('BudgetChangelog: Found potential sidebar via mutation');
+              if (DEBUG) console.log('BudgetChangelog: Found potential sidebar via mutation');
               // Delay to ensure sidebar is fully rendered
               setTimeout(() => {
                 const isBudgetSidebar = isBudgetBackupsSidebar(sidebar);
-                console.log('BudgetChangelog: Is Budget Backups sidebar:', isBudgetSidebar);
+                if (DEBUG) console.log('BudgetChangelog: Is Budget Backups sidebar:', isBudgetSidebar);
                 if (isBudgetSidebar) {
                   handleSidebarAppeared(sidebar);
                 }
@@ -164,7 +165,7 @@ const BudgetChangelogFeature = (() => {
       subtree: true
     });
 
-    console.log('BudgetChangelog: Observer started');
+    if (DEBUG) console.log('BudgetChangelog: Observer started');
   }
 
   /**
@@ -182,13 +183,13 @@ const BudgetChangelogFeature = (() => {
    * @param {HTMLElement} sidebar - The sidebar element
    */
   async function handleSidebarAppeared(sidebar) {
-    console.log('BudgetChangelog: handleSidebarAppeared called');
+    if (DEBUG) console.log('BudgetChangelog: handleSidebarAppeared called');
 
     // Check if API is configured
     const isApiConfigured = await checkApiConfigured();
-    console.log('BudgetChangelog: API configured:', isApiConfigured);
+    if (DEBUG) console.log('BudgetChangelog: API configured:', isApiConfigured);
     if (!isApiConfigured) {
-      console.log('BudgetChangelog: API not configured, skipping');
+      if (DEBUG) console.log('BudgetChangelog: API not configured, skipping');
       // Still inject UI but show a message that API is needed
       injectApiRequiredMessage(sidebar);
       return;
@@ -196,9 +197,9 @@ const BudgetChangelogFeature = (() => {
 
     // Get job ID
     const jobId = getJobIdFromUrl();
-    console.log('BudgetChangelog: Job ID from URL:', jobId);
+    if (DEBUG) console.log('BudgetChangelog: Job ID from URL:', jobId);
     if (!jobId) {
-      console.log('BudgetChangelog: Not on a job page, skipping');
+      if (DEBUG) console.log('BudgetChangelog: Not on a job page, skipping');
       return;
     }
 
@@ -206,12 +207,12 @@ const BudgetChangelogFeature = (() => {
 
     // Fetch backup list
     try {
-      console.log('BudgetChangelog: Fetching backups for job:', jobId);
+      if (DEBUG) console.log('BudgetChangelog: Fetching backups for job:', jobId);
       const backups = await fetchBudgetBackups(jobId);
-      console.log('BudgetChangelog: Fetched backups:', backups.length);
+      if (DEBUG) console.log('BudgetChangelog: Fetched backups:', backups.length);
 
       if (backups.length < 2) {
-        console.log('BudgetChangelog: Less than 2 backups, comparison not possible');
+        if (DEBUG) console.log('BudgetChangelog: Less than 2 backups, comparison not possible');
         // Show a message in the sidebar
         injectNotEnoughBackupsMessage(sidebar, backups.length);
         return;
@@ -412,11 +413,11 @@ const BudgetChangelogFeature = (() => {
       }
     };
 
-    console.log('BudgetChangelog: Pave query:', JSON.stringify(wrappedQuery, null, 2));
+    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Pave query keys:', Object.keys(innerQuery));
 
     // Make direct API call (route through background if needed)
     const response = await makePaveRequest(wrappedQuery);
-    console.log('BudgetChangelog: Pave result:', JSON.stringify(response, null, 2));
+    if (DEBUG) if (DEBUG) console.log('BudgetChangelog: Pave result keys:', Object.keys(response || {}));
 
     // Check for errors
     if (response.errors && response.errors.length > 0) {

@@ -2,6 +2,7 @@
 // Injects comparison UI into the Budget Backups sidebar
 
 const BudgetChangelogUI = (() => {
+  const DEBUG = false; // Set to true for development debugging only
   let diffModal = null;
 
   /**
@@ -75,7 +76,7 @@ const BudgetChangelogUI = (() => {
       contentContainer.appendChild(controlsContainer);
     }
 
-    console.log('BudgetChangelog: Compare controls injected');
+    if (DEBUG) console.log('BudgetChangelog: Compare controls injected');
 
     // Populate dropdowns
     populateBackupDropdowns(backups);
@@ -98,7 +99,7 @@ const BudgetChangelogUI = (() => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
-    console.log('BudgetChangelog: Filtering backups, total count:', sorted.length);
+    if (DEBUG) console.log('BudgetChangelog: Filtering backups, total count:', sorted.length);
 
     // Group by LOCAL date (YYYY-MM-DD) and keep only the latest per day
     // Using local date instead of UTC to match user's timezone
@@ -122,22 +123,22 @@ const BudgetChangelogUI = (() => {
       // Since sorted newest first, first occurrence is the latest for that day
       if (!latestByDay.has(dateKey)) {
         latestByDay.set(dateKey, backup);
-        console.log('BudgetChangelog: Added backup for date:', dateKey);
+        if (DEBUG) console.log('BudgetChangelog: Added backup for date:', dateKey);
       }
     }
 
     const uniqueDays = latestByDay.size;
-    console.log('BudgetChangelog: Found', uniqueDays, 'unique days');
+    if (DEBUG) console.log('BudgetChangelog: Found', uniqueDays, 'unique days');
 
     // If fewer than 3 unique days but we have multiple backups, show all backups
     // This allows comparing backups from the same day
     if (uniqueDays < 3 && sorted.length > 1) {
-      console.log('BudgetChangelog: Few unique days, returning all', sorted.length, 'backups');
+      if (DEBUG) console.log('BudgetChangelog: Few unique days, returning all', sorted.length, 'backups');
       return sorted;
     }
 
     const result = Array.from(latestByDay.values());
-    console.log('BudgetChangelog: Filtered to', result.length, 'backups (one per day)');
+    if (DEBUG) console.log('BudgetChangelog: Filtered to', result.length, 'backups (one per day)');
 
     // Return as array, maintaining newest-first order
     return result;
