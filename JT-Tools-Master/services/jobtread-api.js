@@ -614,6 +614,96 @@ const JobTreadAPI = (() => {
   }
 
   /**
+   * Fetch detailed job data for merge field resolution
+   * Includes location, contact, account, tasks, schedule, budget, and invoice data
+   * @param {string} jobId - The job ID to fetch
+   * @returns {Promise<Object>} Full job data for merge field substitution
+   */
+  async function fetchJobForMergeFields(jobId) {
+    if (!jobId) {
+      throw new Error('Job ID is required');
+    }
+
+    const query = {
+      job: {
+        $: { id: jobId },
+        id: {},
+        number: {},
+        name: {},
+        description: {},
+        status: {},
+        createdAt: {},
+        closedOn: {},
+        soldDate: {},
+        priceType: {},
+        scheduledStartDate: {},
+        scheduledEndDate: {},
+        // Location with contact and account
+        location: {
+          id: {},
+          name: {},
+          displayName: {},
+          address: {},
+          city: {},
+          state: {},
+          country: {},
+          street: {},
+          postalCode: {},
+          county: {},
+          taxRate: {},
+          createdAt: {},
+          contact: {
+            id: {},
+            name: {},
+            title: {},
+            createdAt: {}
+          },
+          account: {
+            id: {},
+            name: {},
+            createdAt: {},
+            archivedAt: {},
+            isTaxable: {},
+            primaryContact: {
+              id: {},
+              name: {},
+              title: {},
+              createdAt: {}
+            }
+          }
+        },
+        // Custom field values
+        customFieldValues: {
+          nodes: {
+            id: {},
+            value: {},
+            customField: {
+              id: {},
+              name: {},
+              type: {}
+            }
+          }
+        }
+      }
+    };
+
+    try {
+      const result = await paveQuery(query);
+      const job = result.job;
+
+      if (!job) {
+        throw new Error('Job not found: ' + jobId);
+      }
+
+      console.log('JobTreadAPI: Fetched job for merge fields:', job.id);
+      return job;
+    } catch (error) {
+      console.error('JobTreadAPI: Failed to fetch job for merge fields:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Clear all cached data
    * @returns {Promise<void>}
    */
@@ -745,6 +835,7 @@ const JobTreadAPI = (() => {
     fetchJobsByCustomField,
     fetchJobsWithFilters,
     getCustomFieldValues,
+    fetchJobForMergeFields,
 
     // Raw query access
     paveQuery,

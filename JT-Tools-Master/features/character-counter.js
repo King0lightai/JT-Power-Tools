@@ -118,6 +118,179 @@ const CharacterCounterFeature = (() => {
     }
   }
 
+  // ── Merge Fields ──────────────────────────────────────────────────────
+  // Resolve {token} placeholders in template content using live job data
+
+  // Cache for job merge field data to avoid refetching on every template insert
+  let mergeFieldCache = { jobId: null, data: null, timestamp: 0 };
+  const MERGE_FIELD_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
+  /**
+   * Extract the current job ID from the page URL
+   * JobTread URLs look like: https://app.jobtread.com/jobs/{jobId}/...
+   * @returns {string|null} Job ID or null if not on a job page
+   */
+  function getJobIdFromUrl() {
+    try {
+      const match = window.location.pathname.match(/\/jobs\/([^/]+)/);
+      return match ? match[1] : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Check if a template contains merge field tokens
+   * @param {string} content - Template content
+   * @returns {boolean}
+   */
+  function hasMergeFields(content) {
+    return /\{[a-zA-Z][a-zA-Z0-9:_]*\}/.test(content);
+  }
+
+  /**
+   * Fetch job data for merge field resolution (with caching)
+   * @param {string} jobId - The job ID
+   * @returns {Promise<Object|null>} Job data or null on failure
+   */
+  async function fetchMergeFieldData(jobId) {
+    // Check cache
+    if (
+      mergeFieldCache.jobId === jobId &&
+      mergeFieldCache.data &&
+      Date.now() - mergeFieldCache.timestamp < MERGE_FIELD_CACHE_TTL
+    ) {
+      return mergeFieldCache.data;
+    }
+
+    try {
+      if (!window.JobTreadAPI || !(await window.JobTreadAPI.isConfigured())) {
+        console.log('CharacterCounter: Merge fields skipped - API not configured');
+        return null;
+      }
+
+      const job = await window.JobTreadAPI.fetchJobForMergeFields(jobId);
+      mergeFieldCache = { jobId, data: job, timestamp: Date.now() };
+      return job;
+    } catch (e) {
+      console.warn('CharacterCounter: Failed to fetch merge field data', e);
+      return null;
+    }
+  }
+
+  /**
+   * Build a flat lookup map from nested job data for merge field tokens
+   * Maps tokens like {name}, {location:contact:name}, {location:account:primaryContact:name} etc.
+   * @param {Object} job - Job data from the API
+   * @returns {Object} Map of token -> value
+   */
+  function buildMergeFieldMap(job) {
+    if (!job) return {};
+
+    const map = {};
+    const loc = job.location || {};
+    const contact = loc.contact || {};
+    const account = loc.account || {};
+    const primaryContact = account.primaryContact || {};
+
+    // Record information
+    map['id'] = job.id;
+    map['number'] = job.number;
+    map['name'] = job.name;
+    map['description'] = job.description;
+
+    // Dates
+    map['createdAt'] = job.createdAt;
+    map['closedOn'] = job.closedOn;
+    map['jobSoldDate'] = job.soldDate;
+
+    // Schedule
+    map['scheduledStartDate'] = job.scheduledStartDate;
+    map['scheduledEndDate'] = job.scheduledEndDate;
+
+    // Pricing
+    map['priceType'] = job.priceType;
+
+    // Location
+    map['location:id'] = loc.id;
+    map['location:name'] = loc.name;
+    map['location:displayName'] = loc.displayName;
+    map['location:address'] = loc.address;
+    map['location:city'] = loc.city;
+    map['location:state'] = loc.state;
+    map['location:country'] = loc.country;
+    map['location:street'] = loc.street;
+    map['location:postalCode'] = loc.postalCode;
+    map['location:county'] = loc.county;
+    map['location:taxRate'] = loc.taxRate;
+    map['location:createdAt'] = loc.createdAt;
+
+    // Contact
+    map['location:contact:id'] = contact.id;
+    map['location:contact:name'] = contact.name;
+    map['location:contact:title'] = contact.title;
+    map['location:contact:createdAt'] = contact.createdAt;
+
+    // Account
+    map['location:account:id'] = account.id;
+    map['location:account:name'] = account.name;
+    map['location:account:createdAt'] = account.createdAt;
+    map['location:account:archivedAt'] = account.archivedAt;
+    map['location:account:isTaxable'] = account.isTaxable;
+
+    // Primary contact
+    map['location:account:primaryContact:id'] = primaryContact.id;
+    map['location:account:primaryContact:name'] = primaryContact.name;
+    map['location:account:primaryContact:title'] = primaryContact.title;
+    map['location:account:primaryContact:createdAt'] = primaryContact.createdAt;
+
+    // Custom fields - map by name: {custom:FieldName}
+    const customValues = job.customFieldValues?.nodes || [];
+    customValues.forEach(cv => {
+      if (cv.customField?.name && cv.value != null) {
+        map['custom:' + cv.customField.name] = cv.value;
+      }
+    });
+
+    return map;
+  }
+
+  /**
+   * Resolve merge fields in template content
+   * Replaces {token} placeholders with actual values from job data
+   * Unresolved tokens are left as-is so the user can see what didn't match
+   * @param {string} content - Template content with {token} placeholders
+   * @returns {Promise<string>} Content with merge fields resolved
+   */
+  async function resolveMergeFields(content) {
+    if (!content || !hasMergeFields(content)) {
+      return content;
+    }
+
+    const jobId = getJobIdFromUrl();
+    if (!jobId) {
+      console.log('CharacterCounter: Merge fields skipped - not on a job page');
+      return content;
+    }
+
+    const job = await fetchMergeFieldData(jobId);
+    if (!job) {
+      return content;
+    }
+
+    const fieldMap = buildMergeFieldMap(job);
+
+    // Replace all {token} patterns where token exists in our map
+    return content.replace(/\{([a-zA-Z][a-zA-Z0-9:_]*)\}/g, (match, token) => {
+      const value = fieldMap[token];
+      if (value != null && value !== '') {
+        return String(value);
+      }
+      // Leave unresolved tokens as-is
+      return match;
+    });
+  }
+
   // Character limits for JobTread fields
   // Comments and messages have a 4096 character limit
   const FIELD_LIMITS = {
@@ -1999,9 +2172,10 @@ const CharacterCounterFeature = (() => {
           item.appendChild(createdByDiv);
         }
 
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', async (e) => {
           e.stopPropagation();
-          insertSignature(field, template.content);
+          const resolved = await resolveMergeFields(template.content);
+          insertSignature(field, resolved);
           updateCounter();
           hide();
         });
@@ -2036,13 +2210,15 @@ const CharacterCounterFeature = (() => {
             // Save as company template
             const saved = await saveTeamTemplate({ name: result.name, content: result.content });
             if (saved) {
-              insertSignature(field, result.content);
+              const resolved = await resolveMergeFields(result.content);
+              insertSignature(field, resolved);
               updateCounter();
             }
           } else {
             // Save as personal template
             const newTemplate = await createTemplate(result.name, result.content, result.setAsDefault);
-            insertSignature(field, newTemplate.content);
+            const resolved = await resolveMergeFields(newTemplate.content);
+            insertSignature(field, resolved);
             updateCounter();
           }
         }
