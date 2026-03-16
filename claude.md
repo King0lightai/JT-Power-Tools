@@ -1160,6 +1160,74 @@ The following areas have been the focus of recent development work:
 - Enhanced accessibility features
 - Mobile/responsive improvements
 
+## MCP Context-Mode Integration
+
+### Overview
+
+The `mcp-context-mode/` directory contains a context-mode integration module adapted from [context-mode](https://github.com/mksglu/context-mode) for the JobTread MCP Server (Cloudflare Workers).
+
+Context-mode solves the **context window problem**: when AI tools query large JobTread datasets (budgets, schedules, jobs), raw responses can consume 50KB+ of context. Context-mode indexes responses into a searchable knowledge base and returns only relevant sections — achieving up to **98% context savings**.
+
+### Architecture
+
+```
+mcp-context-mode/
+├── src/
+│   ├── index.js              # Main entry point & ContextMode factory
+│   ├── truncate.js           # Smart truncation (60% head + 40% tail)
+│   ├── store.js              # FTS5 knowledge base (Cloudflare D1)
+│   ├── session.js            # Session continuity (D1 + KV)
+│   ├── stats.js              # Context consumption tracking
+│   ├── intent-filter.js      # Intent-driven response filtering
+│   └── context-tools.js      # MCP tool definitions & handlers
+├── schema.sql                # D1 database schema
+├── wrangler-additions.toml   # Cloudflare bindings config
+└── integration-example.js    # How to wire into existing Worker
+```
+
+### Context-Mode MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `ctx_search` | BM25-ranked search across indexed content (supports multi-query) |
+| `ctx_index` | Index markdown/JSON/text into searchable knowledge base |
+| `ctx_batch` | Execute multiple tool calls + searches in one request |
+| `ctx_stats` | Show context consumption per tool with savings metrics |
+| `ctx_resume` | Restore session state after context compaction |
+| `ctx_sources` | List all indexed knowledge base sources |
+
+### Key Patterns
+
+1. **Smart Truncation**: Large responses trimmed at line boundaries (60% head + 40% tail preserves initial context and final errors)
+2. **Intent-Driven Filtering**: When `intent` parameter is provided on large-response tools, data is indexed and only relevant sections returned
+3. **Batch Execution**: `ctx_batch` replaces 30+ individual tool calls with one request
+4. **Session Continuity**: Tool calls, decisions, and errors tracked in D1; XML resume snapshots stored in KV for context compaction recovery
+5. **FTS5 Search**: Porter stemming + fuzzy Levenshtein correction for typo-tolerant search
+
+### Cloudflare Bindings Required
+
+- **D1 Database** (`CONTEXT_DB`): FTS5 knowledge base, session events, vocabulary
+- **KV Namespace** (`CONTEXT_KV`): Resume snapshots with 7-day TTL
+
+### Integration Pattern
+
+```javascript
+import { createContextMode } from './mcp-context-mode/src/index.js';
+
+// In your Worker request handler:
+const ctx = createContextMode(env.CONTEXT_DB, env.CONTEXT_KV);
+
+// Wrap existing tools with context-mode enhancements
+const wrappedHandler = ctx.wrapTool('jobtread_get_budget', originalHandler, {
+  orgId, sessionId
+});
+
+// Register context tools alongside existing tools
+const contextHandlers = ctx.createHandlers({ orgId, sessionId, callTool });
+```
+
+See `mcp-context-mode/integration-example.js` for the full integration pattern.
+
 ## Contact & Support
 
 - **Repository**: https://github.com/King0lightai/JT-Power-Tools

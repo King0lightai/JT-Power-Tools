@@ -1,0 +1,37 @@
+# ============================================================
+# Context-Mode Wrangler Config Additions
+# ============================================================
+# Add these bindings to your existing wrangler.toml for the
+# JobTread MCP Server Worker.
+#
+# These are ADDITIONS — merge into your existing config,
+# don't replace it.
+# ============================================================
+
+# ── D1 Database ──────────────────────────────────────────
+# Used for: FTS5 knowledge base, session events, vocabulary
+#
+# Create the database:
+#   wrangler d1 create jobtread-context-mode
+#
+# Then run the schema:
+#   wrangler d1 execute jobtread-context-mode --file=./mcp-context-mode/schema.sql
+
+# [[d1_databases]]
+# binding = "CONTEXT_DB"
+# database_name = "jobtread-context-mode"
+# database_id = "<your-d1-database-id>"
+
+# ── KV Namespace ─────────────────────────────────────────
+# Used for: Session resume snapshots (fast read, TTL-based expiry)
+#
+# Create the namespace:
+#   wrangler kv namespace create CONTEXT_KV
+#
+# For preview/dev:
+#   wrangler kv namespace create CONTEXT_KV --preview
+
+# [[kv_namespaces]]
+# binding = "CONTEXT_KV"
+# id = "<your-kv-namespace-id>"
+# preview_id = "<your-preview-kv-namespace-id>"
