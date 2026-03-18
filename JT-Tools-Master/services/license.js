@@ -255,45 +255,89 @@ const LicenseService = (() => {
 
   /**
    * Save license data to storage (obfuscated)
+   * Writes to both sync AND local storage for resilience.
+   * Firefox can lose storage.sync data on extension updates when no Firefox Account
+   * is connected, so local serves as a fallback.
    * @param {Object} licenseData - License data object to save
    */
   async function saveLicenseData(licenseData) {
     try {
       // Obfuscate sensitive data before storing
       const obfuscated = obfuscate(JSON.stringify(licenseData));
-      await chrome.storage.sync.set({
+      const payload = {
         jtToolsLicense: obfuscated,
         jtToolsLicenseVersion: 2 // Version flag for obfuscated format
-      });
-      log('License data saved');
+      };
+
+      // Write to both sync and local for cross-update resilience
+      await Promise.all([
+        chrome.storage.sync.set(payload).catch(e => logError('Sync save failed:', e)),
+        chrome.storage.local.set(payload).catch(e => logError('Local save failed:', e))
+      ]);
+      log('License data saved (sync + local)');
     } catch (error) {
       logError('Error saving license data:', error);
     }
   }
 
   /**
+   * Parse license from a storage result object.
+   * @param {Object} result - Storage result with jtToolsLicense and jtToolsLicenseVersion
+   * @returns {Object|null} Parsed license data or null
+   */
+  function parseLicenseFromStorage(result) {
+    if (!result.jtToolsLicense) return null;
+
+    // Handle obfuscated data (v2)
+    if (result.jtToolsLicenseVersion === 2) {
+      const deobfuscated = deobfuscate(result.jtToolsLicense);
+      return deobfuscated ? JSON.parse(deobfuscated) : null;
+    }
+
+    // Handle legacy plaintext data (v1)
+    if (typeof result.jtToolsLicense === 'object') {
+      return result.jtToolsLicense;
+    }
+
+    return null;
+  }
+
+  /**
    * Get stored license data (deobfuscate if needed)
+   * Tries sync storage first, falls back to local storage.
+   * This prevents Firefox users from being logged out on extension updates
+   * when storage.sync is lost (no Firefox Account connected).
    * @returns {Promise<Object|null>} License data object or null
    */
   async function getLicenseData() {
     try {
-      const result = await chrome.storage.sync.get(['jtToolsLicense', 'jtToolsLicenseVersion']);
+      const keys = ['jtToolsLicense', 'jtToolsLicenseVersion'];
 
-      if (!result.jtToolsLicense) {
-        return null;
+      // Try sync first (primary)
+      const syncResult = await chrome.storage.sync.get(keys);
+      let licenseData = parseLicenseFromStorage(syncResult);
+
+      if (licenseData) {
+        // Handle legacy v1 → v2 migration
+        if (typeof syncResult.jtToolsLicense === 'object') {
+          log('Migrating legacy license data to obfuscated format');
+          await saveLicenseData(licenseData);
+        }
+        return licenseData;
       }
 
-      // Handle obfuscated data (v2)
-      if (result.jtToolsLicenseVersion === 2) {
-        const deobfuscated = deobfuscate(result.jtToolsLicense);
-        return deobfuscated ? JSON.parse(deobfuscated) : null;
-      }
+      // Sync empty — try local fallback (Firefox update recovery)
+      const localResult = await chrome.storage.local.get(keys);
+      licenseData = parseLicenseFromStorage(localResult);
 
-      // Handle legacy plaintext data (v1) - migrate it to obfuscated format
-      if (typeof result.jtToolsLicense === 'object') {
-        log('Migrating legacy license data to obfuscated format');
-        await saveLicenseData(result.jtToolsLicense);
-        return result.jtToolsLicense;
+      if (licenseData) {
+        log('License recovered from local storage fallback — restoring to sync');
+        // Restore to sync so future reads are fast
+        await chrome.storage.sync.set({
+          jtToolsLicense: localResult.jtToolsLicense,
+          jtToolsLicenseVersion: localResult.jtToolsLicenseVersion
+        }).catch(e => logError('Failed to restore license to sync:', e));
+        return licenseData;
       }
 
       return null;
@@ -388,8 +432,12 @@ const LicenseService = (() => {
 
   // Remove license (for deactivation)
   async function removeLicense() {
-    await chrome.storage.sync.remove(['jtToolsLicense', 'jtToolsLicenseVersion']);
-    log('License removed');
+    const keys = ['jtToolsLicense', 'jtToolsLicenseVersion'];
+    await Promise.all([
+      chrome.storage.sync.remove(keys),
+      chrome.storage.local.remove(keys)
+    ]);
+    log('License removed (sync + local)');
   }
 
   /**

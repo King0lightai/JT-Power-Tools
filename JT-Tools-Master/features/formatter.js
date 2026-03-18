@@ -323,12 +323,20 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude fields inside sidebar forms with orange headers (Add Time Entry, Time Clock, etc.)
-      const sidebarForm = field.closest('form');
-      if (sidebarForm) {
-        const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
-        if (orangeHeader) {
-          return false;
+      // Exclude fields inside specific sidebar panels that don't support rich text
+      // Only exclude: Help, Time Entry, Time Clock, Files
+      // Do NOT broadly exclude all forms with orange headers — budget page forms have them too
+      {
+        const NON_FORMATTING_PANELS = ['help', 'time entry', 'time clock', 'files'];
+        const formOrContainer = field.closest('form') || field.closest('[data-is-drag-scroll-boundary="true"]');
+        if (formOrContainer) {
+          const orangeHeader = formOrContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
+          if (orangeHeader) {
+            const headerText = orangeHeader.textContent.trim().toLowerCase();
+            if (NON_FORMATTING_PANELS.some(panel => headerText.includes(panel))) {
+              return false;
+            }
+          }
         }
       }
 
