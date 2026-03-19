@@ -1460,6 +1460,35 @@ footer {
     gap: 16px;
 }
 
+.feature-section-label {
+    grid-column: 1 / -1;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 32px 0 4px;
+    margin-top: 16px;
+    border-top: 1px solid var(--dark-border);
+}
+
+.feature-section-label span {
+    display: block;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    color: var(--gray);
+    margin-top: 4px;
+    text-transform: none;
+}
+
+.feature-section-label:first-child {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+}
+
 /* Homepage feature cards (override docs styles) */
 .home-features .feature-card {
     background: var(--dark-card);
