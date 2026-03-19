@@ -437,30 +437,47 @@ const BudgetChangelogFeature = (() => {
 
   /**
    * Make a Pave API request
-   * Routes through background service worker if in content script context
+   * In MV3, content scripts use the web page's origin for fetch() calls.
+   * Since we run on app.jobtread.com, we can call api.jobtread.com directly
+   * (JobTread's API allows CORS from its own app domain).
+   * This avoids unreliable service worker async messaging on Safari.
+   * Falls back to background service worker proxy if direct fetch fails.
    * @param {Object} query - Wrapped Pave query
    * @returns {Promise<Object>} API response
    */
   async function makePaveRequest(query) {
     const API_URL = 'https://api.jobtread.com/pave';
+    const fetchOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(query)
+    };
 
+    // Strategy 1: Direct fetch (MV3 content scripts inherit page origin)
     try {
-      // Try to route through background script (for content script context)
+      const response = await fetch(API_URL, fetchOptions);
+      if (!response.ok) {
+        throw new Error(`API Error ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (DEBUG) console.log('BudgetChangelog: Direct fetch succeeded');
+      return data;
+    } catch (directError) {
+      if (DEBUG) console.log('BudgetChangelog: Direct fetch failed, trying service worker proxy:', directError.message);
+    }
+
+    // Strategy 2: Route through background service worker (CORS bypass)
+    try {
       const result = await chrome.runtime.sendMessage({
         type: 'JOBTREAD_API_REQUEST',
         url: API_URL,
-        options: {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(query)
-        }
+        options: fetchOptions
       });
 
-      // Safari may return undefined if async sendResponse doesn't resolve
       if (!result) {
-        throw new Error('No response from background script (possible Safari async issue)');
+        throw new Error('No response from background script (Safari async messaging issue)');
       }
 
       if (!result.success) {
@@ -468,9 +485,9 @@ const BudgetChangelogFeature = (() => {
       }
 
       return result.data;
-    } catch (error) {
-      console.error('BudgetChangelog: Pave request failed:', error.message);
-      throw error;
+    } catch (proxyError) {
+      console.error('BudgetChangelog: Pave request failed (both direct and proxy):', proxyError.message);
+      throw proxyError;
     }
   }
 

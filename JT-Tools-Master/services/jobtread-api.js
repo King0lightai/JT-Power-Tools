@@ -32,36 +32,53 @@ const JobTreadAPI = (() => {
   }
 
   /**
-   * Make a fetch request, routing through background proxy if in content script
+   * Make a fetch request, using the best available strategy:
+   * 1. Extension context (popup/service worker): direct fetch (no CORS issues)
+   * 2. Content script (MV3): try direct fetch first (page origin), fall back to proxy
+   *    This avoids Safari's unreliable async sendMessage/sendResponse pattern
    * @param {string} url - URL to fetch
    * @param {Object} options - Fetch options
    * @returns {Promise<Response>} Fetch response or proxy result
    */
   async function proxyFetch(url, options) {
-    if (needsProxy()) {
-      console.log('JobTreadAPI: Using background proxy for API request');
-      // Send through background service worker
-      const result = await chrome.runtime.sendMessage({
-        type: 'JOBTREAD_API_REQUEST',
-        url: url,
-        options: options
-      });
-
-      // Convert proxy result to a Response-like object
-      return {
-        ok: result.success,
-        status: result.status || (result.success ? 200 : 500),
-        statusText: result.statusText || '',
-        text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
-        json: async () => result.data,
-        headers: { entries: () => [] }, // Simplified headers
-        _proxyResult: result
-      };
-    } else {
-      console.log('JobTreadAPI: Using direct fetch (extension context)');
-      // Direct fetch in extension context (popup or service worker)
+    if (!needsProxy()) {
+      if (DEBUG) console.log('JobTreadAPI: Using direct fetch (extension context)');
       return fetch(url, options);
     }
+
+    // Content script context — try direct fetch first (MV3 uses page origin)
+    try {
+      if (DEBUG) console.log('JobTreadAPI: Trying direct fetch (MV3 page origin)');
+      const response = await fetch(url, options);
+      // Direct fetch succeeded — return native Response
+      return response;
+    } catch (directError) {
+      if (DEBUG) console.log('JobTreadAPI: Direct fetch failed, falling back to proxy:', directError.message);
+    }
+
+    // Fall back to background service worker proxy
+    if (DEBUG) console.log('JobTreadAPI: Using background proxy for API request');
+    const result = await chrome.runtime.sendMessage({
+      type: 'JOBTREAD_API_REQUEST',
+      url: url,
+      options: options
+    });
+
+    // Handle Safari async messaging issue (sendMessage resolves with undefined)
+    if (!result) {
+      throw new Error('No response from background script (Safari async messaging issue)');
+    }
+
+    // Convert proxy result to a Response-like object
+    return {
+      ok: result.success,
+      status: result.status || (result.success ? 200 : 500),
+      statusText: result.statusText || '',
+      text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
+      json: async () => result.data,
+      headers: { entries: () => [] }, // Simplified headers
+      _proxyResult: result
+    };
   }
 
   // Storage keys

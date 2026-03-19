@@ -154,6 +154,23 @@ const FormatterFeature = (() => {
       Toolbar().hideToolbar();
     }
 
+    // Clean up orphaned embedded toolbars whose associated fields no longer exist in the DOM
+    // This prevents "ghost" toolbars from accumulating when React re-renders budget tables
+    // Budget adaptive toolbars are appended to document.body and are NOT removed by React
+    const allEmbeddedToolbars = document.querySelectorAll('.jt-formatter-toolbar-embedded');
+    allEmbeddedToolbars.forEach(toolbar => {
+      const fieldId = toolbar.dataset.forField;
+      if (fieldId) {
+        const associatedField = document.querySelector(`[data-formatter-id="${fieldId}"]`);
+        if (!associatedField || !document.body.contains(associatedField)) {
+          toolbar.remove();
+        }
+      } else if (toolbar.parentElement === document.body) {
+        // Body-appended toolbar with no field association — orphaned, remove it
+        toolbar.remove();
+      }
+    });
+
     // Find all textareas that should have the formatter
     const fields = [];
 
@@ -323,12 +340,15 @@ const FormatterFeature = (() => {
         }
       }
 
-      // Exclude fields inside sidebar forms with orange headers (Add Time Entry, Time Clock, etc.)
+      // Exclude fields inside sidebar forms/panels with orange headers (Add Time Entry, Time Clock, etc.)
       // Exception: Budget page — its form also has an orange header but SHOULD have the formatter
+      // Check drag-scroll-boundary FIRST (broader container that holds both the orange header
+      // and the form — e.g. Time Clock has the header outside <form> but inside the boundary)
+      // Then fall back to <form> for cases where the header IS inside the form
       if (!path.endsWith('/budget')) {
-        const sidebarForm = field.closest('form');
-        if (sidebarForm) {
-          const orangeHeader = sidebarForm.querySelector('div.font-bold.text-jtOrange.uppercase');
+        const sidebarContainer = field.closest('[data-is-drag-scroll-boundary="true"]') || field.closest('form');
+        if (sidebarContainer) {
+          const orangeHeader = sidebarContainer.querySelector('div.font-bold.text-jtOrange.uppercase');
           if (orangeHeader) {
             return false;
           }
