@@ -436,6 +436,30 @@ const FormatterFeature = (() => {
           // so this only creates toolbars for sidebar, message, daily log fields, etc.
           Toolbar().embedToolbarForField(field);
         }
+
+        // Defensive fix: if JT set color:transparent on the textarea (overlay rendering mode)
+        // but the overlay sibling isn't present, the user's text will be invisible.
+        // Wait briefly for JT's React to render, then restore text visibility as a fallback.
+        if (field.style.color === 'transparent') {
+          const checkOverlay = () => {
+            const parent = field.parentElement;
+            if (!parent || !document.body.contains(field)) return;
+            const siblings = parent.querySelectorAll(':scope > div');
+            let hasOverlay = false;
+            for (const sibling of siblings) {
+              if (window.getComputedStyle(sibling).pointerEvents === 'none') {
+                hasOverlay = true;
+                break;
+              }
+            }
+            if (!hasOverlay && field.style.color === 'transparent') {
+              field.style.setProperty('color', 'inherit', 'important');
+              console.log('Formatter: Restored text visibility — JT overlay not rendering');
+            }
+          };
+          // Allow time for JT's React to mount the overlay div
+          setTimeout(checkOverlay, 1000);
+        }
       }
     });
   }
