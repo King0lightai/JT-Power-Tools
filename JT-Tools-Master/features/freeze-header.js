@@ -1028,6 +1028,11 @@ const FreezeHeaderFeature = (() => {
   function findAndMarkFullpageSidebars() {
     const overlays = document.querySelectorAll('.absolute.inset-0 .overflow-y-auto.overscroll-contain.sticky');
     for (const el of overlays) {
+      // Skip sidebars inside drag-scroll-boundary containers — these are job-specific
+      // sidebars (Update Task, Cost Item Details, etc.) that need freeze-header positioning,
+      // not fullpage overlays like History or Selection Details
+      if (el.closest('[data-is-drag-scroll-boundary="true"]')) continue;
+
       if (!el.classList.contains('jt-fullpage-sidebar')) {
         el.classList.add('jt-fullpage-sidebar');
         // Clear any freeze-header positioning that may have been applied
@@ -1113,8 +1118,13 @@ const FreezeHeaderFeature = (() => {
                             textUpper.includes('KNOWLEDGE BASE') ||
                             textUpper.includes('SUBMIT A TICKET');
 
-      const isFilesSidebar = (textUpper.includes('FILES') && textUpper.includes('CLOSE')) &&
-                             (textUpper.includes('DELETE') || textUpper.includes('DOWNLOAD') || textUpper.includes('FOLDER'));
+      // Check the orange sidebar header specifically — full-content matching is too broad
+      // because job-specific sidebars (Update Task, etc.) also contain "Files", "Close",
+      // and "Delete" text from their sections and buttons.
+      const isFilesSidebar = (() => {
+        const header = sidebar.querySelector('div.font-bold.text-jtOrange.uppercase');
+        return header && header.textContent.trim().toUpperCase() === 'FILES';
+      })();
 
       // Also check computed top position - global sidebars have top ~48-52px
       const computedStyle = window.getComputedStyle(sidebar);
@@ -1234,8 +1244,11 @@ const FreezeHeaderFeature = (() => {
       // Skip sidebars nested inside an edit-items-panel — handled separately below
       if (sidebar.closest('.jt-edit-items-panel')) continue;
       // Skip full-page overlay sidebars (History, Selection Details, etc.)
-      // These are inside absolute inset-0 containers and should keep native positioning
-      if (sidebar.closest('.absolute.inset-0')) continue;
+      // These are marked by findAndMarkFullpageSidebars() and should keep native positioning.
+      // NOTE: We check the class, NOT the .absolute.inset-0 DOM structure, because
+      // job-specific sidebars (Update Task, etc.) also live inside .absolute.inset-0
+      // wrappers within their drag-scroll-boundary containers.
+      if (sidebar.classList.contains('jt-fullpage-sidebar')) continue;
 
       applySidebarPosition(sidebar, toolbarBottom);
       observeSidebarStyle(sidebar);
