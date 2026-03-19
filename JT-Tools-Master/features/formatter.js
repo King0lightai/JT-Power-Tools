@@ -334,6 +334,12 @@ const FormatterFeature = (() => {
         return false;
       }
       if (placeholder === 'Description') {
+        // Skip if JT has applied their overlay-based native formatter (transparent text).
+        // JT's newer rich text fields use color:transparent + a pointer-events-none overlay div.
+        // Our formatter conflicts with this pattern — text becomes invisible to the user.
+        if (field.style.color === 'transparent') {
+          return false;
+        }
         const parentContainer = field.closest('form') || field.closest('div.space-y-1') || field.closest('div.border-b');
         if (parentContainer && parentContainer.querySelector('textarea[placeholder="Name"]')) {
           return false; // This is a file edit form, not a budget description

@@ -310,6 +310,12 @@ const FormatterDetection = (() => {
     // Budget Description textareas are inline in the budget table (never inside modals)
     // File description textareas also have placeholder="Description" but appear in modals/file edit forms
     if (placeholder === 'Description') {
+      // Skip if JT has applied their overlay-based native formatter (transparent text).
+      // JT's newer rich text fields use color:transparent + a pointer-events-none overlay div
+      // to render formatted text visually. Our formatter conflicts with this pattern.
+      if (textarea.style.color === 'transparent') {
+        return false;
+      }
       // Exclude file description fields in file view/edit modals
       // These modals use .m-auto centering - budget fields are never in modals
       if (textarea.closest('.m-auto')) {
