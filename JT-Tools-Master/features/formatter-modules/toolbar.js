@@ -918,6 +918,7 @@ const FormatterToolbar = (() => {
     toolbar.style.visibility = isVisible ? 'visible' : 'hidden';
     toolbar.style.pointerEvents = isVisible ? 'auto' : 'none';
     toolbar.classList.add('jt-toolbar-sticky-active');
+    console.log('[JT-Formatter] positionBudgetFixedToolbar FINAL: top=', top, 'left=', left, 'width=', width, 'clipPath=', clipPath, 'visible=', isVisible, 'toolbar.offsetHeight=', toolbar.offsetHeight, 'toolbar.innerHTML.length=', toolbar.innerHTML.length);
   }
 
   /**
