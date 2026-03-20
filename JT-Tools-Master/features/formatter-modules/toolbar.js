@@ -106,26 +106,70 @@ const FormatterToolbar = (() => {
 
     const placeholder = field.getAttribute('placeholder');
 
-    // Direct match: line-item rows have placeholder="Description"
+    // Direct match: focused fields get placeholder="Description" from React
     if (placeholder === 'Description') return true;
 
-    // Group-level rows (jt-group-level-*) don't have a placeholder on the
-    // Description textarea.  Identify by column position: the Description
-    // cell is always the first non-sticky .shrink-0 cell immediately after
-    // the sticky Name column.  This avoids matching custom field columns
-    // that also use textareas further along in the row.
+    // Unfocused fields (group-level and line-item rows) lack the placeholder.
+    // Column order is user-customizable, so we match by header text instead
+    // of relying on column position.  This avoids matching custom field
+    // textareas in other columns.
     if (field.tagName === 'TEXTAREA' && placeholder !== 'Name') {
-      const cell = field.closest('.shrink-0');
-      if (cell && !cell.classList.contains('sticky')) {
-        // Verify this cell is directly after the last sticky cell (the Name column)
-        const prevSibling = cell.previousElementSibling;
-        if (prevSibling && prevSibling.classList.contains('sticky')) {
-          return true;
-        }
+      if (isInDescriptionColumn(field)) {
+        return true;
       }
     }
 
     return false;
+  }
+
+  /**
+   * Check if a field's cell is in the "Description" column by matching its
+   * index to the column header row.
+   * @param {HTMLElement} field
+   * @returns {boolean}
+   */
+  function isInDescriptionColumn(field) {
+    const cell = field.closest('.shrink-0');
+    if (!cell) return false;
+
+    const row = cell.parentElement;
+    if (!row) return false;
+
+    // Get cell index among the row's .shrink-0 children
+    const dataCells = Array.from(row.children).filter(c => c.classList.contains('shrink-0'));
+    const cellIndex = dataCells.indexOf(cell);
+    if (cellIndex < 0) return false;
+
+    // Find the budget header container
+    const headerContainer = findBudgetHeaderRow(field);
+    if (!headerContainer) return false;
+
+    // The header container may hold multiple sub-rows (super-header + column headers).
+    // The column header row is the one whose cells contain labels like "Name", "Quantity", etc.
+    const headerFlexRows = headerContainer.querySelectorAll('.flex.min-w-max');
+    let columnHeaderRow = null;
+    for (const flexRow of headerFlexRows) {
+      const text = flexRow.textContent;
+      if (text.includes('Name') && (text.includes('Quantity') || text.includes('Description'))) {
+        columnHeaderRow = flexRow;
+      }
+    }
+    // If header container itself is the row (Strategy 3 fallback)
+    if (!columnHeaderRow && headerContainer.classList.contains('flex') &&
+        headerContainer.classList.contains('min-w-max')) {
+      columnHeaderRow = headerContainer;
+    }
+    if (!columnHeaderRow) return false;
+
+    const headerCells = Array.from(columnHeaderRow.children).filter(c => c.classList.contains('shrink-0'));
+    if (cellIndex >= headerCells.length) return false;
+
+    const headerCell = headerCells[cellIndex];
+    if (!headerCell) return false;
+
+    // Check if this column's header says "Description"
+    const headerText = headerCell.textContent.trim();
+    return headerText === 'Description';
   }
 
   /**
