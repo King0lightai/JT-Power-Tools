@@ -129,9 +129,10 @@ const FormatterToolbar = (() => {
    * @returns {boolean}
    */
   function isBudgetDescriptionField(field) {
-    if (!field || field.getAttribute('placeholder') !== 'Description') {
-      return false;
-    }
+    if (!field) return false;
+    // Delegate entirely to isBudgetTableField which handles both
+    // placeholder="Description" (focused line-item rows) and
+    // no-placeholder (group-level rows, unfocused rows).
     return isBudgetTableField(field);
   }
 
