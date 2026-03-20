@@ -131,31 +131,26 @@ const FormatterToolbar = (() => {
   function isInDescriptionColumn(field) {
     try {
       const cell = field.closest('.shrink-0');
-      if (!cell) { console.log('[JT-Formatter] isInDescriptionColumn: no .shrink-0 cell'); return false; }
+      if (!cell) return false;
 
       const row = cell.parentElement;
-      if (!row) { console.log('[JT-Formatter] isInDescriptionColumn: no parent row'); return false; }
+      if (!row) return false;
 
       // Get cell index among the row's .shrink-0 children
       const dataCells = Array.from(row.children).filter(c => c.classList.contains('shrink-0'));
       const cellIndex = dataCells.indexOf(cell);
-      if (cellIndex < 0) { console.log('[JT-Formatter] isInDescriptionColumn: cell not in shrink-0 list'); return false; }
+      if (cellIndex < 0) return false;
 
       // Find the budget header container
       const headerContainer = findBudgetHeaderRow(field);
-      if (!headerContainer) { console.log('[JT-Formatter] isInDescriptionColumn: no header container found'); return false; }
-
-      console.log('[JT-Formatter] isInDescriptionColumn: headerContainer classes=', headerContainer.className);
+      if (!headerContainer) return false;
 
       // The header container may hold multiple sub-rows (super-header + column headers).
       // The column header row is the one whose cells contain labels like "Name", "Quantity", etc.
-      // Search for ALL .flex rows that could be column headers (min-w-max or inline min-width).
       const headerFlexRows = headerContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
       let columnHeaderRow = null;
-      console.log('[JT-Formatter] isInDescriptionColumn: found', headerFlexRows.length, 'flex rows in header');
       for (const flexRow of headerFlexRows) {
         const text = flexRow.textContent;
-        console.log('[JT-Formatter] isInDescriptionColumn: flex row text preview=', text.substring(0, 100));
         if (text.includes('Name') && (text.includes('Quantity') || text.includes('Description') || text.includes('Unit'))) {
           columnHeaderRow = flexRow;
         }
@@ -167,23 +162,18 @@ const FormatterToolbar = (() => {
           columnHeaderRow = headerContainer;
         }
       }
-      if (!columnHeaderRow) { console.log('[JT-Formatter] isInDescriptionColumn: no column header row found'); return false; }
+      if (!columnHeaderRow) return false;
 
       const headerCells = Array.from(columnHeaderRow.children).filter(c => c.classList.contains('shrink-0'));
-      console.log('[JT-Formatter] isInDescriptionColumn: cellIndex=', cellIndex, 'headerCells.length=', headerCells.length);
-      if (cellIndex >= headerCells.length) { console.log('[JT-Formatter] isInDescriptionColumn: cellIndex out of bounds'); return false; }
+      if (cellIndex >= headerCells.length) return false;
 
       const headerCell = headerCells[cellIndex];
-      if (!headerCell) { console.log('[JT-Formatter] isInDescriptionColumn: no header cell at index'); return false; }
+      if (!headerCell) return false;
 
       // Check if this column's header contains "Description"
       // Use includes() rather than strict equality because the header cell
       // may contain extra whitespace or invisible elements (resize handles, etc.)
-      const headerText = headerCell.textContent.trim();
-      console.log('[JT-Formatter] isInDescriptionColumn: headerText=', JSON.stringify(headerText));
-      const isDesc = headerText.includes('Description');
-      console.log('[JT-Formatter] isInDescriptionColumn: result=', isDesc);
-      return isDesc;
+      return headerCell.textContent.includes('Description');
     } catch (err) {
       console.error('[JT-Formatter] isInDescriptionColumn error:', err);
       return false;
@@ -615,54 +605,68 @@ const FormatterToolbar = (() => {
    */
   function findBudgetHeaderRow(field) {
     const scrollContainer = field.closest('.overflow-auto');
-    console.log('[JT-Formatter] findBudgetHeaderRow: scrollContainer=', scrollContainer ? scrollContainer.className.substring(0, 80) : 'null');
 
-    // Strategy 1 (most reliable): jt-budget-header-container from freeze-header feature.
-    // This wraps all header rows with sticky positioning and a known top offset.
-    // Check within the scroll container, then parent scroll container, then globally.
+    // The budget table has sibling scroll wrappers for the header and data:
+    //   div (parent)
+    //     div.sticky.z-30 (header)
+    //       div.overflow-auto (header horizontal scroll)
+    //     div.overflow-auto (data horizontal scroll) ← field lives here
+    //       div.flex.min-w-max (data rows)
+    // So field.closest('.overflow-auto') returns the DATA scroll wrapper.
+    // The header is a sibling, not a parent.  We search both the scroll
+    // container AND its parent element to find the header.
+
+    const searchRoots = [];
     if (scrollContainer) {
-      let header = scrollContainer.querySelector('.jt-budget-header-container');
-      if (header) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (local)'); return header; }
-
-      // Data rows might be in a nested overflow-auto — check parent too
+      searchRoots.push(scrollContainer);
+      // Parent element contains both the header and data scroll wrappers
+      if (scrollContainer.parentElement) {
+        searchRoots.push(scrollContainer.parentElement);
+      }
+      // Also check grandparent in case of deeper nesting
       const parentScroll = scrollContainer.parentElement?.closest('.overflow-auto');
       if (parentScroll) {
-        header = parentScroll.querySelector('.jt-budget-header-container');
-        if (header) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (parent)'); return header; }
+        searchRoots.push(parentScroll);
       }
+    }
+
+    // Strategy 1 (most reliable): jt-budget-header-container from freeze-header feature.
+    for (const root of searchRoots) {
+      const header = root.querySelector('.jt-budget-header-container');
+      if (header) return header;
     }
 
     // Global fallback — only one budget table visible at a time in JobTread
     const globalHeader = document.querySelector('.jt-budget-header-container');
-    if (globalHeader) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (global)'); return globalHeader; }
+    if (globalHeader) return globalHeader;
 
-    if (!scrollContainer) { console.log('[JT-Formatter] findBudgetHeaderRow: no scrollContainer, giving up'); return null; }
+    if (searchRoots.length === 0) return null;
 
     // Strategy 2: Look for sticky elements that contain budget header text.
-    // Check for "Name" column (always present) plus any other budget column
-    // to avoid requiring a specific column like "Description" which may be reordered.
-    const stickyElements = scrollContainer.querySelectorAll('.sticky');
-    for (const sticky of stickyElements) {
-      const text = sticky.textContent;
-      if (text.includes('Name') && (text.includes('Description') || text.includes('Quantity') || text.includes('Unit'))) {
-        console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 2');
-        return sticky;
+    // Check for "Name" column (always present) plus any other budget column.
+    for (const root of searchRoots) {
+      const stickyElements = root.querySelectorAll('.sticky');
+      for (const sticky of stickyElements) {
+        const text = sticky.textContent;
+        if (text.includes('Name') && (text.includes('Description') || text.includes('Quantity') || text.includes('Unit'))) {
+          return sticky;
+        }
       }
     }
 
     // Strategy 3: Look through all flex rows for header-like rows
-    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
-    for (const row of allRows) {
-      if (row.querySelector('textarea')) continue;
-      const rowText = row.textContent;
-      if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
-      if (rowText.includes('Name') && (rowText.includes('Description') || rowText.includes('Quantity') || rowText.includes('Unit'))) {
-        console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 3');
-        return row;
+    for (const root of searchRoots) {
+      const allRows = root.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
+      for (const row of allRows) {
+        if (row.querySelector('textarea')) continue;
+        const rowText = row.textContent;
+        if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
+        if (rowText.includes('Name') && (rowText.includes('Description') || rowText.includes('Quantity') || rowText.includes('Unit'))) {
+          return row;
+        }
       }
     }
 
-    console.log('[JT-Formatter] findBudgetHeaderRow: all strategies failed');
     return null;
   }
 
