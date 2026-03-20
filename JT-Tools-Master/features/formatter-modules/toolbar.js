@@ -101,7 +101,6 @@ const FormatterToolbar = (() => {
 
     // Must be a budget table field first
     const isAny = isAnyBudgetTableField(field);
-    console.log('[JT-Formatter] isBudgetTableField: isAnyBudgetTableField=', isAny, 'tag=', field.tagName, 'placeholder=', field.getAttribute('placeholder'));
     if (!isAny) {
       return false;
     }
@@ -110,7 +109,6 @@ const FormatterToolbar = (() => {
 
     // Direct match: focused fields get placeholder="Description" from React
     if (placeholder === 'Description') {
-      console.log('[JT-Formatter] isBudgetTableField: matched by placeholder');
       return true;
     }
 
@@ -120,13 +118,11 @@ const FormatterToolbar = (() => {
     // textareas in other columns.
     if (field.tagName === 'TEXTAREA' && placeholder !== 'Name') {
       const inDescCol = isInDescriptionColumn(field);
-      console.log('[JT-Formatter] isBudgetTableField: isInDescriptionColumn=', inDescCol);
       if (inDescCol) {
         return true;
       }
     }
 
-    console.log('[JT-Formatter] isBudgetTableField: returning false');
     return false;
   }
 
@@ -436,13 +432,11 @@ const FormatterToolbar = (() => {
     // Budget table fields that are NOT Description get no toolbar
     // Description fields now use the embedded compact toolbar (adaptive)
     if (isAnyBudgetTableField(field) && !isBudgetDescriptionField(field)) {
-      console.log('[JT-Formatter] embedToolbarForField: non-Description budget field, returning null');
       return null;
     }
 
     // Check if already embedded for THIS specific field
     let toolbar = findEmbeddedToolbar(field);
-    console.log('[JT-Formatter] embedToolbarForField: existing toolbar=', !!toolbar, 'isBudgetDesc=', isBudgetDescriptionField(field));
     if (toolbar) {
       // Re-run overflow check in case width changed
       requestAnimationFrame(() => updateToolbarOverflow(toolbar));
@@ -561,7 +555,6 @@ const FormatterToolbar = (() => {
 
     // Check if this is a budget Description field
     const isBudgetDesc = isBudgetDescriptionField(field);
-    console.log('[JT-Formatter] embedToolbarForField: inserting toolbar, isBudgetDesc=', isBudgetDesc);
 
     // Insert toolbar near the field for all contexts
     if (isBudgetDesc) {
@@ -573,7 +566,6 @@ const FormatterToolbar = (() => {
       // Scroll-aware repositioning handled by positionBudgetFixedToolbar().
       toolbar.classList.add('jt-toolbar-budget-adaptive');
       document.body.appendChild(toolbar);
-      console.log('[JT-Formatter] embedToolbarForField: appended budget toolbar to body');
     } else if (isMessageField) {
       // For Message fields, insert toolbar between the TO line and the textarea
       // scroll container. The TO line is a div.flex.border-t.rounded-t-sm.border-x
@@ -806,7 +798,6 @@ const FormatterToolbar = (() => {
     // Its getBoundingClientRect().bottom gives the header's visual bottom in viewport.
     const headerRow = findBudgetHeaderRow(field);
     const headerBottom = headerRow ? headerRow.getBoundingClientRect().bottom : 0;
-    console.log('[JT-Formatter] positionBudgetFixedToolbar: headerBottom=', headerBottom, 'fieldRect.top=', fieldRect.top, 'toolbarHeight=', toolbarHeight);
 
     // Find the description column cell for horizontal alignment
     const descCell = field.closest('.shrink-0, [class*="shrink"]') || field.parentElement;
@@ -918,7 +909,6 @@ const FormatterToolbar = (() => {
     toolbar.style.visibility = isVisible ? 'visible' : 'hidden';
     toolbar.style.pointerEvents = isVisible ? 'auto' : 'none';
     toolbar.classList.add('jt-toolbar-sticky-active');
-    console.log('[JT-Formatter] positionBudgetFixedToolbar FINAL: top=', top, 'left=', left, 'width=', width, 'clipPath=', clipPath, 'visible=', isVisible, 'toolbar.offsetHeight=', toolbar.offsetHeight, 'toolbar.innerHTML.length=', toolbar.innerHTML.length);
   }
 
   /**
