@@ -100,25 +100,33 @@ const FormatterToolbar = (() => {
     if (!field) return false;
 
     // Must be a budget table field first
-    if (!isAnyBudgetTableField(field)) {
+    const isAny = isAnyBudgetTableField(field);
+    console.log('[JT-Formatter] isBudgetTableField: isAnyBudgetTableField=', isAny, 'tag=', field.tagName, 'placeholder=', field.getAttribute('placeholder'));
+    if (!isAny) {
       return false;
     }
 
     const placeholder = field.getAttribute('placeholder');
 
     // Direct match: focused fields get placeholder="Description" from React
-    if (placeholder === 'Description') return true;
+    if (placeholder === 'Description') {
+      console.log('[JT-Formatter] isBudgetTableField: matched by placeholder');
+      return true;
+    }
 
     // Unfocused fields (group-level and line-item rows) lack the placeholder.
     // Column order is user-customizable, so we match by header text instead
     // of relying on column position.  This avoids matching custom field
     // textareas in other columns.
     if (field.tagName === 'TEXTAREA' && placeholder !== 'Name') {
-      if (isInDescriptionColumn(field)) {
+      const inDescCol = isInDescriptionColumn(field);
+      console.log('[JT-Formatter] isBudgetTableField: isInDescriptionColumn=', inDescCol);
+      if (inDescCol) {
         return true;
       }
     }
 
+    console.log('[JT-Formatter] isBudgetTableField: returning false');
     return false;
   }
 
