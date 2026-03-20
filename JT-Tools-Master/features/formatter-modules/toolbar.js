@@ -110,13 +110,18 @@ const FormatterToolbar = (() => {
     if (placeholder === 'Description') return true;
 
     // Group-level rows (jt-group-level-*) don't have a placeholder on the
-    // Description textarea.  Identify by: it's a <textarea>, it's NOT the
-    // Name field, and it's NOT inside a sticky column (Name cells are sticky,
-    // Description cells are not).
+    // Description textarea.  Identify by column position: the Description
+    // cell is always the first non-sticky .shrink-0 cell immediately after
+    // the sticky Name column.  This avoids matching custom field columns
+    // that also use textareas further along in the row.
     if (field.tagName === 'TEXTAREA' && placeholder !== 'Name') {
       const cell = field.closest('.shrink-0');
       if (cell && !cell.classList.contains('sticky')) {
-        return true;
+        // Verify this cell is directly after the last sticky cell (the Name column)
+        const prevSibling = cell.previousElementSibling;
+        if (prevSibling && prevSibling.classList.contains('sticky')) {
+          return true;
+        }
       }
     }
 
