@@ -436,11 +436,13 @@ const FormatterToolbar = (() => {
     // Budget table fields that are NOT Description get no toolbar
     // Description fields now use the embedded compact toolbar (adaptive)
     if (isAnyBudgetTableField(field) && !isBudgetDescriptionField(field)) {
+      console.log('[JT-Formatter] embedToolbarForField: non-Description budget field, returning null');
       return null;
     }
 
     // Check if already embedded for THIS specific field
     let toolbar = findEmbeddedToolbar(field);
+    console.log('[JT-Formatter] embedToolbarForField: existing toolbar=', !!toolbar, 'isBudgetDesc=', isBudgetDescriptionField(field));
     if (toolbar) {
       // Re-run overflow check in case width changed
       requestAnimationFrame(() => updateToolbarOverflow(toolbar));
@@ -559,6 +561,7 @@ const FormatterToolbar = (() => {
 
     // Check if this is a budget Description field
     const isBudgetDesc = isBudgetDescriptionField(field);
+    console.log('[JT-Formatter] embedToolbarForField: inserting toolbar, isBudgetDesc=', isBudgetDesc);
 
     // Insert toolbar near the field for all contexts
     if (isBudgetDesc) {
@@ -570,6 +573,7 @@ const FormatterToolbar = (() => {
       // Scroll-aware repositioning handled by positionBudgetFixedToolbar().
       toolbar.classList.add('jt-toolbar-budget-adaptive');
       document.body.appendChild(toolbar);
+      console.log('[JT-Formatter] embedToolbarForField: appended budget toolbar to body');
     } else if (isMessageField) {
       // For Message fields, insert toolbar between the TO line and the textarea
       // scroll container. The TO line is a div.flex.border-t.rounded-t-sm.border-x
@@ -802,6 +806,7 @@ const FormatterToolbar = (() => {
     // Its getBoundingClientRect().bottom gives the header's visual bottom in viewport.
     const headerRow = findBudgetHeaderRow(field);
     const headerBottom = headerRow ? headerRow.getBoundingClientRect().bottom : 0;
+    console.log('[JT-Formatter] positionBudgetFixedToolbar: headerBottom=', headerBottom, 'fieldRect.top=', fieldRect.top, 'toolbarHeight=', toolbarHeight);
 
     // Find the description column cell for horizontal alignment
     const descCell = field.closest('.shrink-0, [class*="shrink"]') || field.parentElement;
