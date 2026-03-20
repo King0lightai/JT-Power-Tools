@@ -615,33 +615,37 @@ const FormatterToolbar = (() => {
    */
   function findBudgetHeaderRow(field) {
     const scrollContainer = field.closest('.overflow-auto');
+    console.log('[JT-Formatter] findBudgetHeaderRow: scrollContainer=', scrollContainer ? scrollContainer.className.substring(0, 80) : 'null');
 
     // Strategy 1 (most reliable): jt-budget-header-container from freeze-header feature.
     // This wraps all header rows with sticky positioning and a known top offset.
     // Check within the scroll container, then parent scroll container, then globally.
     if (scrollContainer) {
       let header = scrollContainer.querySelector('.jt-budget-header-container');
-      if (header) return header;
+      if (header) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (local)'); return header; }
 
       // Data rows might be in a nested overflow-auto — check parent too
       const parentScroll = scrollContainer.parentElement?.closest('.overflow-auto');
       if (parentScroll) {
         header = parentScroll.querySelector('.jt-budget-header-container');
-        if (header) return header;
+        if (header) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (parent)'); return header; }
       }
     }
 
     // Global fallback — only one budget table visible at a time in JobTread
     const globalHeader = document.querySelector('.jt-budget-header-container');
-    if (globalHeader) return globalHeader;
+    if (globalHeader) { console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 1 (global)'); return globalHeader; }
 
-    if (!scrollContainer) return null;
+    if (!scrollContainer) { console.log('[JT-Formatter] findBudgetHeaderRow: no scrollContainer, giving up'); return null; }
 
-    // Strategy 2: Look for sticky elements that contain header text
+    // Strategy 2: Look for sticky elements that contain budget header text.
+    // Check for "Name" column (always present) plus any other budget column
+    // to avoid requiring a specific column like "Description" which may be reordered.
     const stickyElements = scrollContainer.querySelectorAll('.sticky');
     for (const sticky of stickyElements) {
       const text = sticky.textContent;
-      if (text.includes('Name') && text.includes('Description')) {
+      if (text.includes('Name') && (text.includes('Description') || text.includes('Quantity') || text.includes('Unit'))) {
+        console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 2');
         return sticky;
       }
     }
@@ -652,11 +656,13 @@ const FormatterToolbar = (() => {
       if (row.querySelector('textarea')) continue;
       const rowText = row.textContent;
       if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
-      if (rowText.includes('Name') && rowText.includes('Description')) {
+      if (rowText.includes('Name') && (rowText.includes('Description') || rowText.includes('Quantity') || rowText.includes('Unit'))) {
+        console.log('[JT-Formatter] findBudgetHeaderRow: found via Strategy 3');
         return row;
       }
     }
 
+    console.log('[JT-Formatter] findBudgetHeaderRow: all strategies failed');
     return null;
   }
 
