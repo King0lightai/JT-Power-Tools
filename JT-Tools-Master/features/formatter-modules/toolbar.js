@@ -613,57 +613,68 @@ const FormatterToolbar = (() => {
     //     div.overflow-auto (data horizontal scroll) ← field lives here
     //       div.flex.min-w-max (data rows)
     // So field.closest('.overflow-auto') returns the DATA scroll wrapper.
-    // The header is a sibling, not a parent.  We search both the scroll
-    // container AND its parent element to find the header.
-
-    const searchRoots = [];
-    if (scrollContainer) {
-      searchRoots.push(scrollContainer);
-      // Parent element contains both the header and data scroll wrappers
-      if (scrollContainer.parentElement) {
-        searchRoots.push(scrollContainer.parentElement);
-      }
-      // Also check grandparent in case of deeper nesting
-      const parentScroll = scrollContainer.parentElement?.closest('.overflow-auto');
-      if (parentScroll) {
-        searchRoots.push(parentScroll);
-      }
-    }
+    // The budget table has sibling scroll wrappers:
+    //   div (parent)
+    //     div.sticky.z-30.break-inside-avoid (header)
+    //     div.overflow-auto.overscroll-x-none (data scroll) ← field is here
+    // field.closest('.overflow-auto') finds the data scroll wrapper.
+    // The header is a sibling — NOT inside the scroll container.
 
     // Strategy 1 (most reliable): jt-budget-header-container from freeze-header feature.
-    for (const root of searchRoots) {
-      const header = root.querySelector('.jt-budget-header-container');
+    if (scrollContainer) {
+      let header = scrollContainer.querySelector('.jt-budget-header-container');
       if (header) return header;
+
+      // Check parent for the header (header is a sibling of the data scroll wrapper)
+      if (scrollContainer.parentElement) {
+        header = scrollContainer.parentElement.querySelector(':scope > .jt-budget-header-container');
+        if (header) return header;
+      }
+
+      // Check parent overflow-auto container
+      const parentScroll = scrollContainer.parentElement?.closest('.overflow-auto');
+      if (parentScroll) {
+        header = parentScroll.querySelector('.jt-budget-header-container');
+        if (header) return header;
+      }
     }
 
     // Global fallback — only one budget table visible at a time in JobTread
     const globalHeader = document.querySelector('.jt-budget-header-container');
     if (globalHeader) return globalHeader;
 
-    if (searchRoots.length === 0) return null;
+    if (!scrollContainer) return null;
 
-    // Strategy 2: Look for sticky elements that contain budget header text.
-    // Check for "Name" column (always present) plus any other budget column.
-    for (const root of searchRoots) {
-      const stickyElements = root.querySelectorAll('.sticky');
-      for (const sticky of stickyElements) {
-        const text = sticky.textContent;
+    // Strategy 2: The header is a sibling sticky element of the data scroll wrapper.
+    // Only check direct children of the parent to avoid scanning the entire DOM subtree.
+    const parent = scrollContainer.parentElement;
+    if (parent) {
+      for (const child of parent.children) {
+        if (child === scrollContainer) continue;
+        if (!child.classList.contains('sticky')) continue;
+        const text = child.textContent;
         if (text.includes('Name') && (text.includes('Description') || text.includes('Quantity') || text.includes('Unit'))) {
-          return sticky;
+          return child;
         }
       }
     }
 
-    // Strategy 3: Look through all flex rows for header-like rows
-    for (const root of searchRoots) {
-      const allRows = root.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
-      for (const row of allRows) {
-        if (row.querySelector('textarea')) continue;
-        const rowText = row.textContent;
-        if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
-        if (rowText.includes('Name') && (rowText.includes('Description') || rowText.includes('Quantity') || rowText.includes('Unit'))) {
-          return row;
-        }
+    // Strategy 3: Search within the scroll container itself (original behavior)
+    const stickyElements = scrollContainer.querySelectorAll('.sticky');
+    for (const sticky of stickyElements) {
+      const text = sticky.textContent;
+      if (text.includes('Name') && (text.includes('Description') || text.includes('Quantity') || text.includes('Unit'))) {
+        return sticky;
+      }
+    }
+
+    const allRows = scrollContainer.querySelectorAll('.flex.min-w-max, .flex[style*="min-width"]');
+    for (const row of allRows) {
+      if (row.querySelector('textarea')) continue;
+      const rowText = row.textContent;
+      if (rowText.includes('+ Item') || (rowText.includes('Item') && rowText.includes('Group') && row.querySelector('.bg-gray-700'))) continue;
+      if (rowText.includes('Name') && (rowText.includes('Description') || rowText.includes('Quantity') || rowText.includes('Unit'))) {
+        return row;
       }
     }
 
