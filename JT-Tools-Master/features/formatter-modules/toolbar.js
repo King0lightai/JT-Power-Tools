@@ -104,9 +104,23 @@ const FormatterToolbar = (() => {
       return false;
     }
 
-    // Must have placeholder="Description" for floating toolbar
     const placeholder = field.getAttribute('placeholder');
-    return placeholder === 'Description';
+
+    // Direct match: line-item rows have placeholder="Description"
+    if (placeholder === 'Description') return true;
+
+    // Group-level rows (jt-group-level-*) don't have a placeholder on the
+    // Description textarea.  Identify by: it's a <textarea>, it's NOT the
+    // Name field, and it's NOT inside a sticky column (Name cells are sticky,
+    // Description cells are not).
+    if (field.tagName === 'TEXTAREA' && placeholder !== 'Name') {
+      const cell = field.closest('.shrink-0');
+      if (cell && !cell.classList.contains('sticky')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
