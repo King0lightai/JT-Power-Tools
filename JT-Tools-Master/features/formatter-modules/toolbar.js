@@ -913,7 +913,7 @@ const FormatterToolbar = (() => {
     toolbar.style.top = `${top}px`;
     toolbar.style.left = `${left}px`;
     toolbar.style.width = `${width}px`;
-    toolbar.style.zIndex = '9'; // Below budget header (z-10) so it slides under
+    toolbar.style.zIndex = '999999'; // High z-index; clip-path handles the slide-under-header effect
     toolbar.style.clipPath = clipPath;
     toolbar.style.visibility = isVisible ? 'visible' : 'hidden';
     toolbar.style.pointerEvents = isVisible ? 'auto' : 'none';
