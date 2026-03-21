@@ -2259,7 +2259,7 @@ function setPrereqStatus(el, isDone) {
 // ===================================
 
 // Temporary setup token storage
-let currentSetupToken = null;
+// currentSetupToken removed — portal uses direct registration
 
 /**
  * Initialize account UI
@@ -2430,6 +2430,18 @@ function setupAccountEventListeners() {
       if (e.key === 'Enter') handleRegister();
     });
   }
+
+  // Migration banner dismiss
+  document.getElementById('migrationDismiss')?.addEventListener('click', () => {
+    document.getElementById('migrationBanner').style.display = 'none';
+    sessionStorage.setItem('migrationBannerDismissed', 'true');
+  });
+
+  // Migration banner sign-in
+  document.getElementById('migrationSignInBtn')?.addEventListener('click', () => {
+    document.getElementById('migrationBanner').style.display = 'none';
+    showAccountForm('login');
+  });
 }
 
 /**
@@ -2456,39 +2468,46 @@ async function updateAccountUI() {
     accountRegister.style.display = 'none';
     accountSetupPrompt.style.display = 'none';
     accountSection.style.display = 'block';
+
+    // Show "Manage Team" link for owners and admins
+    const manageLink = document.getElementById('manageTeamLink');
+    if (manageLink) {
+      if (user && user.role && (user.role === 'owner' || user.role === 'admin')) {
+        manageLink.style.display = '';
+      } else {
+        manageLink.style.display = 'none';
+      }
+    }
+
+    // Hide migration banner when logged in
+    const migrationBanner = document.getElementById('migrationBanner');
+    if (migrationBanner) migrationBanner.style.display = 'none';
+
     return;
   }
 
-  // Check if user has a valid license
-  const licenseData = await LicenseService.getLicenseData();
-  if (licenseData && licenseData.valid) {
-    // User has license but not logged in
-    // Check if we already have a setup token
-    if (currentSetupToken) {
-      // Show register form
-      showAccountForm('register');
-    } else if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
-      // Show setup prompt (unless skipped)
-      accountLoggedIn.style.display = 'none';
-      accountLogin.style.display = 'none';
-      accountRegister.style.display = 'none';
-      accountSetupPrompt.style.display = 'block';
-      accountSection.style.display = 'block';
-    } else {
-      // User skipped - hide account section
-      accountSection.style.display = 'none';
-    }
+  // User not logged in - show setup prompt or hide based on skip state
+  if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
+    accountLoggedIn.style.display = 'none';
+    accountLogin.style.display = 'none';
+    accountRegister.style.display = 'none';
+    accountSetupPrompt.style.display = 'block';
+    accountSection.style.display = 'block';
   } else {
-    // No license - still show login/register so users can sign in.
-    // The server will validate whether they have a license on login.
-    if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
-      accountLoggedIn.style.display = 'none';
-      accountLogin.style.display = 'none';
-      accountRegister.style.display = 'none';
-      accountSetupPrompt.style.display = 'block';
-      accountSection.style.display = 'block';
+    accountSection.style.display = 'none';
+  }
+
+  // Show migration banner if licensed but not signed in
+  const migrationBanner = document.getElementById('migrationBanner');
+  if (migrationBanner) {
+    const licenseData = await LicenseService.getLicenseData();
+    if (licenseData && licenseData.valid) {
+      const dismissed = sessionStorage.getItem('migrationBannerDismissed');
+      if (!dismissed) {
+        migrationBanner.style.display = '';
+      }
     } else {
-      accountSection.style.display = 'none';
+      migrationBanner.style.display = 'none';
     }
   }
 }
@@ -2528,24 +2547,6 @@ async function showAccountForm(formType) {
   if (formType === 'login') {
     accountLogin.style.display = 'block';
   } else if (formType === 'register') {
-    // Get setup token if we don't have one
-    if (!currentSetupToken) {
-      const licenseData = await LicenseService.getLicenseData();
-      if (licenseData && licenseData.key) {
-        const result = await AccountService.requestSetupToken(licenseData.key);
-        if (result.success) {
-          currentSetupToken = result.data.setupToken;
-          // Pre-fill email if available
-          const emailInput = document.getElementById('registerEmail');
-          if (emailInput && result.data.purchaseEmail) {
-            emailInput.value = result.data.purchaseEmail;
-          }
-        } else {
-          showAccountError('register', result.error || 'Failed to prepare registration');
-          return;
-        }
-      }
-    }
     accountRegister.style.display = 'block';
   } else if (formType === 'forgot') {
     if (accountForgotPassword) accountForgotPassword.style.display = 'block';
@@ -2626,25 +2627,25 @@ async function handleRegister() {
     return;
   }
 
-  if (!currentSetupToken) {
-    showAccountError('register', 'Registration session expired. Please try again.');
-    showAccountForm('register');
-    return;
-  }
-
   // Disable button
   registerBtn.disabled = true;
   registerBtn.textContent = 'Creating account...';
 
   try {
-    const result = await AccountService.register(currentSetupToken, email, password, displayName);
+    // Get license key if available (for linking account to existing license)
+    let licenseKey = null;
+    const licenseData = await LicenseService.getLicenseData();
+    if (licenseData && licenseData.key) {
+      licenseKey = licenseData.key;
+    }
+
+    const result = await AccountService.register(email, password, displayName, licenseKey);
 
     if (result.success) {
-      // Clear form and token
+      // Clear form
       nameInput.value = '';
       emailInput.value = '';
       passwordInput.value = '';
-      currentSetupToken = null;
       // Update UI — refresh account, API status, and MCP credentials
       await updateAccountUI();
       await checkApiStatus();
@@ -2654,10 +2655,6 @@ async function handleRegister() {
       showStatus('Account created successfully!', 'success');
     } else {
       showAccountError('register', result.error || 'Registration failed');
-      // If token expired or invalid, clear it
-      if (result.error && (result.error.includes('token') || result.error.includes('expired'))) {
-        currentSetupToken = null;
-      }
     }
   } catch (error) {
     console.error('Register error:', error);

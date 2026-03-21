@@ -538,6 +538,21 @@
             </p>
           </div>
 
+          <!-- Migration Banner -->
+          <div class="migration-banner" id="migrationBanner" style="display: none;">
+            <div class="migration-content">
+              <i class="ph ph-sparkle"></i>
+              <div class="migration-text">
+                <strong>NEW: Manage your team online</strong>
+                <p>Sign in to invite team members, manage grant keys, and more.</p>
+              </div>
+              <button class="btn-small btn-primary" id="migrationSignInBtn">Sign In</button>
+              <button class="migration-dismiss" id="migrationDismiss" title="Dismiss">
+                <i class="ph ph-x"></i>
+              </button>
+            </div>
+          </div>
+
           <!-- Account Section -->
           <div class="account-section" id="accountSection">
             <!-- Logged In State -->
@@ -556,6 +571,10 @@
                 <i class="ph ph-cloud-check"></i>
                 <span>Data synced across devices</span>
               </div>
+              <a href="https://app.jtpowertools.com/dashboard.html" target="_blank"
+                 id="manageTeamLink" class="manage-team-link" style="display: none;">
+                <i class="ph ph-users-three"></i> Manage Team <i class="ph ph-arrow-square-out"></i>
+              </a>
             </div>
 
             <!-- Login Form -->

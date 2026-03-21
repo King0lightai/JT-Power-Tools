@@ -61,6 +61,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `ai_grant_key_encrypted` and `grant_key_encrypted` columns to licenses table
 - Added auto-refresh JWT flow in API client (transparent 401 → refresh → retry)
 
+#### Extension Sign-In Flow — Sprint 3
+- Added inline portal sign-in in popup for premium feature access
+  - AccountService now authenticates against portal API (jobtread-mcp-server)
+  - Direct registration without setup tokens (email + password + license key)
+  - Grant key auto-syncs from portal on sign-in (admin sets once for org)
+  - Portal auth takes priority over legacy license key when both present
+- Added migration banner for existing license key users ("NEW: Manage your team online")
+- Added "Manage Team ↗" link for owners/admins in popup account card (opens portal dashboard)
+- Added grant key to portal auth responses (login, register, refresh, me endpoints)
+
 ### Fixed
 - Fixed team members table showing removed members — added `status = 'active'` filter to team query
 - Fixed password verification crash on legacy base64 hash format — dual-format detection (legacy base64 vs iterations:salt_hex:hash_hex)

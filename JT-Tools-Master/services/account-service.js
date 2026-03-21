@@ -15,7 +15,7 @@ const AccountService = (() => {
   function logError(...args) { if (DEBUG) logError('', ...args); }
 
   // API endpoint (same as license proxy)
-  const API_URL = 'https://jt-tools-license-proxy.king0light-ai.workers.dev';
+  const API_URL = 'https://jobtread-mcp-server.king0light-ai.workers.dev';
 
   // Storage keys
   const STORAGE_KEYS = {
@@ -105,58 +105,35 @@ const AccountService = (() => {
   }
 
   /**
-   * Request a setup token after license validation
-   * @param {string} licenseKey - The validated license key
-   * @param {string} grantKey - Optional grant key for Power Users
-   */
-  async function requestSetupToken(licenseKey, grantKey = null) {
-    try {
-      const response = await fetch(`${API_URL}/auth/setup-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ licenseKey, grantKey })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        log('Setup token received');
-        return { success: true, data: result.data };
-      } else {
-        logError('Setup token failed', result.error);
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      logError('Setup token error', error);
-      return { success: false, error: 'Network error. Please try again.' };
-    }
-  }
-
-  /**
    * Register a new account
-   * @param {string} setupToken - Token from requestSetupToken
    * @param {string} email - User email
    * @param {string} password - User password
    * @param {string} displayName - Optional display name
+   * @param {string} licenseKey - Optional license key
+   * @param {string} inviteToken - Optional invite token
    */
-  async function register(setupToken, email, password, displayName = null) {
+  async function register(email, password, displayName = null, licenseKey = null, inviteToken = null) {
     try {
+      const body = { email, password, displayName };
+      if (inviteToken) body.inviteToken = inviteToken;
+      else if (licenseKey) body.licenseKey = licenseKey;
+
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ setupToken, email, password, displayName })
+        body: JSON.stringify(body)
       });
 
       const result = await response.json();
 
-      if (result.success) {
-        // Store tokens and user data
-        await storeAuthData(result.data);
+      if (response.ok) {
+        // Portal returns flat: { accessToken, refreshToken, expiresIn, user, grantKey }
+        await storeAuthData(result);
         log('Registration successful');
-        return { success: true, data: result.data };
+        return { success: true, data: result };
       } else {
         logError('Registration failed', result.error);
-        return { success: false, error: result.error };
+        return { success: false, error: result.error || 'Registration failed' };
       }
     } catch (error) {
       logError('Registration error', error);
@@ -179,14 +156,14 @@ const AccountService = (() => {
 
       const result = await response.json();
 
-      if (result.success) {
-        // Store tokens and user data
-        await storeAuthData(result.data);
+      if (response.ok) {
+        // Portal returns flat: { accessToken, refreshToken, expiresIn, user, grantKey }
+        await storeAuthData(result);
         log('Login successful');
-        return { success: true, data: result.data };
+        return { success: true, data: result };
       } else {
         logError('Login failed', result.error);
-        return { success: false, error: result.error };
+        return { success: false, error: result.error || 'Login failed' };
       }
     } catch (error) {
       logError('Login error', error);
@@ -217,14 +194,14 @@ const AccountService = (() => {
 
         const result = await response.json();
 
-        if (result.success) {
-          // Update access token and expiry
-          accessToken = result.data.accessToken;
-          tokenExpiry = Date.now() + (result.data.expiresIn * 1000);
+        if (response.ok) {
+          // Portal returns flat: { accessToken, expiresIn, user }
+          accessToken = result.accessToken;
+          tokenExpiry = Date.now() + (result.expiresIn * 1000);
 
           // Update user data if provided
-          if (result.data.user) {
-            currentUser = result.data.user;
+          if (result.user) {
+            currentUser = result.user;
           }
 
           // Store updated data
@@ -240,7 +217,7 @@ const AccountService = (() => {
           // Refresh failed - clear auth data
           logError('Token refresh failed', result.error);
           await clearAuthData();
-          return { success: false, error: result.error };
+          return { success: false, error: result.error || 'Token refresh failed' };
         }
       } catch (error) {
         logError('Token refresh error', error);
@@ -314,11 +291,10 @@ const AccountService = (() => {
       }
     }
 
-    // Store license key if provided (syncs license across devices)
-    if (data.licenseKey && window.LicenseService) {
+    // Sync license key from portal (portal returns licenseKey on user object)
+    if (data.user?.licenseKey && window.LicenseService) {
       log('Syncing license key from server');
-      // Verify and store the license using LicenseService
-      await window.LicenseService.verifyLicense(data.licenseKey);
+      await window.LicenseService.verifyLicense(data.user.licenseKey);
     }
   }
 
@@ -1020,7 +996,7 @@ const AccountService = (() => {
     try {
       log('Requesting password reset for:', email);
 
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      const response = await fetch(`${API_URL}/auth/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1030,12 +1006,12 @@ const AccountService = (() => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (response.ok) {
         log('Password reset email requested');
         return { success: true, message: result.message };
       } else {
         logError('Password reset request failed', result.error);
-        return { success: false, error: result.error };
+        return { success: false, error: result.error || 'Failed to send reset email' };
       }
     } catch (error) {
       logError('Password reset request error', error);
@@ -1061,7 +1037,7 @@ const AccountService = (() => {
     try {
       log('Resetting password...');
 
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
+      const response = await fetch(`${API_URL}/auth/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1071,12 +1047,12 @@ const AccountService = (() => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (response.ok) {
         log('Password reset successful');
         return { success: true, message: result.message };
       } else {
         logError('Password reset failed', result.error);
-        return { success: false, error: result.error };
+        return { success: false, error: result.error || 'Password reset failed' };
       }
     } catch (error) {
       logError('Password reset error', error);
@@ -1095,7 +1071,6 @@ const AccountService = (() => {
     getAccessToken,
 
     // Auth operations
-    requestSetupToken,
     register,
     login,
     logout,
