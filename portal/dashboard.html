@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — JT Power Tools</title>
+  <link rel="icon" type="image/png" href="https://jtpowertools.com/favicon.png">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+  <!-- ─── Nav ──────────────────────────────────────────────── -->
+  <nav class="portal-nav">
+    <a href="/dashboard.html" class="brand">JT <span>Power Tools</span></a>
+    <div class="nav-right">
+      <div class="user-pill">
+        <div class="avatar" id="navAvatar">?</div>
+        <span id="navName">Loading...</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="auth.logout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="dashboard">
+    <!-- ─── Account Card ──────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Your Account</h3>
+        <span class="badge" id="roleBadge"></span>
+      </div>
+      <div class="info-row">
+        <span class="label">Email</span>
+        <span class="value" id="userEmail">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Display Name</span>
+        <span class="value" id="userDisplayName">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Organization</span>
+        <span class="value" id="userOrg">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Tier</span>
+        <span class="value" id="userTier">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">License</span>
+        <span class="value" id="userLicense">—</span>
+      </div>
+      <div style="margin-top: 16px;">
+        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex;">
+          Install Chrome Extension ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- ─── Admin Section (hidden for members) ────────────── -->
+    <div id="adminSection" class="hidden">
+
+      <!-- Stats -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Organization Overview</h3>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="statMembers">—</div>
+            <div class="stat-label">Team Members</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statInvites">—</div>
+            <div class="stat-label">Pending Invites</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statTier">—</div>
+            <div class="stat-label">Plan</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statStatus">—</div>
+            <div class="stat-label">License</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- JobTread Connection -->
+      <div class="card">
+        <div class="card-header">
+          <h3>JobTread Connection</h3>
+          <span class="badge" id="grantKeyBadge">—</span>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Connect your JobTread organization by entering a Grant Key. This key lets the Chrome extension access your org's data.
+          <br><span style="font-size: 12px; color: var(--text-dim);">Get your Grant Key from JobTread → Settings → API → Generate Grant Key</span>
+        </p>
+        <div id="grantKeyStatus" class="hidden" style="margin-bottom: 16px;">
+          <div class="info-row">
+            <span class="label">Current Key</span>
+            <span class="value" id="grantKeyMasked">—</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Connected Org</span>
+            <span class="value" id="grantKeyOrg">—</span>
+          </div>
+        </div>
+        <div class="flex gap-8" style="flex-wrap: wrap;">
+          <input type="text" id="grantKeyInput" placeholder="Paste your JobTread Grant Key" style="flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px; outline: none;">
+          <button class="btn btn-primary btn-sm" id="saveGrantKeyBtn" onclick="saveGrantKey()">
+            <span class="btn-text">Connect</span>
+            <span class="loading-text"><span class="spinner"></span></span>
+          </button>
+        </div>
+        <div id="grantKeyAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
+      </div>
+
+      <!-- AI Server (MCP) -->
+      <div class="card">
+        <div class="card-header">
+          <h3>AI Server (MCP)</h3>
+          <span class="badge" id="aiKeyBadge">—</span>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Connect AI tools (Claude, ChatGPT, Cursor, etc.) to your JobTread data. Use a separate Grant Key for AI — this lets you control AI access independently.
+        </p>
+        <div class="info-row">
+          <span class="label">Server URL</span>
+          <span class="value" style="font-family: monospace; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <span id="mcpServerUrl" style="word-break: break-all;">—</span>
+            <button class="btn btn-ghost btn-sm" onclick="copyText('mcpServerUrl')" style="padding: 2px 8px; font-size: 11px; flex-shrink: 0;">Copy</button>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="label">License Key</span>
+          <span class="value" style="font-family: monospace; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <span id="mcpLicenseKey">—</span>
+            <button class="btn btn-ghost btn-sm" onclick="copyText('mcpLicenseKeyFull', true)" style="padding: 2px 8px; font-size: 11px; flex-shrink: 0;">Copy</button>
+            <span id="mcpLicenseKeyFull" class="hidden"></span>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="label">Auth Format</span>
+          <span class="value" style="font-family: monospace; font-size: 12px; color: var(--text-dim);">Bearer &lt;license_key&gt;:&lt;ai_grant_key&gt;</span>
+        </div>
+        <div id="aiKeyStatus" class="hidden" style="margin-top: 4px;">
+          <div class="info-row">
+            <span class="label">AI Grant Key</span>
+            <span class="value" id="aiKeyMasked" style="font-family: monospace; font-size: 12px;">—</span>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">Set AI Grant Key</p>
+          <div class="flex gap-8" style="flex-wrap: wrap;">
+            <input type="text" id="aiKeyInput" placeholder="Paste a separate Grant Key for AI access" style="flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px; outline: none;">
+            <button class="btn btn-primary btn-sm" id="saveAiKeyBtn" onclick="saveAiKey()">
+              <span class="btn-text">Save AI Key</span>
+              <span class="loading-text"><span class="spinner"></span></span>
+            </button>
+          </div>
+        </div>
+        <div id="aiKeyAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
+      </div>
+
+      <!-- Invite Team -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Invite Team Members</h3>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Create an invite link to share with your team. They'll create their own account and get instant access.
+        </p>
+        <div class="flex gap-8" style="flex-wrap: wrap;">
+          <input type="email" id="inviteEmail" placeholder="Email (optional — leave blank for open link)" style="flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; font-size: 14px; outline: none;">
+          <button class="btn btn-primary btn-sm" id="createInviteBtn" onclick="createInvite()">
+            <span class="btn-text">Create Invite</span>
+            <span class="loading-text"><span class="spinner"></span></span>
+          </button>
+        </div>
+        <div id="inviteResult" class="hidden mt-16">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">Share this link with your team member:</p>
+          <div class="invite-url-box">
+            <input type="text" id="inviteUrl" readonly onclick="this.select()">
+            <button class="btn btn-secondary btn-sm" onclick="copyInvite()">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Members Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Team Members</h3>
+        </div>
+        <div id="teamTableWrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Last Login</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="teamBody">
+              <tr><td colspan="5" class="text-center text-muted" style="padding: 24px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Active Invites Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Invites</h3>
+        </div>
+        <div id="invitesTableWrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Email / Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Uses</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="invitesBody">
+              <tr><td colspan="5" class="text-center text-muted" style="padding: 24px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── Remove Member Modal ──────────────────────────────── -->
+  <div class="modal-overlay" id="removeModal">
+    <div class="modal">
+      <h3>Remove Member</h3>
+      <p style="color: var(--text-secondary); font-size: 14px;">
+        Are you sure you want to remove <strong id="removeName"></strong>? They will lose access to all features.
+      </p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('removeModal')">Cancel</button>
+        <button class="btn btn-danger" id="confirmRemoveBtn" onclick="confirmRemove()">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    if (!auth.requireAuth()) throw new Error('redirect');
+
+    let currentUser = null;
+    let removeTargetId = null;
+
+    // ─── Init ────────────────────────────────────────────────
+
+    async function init() {
+      try {
+        // Get fresh user data
+        const meData = await api.request('/auth/me', { method: 'POST' });
+        currentUser = meData.user;
+        auth.setUser(currentUser);
+
+        renderUserInfo();
+
+        if (currentUser.role === 'owner' || currentUser.role === 'admin') {
+          document.getElementById('adminSection').classList.remove('hidden');
+          await loadAdminData();
+        }
+      } catch (err) {
+        console.error('Dashboard init failed:', err);
+        if (err.status === 401) auth.logout();
+      }
+    }
+
+    function renderUserInfo() {
+      const u = currentUser;
+      document.getElementById('navAvatar').textContent = (u.displayName || u.email)[0].toUpperCase();
+      document.getElementById('navName').textContent = u.displayName || u.email;
+      document.getElementById('userEmail').textContent = u.email;
+      document.getElementById('userDisplayName').textContent = u.displayName;
+      document.getElementById('userOrg').textContent = u.orgName || '—';
+      document.getElementById('userTier').textContent = formatTier(u.tier);
+      document.getElementById('userLicense').textContent = u.licenseKey
+        ? u.licenseKey.slice(0, 8) + '••••••••'
+        : '—';
+
+      const badge = document.getElementById('roleBadge');
+      badge.textContent = u.role;
+      badge.className = `badge badge-${u.role}`;
+    }
+
+    // ─── Admin Data ──────────────────────────────────────────
+
+    async function loadAdminData() {
+      const [orgData, teamData, invitesData, connData] = await Promise.all([
+        api.post('/admin/org'),
+        api.post('/admin/team'),
+        api.post('/admin/list-invites'),
+        api.post('/admin/connection'),
+      ]);
+
+      // Stats
+      document.getElementById('statMembers').textContent = orgData.stats.members;
+      document.getElementById('statInvites').textContent = orgData.stats.pendingInvites;
+      document.getElementById('statTier').textContent = formatTier(orgData.license.tier);
+      document.getElementById('statStatus').textContent = orgData.license.valid ? 'Active' : 'Expired';
+
+      // Team table
+      renderTeamTable(teamData.members);
+
+      // Invites table
+      renderInvitesTable(invitesData.invites);
+
+      // Connection status
+      renderConnectionStatus(connData);
+    }
+
+    function renderConnectionStatus(data) {
+      // Grant Key status
+      const grantBadge = document.getElementById('grantKeyBadge');
+      if (data.grantKey.configured && data.grantKey.valid) {
+        grantBadge.textContent = 'Connected';
+        grantBadge.className = 'badge badge-active';
+        document.getElementById('grantKeyStatus').classList.remove('hidden');
+        document.getElementById('grantKeyMasked').textContent = data.grantKey.maskedKey;
+        document.getElementById('grantKeyOrg').textContent = data.grantKey.org?.name || '—';
+        document.getElementById('saveGrantKeyBtn').querySelector('.btn-text').textContent = 'Update';
+      } else if (data.grantKey.configured) {
+        grantBadge.textContent = 'Invalid';
+        grantBadge.className = 'badge badge-expired';
+        document.getElementById('grantKeyStatus').classList.remove('hidden');
+        document.getElementById('grantKeyMasked').textContent = data.grantKey.maskedKey;
+        document.getElementById('grantKeyOrg').textContent = 'Key expired or revoked';
+      } else {
+        grantBadge.textContent = 'Not Connected';
+        grantBadge.className = 'badge badge-member';
+      }
+
+      // AI Key status
+      const aiBadge = document.getElementById('aiKeyBadge');
+      if (data.aiKey.configured && data.aiKey.valid) {
+        aiBadge.textContent = 'Connected';
+        aiBadge.className = 'badge badge-active';
+        document.getElementById('aiKeyStatus').classList.remove('hidden');
+        document.getElementById('aiKeyMasked').textContent = data.aiKey.maskedKey;
+        document.getElementById('saveAiKeyBtn').querySelector('.btn-text').textContent = 'Update';
+      } else if (data.aiKey.configured) {
+        aiBadge.textContent = 'Invalid';
+        aiBadge.className = 'badge badge-expired';
+        document.getElementById('aiKeyStatus').classList.remove('hidden');
+        document.getElementById('aiKeyMasked').textContent = data.aiKey.maskedKey;
+      } else {
+        aiBadge.textContent = 'Not Set';
+        aiBadge.className = 'badge badge-member';
+      }
+
+      // MCP server info
+      document.getElementById('mcpServerUrl').textContent = data.mcp.serverUrl;
+      document.getElementById('mcpLicenseKey').textContent = data.mcp.maskedLicenseKey;
+      document.getElementById('mcpLicenseKeyFull').textContent = data.mcp.licenseKey;
+    }
+
+    function renderTeamTable(members) {
+      const tbody = document.getElementById('teamBody');
+      if (!members.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 24px;">No team members yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = members.map(m => `
+        <tr>
+          <td style="color: var(--text-primary); font-weight: 600;">${esc(m.displayName)}</td>
+          <td>${esc(m.email)}</td>
+          <td><span class="badge badge-${m.role}">${m.role}</span></td>
+          <td>${m.lastLoginAt ? timeAgo(m.lastLoginAt) : 'Never'}</td>
+          <td style="text-align: right;">
+            ${m.id !== currentUser.id && m.role !== 'owner' ? `
+              <button class="btn btn-ghost btn-sm" onclick="showRemoveModal('${m.id}', '${esc(m.displayName)}')" title="Remove member" style="color: var(--error); padding: 4px 10px;">Remove</button>
+            ` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderInvitesTable(invites) {
+      const tbody = document.getElementById('invitesBody');
+      if (!invites.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted" style="padding: 24px;">No invites created yet</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = invites.map(inv => {
+        let statusBadge;
+        if (inv.revoked) statusBadge = '<span class="badge badge-expired">Revoked</span>';
+        else if (inv.expired) statusBadge = '<span class="badge badge-expired">Expired</span>';
+        else if (inv.active) statusBadge = '<span class="badge badge-active">Active</span>';
+        else statusBadge = '<span class="badge badge-member">Used</span>';
+
+        return `
+          <tr>
+            <td>${inv.email ? esc(inv.email) : '<span style="color: var(--text-dim);">Open link</span>'}</td>
+            <td>${statusBadge}</td>
+            <td>${timeAgo(inv.createdAt)}</td>
+            <td>${inv.useCount}${inv.maxUses ? ' / ' + inv.maxUses : ''}</td>
+            <td style="text-align: right;">
+              ${inv.active ? `<button class="btn btn-ghost btn-sm" onclick="revokeInvite('${inv.id}')" style="padding: 4px 10px;">Revoke</button>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ─── Connection Actions ─────────────────────────────────
+
+    async function saveGrantKey() {
+      const btn = document.getElementById('saveGrantKeyBtn');
+      const input = document.getElementById('grantKeyInput');
+      const alertEl = document.getElementById('grantKeyAlert');
+      const key = input.value.trim();
+
+      if (!key) { showInlineAlert(alertEl, 'Please enter a Grant Key', 'error'); return; }
+
+      btn.classList.add('loading');
+      alertEl.classList.add('hidden');
+
+      try {
+        const data = await api.post('/admin/update-grant-key', { grantKey: key });
+        showInlineAlert(alertEl, `Connected to ${data.org.name}`, 'success');
+        input.value = '';
+        // Refresh connection status
+        const connData = await api.post('/admin/connection');
+        renderConnectionStatus(connData);
+      } catch (err) {
+        showInlineAlert(alertEl, err.message || 'Failed to validate key', 'error');
+      } finally {
+        btn.classList.remove('loading');
+      }
+    }
+
+    async function saveAiKey() {
+      const btn = document.getElementById('saveAiKeyBtn');
+      const input = document.getElementById('aiKeyInput');
+      const alertEl = document.getElementById('aiKeyAlert');
+      const key = input.value.trim();
+
+      if (!key) { showInlineAlert(alertEl, 'Please enter a Grant Key for AI', 'error'); return; }
+
+      btn.classList.add('loading');
+      alertEl.classList.add('hidden');
+
+      try {
+        const data = await api.post('/admin/update-ai-key', { grantKey: key });
+        showInlineAlert(alertEl, `AI key connected to ${data.org.name}`, 'success');
+        input.value = '';
+        // Refresh connection status
+        const connData = await api.post('/admin/connection');
+        renderConnectionStatus(connData);
+      } catch (err) {
+        showInlineAlert(alertEl, err.message || 'Failed to validate key', 'error');
+      } finally {
+        btn.classList.remove('loading');
+      }
+    }
+
+    function showInlineAlert(el, msg, type) {
+      el.textContent = msg;
+      el.style.background = type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+      el.style.color = type === 'success' ? '#22c55e' : '#ef4444';
+      el.style.border = `1px solid ${type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`;
+      el.classList.remove('hidden');
+      if (type === 'success') setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    function copyText(elementId, useHidden) {
+      const el = document.getElementById(elementId);
+      const text = el.textContent;
+      navigator.clipboard.writeText(text);
+
+      // Flash feedback on the nearest copy button
+      const row = el.closest('.info-row') || el.parentElement;
+      const btn = row.querySelector('.btn');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      }
+    }
+
+    // ─── Invite Actions ──────────────────────────────────────
+
+    async function createInvite() {
+      const btn = document.getElementById('createInviteBtn');
+      const email = document.getElementById('inviteEmail').value.trim();
+      btn.classList.add('loading');
+
+      try {
+        const data = await api.post('/admin/create-invite', {
+          email: email || undefined,
+          expiresInDays: 7,
+        });
+
+        document.getElementById('inviteUrl').value = data.invite.url;
+        document.getElementById('inviteResult').classList.remove('hidden');
+        document.getElementById('inviteEmail').value = '';
+
+        // Refresh invites table
+        const invitesData = await api.post('/admin/list-invites');
+        renderInvitesTable(invitesData.invites);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.classList.remove('loading');
+      }
+    }
+
+    function copyInvite() {
+      const input = document.getElementById('inviteUrl');
+      input.select();
+      navigator.clipboard.writeText(input.value);
+
+      const btn = input.nextElementSibling;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+
+    async function revokeInvite(inviteId) {
+      if (!confirm('Revoke this invite?')) return;
+
+      try {
+        await api.post('/admin/revoke-invite', { inviteId });
+        const invitesData = await api.post('/admin/list-invites');
+        renderInvitesTable(invitesData.invites);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function showRemoveModal(accountId, name) {
+      removeTargetId = accountId;
+      document.getElementById('removeName').textContent = name;
+      document.getElementById('removeModal').classList.add('show');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    async function confirmRemove() {
+      if (!removeTargetId) return;
+
+      try {
+        await api.post('/admin/remove-member', { accountId: removeTargetId });
+        closeModal('removeModal');
+
+        // Refresh
+        const teamData = await api.post('/admin/team');
+        renderTeamTable(teamData.members);
+
+        const orgData = await api.post('/admin/org');
+        document.getElementById('statMembers').textContent = orgData.stats.members;
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────
+
+    function formatTier(tier) {
+      const names = { essential: 'Essential', pro: 'Pro', power_user: 'Power User' };
+      return names[tier] || tier;
+    }
+
+    function timeAgo(ts) {
+      const seconds = Math.floor(Date.now() / 1000) - ts;
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
+      return new Date(ts * 1000).toLocaleDateString();
+    }
+
+    function esc(str) {
+      const el = document.createElement('span');
+      el.textContent = str;
+      return el.innerHTML;
+    }
+
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', (e) => {
+        if (e.target === el) el.classList.remove('show');
+      });
+    });
+
+    // Go!
+    init();
+  </script>
+</body>
+</html>

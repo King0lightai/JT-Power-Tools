@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — JT Power Tools</title>
+  <link rel="icon" type="image/png" href="https://jtpowertools.com/favicon.png">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <div class="page-center">
+      <div class="auth-card">
+        <div class="logo">
+          <h1>JT <span>Power Tools</span></h1>
+          <p>Sign in to manage your team</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="loginForm" autocomplete="on">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@company.com" required autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Your password" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span class="btn-text">Sign In</span>
+            <span class="loading-text"><span class="spinner"></span> Signing in...</span>
+          </button>
+        </form>
+
+        <div style="text-align: right; margin-top: 10px;">
+          <a href="forgot-password.html" style="font-size: 13px; color: var(--text-muted);">Forgot password?</a>
+        </div>
+
+        <div class="auth-divider">or</div>
+
+        <a href="register.html" class="btn btn-secondary">Create Account</a>
+
+        <div class="auth-footer mt-24">
+          <p>Don't have a license? <a href="https://jtpowertools.com/#pricing" target="_blank">Get JT Power Tools</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // Redirect if already logged in
+    auth.redirectIfLoggedIn();
+
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('submitBtn');
+    const alert = document.getElementById('alert');
+
+    function showAlert(msg, type = 'error') {
+      alert.textContent = msg;
+      alert.className = `alert alert-${type} show`;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.classList.add('loading');
+      btn.disabled = true;
+      alert.classList.remove('show');
+
+      try {
+        await auth.login(
+          document.getElementById('email').value,
+          document.getElementById('password').value
+        );
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        showAlert(err.message || 'Sign in failed. Please try again.');
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

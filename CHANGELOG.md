@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+#### Web Portal Backend — Sprint 1 (Auth, Admin, Invites)
+- Added JWT-based portal authentication system (`portal-auth.js`)
+  - `POST /auth/register` — account registration with invite token or license key
+  - `POST /auth/login` — email/password sign-in, returns JWT access + refresh tokens
+  - `POST /auth/refresh` — exchange refresh token for new access token
+  - `POST /auth/forgot` — request password reset email (via Resend)
+  - `POST /auth/reset` — reset password with token
+  - `POST /auth/me` — get current user info from access token
+  - `POST /auth/logout` — invalidate refresh token session
+  - HMAC-SHA256 JWT signing via Web Crypto API (no external deps)
+  - PBKDF2-SHA256 password hashing (100K iterations)
+  - 15-minute access tokens + 7-day refresh tokens in D1 sessions table
+- Added admin team management endpoints (`admin.js`)
+  - `POST /admin/org` — org/license details with member & invite counts
+  - `POST /admin/team` — list all team members with roles and last login
+  - `POST /admin/create-invite` — generate invite links (open or email-specific)
+  - `POST /admin/revoke-invite` — revoke pending invites
+  - `POST /admin/list-invites` — list all invites with status
+  - `POST /admin/remove-member` — soft-delete team members (owner protection)
+  - `POST /admin/update-role` — promote/demote members (owner-only)
+  - `POST /admin/update-grant-key` — validate and update org grant key
+- Added invite system for team onboarding
+  - `GET /invite/:token` — validate invite link, return org info
+  - Invite links support email-specific or open (shareable) modes
+  - Configurable expiration (default 7 days) and max uses
+  - Automatic Resend email delivery when configured
+- Added auto-owner assignment logic
+  - First account registered on a license automatically becomes `owner`
+  - Email matching Gumroad `purchaseEmail` also gets `owner` role
+  - Invite-based registrations default to `member`
+- Added `invites` table migration (`006_invites.sql`)
+- Added rate limiting on `/auth/register` and `/auth/login` endpoints
+- MCP server version bumped to 5.3.0
+
+#### Web Portal Frontend — Sprint 2 (Portal UI)
+- Added portal site hosted on Cloudflare Pages at `app.jtpowertools.com`
+  - Login page with email/password authentication
+  - Registration page with invite token and license key flows
+  - Forgot password and reset password pages
+  - Dashboard with account info, org overview, and admin controls
+- Added on-brand design system (Bebas Neue headers, Source Sans 3 body, #FE4C0D/#FF6B35 gradient, dark neutral backgrounds)
+- Added admin dashboard features for org owners
+  - Organization overview stats (members, invites, plan, license status)
+  - Team members table with remove member functionality
+  - Invite creation with shareable links and email-specific invites
+  - Invite management with revoke capability
+- Added JobTread Connection card — validate and store org-level Grant Key
+- Added AI Server (MCP) card — separate Grant Key for AI tools, server URL and license key with copy buttons
+- Added `POST /admin/update-ai-key` endpoint for AI-specific grant key management
+- Added `POST /admin/connection` endpoint for connection status (grant keys, MCP info)
+- Added `ai_grant_key_encrypted` and `grant_key_encrypted` columns to licenses table
+- Added auto-refresh JWT flow in API client (transparent 401 → refresh → retry)
+
+### Fixed
+- Fixed team members table showing removed members — added `status = 'active'` filter to team query
+- Fixed password verification crash on legacy base64 hash format — dual-format detection (legacy base64 vs iterations:salt_hex:hash_hex)
+- Fixed portal auth queries using wrong table — updated from `users` to `licenses` table with correct column names
+
 ### Fixed
 #### MCP Server Tool Quality Fixes
 - Fixed `search_jobs` status filter returning too few results — now over-fetches (100) before client-side filtering by computed status, then applies user's requested limit
