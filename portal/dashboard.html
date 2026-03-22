@@ -163,11 +163,12 @@
           <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">Setup Instructions</h4>
 
           <!-- Platform Tabs -->
-          <div class="mcp-tabs" style="display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 0;">
-            <button class="mcp-tab active" data-platform="claude-code" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid var(--brand-primary); color: var(--brand-primary); cursor: pointer;">Claude Code</button>
-            <button class="mcp-tab" data-platform="claude-desktop" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Claude Desktop</button>
-            <button class="mcp-tab" data-platform="cursor" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Cursor</button>
-            <button class="mcp-tab" data-platform="chatgpt" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">ChatGPT</button>
+          <div class="mcp-tabs" style="display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 0; flex-wrap: wrap;">
+            <button class="mcp-tab active" data-platform="claude-code" style="padding: 8px 12px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid var(--brand-primary); color: var(--brand-primary); cursor: pointer;">Claude Code</button>
+            <button class="mcp-tab" data-platform="claude-web" style="padding: 8px 12px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Claude.ai</button>
+            <button class="mcp-tab" data-platform="claude-desktop" style="padding: 8px 12px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Claude Desktop</button>
+            <button class="mcp-tab" data-platform="cursor" style="padding: 8px 12px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Cursor</button>
+            <button class="mcp-tab" data-platform="chatgpt" style="padding: 8px 12px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">ChatGPT</button>
           </div>
 
           <!-- Claude Code -->
@@ -179,9 +180,25 @@
             </div>
           </div>
 
+          <!-- Claude.ai (Web) -->
+          <div class="mcp-panel" data-platform="claude-web" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Claude.ai connects via OAuth — no config file needed:</p>
+            <ol style="font-size: 13px; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
+              <li>Go to <strong>claude.ai → Settings → Integrations</strong></li>
+              <li>Click <strong>Add More Integrations</strong></li>
+              <li>Enter the Server URL: <code id="claudeWebUrl" style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;"></code>
+                <button onclick="navigator.clipboard.writeText(document.getElementById('claudeWebUrl').textContent); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy',2000);" style="padding: 2px 8px; font-size: 11px; background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; cursor: pointer; margin-left: 6px;">Copy</button>
+              </li>
+              <li>Complete the OAuth sign-in flow</li>
+              <li>Once connected, all 77 tools are available in your Claude conversations</li>
+            </ol>
+          </div>
+
           <!-- Claude Desktop -->
           <div class="mcp-panel" data-platform="claude-desktop" style="display: none;">
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Add to your Claude Desktop MCP config:</p>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Claude Desktop requires <code style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;">mcp-remote</code> to connect to remote MCP servers. First install it:</p>
+            <pre style="background: #111; color: #e0e0e0; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 12px; margin: 0 0 12px; overflow-x: auto;">npm install -g mcp-remote</pre>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Then add to your <code style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;">claude_desktop_config.json</code>:</p>
             <div style="position: relative;">
               <pre id="claudeDesktopConfig" style="background: #111; color: #e0e0e0; padding: 14px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; margin: 0;"></pre>
               <button onclick="copyConfigBlock('claudeDesktopConfig')" style="position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 11px; background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Copy</button>
@@ -199,7 +216,7 @@
 
           <!-- ChatGPT -->
           <div class="mcp-panel" data-platform="chatgpt" style="display: none;">
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">ChatGPT uses OAuth — no config file needed:</p>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">ChatGPT connects via OAuth — no config file needed:</p>
             <ol style="font-size: 13px; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
               <li>Go to <strong>ChatGPT → Settings → Connected Apps</strong></li>
               <li>Click <strong>Add Connection</strong></li>
@@ -777,43 +794,49 @@
     });
 
     function populateMcpConfigs(serverUrl, licenseKey) {
+      const mcpUrl = serverUrl + '/mcp';
+      const authHeader = `Bearer ${licenseKey}:<your_ai_grant_key>`;
+
+      // Claude Code — native streamable HTTP
       const claudeCode = {
         mcpServers: {
           jobtread: {
             type: "streamableHttp",
-            url: serverUrl + '/mcp',
-            headers: {
-              Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
-            }
+            url: mcpUrl,
+            headers: { Authorization: authHeader }
           }
         }
       };
       document.getElementById('claudeCodeConfig').textContent = JSON.stringify(claudeCode, null, 2);
 
+      // Claude Desktop — requires mcp-remote
       const claudeDesktop = {
         mcpServers: {
           jobtread: {
-            url: serverUrl + '/mcp',
-            transport: "streamable-http",
-            headers: {
-              Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
-            }
+            command: "npx",
+            args: [
+              "mcp-remote",
+              mcpUrl,
+              "--header",
+              `Authorization:${authHeader}`
+            ]
           }
         }
       };
       document.getElementById('claudeDesktopConfig').textContent = JSON.stringify(claudeDesktop, null, 2);
 
+      // Cursor — streamable HTTP
       const cursor = {
         name: "JobTread (JT Power Tools)",
         type: "streamableHttp",
-        url: serverUrl + '/mcp',
-        headers: {
-          Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
-        }
+        url: mcpUrl,
+        headers: { Authorization: authHeader }
       };
       document.getElementById('cursorConfig').textContent = JSON.stringify(cursor, null, 2);
 
-      document.getElementById('chatgptUrl').textContent = serverUrl + '/mcp';
+      // Claude.ai & ChatGPT — OAuth URLs
+      document.getElementById('claudeWebUrl').textContent = mcpUrl;
+      document.getElementById('chatgptUrl').textContent = mcpUrl;
       document.getElementById('toolCount').textContent = '(77 tools)';
     }
 
