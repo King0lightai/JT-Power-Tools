@@ -1145,30 +1145,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Listen for API key test
-  document.getElementById('testApiBtn').addEventListener('click', testApiKey);
+  // Listen for API key test (if elements exist — moved to portal)
+  const testApiBtn = document.getElementById('testApiBtn');
+  if (testApiBtn) testApiBtn.addEventListener('click', testApiKey);
+  const apiKeyEl = document.getElementById('apiKey');
+  if (apiKeyEl) apiKeyEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') testApiKey(); });
+  const orgIdEl = document.getElementById('orgId');
+  if (orgIdEl) orgIdEl.addEventListener('keypress', (e) => { if (e.key === 'Enter') testApiKey(); });
 
-  // Allow Enter key in API inputs
-  document.getElementById('apiKey').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      testApiKey();
-    }
-  });
-  document.getElementById('orgId').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      testApiKey();
-    }
-  });
-
-  // Listen for license verification
-  document.getElementById('verifyBtn').addEventListener('click', verifyLicenseKey);
-
-  // Allow Enter key in license input
-  document.getElementById('licenseKey').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      verifyLicenseKey();
-    }
-  });
+  // Listen for license verification (if elements exist — moved to portal)
+  const verifyBtn = document.getElementById('verifyBtn');
+  const licenseKeyInput = document.getElementById('licenseKey');
+  if (verifyBtn) verifyBtn.addEventListener('click', verifyLicenseKey);
+  if (licenseKeyInput) {
+    licenseKeyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') verifyLicenseKey();
+    });
+  }
 
   // Initialize account UI
   await initAccountUI();
