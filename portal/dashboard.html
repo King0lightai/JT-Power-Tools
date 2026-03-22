@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — JT Power Tools</title>
   <link rel="icon" type="image/png" href="https://jtpowertools.com/favicon.png">
-  <link rel="stylesheet" href="css/portal.css">
+  <link rel="stylesheet" href="css/portal.css?v=4">
 </head>
 <body>
   <!-- ─── Nav ──────────────────────────────────────────────── -->
@@ -71,21 +71,6 @@
         <span class="label">License</span>
         <span class="value" id="userLicense">—</span>
       </div>
-      <div style="margin-top: 16px;">
-        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Install Extension</p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-          <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
-            Chrome ↗
-          </a>
-          <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
-            Edge ↗
-          </a>
-          <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
-            Firefox ↗
-          </a>
-          <button onclick="copyInstallLinks()" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 11px;" title="Copy all install links">Copy Links</button>
-        </div>
-      </div>
     </div>
 
       <!-- Change Password -->
@@ -106,62 +91,10 @@
         <div id="passwordAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
       </div>
 
-      <!-- Quick Links -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Quick Links</h3>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div>
-            <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Install Extension</p>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Chrome ↗</a>
-              <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Edge ↗</a>
-              <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Firefox ↗</a>
-              <button onclick="copyInstallLinks()" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 11px;" title="Copy all install links">Copy Links</button>
-            </div>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <a href="https://gumroad.com/library" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">Manage Subscription ↗</a>
-            <a href="https://jtpowertools.com/changelog.html" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">What's New ↗</a>
-          </div>
-        </div>
-      </div>
-
       </div><!-- end #section-account -->
 
       <!-- ════════ AI & MCP SECTION ════════ -->
       <div class="dashboard-section" id="section-mcp">
-
-      <!-- JobTread Connection -->
-      <div class="card">
-        <div class="card-header">
-          <h3>JobTread Connection</h3>
-          <span class="badge" id="grantKeyBadge">—</span>
-        </div>
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
-          Connect your JobTread organization by entering a Grant Key. This key lets the Chrome extension access your org's data.
-          <br><span style="font-size: 12px; color: var(--text-dim);">Get your Grant Key from JobTread → Settings → API → Generate Grant Key</span>
-        </p>
-        <div id="grantKeyStatus" class="hidden" style="margin-bottom: 16px;">
-          <div class="info-row">
-            <span class="label">Current Key</span>
-            <span class="value" id="grantKeyMasked">—</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Connected Org</span>
-            <span class="value" id="grantKeyOrg">—</span>
-          </div>
-        </div>
-        <div class="flex gap-8" style="flex-wrap: wrap;">
-          <input type="text" id="grantKeyInput" placeholder="Paste your JobTread Grant Key" style="flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px; outline: none;">
-          <button class="btn btn-primary btn-sm" id="saveGrantKeyBtn" onclick="saveGrantKey()">
-            <span class="btn-text">Connect</span>
-            <span class="loading-text"><span class="spinner"></span></span>
-          </button>
-        </div>
-        <div id="grantKeyAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
-      </div>
 
       <!-- AI Server (MCP) -->
       <div class="card">
@@ -390,6 +323,36 @@
 
       <!-- ════════ TEAM SECTION ════════ -->
       <div class="dashboard-section" id="section-team">
+
+      <!-- JobTread Connection -->
+      <div class="card">
+        <div class="card-header">
+          <h3>JobTread Connection</h3>
+          <span class="badge" id="grantKeyBadge">—</span>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+          Connect your JobTread organization by entering a Grant Key. This key lets the Chrome extension access your org's data.
+          <br><span style="font-size: 12px; color: var(--text-dim);">Get your Grant Key from JobTread → Settings → API → Generate Grant Key</span>
+        </p>
+        <div id="grantKeyStatus" class="hidden" style="margin-bottom: 16px;">
+          <div class="info-row">
+            <span class="label">Current Key</span>
+            <span class="value" id="grantKeyMasked">—</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Connected Org</span>
+            <span class="value" id="grantKeyOrg">—</span>
+          </div>
+        </div>
+        <div class="flex gap-8" style="flex-wrap: wrap;">
+          <input type="text" id="grantKeyInput" placeholder="Paste your JobTread Grant Key" style="flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px; outline: none;">
+          <button class="btn btn-primary btn-sm" id="saveGrantKeyBtn" onclick="saveGrantKey()">
+            <span class="btn-text">Connect</span>
+            <span class="loading-text"><span class="spinner"></span></span>
+          </button>
+        </div>
+        <div id="grantKeyAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
+      </div>
 
       <!-- Organization Overview -->
       <div class="card">

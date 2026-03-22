@@ -211,6 +211,7 @@ a:hover { color: var(--brand-light); }
   top: 61px;
   height: calc(100vh - 61px);
   overflow-y: auto;
+  z-index: 10;
 }
 
 .sidebar-nav {
@@ -258,8 +259,8 @@ a:hover { color: var(--brand-light); }
   letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;
 }
 
-.dashboard-section { display: none; }
-.dashboard-section.active { display: block; }
+.dashboard-section { display: none !important; }
+.dashboard-section.active { display: block !important; }
 
 /* ─── Cards ──────────────────────────────────────────────────── */
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
