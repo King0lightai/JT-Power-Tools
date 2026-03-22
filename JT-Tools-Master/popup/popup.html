@@ -502,13 +502,19 @@
                 </div>
                 <div class="account-info">
                   <p class="account-email" id="accountEmail">user@example.com</p>
-                  <p class="account-tier" id="accountTier">Pro Tier</p>
+                  <p class="account-org" id="accountOrg"></p>
                 </div>
                 <button id="logoutBtn" class="btn-secondary btn-small">Sign Out</button>
               </div>
-              <div class="sync-status" id="syncStatus">
-                <i class="ph ph-cloud-check"></i>
-                <span>Data synced across devices</span>
+              <div class="account-status-row">
+                <div class="account-status-item" id="accountLicenseStatus">
+                  <i class="ph ph-crown"></i>
+                  <span id="accountTier">Pro Tier</span>
+                </div>
+                <div class="account-status-item active" id="accountConnectionStatus">
+                  <i class="ph ph-check-circle"></i>
+                  <span>Active</span>
+                </div>
               </div>
               <a href="https://app.jtpowertools.com/dashboard.html" target="_blank"
                  id="manageTeamLink" class="manage-team-link" style="display: none;">

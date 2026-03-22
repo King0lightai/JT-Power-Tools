@@ -2455,7 +2455,32 @@ async function updateAccountUI() {
     // Show logged in state
     const user = AccountService.getCurrentUser();
     document.getElementById('accountEmail').textContent = user?.email || 'Unknown';
-    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName(user?.tier)} Tier`;
+    document.getElementById('accountOrg').textContent = user?.orgName || '';
+    document.getElementById('accountTier').textContent = `${LicenseService.getTierDisplayName(user?.tier || (await LicenseService.getTier()))} Tier`;
+
+    // Update license status indicator
+    const licenseStatusEl = document.getElementById('accountLicenseStatus');
+    const connectionStatusEl = document.getElementById('accountConnectionStatus');
+    const licenseData = await LicenseService.getLicenseData();
+    const isLicenseActive = (licenseData && licenseData.valid) || user?.licenseStatus === 'active';
+    if (licenseStatusEl) {
+      if (isLicenseActive) {
+        licenseStatusEl.className = 'account-status-item active';
+        licenseStatusEl.querySelector('i').className = 'ph ph-crown';
+      } else {
+        licenseStatusEl.className = 'account-status-item inactive';
+        licenseStatusEl.querySelector('i').className = 'ph ph-crown';
+      }
+    }
+    if (connectionStatusEl) {
+      if (isLicenseActive) {
+        connectionStatusEl.className = 'account-status-item active';
+        connectionStatusEl.innerHTML = '<i class="ph ph-check-circle"></i><span>Active</span>';
+      } else {
+        connectionStatusEl.className = 'account-status-item inactive';
+        connectionStatusEl.innerHTML = '<i class="ph ph-x-circle"></i><span>Inactive</span>';
+      }
+    }
 
     accountLoggedIn.style.display = 'block';
     accountLogin.style.display = 'none';
