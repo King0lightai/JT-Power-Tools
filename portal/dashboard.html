@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard — JT Power Tools</title>
   <link rel="icon" type="image/png" href="https://jtpowertools.com/favicon.png">
-  <link rel="stylesheet" href="css/portal.css?v=4">
+  <link rel="stylesheet" href="css/portal.css?v=5">
 </head>
 <body>
   <!-- ─── Nav ──────────────────────────────────────────────── -->
@@ -89,6 +89,28 @@
           </button>
         </div>
         <div id="passwordAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Quick Links</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Install Extension</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Chrome ↗</a>
+              <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Edge ↗</a>
+              <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Firefox ↗</a>
+              <button onclick="copyInstallLinks()" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 11px;" title="Copy all install links">Copy Links</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="https://gumroad.com/library" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">Manage Subscription ↗</a>
+            <a href="https://jtpowertools.com/changelog.html" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">What's New ↗</a>
+          </div>
+        </div>
       </div>
 
       </div><!-- end #section-account -->
