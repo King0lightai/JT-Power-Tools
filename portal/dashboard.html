@@ -20,8 +20,32 @@
     </div>
   </nav>
 
-  <div class="dashboard">
-    <!-- ─── Account Card ──────────────────────────────────── -->
+  <div class="dashboard-layout">
+    <!-- ─── Sidebar ──────────────────────────────────────── -->
+    <aside class="dashboard-sidebar">
+      <ul class="sidebar-nav">
+        <li class="sidebar-item active" data-section="account">
+          <span class="sidebar-icon">👤</span>
+          Account
+        </li>
+        <li class="sidebar-item" data-section="mcp" id="sidebarMcp">
+          <span class="sidebar-icon">🤖</span>
+          AI & MCP
+        </li>
+        <li class="sidebar-item" data-section="team" id="sidebarTeam">
+          <span class="sidebar-icon">👥</span>
+          Team
+        </li>
+      </ul>
+    </aside>
+
+    <!-- ─── Main Content ─────────────────────────────────── -->
+    <div class="dashboard">
+
+      <!-- ════════ ACCOUNT SECTION ════════ -->
+      <div class="dashboard-section active" id="section-account">
+
+      <!-- ─── Account Card ──────────────────────────────────── -->
     <div class="card">
       <div class="card-header">
         <h3>Your Account</h3>
@@ -64,8 +88,6 @@
       </div>
     </div>
 
-    <!-- ─── Member Section (visible to all users) ──────────── -->
-    <div id="memberSection">
       <!-- Change Password -->
       <div class="card">
         <div class="card-header">
@@ -105,35 +127,11 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- ─── Admin Section (hidden for members) ────────────── -->
-    <div id="adminSection" class="hidden">
+      </div><!-- end #section-account -->
 
-      <!-- Stats -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Organization Overview</h3>
-        </div>
-        <div class="stat-grid">
-          <div class="stat-item">
-            <div class="stat-value" id="statMembers">—</div>
-            <div class="stat-label">Team Members</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="statInvites">—</div>
-            <div class="stat-label">Pending Invites</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="statTier">—</div>
-            <div class="stat-label">Plan</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value" id="statStatus">—</div>
-            <div class="stat-label">License</div>
-          </div>
-        </div>
-      </div>
+      <!-- ════════ AI & MCP SECTION ════════ -->
+      <div class="dashboard-section" id="section-mcp">
 
       <!-- JobTread Connection -->
       <div class="card">
@@ -388,6 +386,36 @@
         </div>
       </div>
 
+      </div><!-- end #section-mcp -->
+
+      <!-- ════════ TEAM SECTION ════════ -->
+      <div class="dashboard-section" id="section-team">
+
+      <!-- Organization Overview -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Organization Overview</h3>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="statMembers">—</div>
+            <div class="stat-label">Team Members</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statInvites">—</div>
+            <div class="stat-label">Pending Invites</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statTier">—</div>
+            <div class="stat-label">Plan</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statStatus">—</div>
+            <div class="stat-label">License</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Invite Team -->
       <div class="card">
         <div class="card-header">
@@ -458,8 +486,10 @@
         </div>
       </div>
 
-    </div>
-  </div>
+      </div><!-- end #section-team -->
+
+    </div><!-- end .dashboard -->
+  </div><!-- end .dashboard-layout -->
 
   <!-- ─── Remove Member Modal ──────────────────────────────── -->
   <div class="modal-overlay" id="removeModal">
@@ -495,8 +525,12 @@
         renderUserInfo();
 
         if (currentUser.role === 'owner' || currentUser.role === 'admin') {
-          document.getElementById('adminSection').classList.remove('hidden');
+          document.getElementById('sidebarMcp').style.display = '';
+          document.getElementById('sidebarTeam').style.display = '';
           await loadAdminData();
+        } else {
+          document.getElementById('sidebarMcp').style.display = 'none';
+          document.getElementById('sidebarTeam').style.display = 'none';
         }
       } catch (err) {
         console.error('Dashboard init failed:', err);
@@ -967,6 +1001,17 @@
         btn.textContent = 'Show All';
       }
     }
+
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const section = item.dataset.section;
+        document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-' + section).classList.add('active');
+      });
+    });
 
     // Go!
     init();

@@ -195,12 +195,71 @@ a:hover { color: var(--brand-light); }
   font-weight: 700; font-size: 12px;
 }
 
-/* ─── Dashboard ──────────────────────────────────────────────── */
-.dashboard { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+/* ─── Dashboard Layout (Sidebar + Content) ──────────────────── */
+.dashboard-layout {
+  display: flex;
+  min-height: calc(100vh - 61px); /* below navbar */
+}
+
+.dashboard-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #151515;
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  position: sticky;
+  top: 61px;
+  height: calc(100vh - 61px);
+  overflow-y: auto;
+}
+
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all var(--transition);
+  user-select: none;
+}
+.sidebar-item:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+.sidebar-item.active {
+  color: var(--brand);
+  border-left-color: var(--brand);
+  background: rgba(254, 76, 13, 0.06);
+}
+.sidebar-item .sidebar-icon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+}
+
+.dashboard {
+  flex: 1;
+  max-width: 960px;
+  padding: 32px 32px;
+  min-width: 0;
+}
 .dashboard-title {
   font-family: 'Bebas Neue', sans-serif; font-size: 28px;
   letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;
 }
+
+.dashboard-section { display: none; }
+.dashboard-section.active { display: block; }
 
 /* ─── Cards ──────────────────────────────────────────────────── */
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
@@ -288,10 +347,38 @@ a:hover { color: var(--brand-light); }
 .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 
 /* ─── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .dashboard-layout { flex-direction: column; }
+  .dashboard-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    overflow-x: auto;
+  }
+  .sidebar-nav {
+    display: flex;
+    gap: 0;
+    white-space: nowrap;
+  }
+  .sidebar-item {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    padding: 14px 20px;
+    font-size: 13px;
+  }
+  .sidebar-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--brand);
+  }
+  .dashboard { padding: 20px 16px; }
+}
+
 @media (max-width: 600px) {
   .auth-card { padding: 28px 20px; }
   .portal-nav { padding: 12px 16px; }
-  .dashboard { padding: 20px 16px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .data-table th, .data-table td { padding: 8px; font-size: 13px; }
   .modal-actions { flex-direction: column; }
