@@ -133,8 +133,7 @@ header h1 {
   letter-spacing: 0.04em;
 }
 
-.theme-toggle-btn {
-  margin-left: auto;
+.header-action-btn {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -146,11 +145,17 @@ header h1 {
   justify-content: center;
   transition: all var(--duration) var(--ease);
   padding: 0;
+  color: var(--text-secondary, #666);
+  font-size: 15px;
+}
+.header-action-btn:first-of-type {
+  margin-left: auto;
 }
 
-.theme-toggle-btn:hover {
+.header-action-btn:hover {
   background: var(--border-subtle);
   border-color: var(--border-default);
+  color: var(--text-primary, #1a1a1a);
 }
 
 .theme-icon {
