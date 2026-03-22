@@ -38,18 +38,9 @@
           <i class="ph ph-palette tab-icon"></i>
           <span class="tab-label">Theme</span>
         </button>
-        <button class="tab-item" data-tab="api">
-          <i class="ph ph-plugs-connected tab-icon"></i>
-          <span class="tab-label">API</span>
-        </button>
-        <button class="tab-item" data-tab="license">
-          <i class="ph ph-key tab-icon"></i>
-          <span class="tab-label">License</span>
-        </button>
-        <button class="tab-item" data-tab="mcp">
-          <i class="ph ph-robot tab-icon"></i>
-          <span class="tab-label">MCP</span>
-          <span class="tab-badge mcp-badge">BETA</span>
+        <button class="tab-item" data-tab="account">
+          <i class="ph ph-user-circle tab-icon"></i>
+          <span class="tab-label">Account</span>
         </button>
       </div>
     </nav>
@@ -66,7 +57,7 @@
             <div class="category-header" data-category="schedule">
               <i class="ph ph-calendar-blank category-icon"></i>
               <span class="category-title">Schedule & Calendar</span>
-              <span class="category-count">5</span>
+              <span class="category-count">6</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features" data-category-content="schedule">
@@ -126,6 +117,17 @@
                   <span class="slider"></span>
                 </label>
               </div>
+
+              <div class="feature-item premium" id="taskTypeFilterFeature">
+                <div class="feature-info">
+                  <h3>Unassigned Availability <i class="ph ph-question feature-help" data-guide="unassigned-availability" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>See unassigned tasks in schedule availability, filtered by type</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="taskTypeFilter" data-feature="taskTypeFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -134,7 +136,7 @@
             <div class="category-header" data-category="productivity">
               <i class="ph ph-lightning category-icon"></i>
               <span class="category-title">Productivity Tools</span>
-              <span class="category-count">8</span>
+              <span class="category-count">10</span>
               <span class="category-toggle">▼</span>
             </div>
             <div class="category-features" data-category-content="productivity">
@@ -225,6 +227,28 @@
                 </div>
                 <label class="toggle">
                   <input type="checkbox" id="previewMode" data-feature="previewMode">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="customFieldFilterFeature">
+                <div class="feature-info">
+                  <h3>Job Switcher Filter <i class="ph ph-question feature-help" data-guide="custom-field-filter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>Filter jobs by custom fields in Job Switcher</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="feature-item premium" id="budgetChangelogFeature">
+                <div class="feature-info">
+                  <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide="budget-changelog" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
+                  <p>Compare budget backups and see what changed</p>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
                   <span class="slider"></span>
                 </label>
               </div>
@@ -443,99 +467,15 @@
         </div>
       </div>
 
-      <!-- ==================== API TAB ==================== -->
-      <div class="tab-content" id="tab-api">
+      <!-- ==================== ACCOUNT TAB ==================== -->
+      <div class="tab-content" id="tab-account">
         <div class="tab-panel-content">
           <div class="panel-header">
-            <div class="panel-icon"><i class="ph ph-plugs-connected"></i></div>
+            <div class="panel-icon"><i class="ph ph-user-circle"></i></div>
             <div class="panel-info">
-              <h2 class="panel-title">API Configuration</h2>
-              <p class="panel-desc">Connect for power user features</p>
+              <h2 class="panel-title">Account</h2>
+              <p class="panel-desc">Sign in to unlock premium features</p>
             </div>
-          </div>
-
-          <!-- API Features -->
-          <div class="api-features">
-            <div class="feature-item" id="customFieldFilterFeature">
-              <div class="feature-info">
-                <h3>Job Switcher Filter <i class="ph ph-question feature-help" data-guide="custom-field-filter" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
-                <p>Filter jobs by custom fields in Job Switcher</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="customFieldFilter" data-feature="customFieldFilter">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="feature-item" id="budgetChangelogFeature">
-              <div class="feature-info">
-                <h3>Budget Changelog <i class="ph ph-question feature-help" data-guide="budget-changelog" title="Learn more"></i><i class="ph ph-device-mobile feature-mobile" title="Mobile friendly"></i> <span class="badge power-user">Power User</span></h3>
-                <p>Compare budget backups and see what changed</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="budgetChangelog" data-feature="budgetChangelog">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="feature-item" id="taskTypeFilterFeature">
-              <div class="feature-info">
-                <h3>Unassigned Availability <i class="ph ph-question feature-help" data-guide="unassigned-availability" title="Learn more"></i> <span class="badge power-user">Power User</span></h3>
-                <p>See unassigned tasks in schedule availability, filtered by type</p>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="taskTypeFilter" data-feature="taskTypeFilter">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <!-- API Configuration Panel -->
-          <div class="api-config-section" id="apiConfigPanel">
-            <div class="section-divider"></div>
-
-            <div id="apiStatus" class="api-status">
-              <p class="status-text"></p>
-            </div>
-
-            <div class="api-input">
-              <input type="password" id="apiKey" placeholder="Grant Key">
-              <input type="hidden" id="orgId">
-              <button id="testApiBtn" class="btn-verify">Test Connection</button>
-            </div>
-
-            <p class="api-hint">
-              <i class="ph ph-map-pin"></i> Get your Grant Key: JobTread Settings → Integrations → API<br>
-              <i class="ph ph-lightbulb"></i> One team member sets this up, others use the same Grant Key to join
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ==================== LICENSE TAB ==================== -->
-      <div class="tab-content" id="tab-license">
-        <div class="tab-panel-content">
-          <div class="panel-header">
-            <div class="panel-icon"><i class="ph ph-crown"></i></div>
-            <div class="panel-info">
-              <h2 class="panel-title">Premium License</h2>
-              <p class="panel-desc">Manage your subscription</p>
-            </div>
-          </div>
-
-          <div class="license-panel">
-            <div id="licenseStatus" class="license-status">
-              <p class="status-text"></p>
-            </div>
-
-            <div class="license-input">
-              <input type="text" id="licenseKey" placeholder="Enter license key">
-              <button id="verifyBtn" class="btn-verify">Verify</button>
-            </div>
-
-            <p class="license-link">
-              <a href="https://jtpowertools.com/subscribe.html" target="_blank">Subscribe to share a license with your team!</a>
-            </p>
           </div>
 
           <!-- Migration Banner -->
@@ -660,462 +600,60 @@
             </div>
           </div>
 
-          <!-- Tier info -->
-          <div class="tier-info">
-            <div class="tier-card">
-              <span class="badge essential">Essential</span>
-              <p>Core productivity tools</p>
+          <!-- Portal Links -->
+          <div class="portal-links" id="portalLinks" style="display: none;">
+            <div class="portal-links-header">
+              <h3><i class="ph ph-gear-six"></i> Manage on Portal</h3>
             </div>
-            <div class="tier-card">
-              <span class="badge pro">Pro</span>
-              <p>Premium formatting & preview tools</p>
-            </div>
-            <div class="tier-card">
-              <span class="badge power-user">Power User</span>
-              <p>API access & advanced features</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ==================== MCP TAB ==================== -->
-      <div class="tab-content" id="tab-mcp">
-        <div class="tab-panel-content">
-
-          <!-- Panel Header -->
-          <div class="panel-header">
-            <div class="panel-icon"><i class="ph ph-robot"></i></div>
-            <div class="panel-info">
-              <h2 class="panel-title">MCP Server <span class="mcp-beta-tag">BETA</span></h2>
-              <p class="panel-desc">Connect AI assistants to your JobTread data</p>
-            </div>
-          </div>
-
-          <!-- Beta Banner -->
-          <div class="mcp-beta-banner">
-            <div class="mcp-beta-banner-row">
-              <i class="ph ph-flask"></i>
-              <div>
-                <strong>Beta &mdash; 66 Tools Available</strong>
-                <p>MCP integration is in beta with <strong>39 read</strong> and <strong>27 write</strong> tools. AI assistants can search, analyze, and update your JobTread data.</p>
+            <a href="https://app.jtpowertools.com/dashboard.html" target="_blank" class="portal-link-item">
+              <i class="ph ph-users-three"></i>
+              <div class="portal-link-text">
+                <strong>Team Management</strong>
+                <p>Invite members, manage roles</p>
               </div>
-            </div>
-          </div>
-
-          <!-- What is MCP -->
-          <div class="mcp-info-card">
-            <h3><i class="ph ph-info"></i> What is MCP?</h3>
-            <p>Model Context Protocol (MCP) lets AI tools like <strong>Claude</strong>, <strong>ChatGPT</strong>, <strong>Grok</strong>, <strong>Gemini</strong>, and <strong>Cursor</strong> access your JobTread data directly. Search jobs, analyze budgets, review schedules, create tasks, update records, and more &mdash; all using natural language.</p>
-          </div>
-
-          <!-- Upgrade CTA (shown to non-Power Users) -->
-          <div class="mcp-upgrade-cta" id="mcpUpgradeCta" style="display: none;">
-            <div class="mcp-upgrade-icon"><i class="ph ph-lock-key"></i></div>
-            <div class="mcp-upgrade-content">
-              <h3>Unlock MCP Integration</h3>
-              <p>Connect AI assistants like Claude, ChatGPT, and Gemini directly to your JobTread data. Requires a <strong>Power User</strong> license.</p>
-            </div>
-            <a href="#" class="mcp-upgrade-btn" data-tab-link="license">
-              <i class="ph ph-arrow-right"></i> Go to License
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+            <a href="https://app.jtpowertools.com/dashboard.html#connection" target="_blank" class="portal-link-item">
+              <i class="ph ph-plugs-connected"></i>
+              <div class="portal-link-text">
+                <strong>JobTread Connection</strong>
+                <p>Grant key &amp; API configuration</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+            <a href="https://app.jtpowertools.com/dashboard.html#mcp" target="_blank" class="portal-link-item">
+              <i class="ph ph-robot"></i>
+              <div class="portal-link-text">
+                <strong>AI Server (MCP)</strong>
+                <p>Connect Claude, ChatGPT &amp; more</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
+            </a>
+            <a href="https://app.jtpowertools.com/dashboard.html#license" target="_blank" class="portal-link-item">
+              <i class="ph ph-crown"></i>
+              <div class="portal-link-text">
+                <strong>License &amp; Billing</strong>
+                <p>View plan, upgrade, manage subscription</p>
+              </div>
+              <i class="ph ph-arrow-square-out portal-link-arrow"></i>
             </a>
           </div>
 
-          <!-- Setup sections (hidden for non-Power Users) -->
-          <div id="mcpSetupSections">
-
-          <!-- Prerequisites -->
-          <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-list-checks"></i> Prerequisites</h3>
-            <div class="mcp-prereqs">
-              <div class="mcp-prereq" id="prereqLicense">
-                <i class="ph ph-circle-dashed prereq-icon"></i>
-                <span class="prereq-text">Power User license activated</span>
-                <span class="prereq-action"><a href="#" data-tab-link="license">License tab</a></span>
-              </div>
-              <div class="mcp-prereq" id="prereqGrantKey">
-                <i class="ph ph-circle-dashed prereq-icon"></i>
-                <span class="prereq-text">Grant Key configured</span>
-                <span class="prereq-action"><a href="#" data-tab-link="api">API tab</a></span>
+          <!-- Get License CTA (shown when not signed in) -->
+          <div class="get-license-cta" id="getLicenseCta">
+            <div class="cta-content">
+              <i class="ph ph-crown"></i>
+              <div>
+                <strong>Unlock Premium Features</strong>
+                <p>Get access to Pro and Power User tools, AI integration, team management, and more.</p>
               </div>
             </div>
-          </div>
-
-          <!-- Quick Setup Steps -->
-          <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-rocket-launch"></i> Quick Setup</h3>
-            <div class="mcp-steps">
-              <div class="mcp-step">
-                <span class="step-number">1</span>
-                <div class="step-content">
-                  <strong>Choose Your AI Tool</strong>
-                  <p>Select your platform below to get the right config.</p>
-                </div>
-              </div>
-              <div class="mcp-step">
-                <span class="step-number">2</span>
-                <div class="step-content">
-                  <strong>Copy &amp; Paste Config</strong>
-                  <p>Your <em>License Key</em> and <em>Grant Key</em> are embedded automatically.</p>
-                </div>
-              </div>
-              <div class="mcp-step">
-                <span class="step-number">3</span>
-                <div class="step-content">
-                  <strong>Start Asking Questions</strong>
-                  <p>Search jobs, analyze budgets, create tasks, update records, and more!</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Config Generator -->
-          <div class="mcp-section" id="mcpCredentialsSection">
-            <h3 class="mcp-section-title"><i class="ph ph-code"></i> Your Config</h3>
-
-            <!-- Credential Status -->
-            <div class="mcp-credentials">
-              <div class="credential-row">
-                <span class="credential-label">License Key:</span>
-                <span class="credential-value" id="mcpLicenseKey">Not configured</span>
-                <span class="credential-status" id="mcpLicenseStatus"></span>
-                <button class="credential-copy-btn" id="copyLicenseKey" title="Copy License Key">
-                  <i class="ph ph-copy"></i>
-                </button>
-              </div>
-              <div class="credential-row">
-                <span class="credential-label">Grant Key:</span>
-                <span class="credential-value" id="mcpGrantKey">Not configured</span>
-                <span class="credential-status" id="mcpGrantStatus"></span>
-              </div>
-            </div>
-
-            <!-- Grant Key Update -->
-            <div class="grant-key-update" id="grantKeyUpdateSection">
-              <p class="mcp-hint"><i class="ph ph-warning"></i> Grant keys expire after 3 months of inactivity. Update yours below if needed.</p>
-              <div class="grant-key-input-row">
-                <input type="password" id="mcpGrantKeyInput" placeholder="Enter new Grant Key" class="mcp-input">
-                <button id="updateGrantKeyBtn" class="btn-small btn-secondary">
-                  <i class="ph ph-arrows-clockwise"></i> Update
-                </button>
-              </div>
-              <div class="grant-key-error" id="grantKeyError" style="display: none;"></div>
-            </div>
-
-            <!-- Platform Config Generator -->
-            <div class="mcp-config-generator">
-              <h4 class="mcp-config-title">Pick your AI</h4>
-
-              <!-- Level 1: AI Provider -->
-              <div class="platform-tabs" id="aiProviderTabs">
-                <button class="platform-tab active" data-provider="claude">
-                  <i class="ph ph-cloud"></i>
-                  <span>Claude</span>
-                </button>
-                <button class="platform-tab" data-provider="chatgpt">
-                  <i class="ph ph-chat-circle-dots"></i>
-                  <span>ChatGPT</span>
-                </button>
-                <button class="platform-tab" data-provider="gemini">
-                  <i class="ph ph-sparkle"></i>
-                  <span>Gemini</span>
-                </button>
-                <button class="platform-tab" data-provider="grok">
-                  <i class="ph ph-lightning"></i>
-                  <span>Grok</span>
-                </button>
-              </div>
-
-              <!-- Level 2: Variant (Claude only) -->
-              <div class="platform-variants" id="platformVariants">
-                <div class="variant-group active" data-provider="claude">
-                  <button class="variant-tab active" data-platform="claude-code">
-                    <i class="ph ph-terminal"></i> Code
-                  </button>
-                  <button class="variant-tab" data-platform="claude-desktop">
-                    <i class="ph ph-desktop"></i> Desktop
-                  </button>
-                  <button class="variant-tab" data-platform="claude-web">
-                    <i class="ph ph-globe"></i> Web
-                    <span class="oauth-badge">OAuth</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Platform Notes -->
-              <div class="platform-notes">
-                <div class="platform-note active" data-platform="claude-code">
-                  <div class="platform-note-content">
-                    <p>Add to <code>.mcp.json</code> in your project root, or run from terminal:</p>
-                    <code class="platform-note-cmd">claude mcp add --transport http jobtread URL</code>
-                    <p class="platform-note-security"><i class="ph ph-warning"></i> Config contains credentials &mdash; add <code>.mcp.json</code> to your <code>.gitignore</code> to avoid committing secrets.</p>
-                  </div>
-                </div>
-                <div class="platform-note" data-platform="claude-desktop">
-                  <div class="platform-note-content">
-                    <p>Uses <a href="https://www.npmjs.com/package/mcp-remote" target="_blank">mcp-remote</a> (auto-installed via npx).</p>
-                    <p>Paste config into Settings &rarr; Developer &rarr; Edit Config.</p>
-                  </div>
-                </div>
-                <div class="platform-note" data-platform="claude-web">
-                  <div class="platform-note-content platform-note-oauth">
-                    <div class="platform-note-steps">
-                      <span class="note-step"><span class="note-step-num">1</span> Settings &rarr; Connectors &rarr; Add custom connector</span>
-                      <span class="note-step"><span class="note-step-num">2</span> Paste the server URL below</span>
-                      <span class="note-step"><span class="note-step-num">3</span> Click <strong>Connect</strong> to open the Power Tools auth page</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="platform-note" data-platform="chatgpt">
-                  <div class="platform-note-content platform-note-oauth">
-                    <div class="platform-note-steps">
-                      <span class="note-step"><span class="note-step-num">1</span> Settings &rarr; Apps &rarr; Advanced settings &rarr; Enable developer mode</span>
-                      <span class="note-step"><span class="note-step-num">2</span> Create app &rarr; Paste the server URL below</span>
-                      <span class="note-step"><span class="note-step-num">3</span> Click <strong>Connect</strong> to authorize with your keys</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="platform-note" data-platform="gemini">
-                  <div class="platform-note-content">
-                    <p>Add to <code>~/.gemini/settings.json</code> under <code>mcpServers</code>.</p>
-                    <p>Uses the <code>httpUrl</code> key per Gemini CLI docs.</p>
-                  </div>
-                </div>
-                <div class="platform-note" data-platform="grok">
-                  <div class="platform-note-content">
-                    <p>Configure via xAI API settings or Grok client MCP configuration.</p>
-                    <p>Uses standard <code>url</code> + <code>Authorization</code> header.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mcp-config-actions">
-                <button id="copyMcpConfigBtn" class="btn-primary mcp-config-btn" disabled>
-                  <i class="ph ph-copy"></i> Copy Config
-                </button>
-                <p class="mcp-config-hint" id="mcpConfigHint">
-                  <i class="ph ph-info"></i> <span id="mcpConfigHintText">Both keys must be configured to copy</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          </div><!-- /mcpSetupSections -->
-
-          <!-- Available Tools -->
-          <div class="mcp-section">
-            <h3 class="mcp-section-title"><i class="ph ph-wrench"></i> Available Tools (64)</h3>
-
-            <!-- READ TOOLS -->
-            <div class="mcp-tools-group-header">
-              <i class="ph ph-book-open-text"></i> Read Tools (39)
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Jobs</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Jobs</div>
-                <div class="mcp-tool"><i class="ph ph-briefcase"></i> Get Job</div>
-                <div class="mcp-tool"><i class="ph ph-clipboard-text"></i> Job Details</div>
-                <div class="mcp-tool"><i class="ph ph-activity"></i> Job Activity</div>
-                <div class="mcp-tool"><i class="ph ph-globe"></i> Global Search</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Budget</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-calculator"></i> Get Budget</div>
-                <div class="mcp-tool"><i class="ph ph-list-numbers"></i> Full Budget</div>
-                <div class="mcp-tool"><i class="ph ph-tree-structure"></i> Budget Tree</div>
-                <div class="mcp-tool"><i class="ph ph-clock-counter-clockwise"></i> Budget Backups</div>
-                <div class="mcp-tool"><i class="ph ph-arrows-left-right"></i> Compare Budgets</div>
-                <div class="mcp-tool"><i class="ph ph-file-text"></i> Documents Summary</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Schedule</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-list-checks"></i> List Tasks</div>
-                <div class="mcp-tool"><i class="ph ph-calendar"></i> Get Schedule</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Accounts</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-address-book"></i> Search Accounts</div>
-                <div class="mcp-tool"><i class="ph ph-user"></i> Account Details</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Logs &amp; Activity</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-notebook"></i> Daily Logs</div>
-                <div class="mcp-tool"><i class="ph ph-note"></i> Single Log</div>
-                <div class="mcp-tool"><i class="ph ph-chat-circle"></i> Comments</div>
-                <div class="mcp-tool"><i class="ph ph-clock"></i> Time Entries</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Files</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-files"></i> Job Files</div>
-                <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Files</div>
-                <div class="mcp-tool"><i class="ph ph-file-pdf"></i> Parse PDF</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Dashboards</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-chart-bar"></i> List Dashboards</div>
-                <div class="mcp-tool"><i class="ph ph-squares-four"></i> Get Dashboard</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Organization</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-map-pin"></i> Locations</div>
-                <div class="mcp-tool"><i class="ph ph-users"></i> Team Members</div>
-                <div class="mcp-tool"><i class="ph ph-tag"></i> Cost Codes</div>
-                <div class="mcp-tool"><i class="ph ph-sliders"></i> Custom Fields</div>
-                <div class="mcp-tool"><i class="ph ph-chart-pie"></i> Org Summary</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Team Notes</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-magnifying-glass"></i> Search Notes</div>
-                <div class="mcp-tool"><i class="ph ph-notepad"></i> List Notes</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Workflows</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-flow-arrow"></i> List Workflows</div>
-                <div class="mcp-tool"><i class="ph ph-git-branch"></i> Get Workflow</div>
-                <div class="mcp-tool"><i class="ph ph-list-numbers"></i> Workflow Runs</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Templates &amp; Reference</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool"><i class="ph ph-copy"></i> Template Jobs</div>
-                <div class="mcp-tool"><i class="ph ph-list-plus"></i> Task Templates</div>
-                <div class="mcp-tool"><i class="ph ph-folder-open"></i> Cost Group Templates</div>
-                <div class="mcp-tool"><i class="ph ph-database"></i> Raw Query</div>
-                <div class="mcp-tool"><i class="ph ph-book-open"></i> Knowledge Lookup</div>
-              </div>
-            </div>
-
-            <!-- WRITE TOOLS -->
-            <div class="mcp-tools-group-header mcp-tools-group-write">
-              <i class="ph ph-pencil-simple-line"></i> Write Tools (27)
-            </div>
-            <div class="mcp-write-notice">
-              <i class="ph ph-warning"></i>
-              <span>Write actions are performed as the account that created the grant key. We recommend using a dedicated account (e.g. "AI Assistant") so your team can easily identify AI-created items.</span>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Jobs</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Job</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Job</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Budget</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Cost Item</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Cost Item</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Cost Group</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Cost Group</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Tasks</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Task</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Task</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-download-simple"></i> Import Task Template</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Accounts &amp; Contacts</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Account</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Account</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Contact</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Contact</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Locations</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Location</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Location</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Daily Logs &amp; Comments</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Daily Log</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Daily Log</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Comment</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Comment</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Time Entries</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Time Entry</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Time Entry</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Team Notes</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Team Note</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Team Note</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Workflows</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Workflow</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Workflow</div>
-              </div>
-            </div>
-
-            <div class="mcp-tools-category">
-              <h4 class="mcp-tools-category-title">Dashboards</h4>
-              <div class="mcp-tools-list">
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-plus-circle"></i> Create Dashboard</div>
-                <div class="mcp-tool mcp-tool-write"><i class="ph ph-pencil-simple"></i> Update Dashboard</div>
-              </div>
-            </div>
-
-            <p class="mcp-hint" style="margin-top: 8px;"><i class="ph ph-shield-check"></i> Write tools let AI create and update records &mdash; always review changes before confirming. No delete operations available.</p>
+            <a href="https://jtpowertools.com/subscribe.html" target="_blank" class="btn-primary btn-small">Get a License</a>
           </div>
 
         </div>
       </div>
+
 
     </div>
 

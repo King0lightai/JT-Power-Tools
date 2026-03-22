@@ -2483,19 +2483,31 @@ async function updateAccountUI() {
     const migrationBanner = document.getElementById('migrationBanner');
     if (migrationBanner) migrationBanner.style.display = 'none';
 
+    // Show portal links for signed-in users
+    const portalLinks = document.getElementById('portalLinks');
+    if (portalLinks) portalLinks.style.display = 'block';
+
+    // Hide get-license CTA
+    const getLicenseCta = document.getElementById('getLicenseCta');
+    if (getLicenseCta) getLicenseCta.style.display = 'none';
+
     return;
   }
 
-  // User not logged in - show setup prompt or hide based on skip state
-  if (sessionStorage.getItem('accountSetupSkipped') !== 'true') {
-    accountLoggedIn.style.display = 'none';
-    accountLogin.style.display = 'none';
-    accountRegister.style.display = 'none';
-    accountSetupPrompt.style.display = 'block';
-    accountSection.style.display = 'block';
-  } else {
-    accountSection.style.display = 'none';
-  }
+  // User not logged in - show login form directly
+  accountLoggedIn.style.display = 'none';
+  accountLogin.style.display = 'block';
+  accountRegister.style.display = 'none';
+  if (accountSetupPrompt) accountSetupPrompt.style.display = 'none';
+  accountSection.style.display = 'block';
+
+  // Hide portal links when not signed in
+  const portalLinks = document.getElementById('portalLinks');
+  if (portalLinks) portalLinks.style.display = 'none';
+
+  // Show get-license CTA when not signed in
+  const getLicenseCta = document.getElementById('getLicenseCta');
+  if (getLicenseCta) getLicenseCta.style.display = '';
 
   // Show migration banner if licensed but not signed in
   const migrationBanner = document.getElementById('migrationBanner');
