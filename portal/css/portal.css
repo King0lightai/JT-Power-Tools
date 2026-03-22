@@ -317,3 +317,36 @@ a:hover { color: var(--brand-light); }
 .gap-12 { gap: 12px; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+
+/* ─── MCP Tool Chips ─────────────────────────────────────── */
+.tool-chip {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  background: rgba(254, 76, 13, 0.08);
+  border: 1px solid rgba(254, 76, 13, 0.15);
+  border-radius: 4px;
+  color: #ff8855;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tool-chip.write {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+}
+.tool-chip.ctx {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+/* MCP platform tabs */
+.mcp-tab:hover {
+  color: var(--text-primary) !important;
+}
+.mcp-tab.active {
+  border-bottom-color: var(--brand-primary) !important;
+  color: var(--brand-primary) !important;
+}

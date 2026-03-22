@@ -157,6 +157,165 @@
           </div>
         </div>
         <div id="aiKeyAlert" class="hidden" style="margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px;"></div>
+
+        <!-- Setup Instructions -->
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+          <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">Setup Instructions</h4>
+
+          <!-- Platform Tabs -->
+          <div class="mcp-tabs" style="display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border-light); padding-bottom: 0;">
+            <button class="mcp-tab active" data-platform="claude-code" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid var(--brand-primary); color: var(--brand-primary); cursor: pointer;">Claude Code</button>
+            <button class="mcp-tab" data-platform="claude-desktop" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Claude Desktop</button>
+            <button class="mcp-tab" data-platform="cursor" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">Cursor</button>
+            <button class="mcp-tab" data-platform="chatgpt" style="padding: 8px 14px; font-size: 12px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer;">ChatGPT</button>
+          </div>
+
+          <!-- Claude Code -->
+          <div class="mcp-panel active" data-platform="claude-code">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Add to your <code style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;">~/.claude/settings.json</code> or project <code style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;">.mcp.json</code>:</p>
+            <div style="position: relative;">
+              <pre id="claudeCodeConfig" style="background: #111; color: #e0e0e0; padding: 14px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; margin: 0;"></pre>
+              <button onclick="copyConfigBlock('claudeCodeConfig')" style="position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 11px; background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Copy</button>
+            </div>
+          </div>
+
+          <!-- Claude Desktop -->
+          <div class="mcp-panel" data-platform="claude-desktop" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Add to your Claude Desktop MCP config:</p>
+            <div style="position: relative;">
+              <pre id="claudeDesktopConfig" style="background: #111; color: #e0e0e0; padding: 14px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; margin: 0;"></pre>
+              <button onclick="copyConfigBlock('claudeDesktopConfig')" style="position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 11px; background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Copy</button>
+            </div>
+          </div>
+
+          <!-- Cursor -->
+          <div class="mcp-panel" data-platform="cursor" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">In Cursor, go to <strong>Settings → MCP Servers → Add Server</strong>:</p>
+            <div style="position: relative;">
+              <pre id="cursorConfig" style="background: #111; color: #e0e0e0; padding: 14px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.5; overflow-x: auto; white-space: pre; margin: 0;"></pre>
+              <button onclick="copyConfigBlock('cursorConfig')" style="position: absolute; top: 8px; right: 8px; padding: 4px 10px; font-size: 11px; background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; cursor: pointer;">Copy</button>
+            </div>
+          </div>
+
+          <!-- ChatGPT -->
+          <div class="mcp-panel" data-platform="chatgpt" style="display: none;">
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">ChatGPT uses OAuth — no config file needed:</p>
+            <ol style="font-size: 13px; color: var(--text-muted); padding-left: 20px; line-height: 1.8;">
+              <li>Go to <strong>ChatGPT → Settings → Connected Apps</strong></li>
+              <li>Click <strong>Add Connection</strong></li>
+              <li>Enter the Server URL: <code id="chatgptUrl" style="background: var(--bg-input); padding: 2px 6px; border-radius: 4px; font-size: 12px;"></code></li>
+              <li>Complete the OAuth sign-in flow</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Available Tools -->
+        <div style="margin-top: 24px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0;">Available Tools <span id="toolCount" style="font-weight: 400; font-size: 13px; color: var(--text-muted);"></span></h4>
+            <button id="toggleToolsBtn" onclick="toggleToolList()" style="padding: 4px 12px; font-size: 12px; background: var(--bg-input); color: var(--text-muted); border: 1px solid var(--border-light); border-radius: var(--radius-sm); cursor: pointer;">Show All</button>
+          </div>
+
+          <div id="toolCategories" style="display: none;">
+            <!-- Read Tools -->
+            <div style="margin-bottom: 16px;">
+              <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--brand-primary); margin-bottom: 8px; letter-spacing: 0.5px;">Read &amp; Search</h5>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                <span class="tool-chip">search_jobs</span>
+                <span class="tool-chip">get_job</span>
+                <span class="tool-chip">get_job_details</span>
+                <span class="tool-chip">get_job_activity</span>
+                <span class="tool-chip">get_budget</span>
+                <span class="tool-chip">get_budget_full</span>
+                <span class="tool-chip">get_budget_tree</span>
+                <span class="tool-chip">get_budget_backups</span>
+                <span class="tool-chip">compare_budgets</span>
+                <span class="tool-chip">get_schedule</span>
+                <span class="tool-chip">list_tasks</span>
+                <span class="tool-chip">get_documents_summary</span>
+                <span class="tool-chip">search_accounts</span>
+                <span class="tool-chip">get_account_details</span>
+                <span class="tool-chip">get_daily_logs</span>
+                <span class="tool-chip">get_daily_log</span>
+                <span class="tool-chip">get_comments</span>
+                <span class="tool-chip">get_time_entries</span>
+                <span class="tool-chip">get_job_files</span>
+                <span class="tool-chip">search_files</span>
+                <span class="tool-chip">list_locations</span>
+                <span class="tool-chip">list_members</span>
+                <span class="tool-chip">list_cost_codes</span>
+                <span class="tool-chip">list_cost_types</span>
+                <span class="tool-chip">list_units</span>
+                <span class="tool-chip">get_custom_fields</span>
+                <span class="tool-chip">get_org_summary</span>
+                <span class="tool-chip">global_search</span>
+                <span class="tool-chip">list_template_jobs</span>
+                <span class="tool-chip">list_task_templates</span>
+                <span class="tool-chip">list_cost_group_templates</span>
+                <span class="tool-chip">search_team_notes</span>
+                <span class="tool-chip">list_team_notes</span>
+                <span class="tool-chip">list_dashboards</span>
+                <span class="tool-chip">get_dashboard</span>
+                <span class="tool-chip">list_workflows</span>
+                <span class="tool-chip">get_workflow</span>
+                <span class="tool-chip">list_workflow_runs</span>
+                <span class="tool-chip">knowledge_lookup</span>
+                <span class="tool-chip">extract_product</span>
+                <span class="tool-chip">parse_pdf</span>
+                <span class="tool-chip">raw_query</span>
+              </div>
+            </div>
+
+            <!-- Write Tools -->
+            <div style="margin-bottom: 16px;">
+              <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #16a34a; margin-bottom: 8px; letter-spacing: 0.5px;">Create &amp; Update</h5>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                <span class="tool-chip write">create_job</span>
+                <span class="tool-chip write">update_job</span>
+                <span class="tool-chip write">create_task</span>
+                <span class="tool-chip write">update_task</span>
+                <span class="tool-chip write">create_comment</span>
+                <span class="tool-chip write">update_comment</span>
+                <span class="tool-chip write">create_daily_log</span>
+                <span class="tool-chip write">update_daily_log</span>
+                <span class="tool-chip write">create_cost_item</span>
+                <span class="tool-chip write">update_cost_item</span>
+                <span class="tool-chip write">create_cost_group</span>
+                <span class="tool-chip write">update_cost_group</span>
+                <span class="tool-chip write">create_account</span>
+                <span class="tool-chip write">update_account</span>
+                <span class="tool-chip write">create_contact</span>
+                <span class="tool-chip write">update_contact</span>
+                <span class="tool-chip write">create_location</span>
+                <span class="tool-chip write">update_location</span>
+                <span class="tool-chip write">create_time_entry</span>
+                <span class="tool-chip write">update_time_entry</span>
+                <span class="tool-chip write">create_team_note</span>
+                <span class="tool-chip write">update_team_note</span>
+                <span class="tool-chip write">create_workflow</span>
+                <span class="tool-chip write">update_workflow</span>
+                <span class="tool-chip write">create_dashboard</span>
+                <span class="tool-chip write">update_dashboard</span>
+                <span class="tool-chip write">import_task_template</span>
+                <span class="tool-chip write">upload_file</span>
+                <span class="tool-chip write">upload_file_to_cost_item</span>
+              </div>
+            </div>
+
+            <!-- Context Tools -->
+            <div>
+              <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #8b5cf6; margin-bottom: 8px; letter-spacing: 0.5px;">AI Context</h5>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                <span class="tool-chip ctx">ctx_search</span>
+                <span class="tool-chip ctx">ctx_index</span>
+                <span class="tool-chip ctx">ctx_batch</span>
+                <span class="tool-chip ctx">ctx_stats</span>
+                <span class="tool-chip ctx">ctx_resume</span>
+                <span class="tool-chip ctx">ctx_sources</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Invite Team -->
@@ -361,6 +520,9 @@
       document.getElementById('mcpServerUrl').textContent = data.mcp.serverUrl;
       document.getElementById('mcpLicenseKey').textContent = data.mcp.maskedLicenseKey;
       document.getElementById('mcpLicenseKeyFull').textContent = data.mcp.licenseKey;
+
+      // Populate MCP setup configs
+      populateMcpConfigs(data.mcp.serverUrl, data.mcp.licenseKey);
     }
 
     function renderTeamTable(members) {
@@ -594,6 +756,89 @@
         if (e.target === el) el.classList.remove('show');
       });
     });
+
+    // ─── MCP Setup ──────────────────────────────────────────
+
+    // Platform tab switching
+    document.querySelectorAll('.mcp-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mcp-tab').forEach(t => {
+          t.classList.remove('active');
+          t.style.borderBottomColor = 'transparent';
+          t.style.color = 'var(--text-muted)';
+        });
+        tab.classList.add('active');
+        tab.style.borderBottomColor = 'var(--brand-primary)';
+        tab.style.color = 'var(--brand-primary)';
+        const platform = tab.dataset.platform;
+        document.querySelectorAll('.mcp-panel').forEach(p => p.style.display = 'none');
+        document.querySelector(`.mcp-panel[data-platform="${platform}"]`).style.display = '';
+      });
+    });
+
+    function populateMcpConfigs(serverUrl, licenseKey) {
+      const claudeCode = {
+        mcpServers: {
+          jobtread: {
+            type: "streamableHttp",
+            url: serverUrl + '/mcp',
+            headers: {
+              Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
+            }
+          }
+        }
+      };
+      document.getElementById('claudeCodeConfig').textContent = JSON.stringify(claudeCode, null, 2);
+
+      const claudeDesktop = {
+        mcpServers: {
+          jobtread: {
+            url: serverUrl + '/mcp',
+            transport: "streamable-http",
+            headers: {
+              Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
+            }
+          }
+        }
+      };
+      document.getElementById('claudeDesktopConfig').textContent = JSON.stringify(claudeDesktop, null, 2);
+
+      const cursor = {
+        name: "JobTread (JT Power Tools)",
+        type: "streamableHttp",
+        url: serverUrl + '/mcp',
+        headers: {
+          Authorization: `Bearer ${licenseKey}:<your_ai_grant_key>`
+        }
+      };
+      document.getElementById('cursorConfig').textContent = JSON.stringify(cursor, null, 2);
+
+      document.getElementById('chatgptUrl').textContent = serverUrl + '/mcp';
+      document.getElementById('toolCount').textContent = '(77 tools)';
+    }
+
+    function copyConfigBlock(id) {
+      const el = document.getElementById(id);
+      navigator.clipboard.writeText(el.textContent);
+      const btn = el.parentElement.querySelector('button');
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      }
+    }
+
+    function toggleToolList() {
+      const cats = document.getElementById('toolCategories');
+      const btn = document.getElementById('toggleToolsBtn');
+      if (cats.style.display === 'none') {
+        cats.style.display = '';
+        btn.textContent = 'Hide';
+      } else {
+        cats.style.display = 'none';
+        btn.textContent = 'Show All';
+      }
+    }
 
     // Go!
     init();
