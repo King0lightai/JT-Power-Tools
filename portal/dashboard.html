@@ -48,9 +48,19 @@
         <span class="value" id="userLicense">—</span>
       </div>
       <div style="margin-top: 16px;">
-        <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex;">
-          Install Chrome Extension ↗
-        </a>
+        <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Install Extension</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
+            Chrome ↗
+          </a>
+          <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
+            Edge ↗
+          </a>
+          <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">
+            Firefox ↗
+          </a>
+          <button onclick="copyInstallLinks()" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 11px;" title="Copy all install links">Copy Links</button>
+        </div>
       </div>
     </div>
 
@@ -79,16 +89,20 @@
         <div class="card-header">
           <h3>Quick Links</h3>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: fit-content; display: inline-flex; gap: 6px; text-decoration: none;">
-            Install Chrome Extension ↗
-          </a>
-          <a href="https://gumroad.com/library" target="_blank" class="btn btn-secondary btn-sm" style="width: fit-content; display: inline-flex; gap: 6px; text-decoration: none;">
-            Manage Subscription ↗
-          </a>
-          <a href="https://jtpowertools.com/changelog.html" target="_blank" class="btn btn-secondary btn-sm" style="width: fit-content; display: inline-flex; gap: 6px; text-decoration: none;">
-            What's New ↗
-          </a>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <p style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Install Extension</p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <a href="https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Chrome ↗</a>
+              <a href="https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Edge ↗</a>
+              <a href="https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 4px; text-decoration: none;">Firefox ↗</a>
+              <button onclick="copyInstallLinks()" class="btn btn-ghost btn-sm" style="padding: 4px 10px; font-size: 11px;" title="Copy all install links">Copy Links</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="https://gumroad.com/library" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">Manage Subscription ↗</a>
+            <a href="https://jtpowertools.com/changelog.html" target="_blank" class="btn btn-secondary btn-sm" style="width: auto; display: inline-flex; gap: 6px; text-decoration: none;">What's New ↗</a>
+          </div>
         </div>
       </div>
     </div>
@@ -727,6 +741,21 @@
       } finally {
         btn.classList.remove('loading');
       }
+    }
+
+    function copyInstallLinks() {
+      const links = [
+        'Chrome: https://chromewebstore.google.com/detail/jt-power-tools/kfbcifdgmcendohejbiiojjkgdbjkpcn',
+        'Edge: https://microsoftedge.microsoft.com/addons/detail/jt-power-tools/mimieaaodidgnkblemjpfmffgikbnofi',
+        'Firefox: https://addons.mozilla.org/en-US/firefox/addon/jt-power-tools/',
+      ].join('\n');
+      navigator.clipboard.writeText(links);
+      // Flash all copy buttons
+      document.querySelectorAll('button[onclick="copyInstallLinks()"]').forEach(btn => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+      });
     }
 
     function copyText(elementId, useHidden) {
