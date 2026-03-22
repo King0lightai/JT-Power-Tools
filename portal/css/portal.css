@@ -87,6 +87,13 @@ a:hover { color: var(--brand-light); }
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.auth-card .logo .tagline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+  margin: 8px 0 4px;
+}
 .auth-card .logo p { font-size: 14px; color: var(--text-muted); }
 
 .auth-card h2 {
