@@ -107,6 +107,7 @@ const defaultSettings = (typeof JTDefaults !== 'undefined' && JTDefaults.getDefa
 // Check and update API status on load
 async function checkApiStatus() {
   const apiStatus = document.getElementById('apiStatus');
+  if (!apiStatus) return; // API UI removed — config now in portal
   const statusText = apiStatus.querySelector('.status-text');
   const apiKeyInput = document.getElementById('apiKey');
   const orgIdInput = document.getElementById('orgId');
@@ -294,7 +295,7 @@ async function checkLicenseStatus() {
   const licenseData = await LicenseService.getLicenseData();
   const tier = await LicenseService.getTier();
   const licenseStatus = document.getElementById('licenseStatus');
-  const statusText = licenseStatus.querySelector('.status-text');
+  const statusText = licenseStatus ? licenseStatus.querySelector('.status-text') : null;
 
   // PRO tier features (require Pro or Power User)
   const dragDropFeature = document.getElementById('dragDropFeature');
@@ -331,8 +332,8 @@ async function checkLicenseStatus() {
   if (licenseData && licenseData.valid && tier) {
     // Valid license - show tier name
     const tierDisplayName = LicenseService.getTierDisplayName(tier);
-    licenseStatus.className = 'license-status active';
-    statusText.textContent = `✓ ${tierDisplayName} Active`;
+    if (licenseStatus) licenseStatus.className = 'license-status active';
+    if (statusText) statusText.textContent = `✓ ${tierDisplayName} Active`;
 
     // Check tier access for PRO features (Pro and Power User only)
     const hasProFeatures = LicenseService.tierHasFeature(tier, 'dragDrop');
@@ -361,7 +362,7 @@ async function checkLicenseStatus() {
       if (availabilityFilterCheckbox) availabilityFilterCheckbox.disabled = true;
 
       // Add upgrade hint for Essential users
-      statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for more features`;
+      if (statusText) statusText.textContent = `✓ ${tierDisplayName} Active - Upgrade to Pro for more features`;
     }
 
     // POWER USER features and API section visibility
@@ -402,8 +403,8 @@ async function checkLicenseStatus() {
     return { hasLicense: true, tier: tier };
   } else {
     // No license or invalid - FREE features still work!
-    licenseStatus.className = 'license-status inactive';
-    statusText.textContent = 'Free Mode - Upgrade for more features';
+    if (licenseStatus) licenseStatus.className = 'license-status inactive';
+    if (statusText) statusText.textContent = 'Free Mode - Upgrade for more features';
 
     // Lock PRO features
     dragDropFeature?.classList.add('locked');
