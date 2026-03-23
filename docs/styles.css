@@ -1430,28 +1430,6 @@ footer {
 }
 
 /* Homepage Features Section */
-.home-tagline {
-    padding: 80px 0 0;
-    text-align: center;
-}
-.tagline-heading {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(32px, 4.5vw, 52px);
-    letter-spacing: 2px;
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 16px;
-}
-.tagline-sub {
-    font-size: clamp(16px, 2vw, 20px);
-    color: var(--text-muted);
-    max-width: 640px;
-    margin: 0 auto;
-    line-height: 1.6;
-}
-
 .home-features {
     padding: 120px 0;
     position: relative;
@@ -1474,13 +1452,6 @@ footer {
     font-family: 'Bebas Neue', sans-serif;
     font-size: clamp(36px, 5vw, 56px);
     letter-spacing: 2px;
-}
-.section-sub {
-    font-size: clamp(16px, 2vw, 20px);
-    color: var(--text-muted);
-    max-width: 640px;
-    margin: 16px auto 0;
-    line-height: 1.6;
 }
 
 .features-grid {
