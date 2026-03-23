@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-03-22
+
 ### Added
+#### Web Portal — app.jtpowertools.com
+- Added full web portal for team and license management at `app.jtpowertools.com`
+
 #### Web Portal Backend — Sprint 1 (Auth, Admin, Invites)
 - Added JWT-based portal authentication system (`portal-auth.js`)
   - `POST /auth/register` — account registration with invite token or license key
@@ -70,6 +75,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added migration banner for existing license key users ("NEW: Manage your team online")
 - Added "Manage Team ↗" link for owners/admins in popup account card (opens portal dashboard)
 - Added grant key to portal auth responses (login, register, refresh, me endpoints)
+
+#### Extension Simplification — Sprint 4
+- Removed License, API, and MCP tabs from popup — all configuration now in portal
+- Added Account tab with sign-in/sign-out and account info display
+- Added refresh button to popup header (always visible)
+- Simplified popup to Features + Theme + Account tabs
+- Extended refresh token TTL from 7 days to 90 days with rolling renewal
+
+#### Branding & Polish
+- Updated extension icons with new logo across all sizes
+- Added tagline to docs site: "The Missing Piece of Your JobTread Workflow"
+- Added branded invite emails via Resend with install instructions and quick setup guide
+- Added sidebar navigation to portal dashboard (Account, AI & MCP, Team sections)
+- Added profile editing (display name, change password) to portal
+- Added MCP setup instructions with tabs for Claude Code, Claude Desktop, Claude Web, ChatGPT
+- Added role-based dashboard views (owner/admin see team management, members see limited view)
+
+### Changed
+- Version bumped to 4.0.0
+- Portal live at custom domain `app.jtpowertools.com`
 
 ### Fixed
 - Fixed team members table showing removed members — added `status = 'active'` filter to team query
